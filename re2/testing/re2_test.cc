@@ -240,6 +240,30 @@ TEST(RE2, Consume) {
   CHECK(! RE2::Consume(&input, r, &word)) << " input: " << input;
 }
 
+TEST(RE2, ConsumeN) {
+  const string s(" one two three 4");
+  StringPiece input(s);
+
+  RE2::Arg argv[2];
+  const RE2::Arg* const args[2] = { &argv[0], &argv[1] };
+
+  // 0 arg
+  EXPECT_TRUE(RE2::ConsumeN(&input, "\\s*(\\w+)", args, 0));  // Skips "one".
+
+  // 1 arg
+  string word;
+  argv[0] = &word;
+  EXPECT_TRUE(RE2::ConsumeN(&input, "\\s*(\\w+)", args, 1));
+  EXPECT_EQ("two", word);
+
+  // Multi-args
+  int n;
+  argv[1] = &n;
+  EXPECT_TRUE(RE2::ConsumeN(&input, "\\s*(\\w+)\\s*(\\d+)", args, 2));
+  EXPECT_EQ("three", word);
+  EXPECT_EQ(4, n);
+}
+
 TEST(RE2, FindAndConsume) {
   VLOG(1) << "TestFindAndConsume";
 
@@ -263,6 +287,30 @@ TEST(RE2, FindAndConsume) {
   input = "aaa";
   CHECK(RE2::FindAndConsume(&input, "aaa"));
   CHECK_EQ(input, "");
+}
+
+TEST(RE2, FindAndConsumeN) {
+  const string s(" one two three 4");
+  StringPiece input(s);
+
+  RE2::Arg argv[2];
+  const RE2::Arg* const args[2] = { &argv[0], &argv[1] };
+
+  // 0 arg
+  EXPECT_TRUE(RE2::FindAndConsumeN(&input, "(\\w+)", args, 0));  // Skips "one".
+
+  // 1 arg
+  string word;
+  argv[0] = &word;
+  EXPECT_TRUE(RE2::FindAndConsumeN(&input, "(\\w+)", args, 1));
+  EXPECT_EQ("two", word);
+
+  // Multi-args
+  int n;
+  argv[1] = &n;
+  EXPECT_TRUE(RE2::FindAndConsumeN(&input, "(\\w+)\\s*(\\d+)", args, 2));
+  EXPECT_EQ("three", word);
+  EXPECT_EQ(4, n);
 }
 
 TEST(RE2, MatchNumberPeculiarity) {
@@ -473,6 +521,30 @@ TEST(RE2, PartialMatch) {
   CHECK(RE2::PartialMatch("x", "((((((((((((((((((((x))))))))))))))))))))"));
 }
 
+TEST(RE2, PartialMatchN) {
+  RE2::Arg argv[2];
+  const RE2::Arg* const args[2] = { &argv[0], &argv[1] };
+
+  // 0 arg
+  EXPECT_TRUE(RE2::PartialMatchN("hello", "e.*o", args, 0));
+  EXPECT_FALSE(RE2::PartialMatchN("othello", "a.*o", args, 0));
+
+  // 1 arg
+  int i;
+  argv[0] = &i;
+  EXPECT_TRUE(RE2::PartialMatchN("1001 nights", "(\\d+)", args, 1));
+  EXPECT_EQ(1001, i);
+  EXPECT_FALSE(RE2::PartialMatchN("three", "(\\d+)", args, 1));
+
+  // Multi-arg
+  string s;
+  argv[1] = &s;
+  EXPECT_TRUE(RE2::PartialMatchN("answer: 42:life", "(\\d+):(\\w+)", args, 2));
+  EXPECT_EQ(42, i);
+  EXPECT_EQ("life", s);
+  EXPECT_FALSE(RE2::PartialMatchN("hi1", "(\\w+)(1)", args, 2));
+}
+
 TEST(RE2, FullMatchZeroArg) {
   // Zero-arg
   CHECK(RE2::FullMatch("1001", "\\d+"));
@@ -531,6 +603,30 @@ TEST(RE2, FullMatchMultiArg) {
   CHECK(RE2::FullMatch("ruby:1234", "(\\w+):(\\d+)", &s, &i));
   CHECK_EQ(s, string("ruby"));
   CHECK_EQ(i, 1234);
+}
+
+TEST(RE2, FullMatchN) {
+  RE2::Arg argv[2];
+  const RE2::Arg* const args[2] = { &argv[0], &argv[1] };
+
+  // 0 arg
+  EXPECT_TRUE(RE2::FullMatchN("hello", "h.*o", args, 0));
+  EXPECT_FALSE(RE2::FullMatchN("othello", "h.*o", args, 0));
+
+  // 1 arg
+  int i;
+  argv[0] = &i;
+  EXPECT_TRUE(RE2::FullMatchN("1001", "(\\d+)", args, 1));
+  EXPECT_EQ(1001, i);
+  EXPECT_FALSE(RE2::FullMatchN("three", "(\\d+)", args, 1));
+
+  // Multi-arg
+  string s;
+  argv[1] = &s;
+  EXPECT_TRUE(RE2::FullMatchN("42:life", "(\\d+):(\\w+)", args, 2));
+  EXPECT_EQ(42, i);
+  EXPECT_EQ("life", s);
+  EXPECT_FALSE(RE2::FullMatchN("hi1", "(\\w+)(1)", args, 2));
 }
 
 TEST(RE2, FullMatchIgnoredArg) {

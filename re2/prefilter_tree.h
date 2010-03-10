@@ -49,7 +49,7 @@ class PrefilterTree {
   // content. The caller can use any string match engine to perform
   // this function.
   void RegexpsGivenStrings(const vector<int>& matched_atoms,
-                           vector<int>* regexps);
+                           vector<int>* regexps) const;
 
   // Print debug prefilter. Also prints unique ids associated with
   // nodes of the prefilter of the regexp.
@@ -86,7 +86,7 @@ class PrefilterTree {
 
   // Given the matching atoms, find the regexps to be triggered.
   void PropagateMatch(const vector<int>& atom_ids,
-                      IntMap* regexps);
+                      IntMap* regexps) const;
 
   // Returns the prefilter node that has the same NodeString as this
   // node. For the canonical node, returns node.

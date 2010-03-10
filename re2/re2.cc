@@ -26,8 +26,10 @@ namespace re2 {
 static const int kMaxArgs = 16;
 static const int kVecSize = 1+kMaxArgs;
 
-// Special name for missing C++ arguments.
-RE2::Arg RE2::no_more_args((void*)NULL);
+const VariadicFunction2<bool, const StringPiece&, const RE2&, RE2::Arg, RE2::FullMatchN> RE2::FullMatch;
+const VariadicFunction2<bool, const StringPiece&, const RE2&, RE2::Arg, RE2::PartialMatchN> RE2::PartialMatch;
+const VariadicFunction2<bool, StringPiece*, const RE2&, RE2::Arg, RE2::ConsumeN> RE2::Consume;
+const VariadicFunction2<bool, StringPiece*, const RE2&, RE2::Arg, RE2::FindAndConsumeN> RE2::FindAndConsume;
 
 const int RE2::Options::kDefaultMaxMem;  // initialized in re2.h
 
@@ -238,123 +240,18 @@ const map<string, int>&  RE2::NamedCapturingGroups() const {
 
 /***** Convenience interfaces *****/
 
-bool RE2::FullMatch(const StringPiece& text, const RE2& re,
-                   const Arg& a0,
-                   const Arg& a1,
-                   const Arg& a2,
-                   const Arg& a3,
-                   const Arg& a4,
-                   const Arg& a5,
-                   const Arg& a6,
-                   const Arg& a7,
-                   const Arg& a8,
-                   const Arg& a9,
-                   const Arg& a10,
-                   const Arg& a11,
-                   const Arg& a12,
-                   const Arg& a13,
-                   const Arg& a14,
-                   const Arg& a15) {
-  const Arg* args[kMaxArgs];
-  int n = 0;
-  if (&a0 == &no_more_args)  goto done; args[n++] = &a0;
-  if (&a1 == &no_more_args)  goto done; args[n++] = &a1;
-  if (&a2 == &no_more_args)  goto done; args[n++] = &a2;
-  if (&a3 == &no_more_args)  goto done; args[n++] = &a3;
-  if (&a4 == &no_more_args)  goto done; args[n++] = &a4;
-  if (&a5 == &no_more_args)  goto done; args[n++] = &a5;
-  if (&a6 == &no_more_args)  goto done; args[n++] = &a6;
-  if (&a7 == &no_more_args)  goto done; args[n++] = &a7;
-  if (&a8 == &no_more_args)  goto done; args[n++] = &a8;
-  if (&a9 == &no_more_args)  goto done; args[n++] = &a9;
-  if (&a10 == &no_more_args) goto done; args[n++] = &a10;
-  if (&a11 == &no_more_args) goto done; args[n++] = &a11;
-  if (&a12 == &no_more_args) goto done; args[n++] = &a12;
-  if (&a13 == &no_more_args) goto done; args[n++] = &a13;
-  if (&a14 == &no_more_args) goto done; args[n++] = &a14;
-  if (&a15 == &no_more_args) goto done; args[n++] = &a15;
-done:
-
+bool RE2::FullMatchN(const StringPiece& text, const RE2& re,
+                     const Arg* const args[], int n) {
   return re.DoMatch(text, ANCHOR_BOTH, NULL, args, n);
 }
 
-bool RE2::PartialMatch(const StringPiece& text, const RE2& re,
-                      const Arg& a0,
-                      const Arg& a1,
-                      const Arg& a2,
-                      const Arg& a3,
-                      const Arg& a4,
-                      const Arg& a5,
-                      const Arg& a6,
-                      const Arg& a7,
-                      const Arg& a8,
-                      const Arg& a9,
-                      const Arg& a10,
-                      const Arg& a11,
-                      const Arg& a12,
-                      const Arg& a13,
-                      const Arg& a14,
-                      const Arg& a15) {
-  const Arg* args[kMaxArgs];
-  int n = 0;
-  if (&a0 == &no_more_args)  goto done; args[n++] = &a0;
-  if (&a1 == &no_more_args)  goto done; args[n++] = &a1;
-  if (&a2 == &no_more_args)  goto done; args[n++] = &a2;
-  if (&a3 == &no_more_args)  goto done; args[n++] = &a3;
-  if (&a4 == &no_more_args)  goto done; args[n++] = &a4;
-  if (&a5 == &no_more_args)  goto done; args[n++] = &a5;
-  if (&a6 == &no_more_args)  goto done; args[n++] = &a6;
-  if (&a7 == &no_more_args)  goto done; args[n++] = &a7;
-  if (&a8 == &no_more_args)  goto done; args[n++] = &a8;
-  if (&a9 == &no_more_args)  goto done; args[n++] = &a9;
-  if (&a10 == &no_more_args) goto done; args[n++] = &a10;
-  if (&a11 == &no_more_args) goto done; args[n++] = &a11;
-  if (&a12 == &no_more_args) goto done; args[n++] = &a12;
-  if (&a13 == &no_more_args) goto done; args[n++] = &a13;
-  if (&a14 == &no_more_args) goto done; args[n++] = &a14;
-  if (&a15 == &no_more_args) goto done; args[n++] = &a15;
-done:
-
+bool RE2::PartialMatchN(const StringPiece& text, const RE2& re,
+                        const Arg* const args[], int n) {
   return re.DoMatch(text, UNANCHORED, NULL, args, n);
 }
 
-bool RE2::Consume(StringPiece* input, const RE2& re,
-                 const Arg& a0,
-                 const Arg& a1,
-                 const Arg& a2,
-                 const Arg& a3,
-                 const Arg& a4,
-                 const Arg& a5,
-                 const Arg& a6,
-                 const Arg& a7,
-                 const Arg& a8,
-                 const Arg& a9,
-                 const Arg& a10,
-                 const Arg& a11,
-                 const Arg& a12,
-                 const Arg& a13,
-                 const Arg& a14,
-                 const Arg& a15) {
-  const Arg* args[kMaxArgs];
-  int n = 0;
-  if (&a0 == &no_more_args)  goto done; args[n++] = &a0;
-  if (&a1 == &no_more_args)  goto done; args[n++] = &a1;
-  if (&a2 == &no_more_args)  goto done; args[n++] = &a2;
-  if (&a3 == &no_more_args)  goto done; args[n++] = &a3;
-  if (&a4 == &no_more_args)  goto done; args[n++] = &a4;
-  if (&a5 == &no_more_args)  goto done; args[n++] = &a5;
-  if (&a6 == &no_more_args)  goto done; args[n++] = &a6;
-  if (&a7 == &no_more_args)  goto done; args[n++] = &a7;
-  if (&a8 == &no_more_args)  goto done; args[n++] = &a8;
-  if (&a9 == &no_more_args)  goto done; args[n++] = &a9;
-  if (&a10 == &no_more_args) goto done; args[n++] = &a10;
-  if (&a11 == &no_more_args) goto done; args[n++] = &a11;
-  if (&a12 == &no_more_args) goto done; args[n++] = &a12;
-  if (&a13 == &no_more_args) goto done; args[n++] = &a13;
-  if (&a14 == &no_more_args) goto done; args[n++] = &a14;
-  if (&a15 == &no_more_args) goto done; args[n++] = &a15;
-done:
-
+bool RE2::ConsumeN(StringPiece* input, const RE2& re,
+                   const Arg* const args[], int n) {
   int consumed;
   if (re.DoMatch(*input, ANCHOR_START, &consumed, args, n)) {
     input->remove_prefix(consumed);
@@ -364,43 +261,8 @@ done:
   }
 }
 
-bool RE2::FindAndConsume(StringPiece* input, const RE2& re,
-                        const Arg& a0,
-                        const Arg& a1,
-                        const Arg& a2,
-                        const Arg& a3,
-                        const Arg& a4,
-                        const Arg& a5,
-                        const Arg& a6,
-                        const Arg& a7,
-                        const Arg& a8,
-                        const Arg& a9,
-                        const Arg& a10,
-                        const Arg& a11,
-                        const Arg& a12,
-                        const Arg& a13,
-                        const Arg& a14,
-                        const Arg& a15) {
-  const Arg* args[kMaxArgs];
-  int n = 0;
-  if (&a0 == &no_more_args)  goto done; args[n++] = &a0;
-  if (&a1 == &no_more_args)  goto done; args[n++] = &a1;
-  if (&a2 == &no_more_args)  goto done; args[n++] = &a2;
-  if (&a3 == &no_more_args)  goto done; args[n++] = &a3;
-  if (&a4 == &no_more_args)  goto done; args[n++] = &a4;
-  if (&a5 == &no_more_args)  goto done; args[n++] = &a5;
-  if (&a6 == &no_more_args)  goto done; args[n++] = &a6;
-  if (&a7 == &no_more_args)  goto done; args[n++] = &a7;
-  if (&a8 == &no_more_args)  goto done; args[n++] = &a8;
-  if (&a9 == &no_more_args)  goto done; args[n++] = &a9;
-  if (&a10 == &no_more_args) goto done; args[n++] = &a10;
-  if (&a11 == &no_more_args) goto done; args[n++] = &a11;
-  if (&a12 == &no_more_args) goto done; args[n++] = &a12;
-  if (&a13 == &no_more_args) goto done; args[n++] = &a13;
-  if (&a14 == &no_more_args) goto done; args[n++] = &a14;
-  if (&a15 == &no_more_args) goto done; args[n++] = &a15;
-done:
-
+bool RE2::FindAndConsumeN(StringPiece* input, const RE2& re,
+                          const Arg* const args[], int n) {
   int consumed;
   if (re.DoMatch(*input, UNANCHORED, &consumed, args, n)) {
     input->remove_prefix(consumed);
@@ -833,10 +695,10 @@ bool RE2::Match(const StringPiece& text,
 
 // Internal matcher - like Match() but takes Args not StringPieces.
 bool RE2::DoMatch(const StringPiece& text,
-                     Anchor anchor,
-                     int* consumed,
-                     const Arg* const* args,
-                     int n) const {
+                  Anchor anchor,
+                  int* consumed,
+                  const Arg* const* args,
+                  int n) const {
   if (!ok()) {
     if (options_.log_errors())
       LOG(ERROR) << "Invalid RE2: " << *error_;

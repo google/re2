@@ -10,7 +10,7 @@
 class Thread {
  public:
   Thread();
-  ~Thread();
+  virtual ~Thread();
   void Start();
   void Join();
   void SetJoinable(bool);

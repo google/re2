@@ -96,10 +96,10 @@
 // -----------------------------------------------------------------------
 // PRE-COMPILED REGULAR EXPRESSIONS
 //
-// RE makes it easy to use any string as a regular expression, without
+// RE2 makes it easy to use any string as a regular expression, without
 // requiring a separate compilation step.
 //
-// If speed is of the essence, you can create a pre-compiled "RE"
+// If speed is of the essence, you can create a pre-compiled "RE2"
 // object from the pattern and use it multiple times.  If you do so,
 // you can typically parse text faster than with sscanf.
 //
@@ -140,6 +140,28 @@
 //     RE2::FindAndConsume(&input, "(\\w+)", &word)
 //
 // -----------------------------------------------------------------------
+// USING VARIABLE NUMBER OF ARGUMENTS
+//
+// The above operations require you to know the number of arguments
+// when you write the code.  This is not always possible or easy (for
+// example, the regular expression may be calculated at run time).
+// You can use the "N" version of the operations when the number of
+// match arguments are determined at run time.
+//
+// Example:
+//   const RE2::Arg* args[10];
+//   int n;
+//   // ... populate args with pointers to RE2::Arg values ...
+//   // ... set n to the number of RE2::Arg objects ...
+//   bool match = RE2::FullMatchN(input, pattern, args, n);
+//
+// The last statement is equivalent to
+//
+//   bool match = RE2::FullMatch(input, pattern,
+//                               *args[0], *args[1], ..., *args[n - 1]);
+//
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
 // PARSING HEX/OCTAL/C-RADIX NUMBERS
 //
 // By default, if you pass a pointer to a numeric value, the
@@ -160,6 +182,7 @@
 #include <map>
 #include <string>
 #include "re2/stringpiece.h"
+#include "re2/variadic_function.h"
 
 namespace re2 {
 using std::string;
@@ -169,18 +192,12 @@ class Prog;
 class Regexp;
 
 // Interface for regular expression matching.  Also corresponds to a
-// pre-compiled regular expression.  An "RE" object is safe for
+// pre-compiled regular expression.  An "RE2" object is safe for
 // concurrent use by multiple threads.
 class RE2 {
  public:
   // We convert user-passed pointers into special Arg objects
   class Arg;
-
-  // Marks end of arg list.
-  // ONLY USE IN OPTIONAL ARG DEFAULTS.
-  // DO NOT PASS EXPLICITLY.
-  static Arg no_more_args;
-
   class Options;
 
   enum ErrorCode {
@@ -225,23 +242,23 @@ class RE2 {
   RE2(const StringPiece& pattern, const Options& option);
   ~RE2();
 
-  // Returns whether RE was created properly.
+  // Returns whether RE2 was created properly.
   bool ok() const { return error_code() == NoError; }
 
-  // The string specification for this RE.  E.g.
-  //   RE re("ab*c?d+");
+  // The string specification for this RE2.  E.g.
+  //   RE2 re("ab*c?d+");
   //   re.pattern();    // "ab*c?d+"
   const string& pattern() const { return pattern_; }
 
-  // If RE could not be created properly, returns an error string.
+  // If RE2 could not be created properly, returns an error string.
   // Else returns the empty string.
   const string& error() const { return *error_; }
 
-  // If RE could not be created properly, returns an error code.
+  // If RE2 could not be created properly, returns an error code.
   // Else returns RE2::NoError (== 0).
   ErrorCode error_code() const { return error_code_; }
 
-  // If RE could not be created properly, returns the offending
+  // If RE2 could not be created properly, returns the offending
   // portion of the regexp.
   const string& error_arg() const { return error_arg_; }
 
@@ -260,7 +277,7 @@ class RE2 {
   // supplied, copies matched sub-patterns into them.
   //
   // You can pass in a "const char*" or a "string" for "text".
-  // You can pass in a "const char*" or a "string" or a "RE" for "pattern".
+  // You can pass in a "const char*" or a "string" or a "RE2" for "pattern".
   //
   // The provided pointer arguments can be pointers to any scalar numeric
   // type, or one of:
@@ -284,86 +301,34 @@ class RE2 {
   // valid number):
   //    int number;
   //    RE2::FullMatch("abc", "[a-z]+(\\d+)?", &number);
-  static bool FullMatch(const StringPiece& text, const RE2& re,   // 3..16 args
-                        const Arg& ptr1 = no_more_args,
-                        const Arg& ptr2 = no_more_args,
-                        const Arg& ptr3 = no_more_args,
-                        const Arg& ptr4 = no_more_args,
-                        const Arg& ptr5 = no_more_args,
-                        const Arg& ptr6 = no_more_args,
-                        const Arg& ptr7 = no_more_args,
-                        const Arg& ptr8 = no_more_args,
-                        const Arg& ptr9 = no_more_args,
-                        const Arg& ptr10 = no_more_args,
-                        const Arg& ptr11 = no_more_args,
-                        const Arg& ptr12 = no_more_args,
-                        const Arg& ptr13 = no_more_args,
-                        const Arg& ptr14 = no_more_args,
-                        const Arg& ptr15 = no_more_args,
-                        const Arg& ptr16 = no_more_args);
+  static bool FullMatchN(const StringPiece& text, const RE2& re,
+                         const Arg* const args[], int argc);
+  static const VariadicFunction2<
+    bool, const StringPiece&, const RE2&, Arg, RE2::FullMatchN> FullMatch;
 
   // Exactly like FullMatch(), except that "pattern" is allowed to match
   // a substring of "text".
-  static bool PartialMatch(const StringPiece& text, const RE2& re, // 3..16 args
-                           const Arg& ptr1 = no_more_args,
-                           const Arg& ptr2 = no_more_args,
-                           const Arg& ptr3 = no_more_args,
-                           const Arg& ptr4 = no_more_args,
-                           const Arg& ptr5 = no_more_args,
-                           const Arg& ptr6 = no_more_args,
-                           const Arg& ptr7 = no_more_args,
-                           const Arg& ptr8 = no_more_args,
-                           const Arg& ptr9 = no_more_args,
-                           const Arg& ptr10 = no_more_args,
-                           const Arg& ptr11 = no_more_args,
-                           const Arg& ptr12 = no_more_args,
-                           const Arg& ptr13 = no_more_args,
-                           const Arg& ptr14 = no_more_args,
-                           const Arg& ptr15 = no_more_args,
-                           const Arg& ptr16 = no_more_args);
+  static bool PartialMatchN(const StringPiece& text, const RE2& re, // 3..16 args
+                            const Arg* const args[], int argc);
+  static const VariadicFunction2<
+    bool, const StringPiece&, const RE2&, Arg, RE2::PartialMatchN> PartialMatch;
 
   // Like FullMatch() and PartialMatch(), except that pattern has to
   // match a prefix of "text", and "input" is advanced past the matched
   // text.  Note: "input" is modified iff this routine returns true.
-  static bool Consume(StringPiece* input, const RE2& pattern, // 3..16 args
-                      const Arg& ptr1 = no_more_args,
-                      const Arg& ptr2 = no_more_args,
-                      const Arg& ptr3 = no_more_args,
-                      const Arg& ptr4 = no_more_args,
-                      const Arg& ptr5 = no_more_args,
-                      const Arg& ptr6 = no_more_args,
-                      const Arg& ptr7 = no_more_args,
-                      const Arg& ptr8 = no_more_args,
-                      const Arg& ptr9 = no_more_args,
-                      const Arg& ptr10 = no_more_args,
-                      const Arg& ptr11 = no_more_args,
-                      const Arg& ptr12 = no_more_args,
-                      const Arg& ptr13 = no_more_args,
-                      const Arg& ptr14 = no_more_args,
-                      const Arg& ptr15 = no_more_args,
-                      const Arg& ptr16 = no_more_args);
+  static bool ConsumeN(StringPiece* input, const RE2& pattern, // 3..16 args
+                       const Arg* const args[], int argc);
+  static const VariadicFunction2<
+    bool, StringPiece*, const RE2&, Arg, RE2::ConsumeN> Consume;
 
   // Like Consume(..), but does not anchor the match at the beginning of the
   // string.  That is, "pattern" need not start its match at the beginning of
   // "input".  For example, "FindAndConsume(s, "(\\w+)", &word)" finds the next
   // word in "s" and stores it in "word".
-  static bool FindAndConsume(StringPiece* input, const RE2& pattern,
-                             const Arg& ptr1 = no_more_args,
-                             const Arg& ptr2 = no_more_args,
-                             const Arg& ptr3 = no_more_args,
-                             const Arg& ptr4 = no_more_args,
-                             const Arg& ptr5 = no_more_args,
-                             const Arg& ptr6 = no_more_args,
-                             const Arg& ptr7 = no_more_args,
-                             const Arg& ptr8 = no_more_args,
-                             const Arg& ptr9 = no_more_args,
-                             const Arg& ptr10 = no_more_args,
-                             const Arg& ptr11 = no_more_args,
-                             const Arg& ptr12 = no_more_args,
-                             const Arg& ptr13 = no_more_args,
-                             const Arg& ptr14 = no_more_args,
-                             const Arg& ptr15 = no_more_args,
-                             const Arg& ptr16 = no_more_args);
+  static bool FindAndConsumeN(StringPiece* input, const RE2& pattern,
+                             const Arg* const args[], int argc);
+  static const VariadicFunction2<
+    bool, StringPiece*, const RE2&, Arg, RE2::FindAndConsumeN> FindAndConsume;
 
   // Replace the first match of "pattern" in "str" with "rewrite".
   // Within "rewrite", backslash-escaped digits (\1 to \9) can be
@@ -454,7 +419,7 @@ class RE2 {
   // Returns true if match found, false if not.
   // On a successful match, fills in match[] (up to nmatch entries)
   // with information about submatches.
-  // I.e. matching RE("(foo)|(bar)baz") on "barbazbla" will return true,
+  // I.e. matching RE2("(foo)|(bar)baz") on "barbazbla" will return true,
   // setting match[0] = "barbaz", match[1] = NULL, match[2] = "bar",
   // match[3] = NULL, ..., up to match[nmatch-1] = NULL.
   //

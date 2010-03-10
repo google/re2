@@ -282,7 +282,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
 // Functions for triggering during search.
 void PrefilterTree::RegexpsGivenStrings(
     const vector<int>& matched_atoms,
-    vector<int>* regexps) {
+    vector<int>* regexps) const {
   regexps->clear();
   if (!compiled_) {
     LOG(WARNING) << "Compile() not called";
@@ -309,7 +309,7 @@ void PrefilterTree::RegexpsGivenStrings(
 }
 
 void PrefilterTree::PropagateMatch(const vector<int>& atom_ids,
-                                   IntMap* regexps) {
+                                   IntMap* regexps) const {
   IntMap count(entries_.size());
   IntMap work(entries_.size());
   for (int i = 0; i < atom_ids.size(); i++)
