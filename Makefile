@@ -6,8 +6,8 @@ all: obj/libre2.a
 
 # to build against PCRE for testing or benchmarking,
 # uncomment the next two lines
-CCPCRE=-I/usr/local/include -DUSEPCRE
-LDPCRE=-L/usr/local/lib -lpcre
+# CCPCRE=-I/usr/local/include -DUSEPCRE
+# LDPCRE=-L/usr/local/lib -lpcre
 
 CC=g++
 CFLAGS=-c -Wall -Wno-sign-compare -O3 -g -I. $(CCPCRE)
@@ -136,6 +136,7 @@ install: obj/libre2.a
 	mkdir -p /usr/local/include/re2
 	install -m 444 re2/re2.h /usr/local/include/re2/re2.h
 	install -m 444 re2/stringpiece.h /usr/local/include/re2/stringpiece.h
+	install -m 444 re2/variadic_function.h /usr/local/include/re2/variadic_function.h
 	install -m 555 obj/libre2.a /usr/local/lib/libre2.a
 
 testinstall:
