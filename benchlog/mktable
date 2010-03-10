@@ -35,7 +35,7 @@ sub graph() {
 	my ($name) = @_;
 	
 	my $sys = "wreck";
-	my $base = sprintf("graph%d", ++$ngraph);
+	my $base = sprintf("regexp3g%d", ++$ngraph);
 
 	open(JGR, ">$base.jgr") || die "open >$base.jgr: $!";
 	printf JGR "bbox -20 -12 392 95\n";
