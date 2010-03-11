@@ -142,7 +142,7 @@ install: obj/libre2.a
 testinstall:
 	@mkdir -p obj
 	cp testinstall.cc obj
-	(cd obj && g++ -I/usr/local/include testinstall.cc -lre2 -o testinstall)
+	(cd obj && g++ -I/usr/local/include testinstall.cc -lre2 -lpthread -o testinstall)
 	obj/testinstall
 
 benchlog: obj/test/regexp_benchmark
