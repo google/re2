@@ -47,7 +47,7 @@ class PrefilterTree {
   // of regexps that should be searched.  The matched_atoms should
   // contain all the ids of string atoms that were found to match the
   // content. The caller can use any string match engine to perform
-  // this function.  This function is thread safe.
+  // this function. This function is thread safe.
   void RegexpsGivenStrings(const vector<int>& matched_atoms,
                            vector<int>* regexps) const;
 
