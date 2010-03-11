@@ -186,7 +186,7 @@ TEST(FilteredRE2Test, MatchEmptyPattern) {
   // We are using the regexps used in one of the atom tests
   // for this test. Adding the EXPECT here to make sure
   // the index we use for the test is for the correct test.
-  EXPECT_EQ("CheckEmptyPattern", t->testname);
+  EXPECT_EQ("CheckEmptyPattern", string(t->testname));
   int nregexp;
   for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
     if (t->regexps[nregexp] == NULL)
@@ -205,7 +205,7 @@ TEST(FilteredRE2Test, MatchTests) {
   AtomTest* t = &atom_tests[2];
   // We are using the regexps used in one of the atom tests
   // for this test.
-  EXPECT_EQ("SubstrAtomRemovesSuperStrInOr", t->testname);
+  EXPECT_EQ("SubstrAtomRemovesSuperStrInOr", string(t->testname));
   int nregexp;
   for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
     if (t->regexps[nregexp] == NULL)
