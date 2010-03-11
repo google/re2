@@ -161,7 +161,6 @@
 //                               *args[0], *args[1], ..., *args[n - 1]);
 //
 // -----------------------------------------------------------------------
-// -----------------------------------------------------------------------
 // PARSING HEX/OCTAL/C-RADIX NUMBERS
 //
 // By default, if you pass a pointer to a numeric value, the
@@ -304,14 +303,14 @@ class RE2 {
   static bool FullMatchN(const StringPiece& text, const RE2& re,
                          const Arg* const args[], int argc);
   static const VariadicFunction2<
-    bool, const StringPiece&, const RE2&, Arg, RE2::FullMatchN> FullMatch;
+      bool, const StringPiece&, const RE2&, Arg, RE2::FullMatchN> FullMatch;
 
   // Exactly like FullMatch(), except that "pattern" is allowed to match
   // a substring of "text".
   static bool PartialMatchN(const StringPiece& text, const RE2& re, // 3..16 args
                             const Arg* const args[], int argc);
   static const VariadicFunction2<
-    bool, const StringPiece&, const RE2&, Arg, RE2::PartialMatchN> PartialMatch;
+      bool, const StringPiece&, const RE2&, Arg, RE2::PartialMatchN> PartialMatch;
 
   // Like FullMatch() and PartialMatch(), except that pattern has to
   // match a prefix of "text", and "input" is advanced past the matched
@@ -319,7 +318,7 @@ class RE2 {
   static bool ConsumeN(StringPiece* input, const RE2& pattern, // 3..16 args
                        const Arg* const args[], int argc);
   static const VariadicFunction2<
-    bool, StringPiece*, const RE2&, Arg, RE2::ConsumeN> Consume;
+      bool, StringPiece*, const RE2&, Arg, RE2::ConsumeN> Consume;
 
   // Like Consume(..), but does not anchor the match at the beginning of the
   // string.  That is, "pattern" need not start its match at the beginning of
@@ -328,7 +327,7 @@ class RE2 {
   static bool FindAndConsumeN(StringPiece* input, const RE2& pattern,
                              const Arg* const args[], int argc);
   static const VariadicFunction2<
-    bool, StringPiece*, const RE2&, Arg, RE2::FindAndConsumeN> FindAndConsume;
+      bool, StringPiece*, const RE2&, Arg, RE2::FindAndConsumeN> FindAndConsume;
 
   // Replace the first match of "pattern" in "str" with "rewrite".
   // Within "rewrite", backslash-escaped digits (\1 to \9) can be
