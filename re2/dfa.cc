@@ -33,8 +33,7 @@ DEFINE_bool(re2_dfa_bail_when_slow, true,
 
 namespace re2 {
 
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-// BSD systems lack memrchr.
+#if !defined(__linux__)  /* only Linux seems to have memrchr */
 static void* memrchr(const void* s, int c, size_t n) {
   const unsigned char* p = (const unsigned char*)s;
   for (p += n; n > 0; n--)
