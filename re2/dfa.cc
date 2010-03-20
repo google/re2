@@ -56,7 +56,7 @@ class DFA {
  public:
   DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem);
   ~DFA();
-  bool ok() { return !init_failed_; }
+  bool ok() const { return !init_failed_; }
   Prog::MatchKind kind() { return kind_; }
 
   // Searches for the regular expression in text, which is considered
@@ -94,7 +94,7 @@ class DFA {
   // States, linked by the next_ pointers.  If in state s and reading
   // byte c, the next state should be s->next_[c].
   struct State {
-    inline bool IsMatch() { return flag_ & kFlagMatch; }
+    inline bool IsMatch() const { return flag_ & kFlagMatch; }
     Inst** inst_;       // Instruction pointers in the state.
     int ninst_;         // # of inst_ pointers.
     uint flag_;         // Empty string bitfield flags in effect on the way
@@ -392,9 +392,6 @@ class DFA::Workq : public SparseArray<Inst*> {
     last_was_mark_ = false;
     SparseArray<Inst*>::set_new(id, inst);
   }
-
-  void set_last_was_mark(bool b) { last_was_mark_ = b; }
-  bool last_was_mark() { return last_was_mark_; }
 
  private:
   int n_;                // size excluding marks
@@ -696,7 +693,7 @@ DFA::State* DFA::CachedState(Inst** inst, int ninst, uint flag) {
     mutex_.AssertHeld();
 
   // Look in the cache for a pre-existing state.
-  State state = { inst, ninst, flag };
+  State state = { inst, ninst, flag, NULL };
   StateSet::iterator it = state_cache_.find(&state);
   if (it != state_cache_.end()) {
     if (DebugDFA)

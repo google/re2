@@ -79,6 +79,7 @@ Backtracker::Backtracker(Prog* prog)
   : prog_(prog),
     anchored_(false),
     longest_(false),
+    endmatch_(false),
     submatch_(NULL),
     nsubmatch_(0),
     visited_(NULL),
@@ -120,8 +121,7 @@ bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
 
   // Allocate new visited_ bitmap -- size is proportional
   // to text, so have to reallocate on each call to Search.
-  if (visited_)
-    delete[] visited_;
+  delete[] visited_;
   nvisited_ = (prog_->size()*(text.size()+1) + 31)/32;
   visited_ = new uint32[nvisited_];
   memset(visited_, 0, nvisited_*sizeof visited_[0]);

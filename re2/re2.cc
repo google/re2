@@ -207,12 +207,9 @@ RE2::~RE2() {
     suffix_regexp_->Decref();
   if (entire_regexp_)
     entire_regexp_->Decref();
-  if (mutex_)
-    delete mutex_;
-  if (prog_)
-    delete prog_;
-  if (rprog_)
-    delete rprog_;
+  delete mutex_;
+  delete prog_;
+  delete rprog_;
   if (error_ != &empty_string)
     delete error_;
   if (named_groups_ != NULL && named_groups_ != &empty_map)

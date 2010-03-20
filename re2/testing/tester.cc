@@ -265,14 +265,10 @@ TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
 TestInstance::~TestInstance() {
   if (regexp_)
     regexp_->Decref();
-  if (prog_)
-    delete prog_;
-  if (rprog_)
-    delete rprog_;
-  if (re_)
-    delete re_;
-  if (re2_)
-    delete re2_;
+  delete prog_;
+  delete rprog_;
+  delete re_;
+  delete re2_;
 }
 
 // Runs a single search using the named engine type.

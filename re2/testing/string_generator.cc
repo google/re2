@@ -27,8 +27,7 @@ StringGenerator::StringGenerator(int maxlen, const vector<string>& alphabet)
 }
 
 StringGenerator::~StringGenerator() {
-  if (acm_)
-    delete acm_;
+  delete acm_;
 }
 
 // Resets the string generator state to the beginning.

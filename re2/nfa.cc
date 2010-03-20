@@ -68,9 +68,9 @@ class NFA {
     int j;
 
     AddState()
-      : ip(NULL), j(-1) {}
+      : ip(NULL), cap_j(NULL), j(-1) {}
     explicit AddState(Inst* ip)
-      : ip(ip), j(-1) {}
+      : ip(ip), cap_j(NULL), j(-1) {}
     AddState(Inst* ip, const char* cap_j, int j)
       : ip(ip), cap_j(cap_j), j(j) {}
   };

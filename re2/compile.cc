@@ -205,8 +205,7 @@ Compiler::Compiler() {
 }
 
 Compiler::~Compiler() {
-  if (prog_)
-    delete prog_;
+  delete prog_;
 }
 
 bool Compiler::CanAllocInst() {

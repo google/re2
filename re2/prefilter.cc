@@ -159,7 +159,7 @@ static void SimplifyStringSet(set<string> *ss) {
 Prefilter* Prefilter::OrStrings(set<string>* ss) {
   SimplifyStringSet(ss);
   Prefilter* or_prefilter = NULL;
-  if (ss->size() != 0) {
+  if (!ss->empty()) {
     or_prefilter = new Prefilter(NONE);
     for (SSIter i = ss->begin(); i != ss->end(); ++i)
       or_prefilter = Or(or_prefilter, FromString(*i));
