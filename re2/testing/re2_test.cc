@@ -1032,7 +1032,6 @@ TEST(RE2, NoCrash) {
     string s;
     s.append(515, 'c');
     s.append("x");
-    LOG(INFO) << "Expect to see DFA out of memory print...";
     CHECK(RE2::PartialMatch(s, re));
   }
 }
@@ -1066,11 +1065,8 @@ TEST(RE2, DeepRecursion) {
   // segmentation violation due to stack overflow before pcre was
   // patched.
   // Again, a PCRE legacy test.  RE2 doesn't recurse.
-  rlimit rl;
-  rl.rlim_max = rl.rlim_cur = 1 * 1024 * 1024;
-  CHECK_EQ(0, setrlimit(RLIMIT_STACK, &rl));
   string comment("/*");
-  string a(16384, 'a');
+  string a(131072, 'a');
   comment += a;
   comment += "*/";
   RE2 re("((?:\\s|//.*\n|/[*](?:\n|.)*?[*]/)*)");
