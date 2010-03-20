@@ -10,7 +10,9 @@ all: obj/libre2.a
 # LDPCRE=-L/usr/local/lib -lpcre
 
 CC=g++
-CFLAGS=-c -Wall -Wno-sign-compare -O3 -g -I. $(CCPCRE)
+CXXFLAGS=-Wall -O3 -g  # can override
+RE2_CXXFLAGS=-Wno-sign-compare -c -I. $(CCPCRE)  # required
+LDFLAGS=
 AR=ar
 ARFLAGS=rsc
 NM=nm
@@ -20,6 +22,7 @@ HFILES=\
 	util/arena.h\
 	util/atomicops.h\
 	util/benchmark.h\
+	util/flags.h\
 	util/hash_map.h\
 	util/logging.h\
 	util/mutex.h\
@@ -42,6 +45,7 @@ HFILES=\
 	re2/testing/tester.h\
 	re2/unicode_casefold.h\
 	re2/unicode_groups.h\
+	re2/variadic_function.h\
 	re2/walker-inl.h\
 
 OFILES=\
@@ -104,11 +108,11 @@ TESTS=\
 
 obj/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ $(CFLAGS) $*.cc 2>&1 | sed 5q
+	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc 2>&1 | sed 5q
 
 obj/%.o: %.c $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ $(CFLAGS) $*.c 2>&1 | sed 5q
+	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.c 2>&1 | sed 5q
 
 obj/libre2.a: $(OFILES)
 	@mkdir -p obj
@@ -116,11 +120,11 @@ obj/libre2.a: $(OFILES)
 
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
-	$(CC) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a -lpthread $(LDPCRE)
+	$(CC) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a -lpthread $(LDFLAGS) $(LDPCRE)
 
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o
 	@mkdir -p obj/test
-	$(CC) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a -lpthread $(LDPCRE)
+	$(CC) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a -lpthread $(LDFLAGS) $(LDPCRE)
 
 clean:
 	rm -rf obj
