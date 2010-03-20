@@ -21,6 +21,12 @@ inline void MemoryBarrier() {
   __asm__ __volatile__("mfence" : : : "memory");
 }
 
+#elif defined(__ppc__)
+
+inline void MemoryBarrier() {
+  __asm__ __volatile__("eieio" : : : "memory");
+}
+
 #else
 
 #error Need MemoryBarrier for architecture.
