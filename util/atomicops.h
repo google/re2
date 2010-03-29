@@ -7,7 +7,7 @@
 
 #if defined(__i386__) 
 
-inline void MemoryBarrier() {
+static inline void MemoryBarrier() {
   int x;
   __asm__ __volatile__("xchgl (%0),%0"  // The lock prefix is implicit for xchg.
                        :: "r" (&x));
@@ -17,18 +17,34 @@ inline void MemoryBarrier() {
 
 // 64-bit implementations of memory barrier can be simpler, because it
 // "mfence" is guaranteed to exist.
-inline void MemoryBarrier() {
+static inline void MemoryBarrier() {
   __asm__ __volatile__("mfence" : : : "memory");
 }
 
 #elif defined(__ppc__)
 
-inline void MemoryBarrier() {
+static inline void MemoryBarrier() {
   __asm__ __volatile__("eieio" : : : "memory");
 }
 
 #else
 
+#include "util/mutex.h"
+
+static inline void MemoryBarrier() {
+  // Slight overkill, but good enough:
+  // any mutex implementation must have
+  // a read barrier after the lock operation and
+  // a write barrier before the unlock operation.
+  //
+  // It may be worthwhile to write architecture-specific
+  // barriers for the common platforms, as above, but
+  // this is a correct fallback.
+  re2::Mutex mu;
+  re2::MutexLock l(&mu);
+}
+
+/*
 #error Need MemoryBarrier for architecture.
 
 // Windows
@@ -36,6 +52,7 @@ inline void MemoryBarrier() {
   LONG x;
   ::InterlockedExchange(&x, 0);
 }
+*/
 
 #endif
 

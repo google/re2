@@ -108,11 +108,11 @@ TESTS=\
 
 obj/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc 2>&1 | sed 5q
+	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc
 
 obj/%.o: %.c $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.c 2>&1 | sed 5q
+	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.c
 
 obj/libre2.a: $(OFILES)
 	@mkdir -p obj
