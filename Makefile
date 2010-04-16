@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-all: obj/libre2.a
+all: obj/libre2.a obj/so/libre2.so
 
 # to build against PCRE for testing or benchmarking,
 # uncomment the next two lines
@@ -17,6 +17,12 @@ AR=ar
 ARFLAGS=rsc
 NM=nm
 NMFLAGS=-p
+
+ifeq ($(shell uname),Darwin)
+MAKE_SHARED_LIBRARY=g++ -dynamiclib
+else
+MAKE_SHARED_LIBRARY=g++ -shared -Wl,-soname,libre2.so.0
+endif
 
 HFILES=\
 	util/arena.h\
@@ -106,21 +112,42 @@ TESTS=\
 	obj/test/exhaustive_test\
 	obj/test/random_test\
 
+SOFILES=$(patsubst obj/%,obj/so/%,$(OFILES))
+STESTOFILES=$(patsubst obj/%,obj/so/%,$(TESTOFILES))
+STESTS=$(patsubst obj/%,obj/so/%,$(TESTS))
+
 obj/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
 	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc
+
+obj/so/%.o: %.cc $(HFILES)
+	@mkdir -p $$(dirname $@)
+	$(CC) -o $@ -fPIC $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc
 
 obj/%.o: %.c $(HFILES)
 	@mkdir -p $$(dirname $@)
 	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.c
 
+obj/so/%.o: %.c $(HFILES)
+	@mkdir -p $$(dirname $@)
+	$(CC) -o $@ -fPIC $(CXXFLAGS) $(RE2_CXXFLAGS) $*.c
+
 obj/libre2.a: $(OFILES)
 	@mkdir -p obj
 	$(AR) $(ARFLAGS) obj/libre2.a $(OFILES)
 
+obj/so/libre2.so: $(SOFILES)
+	@mkdir -p obj
+	$(MAKE_SHARED_LIBRARY) -o $@.0 $(SOFILES)
+	ln -s libre2.so.0 $@
+
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
 	$(CC) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a -lpthread $(LDFLAGS) $(LDPCRE)
+
+obj/so/test/%: obj/so/libre2.so obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
+	@mkdir -p obj/so/test
+	$(CC) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -l re2 obj/so/libre2.so.0 -lpthread $(LDFLAGS) $(LDPCRE)
 
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o
 	@mkdir -p obj/test
@@ -131,22 +158,30 @@ clean:
 
 testofiles: $(TESTOFILES)
 
-test: $(TESTS)
+test: static-test shared-test
+
+static-test: $(TESTS)
 	@./runtests $(TESTS)
+
+shared-test: $(STESTS)
+	@LD_LIBRARY_PATH=obj/so:$(LD_LIBRARY_PATH) ./runtests $(STESTS)
 
 benchmark: obj/test/regexp_benchmark
 
-install: obj/libre2.a
+install: obj/libre2.a obj/so/libre2.so.0
 	mkdir -p /usr/local/include/re2
 	install -m 444 re2/re2.h /usr/local/include/re2/re2.h
 	install -m 444 re2/stringpiece.h /usr/local/include/re2/stringpiece.h
 	install -m 444 re2/variadic_function.h /usr/local/include/re2/variadic_function.h
-	install -m 555 obj/libre2.a /usr/local/lib/libre2.a
+	install -m 444 obj/libre2.a /usr/local/lib/libre2.a
+	install -m 444 obj/so/libre2.so /usr/local/lib/libre2.so.0.0.0
+	ln -s libre2.so.0.0.0 /usr/local/lib/libre2.so.0
+	ln -s libre2.so.0.0.0 /usr/local/lib/libre2.so
 
 testinstall:
 	@mkdir -p obj
 	cp testinstall.cc obj
-	(cd obj && g++ -I/usr/local/include testinstall.cc -lre2 -lpthread -o testinstall)
+	(cd obj && g++ -I/usr/local/include -L/usr/local/lib testinstall.cc -lre2 -lpthread -o testinstall)
 	obj/testinstall
 
 benchlog: obj/test/regexp_benchmark
