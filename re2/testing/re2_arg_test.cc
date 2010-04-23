@@ -14,14 +14,7 @@ namespace re2 {
 
 struct SuccessTable {
   const char * value_string;
-  union {
-    int64 value_int64;
-    uint64 value_uint64;
-    int value_int;
-    uint32 value_uint32;
-    int16 value_int16;
-    uint16 value_uint16;
-  };
+  int64 value;
   bool success[6];
 };
 
@@ -34,61 +27,60 @@ struct SuccessTable {
 const SuccessTable kSuccessTable[] = {
 // string       integer value     short  ushort int    uint   int64  uint64
 // 0 to 2^7-1
-{ "0",          {0},            { true,  true,  true,  true,  true,  true  }},
-{ "127",        {127},          { true,  true,  true,  true,  true,  true  }},
+{ "0",          0,              { true,  true,  true,  true,  true,  true  }},
+{ "127",        127,            { true,  true,  true,  true,  true,  true  }},
 
 // -1 to -2^7
-{ "-1",         {-1},           { true,  false, true,  false, true,  false }},
-{ "-128",       {-128},         { true,  false, true,  false, true,  false }},
+{ "-1",         -1,             { true,  false, true,  false, true,  false }},
+{ "-128",       -128,           { true,  false, true,  false, true,  false }},
 
 // 2^7 to 2^8-1
-{ "128",        {128},          { true,  true,  true,  true,  true,  true, }},
-{ "255",        {255},          { true,  true,  true,  true,  true,  true, }},
+{ "128",        128,            { true,  true,  true,  true,  true,  true  }},
+{ "255",        255,            { true,  true,  true,  true,  true,  true  }},
 
 // 2^8 to 2^15-1
-{ "256",        {256},          { true , true,  true,  true,  true,  true  }},
-{ "32767",      {32767},        { true , true,  true,  true,  true,  true  }},
+{ "256",        256,            { true,  true,  true,  true,  true,  true  }},
+{ "32767",      32767,          { true,  true,  true,  true,  true,  true  }},
 
 // -2^7-1 to -2^15
-{ "-129",       {-129},         { true,  false, true,  false, true,  false }},
-{ "-32768",     {-32768},       { true,  false, true,  false, true,  false }},
+{ "-129",       -129,           { true,  false, true,  false, true,  false }},
+{ "-32768",     -32768,         { true,  false, true,  false, true,  false }},
 
 // 2^15 to 2^16-1
-{ "32768",      {32768},        { false, true,  true,  true,  true,  true  }},
-{ "65535",      {65535},        { false, true,  true,  true,  true,  true  }},
+{ "32768",      32768,          { false, true,  true,  true,  true,  true  }},
+{ "65535",      65535,          { false, true,  true,  true,  true,  true  }},
 
 // 2^16 to 2^31-1
-{ "65536",      {65536},        { false, false, true,  true,  true,  true  }},
-{ "2147483647", {2147483647},   { false, false, true,  true,  true,  true  }},
+{ "65536",      65536,          { false, false, true,  true,  true,  true  }},
+{ "2147483647", 2147483647,     { false, false, true,  true,  true,  true  }},
 
 // -2^15-1 to -2^31
-{ "-32769",     {-32769},       { false, false, true,  false, true,  false }},
+{ "-32769",     -32769,         { false, false, true,  false, true,  false }},
 { "-2147483648",
-  {0xFFFFFFFF80000000LL},       { false, false, true,  false, true,  false }},
+  0xFFFFFFFF80000000LL,         { false, false, true,  false, true,  false }},
 
 // 2^31 to 2^32-1
-{ "2147483648", {2147483648U},  { false, false, false, true,  true,  true  }},
-{ "4294967295", {4294967295U},  { false, false, false, true,  true,  true  }},
+{ "2147483648", 2147483648U,    { false, false, false, true,  true,  true  }},
+{ "4294967295", 4294967295U,    { false, false, false, true,  true,  true  }},
 
 // 2^32 to 2^63-1
-{ "4294967296", {4294967296LL}, { false, false, false, false, true,  true  }},
+{ "4294967296", 4294967296LL,   { false, false, false, false, true,  true  }},
 { "9223372036854775807",
-  {9223372036854775807LL},      { false, false, false, false, true,  true  }},
+  9223372036854775807LL,        { false, false, false, false, true,  true  }},
 
 // -2^31-1 to -2^63
-{ "-2147483649",{-2147483649LL},{ false, false, false, false, true,  false }},
+{ "-2147483649", -2147483649LL, { false, false, false, false, true,  false }},
 { "-9223372036854775808",
-  {0x8000000000000000LL},       { false, false, false, false, true,  false }},
+  0x8000000000000000LL,         { false, false, false, false, true,  false }},
 
 // 2^63 to 2^64-1
 { "9223372036854775808",
-  {9223372036854775808ULL},      { false, false, false, false, false, true  }},
+  9223372036854775808ULL,       { false, false, false, false, false, true  }},
 { "18446744073709551615",
-  {18446744073709551615ULL},    { false, false, false, false, false, true  }},
+  18446744073709551615ULL,      { false, false, false, false, false, true  }},
 
 // >= 2^64
-{ "18446744073709551616",
-  {0},                     { false, false, false, false, false, false }},
+{ "18446744073709551616", 0,    { false, false, false, false, false, false }},
 };
 
 const int kNumStrings = ARRAYSIZE(kSuccessTable);
@@ -108,7 +100,7 @@ const int kNumStrings = ARRAYSIZE(kSuccessTable);
       StringPrintf("Parsing '%s' for type " #type " should return %d",   \
                    p, success).c_str());                                 \
     if ( success ) {                                                     \
-      ASSERT_EQUALS(r, kSuccessTable[i].value_##type);                                    \
+      ASSERT_EQUALS(r, kSuccessTable[i].value);                          \
     }                                                                    \
   }                                                                      \
 }
