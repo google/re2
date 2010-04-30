@@ -1,0 +1,11 @@
+re2::Mutex::*
+re2::Prog::*
+re2::RE2::*
+re2::Regexp::*
+re2::StringPiece::*
+re2::VariadicFunction2::*
+# Linker doesn't like these unmangled:
+# operator==(re2::StringPiece const&, re2::StringPiece const&)
+__ZeqRKN3re211StringPieceES2_
+# operator<<(std::ostream&, re2::StringPiece const&)
+__ZlsRSoRKN3re211StringPieceE

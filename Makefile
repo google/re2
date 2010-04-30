@@ -23,9 +23,9 @@ NMFLAGS=-p
 # REBUILD_TABLES=1
 
 ifeq ($(shell uname),Darwin)
-MAKE_SHARED_LIBRARY=g++ -dynamiclib $(LDFLAGS)
+MAKE_SHARED_LIBRARY=g++ -dynamiclib $(LDFLAGS) -exported_symbols_list libre2.symbols.darwin
 else
-MAKE_SHARED_LIBRARY=g++ -shared -Wl,-soname,libre2.so.0 $(LDFLAGS)
+MAKE_SHARED_LIBRARY=g++ -shared -Wl,-soname,libre2.so.0,--version-script=libre2.symbols $(LDFLAGS)
 endif
 
 HFILES=\
@@ -143,15 +143,15 @@ obj/libre2.a: $(OFILES)
 obj/so/libre2.so: $(SOFILES)
 	@mkdir -p obj
 	$(MAKE_SHARED_LIBRARY) -o $@.0 $(SOFILES)
-	ln -s libre2.so.0 $@
+	ln -sf libre2.so.0 $@
 
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
 	$(CC) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
 
-obj/so/test/%: obj/so/libre2.so obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
+obj/so/test/%: obj/so/libre2.so obj/libre2.a obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
 	@mkdir -p obj/so/test
-	$(CC) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -Lobj/so -lre2 $(LDFLAGS) $(LDPCRE)
+	$(CC) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -Lobj/so -lre2 obj/libre2.a $(LDFLAGS) $(LDPCRE)
 
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o
 	@mkdir -p obj/test
@@ -191,8 +191,8 @@ install: obj/libre2.a obj/so/libre2.so.0
 	install -m 444 re2/variadic_function.h /usr/local/include/re2/variadic_function.h
 	install -m 444 obj/libre2.a /usr/local/lib/libre2.a
 	install -m 444 obj/so/libre2.so /usr/local/lib/libre2.so.0.0.0
-	ln -s libre2.so.0.0.0 /usr/local/lib/libre2.so.0
-	ln -s libre2.so.0.0.0 /usr/local/lib/libre2.so
+	ln -sf libre2.so.0.0.0 /usr/local/lib/libre2.so.0
+	ln -sf libre2.so.0.0.0 /usr/local/lib/libre2.so
 
 testinstall:
 	@mkdir -p obj
