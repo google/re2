@@ -10,9 +10,9 @@ all: obj/libre2.a obj/so/libre2.so
 # LDPCRE=-L/usr/local/lib -lpcre
 
 CC=g++
-CXXFLAGS=-Wall -O3 -g  # can override
+CXXFLAGS=-Wall -O3 -g -pthread  # can override
 RE2_CXXFLAGS=-Wno-sign-compare -c -I. $(CCPCRE)  # required
-LDFLAGS=
+LDFLAGS=-pthread
 AR=ar
 ARFLAGS=rsc
 NM=nm
@@ -23,9 +23,9 @@ NMFLAGS=-p
 # REBUILD_TABLES=1
 
 ifeq ($(shell uname),Darwin)
-MAKE_SHARED_LIBRARY=g++ -dynamiclib
+MAKE_SHARED_LIBRARY=g++ -dynamiclib $(LDFLAGS)
 else
-MAKE_SHARED_LIBRARY=g++ -shared -Wl,-soname,libre2.so.0
+MAKE_SHARED_LIBRARY=g++ -shared -Wl,-soname,libre2.so.0 $(LDFLAGS)
 endif
 
 HFILES=\
@@ -147,15 +147,15 @@ obj/so/libre2.so: $(SOFILES)
 
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
-	$(CC) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a -lpthread $(LDFLAGS) $(LDPCRE)
+	$(CC) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
 
 obj/so/test/%: obj/so/libre2.so obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
 	@mkdir -p obj/so/test
-	$(CC) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -l re2 obj/so/libre2.so.0 -lpthread $(LDFLAGS) $(LDPCRE)
+	$(CC) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -l re2 obj/so/libre2.so.0 $(LDFLAGS) $(LDPCRE)
 
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o
 	@mkdir -p obj/test
-	$(CC) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a -lpthread $(LDFLAGS) $(LDPCRE)
+	$(CC) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
 
 ifdef REBUILD_TABLES
 re2/perl_groups.cc: re2/make_perl_groups.pl
@@ -197,7 +197,7 @@ install: obj/libre2.a obj/so/libre2.so.0
 testinstall:
 	@mkdir -p obj
 	cp testinstall.cc obj
-	(cd obj && g++ -I/usr/local/include -L/usr/local/lib testinstall.cc -lre2 -lpthread -o testinstall)
+	(cd obj && g++ -I/usr/local/include -L/usr/local/lib testinstall.cc -lre2 -pthread -o testinstall)
 	obj/testinstall
 
 benchlog: obj/test/regexp_benchmark
