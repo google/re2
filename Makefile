@@ -151,7 +151,7 @@ obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 
 obj/so/test/%: obj/so/libre2.so obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
 	@mkdir -p obj/so/test
-	$(CC) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -l re2 obj/so/libre2.so.0 $(LDFLAGS) $(LDPCRE)
+	$(CC) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -Lobj/so -lre2 $(LDFLAGS) $(LDPCRE)
 
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o
 	@mkdir -p obj/test
