@@ -936,6 +936,7 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   }
 
   // If someone else already computed this, return it.
+  MaybeReadMemoryBarrier(); // On alpha we need to ensure read ordering
   if (state->next_[ByteMap(c)])
     return state->next_[ByteMap(c)];
 
@@ -994,12 +995,10 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   // Write barrier before updating state->next_ so that the
   // main search loop can proceed without any locking, for speed.
   // (Otherwise it would need one mutex operation per input byte.)
-  // On lax memory systems like the Alpha we might still need
-  // to insert a read barrier into the main search loop.
   // The annotations below tell race detectors that:
   //   a) the access to next_ should be ignored,
   //   b) 'ns' is properly published.
-  MemoryBarrier();  // Flush ns before linking to it.
+  WriteMemoryBarrier();  // Flush ns before linking to it.
   ANNOTATE_PUBLISH_MEMORY_RANGE(ns, sizeof(*ns));
 
   ANNOTATE_IGNORE_WRITES_BEGIN();
@@ -1325,6 +1324,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     // Okay to use bytemap[] not ByteMap() here, because
     // c is known to be an actual byte and not kByteEndText.
 
+    MaybeReadMemoryBarrier(); // On alpha we need to ensure read ordering
     State* ns = s->next_[bytemap[c]];
     if (ns == NULL) {
       ns = RunStateOnByteUnlocked(s, c);
@@ -1412,6 +1412,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       lastbyte = params->text.begin()[-1] & 0xFF;
   }
 
+  MaybeReadMemoryBarrier(); // On alpha we need to ensure read ordering
   State* ns = s->next_[ByteMap(lastbyte)];
   if (ns == NULL) {
     ns = RunStateOnByteUnlocked(s, lastbyte);

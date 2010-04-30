@@ -5,33 +5,39 @@
 #ifndef RE2_UTIL_ATOMICOPS_H__
 #define RE2_UTIL_ATOMICOPS_H__
 
-#if defined(__i386__) 
+#if defined(__i386__)
 
-static inline void MemoryBarrier() {
+static inline void WriteMemoryBarrier() {
   int x;
   __asm__ __volatile__("xchgl (%0),%0"  // The lock prefix is implicit for xchg.
                        :: "r" (&x));
 }
 
-#elif defined(__x86_64__) 
+#elif defined(__x86_64__)
 
-// 64-bit implementations of memory barrier can be simpler, because it
-// "mfence" is guaranteed to exist.
-static inline void MemoryBarrier() {
-  __asm__ __volatile__("mfence" : : : "memory");
+// 64-bit implementations of memory barrier can be simpler, because
+// "sfence" is guaranteed to exist.
+static inline void WriteMemoryBarrier() {
+  __asm__ __volatile__("sfence" : : : "memory");
 }
 
 #elif defined(__ppc__)
 
-static inline void MemoryBarrier() {
+static inline void WriteMemoryBarrier() {
   __asm__ __volatile__("eieio" : : : "memory");
+}
+
+#elif defined(__alpha__)
+
+static inline void WriteMemoryBarrier() {
+  __asm__ __volatile__("wmb" : : : "memory");
 }
 
 #else
 
 #include "util/mutex.h"
 
-static inline void MemoryBarrier() {
+static inline void WriteMemoryBarrier() {
   // Slight overkill, but good enough:
   // any mutex implementation must have
   // a read barrier after the lock operation and
@@ -45,15 +51,29 @@ static inline void MemoryBarrier() {
 }
 
 /*
-#error Need MemoryBarrier for architecture.
+#error Need WriteMemoryBarrier for architecture.
 
 // Windows
-inline void MemoryBarrier() {
+inline void WriteMemoryBarrier() {
   LONG x;
   ::InterlockedExchange(&x, 0);
 }
 */
 
 #endif
+
+// Alpha has very weak memory ordering. If relying on WriteBarriers, must one
+// use read barriers for the readers too.
+#if defined(__alpha__)
+
+static inline void MaybeReadMemoryBarrier() {
+  __asm__ __volatile__("rmb" : : : "memory");
+}
+
+#else
+
+static inline void MaybeReadMemoryBarrier() {}
+
+#endif // __alpha__
 
 #endif  // RE2_UTIL_ATOMICOPS_H__
