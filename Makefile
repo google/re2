@@ -39,6 +39,7 @@ HFILES=\
 	util/pcre.h\
 	util/random.h\
 	util/sparse_array.h\
+	util/sparse_set.h\
 	util/test.h\
 	util/utf.h\
 	util/util.h\
@@ -105,6 +106,7 @@ TESTS=\
 	obj/test/possible_match_test\
 	obj/test/re2_test\
 	obj/test/re2_arg_test\
+	obj/test/regexp_test\
 	obj/test/required_prefix_test\
 	obj/test/search_test\
 	obj/test/simplify_test\
@@ -120,34 +122,54 @@ SOFILES=$(patsubst obj/%,obj/so/%,$(OFILES))
 STESTOFILES=$(patsubst obj/%,obj/so/%,$(TESTOFILES))
 STESTS=$(patsubst obj/%,obj/so/%,$(TESTS))
 
+DOFILES=$(patsubst obj/%,obj/dbg/%,$(OFILES))
+DTESTOFILES=$(patsubst obj/%,obj/dbg/%,$(TESTOFILES))
+DTESTS=$(patsubst obj/%,obj/dbg/%,$(TESTS))
+
 obj/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc
+	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.cc
 
-obj/so/%.o: %.cc $(HFILES)
+obj/dbg/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
 	$(CC) -o $@ -fPIC $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc
 
+obj/so/%.o: %.cc $(HFILES)
+	@mkdir -p $$(dirname $@)
+	$(CC) -o $@ -fPIC $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.cc
+
 obj/%.o: %.c $(HFILES)
+	@mkdir -p $$(dirname $@)
+	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.c
+
+obj/dbg/%.o: %.c $(HFILES)
 	@mkdir -p $$(dirname $@)
 	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.c
 
 obj/so/%.o: %.c $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ -fPIC $(CXXFLAGS) $(RE2_CXXFLAGS) $*.c
+	$(CC) -o $@ -fPIC $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.c
 
 obj/libre2.a: $(OFILES)
 	@mkdir -p obj
 	$(AR) $(ARFLAGS) obj/libre2.a $(OFILES)
 
+obj/dbg/libre2.a: $(DOFILES)
+	@mkdir -p obj/dbg
+	$(AR) $(ARFLAGS) obj/dbg/libre2.a $(DOFILES)
+
 obj/so/libre2.so: $(SOFILES)
-	@mkdir -p obj
+	@mkdir -p obj/so
 	$(MAKE_SHARED_LIBRARY) -o $@.0 $(SOFILES)
 	ln -sf libre2.so.0 $@
 
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
 	$(CC) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
+
+obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/util/test.o
+	@mkdir -p obj/dbg/test
+	$(CC) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a $(LDFLAGS) $(LDPCRE)
 
 obj/so/test/%: obj/so/libre2.so obj/libre2.a obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
 	@mkdir -p obj/so/test
@@ -174,7 +196,10 @@ clean:
 
 testofiles: $(TESTOFILES)
 
-test: static-test shared-test
+test: debug-test static-test shared-test
+
+debug-test: $(DTESTS)
+	@./runtests $(DTESTS)
 
 static-test: $(TESTS)
 	@./runtests $(TESTS)
@@ -205,3 +230,11 @@ benchlog: obj/test/regexp_benchmark
 	  (uname -a; g++ --version; hg identify; file obj/test/regexp_benchmark) | sed 's/^/# /'; \
 	  echo; \
 	  ./obj/test/regexp_benchmark 'PCRE|RE2') | tee -a benchlog.$$(hostname | sed 's/\..*//')
+
+# Keep gmake from deleting intermediate files it creates.
+# This makes repeated builds faster and preserves debug info on OS X.
+
+.PRECIOUS: obj/%.o obj/dbg/%.o obj/so/%.o obj/libre2.a \
+	obj/dbg/libre2.a obj/so/libre2.a \
+	obj/test/% obj/so/test/% obj/dbg/test/%
+

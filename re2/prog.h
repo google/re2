@@ -47,14 +47,14 @@ class Bitmap {
 
 // Opcodes for Inst
 enum InstOp {
-  kInstAlt = 1,      // choose between out_ and out1_
+  kInstAlt = 0,      // choose between out_ and out1_
+  kInstAltMatch,     // Alt: out_ is [00-FF] and back, out1_ is match; or vice versa.
   kInstByteRange,    // next (possible case-folded) byte must be in [lo_, hi_]
   kInstCapture,      // capturing parenthesis number cap_
   kInstEmptyWidth,   // empty-width special (^ $ ...); bit(s) set in empty_
   kInstMatch,        // found a match!
   kInstNop,          // no-op; occasionally unavoidable
   kInstFail,         // never match; occasionally unavoidable
-  kInstAltMatch,     // Alt: out_ is [00-FF] and back, out1_ is match; or vice versa.
 };
 
 // Bit flags for empty-width specials
@@ -68,78 +68,7 @@ enum EmptyOp {
   kEmptyAllFlags         = (1<<6)-1,
 };
 
-struct Frag;
-class Prog;
 class Regexp;
-
-// Single instruction in regexp program.
-class Inst {
- public:
-  Inst(int id) : id_(id), opcode_(static_cast<InstOp>(0)), out_(NULL) { }
-
-  // Constructors per opcode
-  void InitAlt(Inst* out, Inst* out1);
-  void InitByteRange(int lo, int hi, int foldcase, Inst* out);
-  void InitCapture(int cap, Inst* out);
-  void InitEmptyWidth(EmptyOp empty, Inst* out);
-  void InitMatch();
-  void InitNop(Inst* out);
-  void InitFail();
-
-  // Getters
-  int id()        { return (this == NULL) ? -1 : id_; }
-  int id_unchecked() { return id_; }
-  InstOp opcode() { return opcode_; }
-  Inst* out()     { return out_; }
-  Inst* out1()    { DCHECK(opcode_ == kInstAlt || opcode_ == kInstAltMatch); return out1_; }
-  int cap()       { DCHECK_EQ(opcode_, kInstCapture); return cap_; }
-  int lo()        { DCHECK_EQ(opcode_, kInstByteRange); return lo_; }
-  int hi()        { DCHECK_EQ(opcode_, kInstByteRange); return hi_; }
-  int foldcase()  { DCHECK_EQ(opcode_, kInstByteRange); return foldcase_; }
-  EmptyOp empty() { DCHECK_EQ(opcode_, kInstEmptyWidth); return empty_; }
-  bool greedy()   { DCHECK_EQ(opcode_, kInstAltMatch); return out_->opcode() == kInstByteRange; }
-
-  // Does this inst (an kInstByteRange) match c?
-  inline bool Matches(int c) {
-    DCHECK_EQ(opcode_, kInstByteRange);
-    if (foldcase_ && 'A' <= c && c <= 'Z')
-      c += 'a' - 'A';
-    return lo_ <= c && c <= hi_;
-  }
-
-  // Returns string representation for debugging.
-  string Dump();
-
- private:
-  int id_;          // sequence number in Prog
-  InstOp opcode_;   // type of instruction
-  Inst* out_;       // next instruction to run
-  union {           // additional instruction arguments:
-    Inst* out1_;       // opcode == kInstAlt
-                       //   alternate next instruction
-
-    int cap_;          // opcode == kInstCapture
-                       //   Index of capture register (holds text
-                       //   position recorded by capturing parentheses).
-                       //   For \n (the submatch for the nth parentheses),
-                       //   the left parenthesis captures into register 2*n
-                       //   and the right one captures into register 2*n+1.
-
-    struct {           // opcode == kInstByteRange
-      int16 lo_;       //   byte range is lo_-hi_ inclusive
-      int16 hi_;       //
-      bool foldcase_;  //   convert A-Z to a-z before checking range.
-    };
-
-    EmptyOp empty_;    // opcode == kInstEmptyWidth
-                       //   empty_ is bitwise OR of kEmpty* flags above.
-  };
-
-  friend class Compiler;
-  friend class Prog;
-
-  DISALLOW_EVIL_CONSTRUCTORS(Inst);
-};
 
 class DFA;
 class OneState;
@@ -149,6 +78,92 @@ class Prog {
  public:
   Prog();
   ~Prog();
+
+  // Single instruction in regexp program.
+  class Inst {
+   public:
+    Inst() : out_opcode_(0), out1_(0) { }
+  
+    // Constructors per opcode
+    void InitAlt(uint32 out, uint32 out1);
+    void InitByteRange(int lo, int hi, int foldcase, uint32 out);
+    void InitCapture(int cap, uint32 out);
+    void InitEmptyWidth(EmptyOp empty, uint32 out);
+    void InitMatch();
+    void InitNop(uint32 out);
+    void InitFail();
+  
+    // Getters
+    int id(Prog* p) { return this - p->inst_; }
+    InstOp opcode() { return static_cast<InstOp>(out_opcode_&7); }
+    int out()     { return out_opcode_>>3; }
+    int out1()    { DCHECK(opcode() == kInstAlt || opcode() == kInstAltMatch); return out1_; }
+    int cap()       { DCHECK_EQ(opcode(), kInstCapture); return cap_; }
+    int lo()        { DCHECK_EQ(opcode(), kInstByteRange); return lo_; }
+    int hi()        { DCHECK_EQ(opcode(), kInstByteRange); return hi_; }
+    int foldcase()  { DCHECK_EQ(opcode(), kInstByteRange); return foldcase_; }
+    EmptyOp empty() { DCHECK_EQ(opcode(), kInstEmptyWidth); return empty_; }
+    bool greedy(Prog *p) {
+      DCHECK_EQ(opcode(), kInstAltMatch);
+      return p->inst(out())->opcode() == kInstByteRange;
+    }
+  
+    // Does this inst (an kInstByteRange) match c?
+    inline bool Matches(int c) {
+      DCHECK_EQ(opcode(), kInstByteRange);
+      if (foldcase_ && 'A' <= c && c <= 'Z')
+        c += 'a' - 'A';
+      return lo_ <= c && c <= hi_;
+    }
+  
+    // Returns string representation for debugging.
+    string Dump();
+  
+    // Maximum instruction id.
+    // (Must fit in out_opcode_, and PatchList steals another bit.)
+    static const int kMaxInst = (1<<28) - 1;
+  
+   private:
+    void set_opcode(InstOp opcode) {
+      out_opcode_ = (out()<<3) | opcode;
+    }
+  
+    void set_out(int out) {
+      out_opcode_ = (out<<3) | opcode();
+    }
+    
+    void set_out_opcode(int out, InstOp opcode) {
+      out_opcode_ = (out<<3) | opcode;
+    }
+    
+    uint32 out_opcode_;  // 29 bits of out, 3 (low) bits opcode
+    union {              // additional instruction arguments:
+      uint32 out1_;      // opcode == kInstAlt
+                         //   alternate next instruction
+  
+      int32 cap_;        // opcode == kInstCapture
+                         //   Index of capture register (holds text
+                         //   position recorded by capturing parentheses).
+                         //   For \n (the submatch for the nth parentheses),
+                         //   the left parenthesis captures into register 2*n
+                         //   and the right one captures into register 2*n+1.
+  
+      struct {           // opcode == kInstByteRange
+        uint8 lo_;       //   byte range is lo_-hi_ inclusive
+        uint8 hi_;       //
+        uint8 foldcase_; //   convert A-Z to a-z before checking range.
+      };
+  
+      EmptyOp empty_;    // opcode == kInstEmptyWidth
+                         //   empty_ is bitwise OR of kEmpty* flags above.
+    };
+  
+    friend class Compiler;
+    friend class PatchList;
+    friend class Prog;
+  
+    DISALLOW_EVIL_CONSTRUCTORS(Inst);
+  };
 
   // Whether to anchor the search.
   enum Anchor {
@@ -174,10 +189,11 @@ class Prog {
     kFullMatch       // match only entire text; implies anchor==kAnchored
   };
 
-  Inst* start() { return start_; }
-  Inst* start_unanchored() { return start_unanchored_; }
-  void set_start(Inst *start) { start_ = start; }
-  void set_start_unanchored(Inst *start) { start_unanchored_ = start; }
+  Inst *inst(int id) { return &inst_[id]; }
+  int start() { return start_; }
+  int start_unanchored() { return start_unanchored_; }
+  void set_start(int start) { start_ = start; }
+  void set_start_unanchored(int start) { start_unanchored_ = start; }
   int64 size() { return size_; }
   bool reversed() { return reversed_; }
   void set_reversed(bool reversed) { reversed_ = reversed; }
@@ -197,9 +213,6 @@ class Prog {
   // Returns string representation of program for debugging.
   string Dump();
   string DumpUnanchored();
-
-  // Allocates and returns a new instruction.
-  Inst* AllocInst();
 
   // Record that at some point in the prog, the bytes in the range
   // lo-hi (inclusive) are treated as different from bytes outside the range.
@@ -311,15 +324,21 @@ class Prog {
   friend class Compiler;
 
   DFA* GetDFA(MatchKind kind);
-
+  
   bool anchor_start_;       // regexp has explicit start anchor
   bool anchor_end_;         // regexp has explicit end anchor
-  Inst* start_;             // entry point for program
-  Inst* start_unanchored_;  // unanchored entry point for program
-  int64 size_;              // number of instructions
-  int64 byte_inst_count_;   // number of kInstByteRange instructions
-  UnsafeArena arena_;       // allocation arena for Inst structures
   bool reversed_;           // whether program runs backward over input
+  bool did_onepass_;        // has IsOnePass been called?
+
+  int start_;               // entry point for program
+  int start_unanchored_;    // unanchored entry point for program
+  int size_;                // number of instructions
+  int byte_inst_count_;     // number of kInstByteRange instructions
+  int bytemap_range_;       // bytemap_[x] < bytemap_range_
+  int flags_;               // regexp parse flags
+  int onepass_statesize_;   // byte size of each OneState* node
+
+  Inst* inst_;              // pointer to instruction array
 
   Mutex dfa_mutex_;    // Protects dfa_first_, dfa_longest_
   DFA* dfa_first_;     // DFA cached for kFirstMatch
@@ -330,13 +349,9 @@ class Prog {
   Bitmap<256> byterange_;    // byterange.Get(x) true if x ends a
                              // commonly-treated byte range.
   uint8 bytemap_[256];       // map from input bytes to byte classes
-  uint8 unbytemap_[256];     // bytemap_[unbytemap_[x]] == x
-  int bytemap_range_;        // bytemap_[x] < bytemap_range_
-  int flags_;                // regexp parse flags
+  uint8 *unbytemap_;         // bytemap_[unbytemap_[x]] == x
 
-  bool did_onepass_;         // has IsOnePass been called?
   uint8* onepass_nodes_;     // data for OnePass nodes
-  int onepass_statesize_;    // byte size of each node
   OneState* onepass_start_;  // start node for OnePass program
 
   DISALLOW_EVIL_CONSTRUCTORS(Prog);

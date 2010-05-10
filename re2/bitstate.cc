@@ -23,9 +23,9 @@
 namespace re2 {
 
 struct Job {
-  Inst* ip;
-  const char* p;
+  int id;
   int arg;
+  const char* p;
 };
 
 class BitState {
@@ -40,10 +40,10 @@ class BitState {
               StringPiece* submatch, int nsubmatch);
 
  private:
-  inline bool ShouldVisit(Inst* ip, const char* p);
-  void Push(Inst* ip, const char* p, int arg);
+  inline bool ShouldVisit(int id, const char* p);
+  void Push(int id, const char* p, int arg);
   bool GrowStack();
-  bool TrySearch(Inst* ip, const char* p);
+  bool TrySearch(int id, const char* p);
 
   // Search parameters
   Prog* prog_;              // program being run
@@ -93,8 +93,8 @@ BitState::~BitState() {
 // Should the search visit the pair ip, p?
 // If so, remember that it was visited so that the next time,
 // we don't repeat the visit.
-bool BitState::ShouldVisit(Inst* ip, const char* p) {
-  uint n = ip->id_unchecked() * (text_.size() + 1) + (p - text_.begin());
+bool BitState::ShouldVisit(int id, const char* p) {
+  uint n = id * (text_.size() + 1) + (p - text_.begin());
   if (visited_[n/VisitedBits] & (1 << (n & (VisitedBits-1))))
     return false;
   visited_[n/VisitedBits] |= 1 << (n & (VisitedBits-1));
@@ -116,38 +116,38 @@ bool BitState::GrowStack() {
   return true;
 }
 
-// Push the triple (ip, p, arg) onto the stack, growing it if necessary.
-void BitState::Push(Inst* ip, const char* p, int arg) {
+// Push the triple (id, p, arg) onto the stack, growing it if necessary.
+void BitState::Push(int id, const char* p, int arg) {
   if (njob_ >= maxjob_) {
     if (!GrowStack())
       return;
   }
-  int op = ip->opcode();
+  int op = prog_->inst(id)->opcode();
   if (op == kInstFail)
     return;
 
   // Only check ShouldVisit when arg == 0.
   // When arg > 0, we are continuing a previous visit.
-  if (arg == 0 && !ShouldVisit(ip, p))
+  if (arg == 0 && !ShouldVisit(id, p))
     return;
 
   Job* j = &job_[njob_++];
-  j->ip = ip;
+  j->id = id;
   j->p = p;
   j->arg = arg;
 }
 
-// Try a search from instruction ip0 in state p0.
+// Try a search from instruction id0 in state p0.
 // Return whether it succeeded.
-bool BitState::TrySearch(Inst* ip0, const char* p0) {
+bool BitState::TrySearch(int id0, const char* p0) {
   bool matched = false;
   const char* end = text_.end();
   njob_ = 0;
-  Push(ip0, p0, 0);
+  Push(id0, p0, 0);
   while (njob_ > 0) {
     // Pop job off stack.
     --njob_;
-    Inst* ip = job_[njob_].ip;
+    int id = job_[njob_].id;
     const char* p = job_[njob_].p;
     int arg = job_[njob_].arg;
 
@@ -160,13 +160,14 @@ bool BitState::TrySearch(Inst* ip0, const char* p0) {
     // manipulation.
     if (0) {
     CheckAndLoop:
-      if (!ShouldVisit(ip, p))
+      if (!ShouldVisit(id, p))
         continue;
     }
 
     // Visit ip, p.
     // VLOG(0) << "Job: " << ip->id() << " "
     //         << (p - text_.begin()) << " " << arg;
+    Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       case kInstFail:
       default:
@@ -183,14 +184,14 @@ bool BitState::TrySearch(Inst* ip0, const char* p0) {
         // ip with arg==1 as a reminder to push ip->out1() later.
         switch (arg) {
           case 0:
-            Push(ip, p, 1);  // come back when we're done
-            ip = ip->out();
+            Push(id, p, 1);  // come back when we're done
+            id = ip->out();
             goto CheckAndLoop;
 
           case 1:
             // Finished ip->out(); try ip->out1().
             arg = 0;
-            ip = ip->out1();
+            id = ip->out1();
             goto CheckAndLoop;
         }
         LOG(DFATAL) << "Bad arg in kInstCapture: " << arg;
@@ -198,16 +199,16 @@ bool BitState::TrySearch(Inst* ip0, const char* p0) {
 
       case kInstAltMatch:
         // One opcode is byte range; the other leads to match.
-        if (ip->greedy()) {
+        if (ip->greedy(prog_)) {
           // out1 is the match
           Push(ip->out1(), p, 0);
-          ip = ip->out1();
+          id = ip->out1();
           p = end;
           goto CheckAndLoop;
         }
         // out is the match - non-greedy
         Push(ip->out(), end, 0);
-        ip = ip->out();
+        id = ip->out();
         goto CheckAndLoop;
 
       case kInstByteRange: {
@@ -215,7 +216,7 @@ bool BitState::TrySearch(Inst* ip0, const char* p0) {
         if (p < end)
           c = *p & 0xFF;
         if (ip->Matches(c)) {
-          ip = ip->out();
+          id = ip->out();
           p++;
           goto CheckAndLoop;
         }
@@ -227,11 +228,11 @@ bool BitState::TrySearch(Inst* ip0, const char* p0) {
           case 0:
             if (0 <= ip->cap() && ip->cap() < ncap_) {
               // Capture p to register, but save old value.
-              Push(ip, cap_[ip->cap()], 1);  // come back when we're done
+              Push(id, cap_[ip->cap()], 1);  // come back when we're done
               cap_[ip->cap()] = p;
             }
             // Continue on.
-            ip = ip->out();
+            id = ip->out();
             goto CheckAndLoop;
           case 1:
             // Finished ip->out(); restore the old value.
@@ -244,11 +245,11 @@ bool BitState::TrySearch(Inst* ip0, const char* p0) {
       case kInstEmptyWidth:
         if (ip->empty() & ~Prog::EmptyFlags(context_, p))
           continue;
-        ip = ip->out();
+        id = ip->out();
         goto CheckAndLoop;
 
       case kInstNop:
-        ip = ip->out();
+        id = ip->out();
         goto CheckAndLoop;
 
       case kInstMatch: {

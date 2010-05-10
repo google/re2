@@ -57,7 +57,7 @@ class Backtracker {
  private:
   // Explores from instruction ip at string position p looking for a match.
   // Returns true if found (so that caller can stop trying other possibilities).
-  bool Visit(Inst* ip, const char* p);
+  bool Visit(int id, const char* p);
 
   // Search parameters
   Prog* prog_;              // program being run
@@ -145,12 +145,12 @@ bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
 
 // Explores from instruction ip at string position p looking for a match.
 // Return true if found (so that caller can stop trying other possibilities).
-bool Backtracker::Visit(Inst* ip, const char* p) {
+bool Backtracker::Visit(int id, const char* p) {
   // Check bitmap.  If we've already explored from here,
   // either it didn't match or it did but we're hoping for a better match.
   // Either way, don't go down that road again.
   CHECK(p <= text_.end());
-  int n = ip->id()*(text_.size()+1) + (p - text_.begin());
+  int n = id*(text_.size()+1) + (p - text_.begin());
   CHECK_LT(n/32, nvisited_);
   if (visited_[n/32] & (1 << (n&31)))
     return false;
@@ -162,6 +162,7 @@ bool Backtracker::Visit(Inst* ip, const char* p) {
   if (p < text_.end())
     c = *p & 0xFF;
 
+  Prog::Inst* ip = prog_->inst(id);
   switch (ip->opcode()) {
     default:
       LOG(FATAL) << "Unexpected opcode: " << (int)ip->opcode();

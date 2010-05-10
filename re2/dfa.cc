@@ -25,7 +25,7 @@
 #include "re2/stringpiece.h"
 #include "util/atomicops.h"
 #include "util/flags.h"
-#include "util/sparse_array.h"
+#include "util/sparse_set.h"
 
 DEFINE_bool(re2_dfa_bail_when_slow, true,
             "Whether the RE2 DFA should bail out early "
@@ -95,7 +95,7 @@ class DFA {
   // byte c, the next state should be s->next_[c].
   struct State {
     inline bool IsMatch() const { return flag_ & kFlagMatch; }
-    Inst** inst_;       // Instruction pointers in the state.
+    int* inst_;         // Instruction pointers in the state.
     int ninst_;         // # of inst_ pointers.
     uint flag_;         // Empty string bitfield flags in effect on the way
                         // into this state, along with kFlagMatch if this
@@ -180,7 +180,7 @@ class DFA {
 
   // Looks up and returns a State matching the inst, ninst, and flag.
   // L >= mutex_
-  State* CachedState(Inst** inst, int ninst, uint flag);
+  State* CachedState(int* inst, int ninst, uint flag);
 
   // Clear the cache entirely.
   // Must hold cache_mutex_.w or be in destructor.
@@ -201,16 +201,16 @@ class DFA {
   void RunWorkqOnByte(Workq* q, Workq* nq,
                              int c, uint flag, bool* ismatch,
                              Prog::MatchKind kind,
-                             Inst* new_byte_loop);
+                             int new_byte_loop);
 
   // Runs a Workq on a set of empty-string flags, producing a new Workq in nq.
   // L >= mutex_
   void RunWorkqOnEmptyString(Workq* q, Workq* nq, uint flag);
 
-  // Adds the instruction ip to the Workq, following empty arrows
+  // Adds the instruction id to the Workq, following empty arrows
   // according to flag.
   // L >= mutex_
-  void AddToQueue(Workq* q, Inst* ip, uint flag);
+  void AddToQueue(Workq* q, int id, uint flag);
 
   // For debugging, returns a text representation of State.
   static string DumpState(State* state);
@@ -309,7 +309,7 @@ class DFA {
   // Constant after initialization.
   Prog* prog_;              // The regular expression program to run.
   Prog::MatchKind kind_;    // The kind of DFA.
-  Inst* start_unanchored_;  // start of unanchored program
+  int start_unanchored_;  // start of unanchored program
   bool init_failed_;        // initialization failed (out of memory)
 
   Mutex mutex_;  // mutex_ >= cache_mutex_.r
@@ -317,7 +317,7 @@ class DFA {
   // Scratch areas, protected by mutex_.
   Workq* q0_;             // Two pre-allocated work queues.
   Workq* q1_;
-  Inst** astack_;         // Pre-allocated stack for AddToQueue
+  int* astack_;         // Pre-allocated stack for AddToQueue
   int nastack_;
 
   // State* cache.  Many threads use and add to the cache simultaneously,
@@ -343,31 +343,30 @@ static inline const uint8* BytePtr(const void* v) {
 
 // Marks separate thread groups of different priority
 // in the work queue when in leftmost-longest matching mode.
-// NOTE(rsc): The code would work if Mark == NULL too,
-// but I want to catch unexpected NULLs from other sources.
-// Mark is never dereferenced.
-#define Mark reinterpret_cast<Inst*>(1)
+#define Mark (-1)
 
 // Internally, the DFA uses a sparse array of
 // program instruction pointers as a work queue.
 // In leftmost longest mode, marks separate sections
 // of workq that started executing at different
 // locations in the string (earlier locations first).
-class DFA::Workq : public SparseArray<Inst*> {
+class DFA::Workq : public SparseSet {
  public:
   // Constructor: n is number of normal slots, maxmark number of mark slots.
   Workq(int n, int maxmark) :
-    SparseArray<Inst*>(n+maxmark),
+    SparseSet(n+maxmark),
     n_(n),
     maxmark_(maxmark),
     nextmark_(n),
     last_was_mark_(true) {
   }
 
+  bool is_mark(int i) { return i >= n_; }
+
   int maxmark() { return maxmark_; }
 
   void clear() {
-    SparseArray<Inst*>::clear();
+    SparseSet::clear();
     nextmark_ = n_;
   }
 
@@ -375,22 +374,22 @@ class DFA::Workq : public SparseArray<Inst*> {
     if (last_was_mark_)
       return;
     last_was_mark_ = false;
-    SparseArray<Inst*>::set_new(nextmark_++, Mark);
+    SparseSet::insert_new(nextmark_++);
   }
 
   int size() {
     return n_ + maxmark_;
   }
 
-  void set(int id, Inst* inst) {
-    if (has_index(id))
+  void insert(int id) {
+    if (contains(id))
       return;
-    set_new(id, inst);
+    insert_new(id);
   }
 
-  void set_new(int id, Inst* inst) {
+  void insert_new(int id) {
     last_was_mark_ = false;
-    SparseArray<Inst*>::set_new(id, inst);
+    SparseSet::insert_new(id);
   }
 
  private:
@@ -423,8 +422,8 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
   // Account for space needed for DFA, q0, q1, astack.
   mem_budget_ -= sizeof(DFA);
   mem_budget_ -= (prog_->size() + nmark) *
-                 (sizeof(int)+sizeof(int)+sizeof(Inst*)) * 2;  // q0, q1
-  mem_budget_ -= nastack_ * sizeof(Inst*);  // astack
+                 (sizeof(int)+sizeof(int)) * 2;  // q0, q1
+  mem_budget_ -= nastack_ * sizeof(int);  // astack
   if (mem_budget_ < 0) {
     LOG(INFO) << StringPrintf("DFA out of memory: prog size %lld mem %lld",
                               prog_->size(), max_mem);
@@ -438,7 +437,7 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
   // At minimum, the search requires room for two states in order
   // to limp along, restarting frequently.  We'll get better performance
   // if there is room for a larger number of states, say 20.
-  int one_state = sizeof(State) + (prog_->size()+nmark)*sizeof(Inst*) +
+  int one_state = sizeof(State) + (prog_->size()+nmark)*sizeof(int) +
                   (prog_->bytemap_range()+1)*sizeof(State*);
   if (state_budget_ < 20*one_state) {
     LOG(INFO) << StringPrintf("DFA out of memory: prog size %lld mem %lld",
@@ -449,7 +448,7 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
 
   q0_ = new Workq(prog->size(), nmark);
   q1_ = new Workq(prog->size(), nmark);
-  astack_ = new Inst*[nastack_];
+  astack_ = new int[nastack_];
 }
 
 DFA::~DFA() {
@@ -478,11 +477,11 @@ string DFA::DumpWorkq(Workq* q) {
   string s;
   const char* sep = "";
   for (DFA::Workq::iterator it = q->begin(); it != q->end(); ++it) {
-    if (it->value() == Mark) {
+    if (q->is_mark(*it)) {
       StringAppendF(&s, "|");
       sep = "";
     } else {
-      StringAppendF(&s, "%s%d", sep, it->value()->id());
+      StringAppendF(&s, "%s%d", sep, *it);
       sep = ",";
     }
   }
@@ -505,7 +504,7 @@ string DFA::DumpState(State* state) {
       StringAppendF(&s, "|");
       sep = "";
     } else {
-      StringAppendF(&s, "%s%d", sep, state->inst_[i]->id());
+      StringAppendF(&s, "%s%d", sep, state->inst_[i]);
       sep = ",";
     }
   }
@@ -524,9 +523,9 @@ string DFA::DumpState(State* state) {
 // requirements and also avoids duplication of effort across the two
 // identical states.
 //
-// A State is defined by an ordered list of Inst* pointers and a flag word.
+// A State is defined by an ordered list of instruction ids and a flag word.
 //
-// The choice of an ordered list of Inst* pointers differs from a typical
+// The choice of an ordered list of instructions differs from a typical
 // textbook DFA implementation, which would use an unordered set.
 // Textbook descriptions, however, only care about whether
 // the DFA matches, not where it matches in the text.  To decide where the
@@ -534,7 +533,7 @@ string DFA::DumpState(State* state) {
 // implementations like PCRE, which try one possible regular expression
 // execution, then another, then another, stopping when one of them succeeds.
 // The DFA execution tries these many executions in parallel, representing
-// each by an Inst* pointer.  These pointers are ordered in the State.inst_
+// each by an instruction id.  These pointers are ordered in the State.inst_
 // list in the same order that the executions would happen in a backtracking
 // search: if a match is found during execution of inst_[2], inst_[i] for i>=3
 // can be discarded.
@@ -552,8 +551,8 @@ string DFA::DumpState(State* state) {
 // any kInstEmptyWidth instructions in the state.  These provide a useful
 // summary indicating when new flags might be useful.
 //
-// The permanent representation of a State's Inst* pointers is just an array,
-// but while a state is being analyzed, these Inst* pointers are represented
+// The permanent representation of a State's instruction ids is just an array,
+// but while a state is being analyzed, these instruction ids are represented
 // as a Workq, which is an array that allows iteration in insertion order.
 
 // NOTE(rsc): The choice of State construction determines whether the DFA
@@ -562,9 +561,9 @@ string DFA::DumpState(State* state) {
 // prescribed by POSIX).  This implementation chooses to mimic the
 // backtracking implementations, because we want to replace PCRE.  To get
 // POSIX behavior, the states would need to be considered not as a simple
-// ordered list of Inst* pointers, but as a list of unordered sets of Inst*
-// pointers.  A match by a state in one set would inhibit the running of sets
-// farther down the list but not other Inst* pointers in the same set.  Each
+// ordered list of instruction ids, but as a list of unordered sets of instruction
+// ids.  A match by a state in one set would inhibit the running of sets
+// farther down the list but not other instruction ids in the same set.  Each
 // set would correspond to matches beginning at a given point in the string.
 // This is implemented by separating different sets with Mark pointers.
 
@@ -575,28 +574,29 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
   if (DEBUG_MODE)
     mutex_.AssertHeld();
 
-  // Construct array of Inst* for the new state.
+  // Construct array of instruction ids for the new state.
   // Only ByteRange, EmptyWidth, and Match instructions are useful to keep:
   // those are the only operators with any effect in
   // RunWorkqOnEmptyString or RunWorkqOnByte.
-  Inst** inst = new Inst*[q->size()];
+  int* inst = new int[q->size()];
   int n = 0;
   uint needflags = 0;     // flags needed by kInstEmptyWidth instructions
   bool sawmatch = false;  // whether queue contains guaranteed kInstMatch
   if (DebugDFA)
     fprintf(stderr, "WorkqToCachedState %s [%#x]", DumpWorkq(q).c_str(), flag);
   for (Workq::iterator it = q->begin(); it != q->end(); ++it) {
-    Inst* ip = it->value();
-    if (sawmatch && (kind_ == Prog::kFirstMatch || ip == Mark))
+    int id = *it;
+    if (sawmatch && (kind_ == Prog::kFirstMatch || q->is_mark(id)))
       break;
-    if (ip == Mark) {
+    if (q->is_mark(id)) {
       if (n > 0 && inst[n-1] != Mark)
         inst[n++] = Mark;
       continue;
     }
+    Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       case kInstAltMatch:
-        if (kind_ != Prog::kFirstMatch || (it == q->begin() && ip->greedy())) {
+        if (kind_ != Prog::kFirstMatch || (it == q->begin() && ip->greedy(prog_))) {
           delete[] inst;
           return FullMatchState;
         }
@@ -605,7 +605,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
       case kInstEmptyWidth:
       case kInstMatch:
       case kInstAlt:          // Not useful, but necessary [*]
-        inst[n++] = it->value();
+        inst[n++] = *it;
         if (ip->opcode() == kInstEmptyWidth)
           needflags |= ip->empty();
         if (ip->opcode() == kInstMatch && !prog_->anchor_end())
@@ -664,10 +664,10 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
   // unordered state sets separated by Marks.  Sort each set
   // to canonicalize, to reduce the number of distinct sets stored.
   if (kind_ == Prog::kLongestMatch) {
-    Inst** ip = inst;
-    Inst** ep = ip + n;
+    int* ip = inst;
+    int* ep = ip + n;
     while (ip < ep) {
-      Inst** markp = ip;
+      int* markp = ip;
       while (markp < ep && *markp != Mark)
         markp++;
       sort(ip, markp);
@@ -688,7 +688,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
 // Looks in the State cache for a State matching inst, ninst, flag.
 // If one is found, returns it.  If one is not found, allocates one,
 // inserts it in the cache, and returns it.
-DFA::State* DFA::CachedState(Inst** inst, int ninst, uint flag) {
+DFA::State* DFA::CachedState(int* inst, int ninst, uint flag) {
   if (DEBUG_MODE)
     mutex_.AssertHeld();
 
@@ -707,7 +707,7 @@ DFA::State* DFA::CachedState(Inst** inst, int ninst, uint flag) {
   // State*, empirically.
   const int kStateCacheOverhead = 32;
   int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
-  int mem = sizeof(State) + nnext*sizeof(State*) + ninst*sizeof(Inst*);
+  int mem = sizeof(State) + nnext*sizeof(State*) + ninst*sizeof(int);
   if (mem_budget_ < mem + kStateCacheOverhead) {
     mem_budget_ = -1;
     return NULL;
@@ -718,7 +718,7 @@ DFA::State* DFA::CachedState(Inst** inst, int ninst, uint flag) {
   char* space = new char[mem];
   State* s = reinterpret_cast<State*>(space);
   s->next_ = reinterpret_cast<State**>(s + 1);
-  s->inst_ = reinterpret_cast<Inst**>(s->next_ + nnext);
+  s->inst_ = reinterpret_cast<int*>(s->next_ + nnext);
   memset(s->next_, 0, nnext*sizeof s->next_[0]);
   memmove(s->inst_, inst, ninst*sizeof s->inst_[0]);
   s->ninst_ = ninst;
@@ -752,13 +752,13 @@ void DFA::StateToWorkq(State* s, Workq* q) {
     if (s->inst_[i] == Mark)
       q->mark();
     else
-      q->set_new(s->inst_[i]->id(), s->inst_[i]);
+      q->insert_new(s->inst_[i]);
   }
 }
 
 // Adds ip to the work queue, following empty arrows according to flag
 // and expanding kInstAlt instructions (two-target gotos).
-void DFA::AddToQueue(Workq* q, Inst* ip, uint flag) {
+void DFA::AddToQueue(Workq* q, int id, uint flag) {
 
   // Use astack_ to hold our stack of states yet to process.
   // It is sized to have room for nastack_ == 2*prog->size() + nmark
@@ -766,33 +766,34 @@ void DFA::AddToQueue(Workq* q, Inst* ip, uint flag) {
   // processed by the switch below only once, and the processing
   // pushes at most two instructions plus maybe a mark.
   // (If we're using marks, nmark == prog->size(); otherwise nmark == 0.)
-  Inst** stk = astack_;
+  int* stk = astack_;
   int nstk = 0;
 
-  stk[nstk++] = ip;
+  stk[nstk++] = id;
   while (nstk > 0) {
     DCHECK_LE(nstk, nastack_);
-    ip = stk[--nstk];
+    id = stk[--nstk];
 
-    if (ip == Mark) {
+    if (id == Mark) {
       q->mark();
       continue;
     }
 
-    if (ip == NULL || ip->opcode() == kInstFail)
+    if (id == 0)
       continue;
 
     // If ip is already on the queue, nothing to do.
     // Otherwise add it.  We don't actually keep all the ones
     // that get added -- for example, kInstAlt is ignored
     // when on a work queue -- but adding all ip's here
-    // increases the likelihood of q->has_index(ip->id()),
+    // increases the likelihood of q->contains(id),
     // reducing the amount of duplicated work.
-    if (q->has_index(ip->id()))
+    if (q->contains(id))
       continue;
-    q->set_new(ip->id(), ip);
+    q->insert_new(id);
 
     // Process instruction.
+    Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       case kInstFail:       // can't happen: discarded above
         break;
@@ -816,7 +817,7 @@ void DFA::AddToQueue(Workq* q, Inst* ip, uint flag) {
         // than the current ones.
         stk[nstk++] = ip->out1();
         if (q->maxmark() > 0 &&
-            ip == prog_->start_unanchored() && ip != prog_->start())
+            id == prog_->start_unanchored() && id != prog_->start())
           stk[nstk++] = Mark;
         stk[nstk++] = ip->out();
         break;
@@ -847,8 +848,12 @@ void DFA::AddToQueue(Workq* q, Inst* ip, uint flag) {
 // exhibited by existing implementations).
 void DFA::RunWorkqOnEmptyString(Workq* oldq, Workq* newq, uint flag) {
   newq->clear();
-  for (Workq::iterator i = oldq->begin(); i != oldq->end(); ++i)
-    AddToQueue(newq, i->value(), flag);
+  for (Workq::iterator i = oldq->begin(); i != oldq->end(); ++i) {
+    if (oldq->is_mark(*i))
+      AddToQueue(newq, Mark, flag);
+    else
+      AddToQueue(newq, *i, flag);
+  }
 }
 
 // Runs the work queue, processing the single byte c followed by any empty
@@ -858,19 +863,20 @@ void DFA::RunWorkqOnEmptyString(Workq* oldq, Workq* newq, uint flag) {
 void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
                          int c, uint flag, bool* ismatch,
                          Prog::MatchKind kind,
-                         Inst* new_byte_loop) {
+                         int new_byte_loop) {
   if (DEBUG_MODE)
     mutex_.AssertHeld();
 
   newq->clear();
   for (Workq::iterator i = oldq->begin(); i != oldq->end(); ++i) {
-    Inst* ip = i->value();
-    if (ip == Mark) {
+    if (oldq->is_mark(*i)) {
       if (*ismatch)
         return;
       newq->mark();
       continue;
     }
+    int id = *i;
+    Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       case kInstFail:        // never succeeds
       case kInstCapture:     // already followed
@@ -1140,7 +1146,7 @@ class DFA::StateSaver {
 
  private:
   DFA* dfa_;         // the DFA to use
-  Inst** inst_;      // saved info from State
+  int* inst_;        // saved info from State
   int ninst_;
   uint flag_;
   bool is_special_;  // whether original state was special
@@ -1163,7 +1169,7 @@ DFA::StateSaver::StateSaver(DFA* dfa, State* state) {
   special_ = NULL;
   flag_ = state->flag_;
   ninst_ = state->ninst_;
-  inst_ = new Inst*[ninst_];
+  inst_ = new int[ninst_];
   memmove(inst_, state->inst_, ninst_*sizeof inst_[0]);
 }
 

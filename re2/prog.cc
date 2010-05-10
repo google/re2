@@ -3,10 +3,10 @@
 // license that can be found in the LICENSE file.
 
 // Compiled regular expression representation.
-// Tested by compile_unittest.cc
+// Tested by compile_test.cc
 
 #include "util/util.h"
-#include "util/sparse_array.h"
+#include "util/sparse_set.h"
 #include "re2/prog.h"
 #include "re2/stringpiece.h"
 
@@ -14,80 +14,75 @@ namespace re2 {
 
 // Constructors per Inst opcode
 
-void Inst::InitAlt(Inst* out, Inst* out1) {
-  DCHECK_EQ(opcode_, 0);
-  opcode_ = kInstAlt;
-  out_ = out;
+void Prog::Inst::InitAlt(uint32 out, uint32 out1) {
+  DCHECK_EQ(out_opcode_, 0);
+  set_out_opcode(out, kInstAlt);
   out1_ = out1;
 }
 
-void Inst::InitByteRange(int lo, int hi, int foldcase, Inst* out) {
-  DCHECK_EQ(opcode_, 0);
-  opcode_ = kInstByteRange;
+void Prog::Inst::InitByteRange(int lo, int hi, int foldcase, uint32 out) {
+  DCHECK_EQ(out_opcode_, 0);
+  set_out_opcode(out, kInstByteRange);
   lo_ = lo & 0xFF;
   hi_ = hi & 0xFF;
   foldcase_ = foldcase;
-  out_ = out;
 }
 
-void Inst::InitCapture(int cap, Inst* out) {
-  DCHECK_EQ(opcode_, 0);
-  opcode_ = kInstCapture;
+void Prog::Inst::InitCapture(int cap, uint32 out) {
+  DCHECK_EQ(out_opcode_, 0);
+  set_out_opcode(out, kInstCapture);
   cap_ = cap;
-  out_ = out;
 }
 
-void Inst::InitEmptyWidth(EmptyOp empty, Inst* out) {
-  DCHECK_EQ(opcode_, 0);
-  opcode_ = kInstEmptyWidth;
+void Prog::Inst::InitEmptyWidth(EmptyOp empty, uint32 out) {
+  DCHECK_EQ(out_opcode_, 0);
+  set_out_opcode(out, kInstEmptyWidth);
   empty_ = empty;
-  out_ = out;
 }
 
-void Inst::InitMatch() {
-  DCHECK_EQ(opcode_, 0);
-  opcode_ = kInstMatch;
+void Prog::Inst::InitMatch() {
+  DCHECK_EQ(out_opcode_, 0);
+  set_opcode(kInstMatch);
 }
 
-void Inst::InitNop(Inst* out) {
-  DCHECK_EQ(opcode_, 0);
-  opcode_ = kInstNop;
-  out_ = out;
+void Prog::Inst::InitNop(uint32 out) {
+  DCHECK_EQ(out_opcode_, 0);
+  set_opcode(kInstNop);
 }
 
-void Inst::InitFail() {
-  DCHECK_EQ(opcode_, 0);
-  opcode_ = kInstFail;
+void Prog::Inst::InitFail() {
+  DCHECK_EQ(out_opcode_, 0);
+  set_opcode(kInstFail);
 }
 
-string Inst::Dump() {
-  switch (opcode_) {
+string Prog::Inst::Dump() {
+  switch (opcode()) {
     default:
-      return StringPrintf("opcode %d", static_cast<int>(opcode_));
+      return StringPrintf("opcode %d", static_cast<int>(opcode()));
 
     case kInstAlt:
-      return StringPrintf("alt -> %d | %d", out_->id(), out1_->id());
+      return StringPrintf("alt -> %d | %d", out(), out1_);
 
     case kInstAltMatch:
-      return StringPrintf("altmatch -> %d | %d", out_->id(), out1_->id());
+      return StringPrintf("altmatch -> %d | %d", out(), out1_);
 
     case kInstByteRange:
       return StringPrintf("byte%s [%02x-%02x] -> %d",
                           foldcase_ ? "/i" : "",
-                          lo_, hi_, out_->id());
+                          lo_, hi_, out());
 
     case kInstCapture:
-      return StringPrintf("capture %d -> %d", cap_, out_->id());
+      return StringPrintf("capture %d -> %d", cap_, out());
 
     case kInstEmptyWidth:
       return StringPrintf("emptywidth %#x -> %d",
-                          static_cast<int>(empty_), out_->id());
+                          static_cast<int>(empty_), out());
 
     case kInstMatch:
       return StringPrintf("match!");
 
     case kInstNop:
-      return StringPrintf("nop -> %d", out_->id());
+      return StringPrintf("nop -> %d", out());
 
     case kInstFail:
       return StringPrintf("fail");
@@ -97,17 +92,18 @@ string Inst::Dump() {
 Prog::Prog()
   : anchor_start_(false),
     anchor_end_(false),
+    did_onepass_(false),
     start_(NULL),
     size_(0),
     byte_inst_count_(0),
-    arena_(40*sizeof(Inst)),        // about 1kB on 64-bit
+    bytemap_range_(0),
+    flags_(0),
+    inst_(NULL),
     dfa_first_(NULL),
     dfa_longest_(NULL),
     dfa_mem_(0),
     delete_dfa_(NULL),
-    bytemap_range_(0),
-    flags_(0),
-    did_onepass_(false),
+    unbytemap_(NULL),
     onepass_nodes_(NULL),
     onepass_start_(NULL) {
 }
@@ -120,25 +116,24 @@ Prog::~Prog() {
       delete_dfa_(dfa_longest_);
   }
   delete[] onepass_nodes_;
+  delete[] inst_;
+  delete[] unbytemap_;
 }
 
-Inst* Prog::AllocInst() {
-  return new (AllocateInArena, &arena_) Inst(size_++);
+typedef SparseSet Workq;
+
+static inline void AddToQueue(Workq* q, int id) {
+  if (id != 0)
+    q->insert(id);
 }
 
-typedef SparseArray<Inst*> Workq;
-
-static inline void AddToQueue(Workq* q, Inst* ip) {
-  if (ip != NULL)
-    q->set(ip->id(), ip);
-}
-
-static string ProgToString(Workq *q) {
+static string ProgToString(Prog* prog, Workq* q) {
   string s;
 
   for (Workq::iterator i = q->begin(); i != q->end(); ++i) {
-    Inst* ip = i->value();
-    StringAppendF(&s, "%d. %s\n", ip->id(), ip->Dump().c_str());
+    int id = *i;
+    Prog::Inst* ip = prog->inst(id);
+    StringAppendF(&s, "%d. %s\n", id, ip->Dump().c_str());
     AddToQueue(q, ip->out());
     if (ip->opcode() == kInstAlt || ip->opcode() == kInstAltMatch)
       AddToQueue(q, ip->out1());
@@ -160,16 +155,16 @@ string Prog::Dump() {
 
   Workq q(size_);
   AddToQueue(&q, start_);
-  return map + ProgToString(&q);
+  return map + ProgToString(this, &q);
 }
 
 string Prog::DumpUnanchored() {
   Workq q(size_);
   AddToQueue(&q, start_unanchored_);
-  return ProgToString(&q);
+  return ProgToString(this, &q);
 }
 
-static bool IsMatch(Inst*);
+static bool IsMatch(Prog*, Prog::Inst*);
 
 // Peep-hole optimizer.
 void Prog::Optimize() {
@@ -180,19 +175,21 @@ void Prog::Optimize() {
   q.clear();
   AddToQueue(&q, start_);
   for (Workq::iterator i = q.begin(); i != q.end(); ++i) {
-    Inst* ip = i->value();
+    int id = *i;
 
-    Inst* j = ip->out();
-    while (j != NULL && j->opcode() == kInstNop) {
-      j = j->out();
+    Inst* ip = inst(id);
+    int j = ip->out();
+    Inst* jp;
+    while (j != 0 && (jp=inst(j))->opcode() == kInstNop) {
+      j = jp->out();
     }
-    ip->out_ = j;
+    ip->set_out(j);
     AddToQueue(&q, ip->out());
 
     if (ip->opcode() == kInstAlt) {
       j = ip->out1();
-      while (j != NULL && j->opcode() == kInstNop) {
-        j = j->out();
+      while (j != 0 && (jp=inst(j))->opcode() == kInstNop) {
+        j = jp->out();
       }
       ip->out1_ = j;
       AddToQueue(&q, ip->out1());
@@ -209,31 +206,32 @@ void Prog::Optimize() {
   q.clear();
   AddToQueue(&q, start_);
   for (Workq::iterator i = q.begin(); i != q.end(); ++i) {
-    Inst* ip = i->value();
+    int id = *i;
+    Inst* ip = inst(id);
     AddToQueue(&q, ip->out());
     if (ip->opcode() == kInstAlt)
       AddToQueue(&q, ip->out1());
 
     if (ip->opcode() == kInstAlt) {
-      Inst* j = ip->out();
-      Inst* k = ip->out1();
-      if (j->opcode() == kInstByteRange && j->out() == ip &&
+      Inst* j = inst(ip->out());
+      Inst* k = inst(ip->out1());
+      if (j->opcode() == kInstByteRange && j->out() == id &&
           j->lo() == 0x00 && j->hi() == 0xFF &&
-          IsMatch(k)) {
-        ip->opcode_ = kInstAltMatch;
+          IsMatch(this, k)) {
+        ip->set_opcode(kInstAltMatch);
         continue;
       }
-      if (IsMatch(j) &&
-          k->opcode() == kInstByteRange && k->out() == ip &&
+      if (IsMatch(this, j) &&
+          k->opcode() == kInstByteRange && k->out() == id &&
           k->lo() == 0x00 && k->hi() == 0xFF) {
-        ip->opcode_ = kInstAltMatch;
+        ip->set_opcode(kInstAltMatch);
       }
     }
   }
 }
 
 // Is ip a guaranteed match at end of text, perhaps after some capturing?
-static bool IsMatch(Inst *ip) {
+static bool IsMatch(Prog* prog, Prog::Inst* ip) {
   for (;;) {
     switch (ip->opcode()) {
       default:
@@ -249,7 +247,7 @@ static bool IsMatch(Inst *ip) {
 
       case kInstCapture:
       case kInstNop:
-        ip = ip->out();
+        ip = prog->inst(ip->out());
         break;
 
       case kInstMatch:
@@ -317,11 +315,13 @@ void Prog::ComputeByteMap() {
     if ((i&31) == 0)
       bits = v.Word(i >> 5);
     bytemap_[i] = n;
-    unbytemap_[n] = i;
     n += bits & 1;
     bits >>= 1;
   }
   bytemap_range_ = bytemap_[255] + 1;
+  unbytemap_ = new uint8[bytemap_range_];
+  for (int i = 0; i < 256; i++)
+    unbytemap_[bytemap_[i]] = i;  
 
   if (0) {  // For debugging: use trivial byte map.
     for (int i = 0; i < 256; i++) {

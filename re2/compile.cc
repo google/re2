@@ -19,74 +19,97 @@ namespace re2 {
 // we can use the Inst* word to hold the list's "next" pointer.
 // It's kind of sleazy, but it works well in practice.
 // See http://swtch.com/~rsc/regexp/regexp1.html for inspiration.
+//
+// Because the out and out1 fields in Inst are no longer pointers,
+// we can't use pointers directly here either.  Instead, p refers
+// to inst_[p>>1].out (p&1 == 0) or inst_[p>>1].out1 (p&1 == 1).
+// p == 0 represents the NULL list.  This is okay because instruction #0
+// is always the fail instruction, which never appears on a list.
 
 struct PatchList {
-  union {
-    PatchList* next;
-    Inst* val;
-  };
+  uint32 p;
 
   // Returns patch list containing just p.
-  static PatchList* Mk(Inst** p);
+  static PatchList Mk(uint32 p);
 
   // Patches all the entries on l to have value v.
   // Caller must not ever use patch list again.
-  static void Patch(PatchList* l, Inst* v);
+  static void Patch(Prog::Inst *inst0, PatchList l, uint32 v);
+
+  // Deref returns the next pointer pointed at by p.
+  static PatchList Deref(Prog::Inst *inst0, PatchList l);
 
   // Appends two patch lists and returns result.
-  static PatchList* Append(PatchList* l1, PatchList* l2);
+  static PatchList Append(Prog::Inst *inst0, PatchList l1, PatchList l2);
 };
 
+static PatchList nullPatchList = { 0 };
+
 // Returns patch list containing just p.
-PatchList* PatchList::Mk(Inst** p) {
-  COMPILE_ASSERT(sizeof(PatchList) == sizeof(*p), PatchListAssert);
-  return reinterpret_cast<PatchList*>(p);
+PatchList PatchList::Mk(uint32 p) {
+  PatchList l;
+  l.p = p;
+  return l;
+}
+
+// Returns the next pointer pointed at by l.
+PatchList PatchList::Deref(Prog::Inst* inst0, PatchList l) {
+  Prog::Inst* ip = &inst0[l.p>>1];
+  if (l.p&1)
+    l.p = ip->out1();
+  else
+    l.p = ip->out();
+  return l;
 }
 
 // Patches all the entries on l to have value v.
-void PatchList::Patch(PatchList* l, Inst* val) {
-  PatchList* next;
-  for (PatchList *ll = l; ll; ll = next) {
-    next = ll->next;
-    ll->val = val;
+void PatchList::Patch(Prog::Inst *inst0, PatchList l, uint32 val) {
+  while (l.p != 0) {
+    Prog::Inst* ip = &inst0[l.p>>1];
+    if (l.p&1) {
+      l.p = ip->out1();
+      ip->out1_ = val;
+    } else {
+      l.p = ip->out();
+      ip->set_out(val);
+    }
   }
 }
 
 // Appends two patch lists and returns result.
-PatchList* PatchList::Append(PatchList* l1, PatchList* l2) {
-  if (l1 == NULL)
+PatchList PatchList::Append(Prog::Inst* inst0, PatchList l1, PatchList l2) {
+  if (l1.p == 0)
     return l2;
-  if (l2 == NULL)
+  if (l2.p == 0)
     return l1;
 
-  PatchList *l = l1;
-  while (l->next)
-    l = l->next;
-  l->next = l2;
+  PatchList l = l1;
+  for (;;) {
+    PatchList next = PatchList::Deref(inst0, l);
+    if (next.p == 0)
+      break;
+    l = next;
+  }
+  
+  Prog::Inst* ip = &inst0[l.p>>1];
+  if(l.p&1)
+    ip->out1_ = l2.p;
+  else
+    ip->set_out(l2.p);
+
   return l1;
 }
 
-
 // Compiled program fragment.
 struct Frag {
-  Inst* begin;
-  PatchList* end;
+  uint32 begin;
+  PatchList end;
 
-
-  Frag() : begin(NULL), end(NULL) {}  // needed so Frag can go in vector
-  Frag(Inst* begin, PatchList* end) : begin(begin), end(end) {}
+  Frag() : begin(0) { end.p = 0; }  // needed so Frag can go in vector
+  Frag(uint32 begin, PatchList end) : begin(begin), end(end) {}
 };
 
-static Frag kNullFrag(NULL, NULL);
-
-// Rune cache entry.
-struct RuneCacheLine {
-  uint64 key;
-  Inst* value;
-
-  RuneCacheLine() : key(0), value(NULL) {}  // so RuneCacheLine can go in vector
-  RuneCacheLine(uint64 key, Inst* value) : key(key), value(value) {}
-};
+static Frag kNullFrag;
 
 // Input encodings.
 enum Encoding {
@@ -146,12 +169,13 @@ class Compiler : public Regexp::Walker<Frag> {
   // Returns a fragment matching an empty-width special op.
   Frag EmptyWidth(EmptyOp op);
 
-  // Maintains the instruction budget.
-  // Must be called before each AllocInst to check whether
-  // it is okay to allocate a new instruction.
-  // Adds 1 to inst_count_, returning true if it hasn't reached max_inst_.
-  // Otherwise returns false, sets failed_ = true.
-  bool CanAllocInst();
+  // Adds n instructions to the program.
+  // Returns the index of the first one.
+  // Returns -1 if no more instructions are available.
+  int AllocInst(int n);
+  
+  // Deletes unused instructions.
+  void Trim();
 
   // Rune range compiler.
 
@@ -165,11 +189,11 @@ class Compiler : public Regexp::Walker<Frag> {
   void Add_80_10ffff();
 
   // New suffix that matches the byte range lo-hi, then goes to next.
-  Inst* RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, Inst* next);
-  Inst* UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, Inst* next);
+  int RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next);
+  int UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next);
 
   // Adds a suffix to alternation.
-  void AddSuffix(Inst* ip);
+  void AddSuffix(int id);
 
   // Returns the alternation of all the added suffixes.
   Frag EndRange();
@@ -179,15 +203,17 @@ class Compiler : public Regexp::Walker<Frag> {
 
  private:
   Prog* prog_;         // Program being built.
-  Inst* fail_inst_;    // kInstFail instruction in program
   bool failed_;        // Did we give up compiling?
   Encoding encoding_;  // Input encoding
   bool reversed_;      // Should program run backward over text?
 
-  int64 inst_count_;   // Number of instructions allocated.
-  int64 max_inst_;     // Maximum number of instructions.
+  int max_inst_;       // Maximum number of instructions.
+  
+  Prog::Inst* inst_;   // Pointer to first instruction.
+  int inst_len_;       // Number of instructions used.
+  int inst_cap_;       // Number of instructions allocated.
 
-  map<uint64, Inst*> rune_cache_;
+  map<uint64, int> rune_cache_;
   Frag rune_range_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Compiler);
@@ -195,27 +221,53 @@ class Compiler : public Regexp::Walker<Frag> {
 
 Compiler::Compiler() {
   prog_ = new Prog();
-  fail_inst_ = prog_->AllocInst();
-  fail_inst_->InitFail();
   failed_ = false;
   encoding_ = kEncodingUTF8;
   reversed_ = false;
-  inst_count_ = 1;
+  inst_ = NULL;
+  inst_len_ = 0;
+  inst_cap_ = 0;
+  max_inst_ = 1;  // make AllocInst for fail instruction okay
+  int fail = AllocInst(1);
+  inst_[fail].InitFail();
   max_inst_ = 0;  // Caller must change
 }
 
 Compiler::~Compiler() {
   delete prog_;
+  delete[] inst_;
 }
 
-bool Compiler::CanAllocInst() {
-  if (failed_)
-    return false;
-  if (inst_count_++ > max_inst_) {
+int Compiler::AllocInst(int n) {
+  if (failed_ || inst_len_ + n > max_inst_) {
     failed_ = true;
-    return false;
+    return -1;
   }
-  return true;
+
+  if (inst_len_ + n > inst_cap_) {
+    if (inst_cap_ == 0)
+      inst_cap_ = 8;
+    while (inst_len_ + n > inst_cap_)
+      inst_cap_ *= 2;
+    Prog::Inst* ip = new Prog::Inst[inst_cap_];
+    memmove(ip, inst_, inst_len_ * sizeof ip[0]);
+    memset(ip + inst_len_, 0, (inst_cap_ - inst_len_) * sizeof ip[0]);
+    delete[] inst_;
+    inst_ = ip;
+  }
+  int id = inst_len_;
+  inst_len_ += n;
+  return id;
+}
+
+void Compiler::Trim() {
+  if (inst_len_ < inst_cap_) {
+    Prog::Inst* ip = new Prog::Inst[inst_len_];
+    memmove(ip, inst_, inst_len_ * sizeof ip[0]);
+    delete[] inst_;
+    inst_ = ip;
+    inst_cap_ = inst_len_;
+  }
 }
 
 // These routines are somewhat hard to visualize in text --
@@ -224,12 +276,12 @@ bool Compiler::CanAllocInst() {
 
 // Returns an unmatchable fragment.
 Frag Compiler::NoMatch() {
-  return Frag(fail_inst_, NULL);
+  return Frag(0, nullPatchList);
 }
 
 // Is a an unmatchable fragment?
 static bool IsNoMatch(Frag a) {
-  return a.begin == NULL || a.begin->opcode() == kInstFail;
+  return a.begin == 0;
 }
 
 // Given fragments a and b, returns fragment for ab.
@@ -238,20 +290,21 @@ Frag Compiler::Cat(Frag a, Frag b) {
     return NoMatch();
 
   // Elide no-op.
-  if (a.begin->opcode() == kInstNop &&
-      a.end == PatchList::Mk(&a.begin->out_) &&
-      a.begin->out() == NULL) {
-    PatchList::Patch(a.end, b.begin);  // in case refs to a somewhere
+  Prog::Inst* begin = &inst_[a.begin];
+  if (begin->opcode() == kInstNop &&
+      a.end.p == (a.begin << 1) &&
+      begin->out() == 0) {
+    PatchList::Patch(inst_, a.end, b.begin);  // in case refs to a somewhere
     return b;
   }
 
   // To run backward over string, reverse all concatenations.
   if (reversed_) {
-    PatchList::Patch(b.end, a.begin);
+    PatchList::Patch(inst_, b.end, a.begin);
     return Frag(b.begin, a.end);
   }
 
-  PatchList::Patch(a.end, b.begin);
+  PatchList::Patch(inst_, a.end, b.begin);
   return Frag(a.begin, b.end);
 }
 
@@ -263,12 +316,12 @@ Frag Compiler::Alt(Frag a, Frag b) {
   if (IsNoMatch(b))
     return a;
 
-  if (!CanAllocInst())
+  int id = AllocInst(1);
+  if (id < 0)
     return NoMatch();
 
-  Inst* ip = prog_->AllocInst();
-  ip->InitAlt(a.begin, b.begin);
-  return Frag(ip, PatchList::Append(a.end, b.end));
+  inst_[id].InitAlt(a.begin, b.begin);
+  return Frag(id, PatchList::Append(inst_, a.end, b.end));
 }
 
 // When capturing submatches in like-Perl mode, a kOpAlt Inst
@@ -280,18 +333,17 @@ Frag Compiler::Alt(Frag a, Frag b) {
 
 // Given a fragment a, returns a fragment for a* or a*? (if nongreedy)
 Frag Compiler::Star(Frag a, bool nongreedy) {
-  if (!CanAllocInst())
+  int id = AllocInst(1);
+  if (id < 0)
     return NoMatch();
-
-  Inst* ip = prog_->AllocInst();
-  ip->InitAlt(NULL, NULL);
-  PatchList::Patch(a.end, ip);
+  inst_[id].InitAlt(0, 0);
+  PatchList::Patch(inst_, a.end, id);
   if (nongreedy) {
-    ip->out1_ = a.begin;
-    return Frag(ip, PatchList::Mk(&ip->out_));
+    inst_[id].out1_ = a.begin;
+    return Frag(id, PatchList::Mk(id << 1));
   } else {
-    ip->out_ = a.begin;
-    return Frag(ip, PatchList::Mk(&ip->out1_));
+    inst_[id].set_out(a.begin);
+    return Frag(id, PatchList::Mk((id << 1) | 1));
   }
 }
 
@@ -304,29 +356,27 @@ Frag Compiler::Plus(Frag a, bool nongreedy) {
 
 // Given a fragment for a, returns a fragment for a? or a?? (if nongreedy)
 Frag Compiler::Quest(Frag a, bool nongreedy) {
-  if (!CanAllocInst())
+  int id = AllocInst(1);
+  if (id < 0)
     return NoMatch();
-
-  Inst* ip = prog_->AllocInst();
-  PatchList* pl;
+  PatchList pl;
   if (nongreedy) {
-    ip->InitAlt(NULL, a.begin);
-    pl = PatchList::Mk(&ip->out_);
+    inst_[id].InitAlt(0, a.begin);
+    pl = PatchList::Mk(id << 1);
   } else {
-    ip->InitAlt(a.begin, NULL);
-    pl = PatchList::Mk(&ip->out1_);
+    inst_[id].InitAlt(a.begin, 0);
+    pl = PatchList::Mk((id << 1) | 1);
   }
-  return Frag(ip, PatchList::Append(pl, a.end));
+  return Frag(id, PatchList::Append(inst_, pl, a.end));
 }
 
 // Returns a fragment for the byte range lo-hi.
 Frag Compiler::ByteRange(int lo, int hi, bool foldcase) {
-  if (!CanAllocInst())
+  int id = AllocInst(1);
+  if (id < 0)
     return NoMatch();
-
+  inst_[id].InitByteRange(lo, hi, foldcase, NULL);
   prog_->byte_inst_count_++;
-  Inst* ip = prog_->AllocInst();
-  ip->InitByteRange(lo, hi, foldcase, NULL);
   prog_->MarkByteRange(lo, hi);
   if (foldcase && lo <= 'z' && hi >= 'a') {
     if (lo < 'a')
@@ -336,36 +386,33 @@ Frag Compiler::ByteRange(int lo, int hi, bool foldcase) {
     if (lo <= hi)
       prog_->MarkByteRange(lo + 'A' - 'a', hi + 'A' - 'a');
   }
-  return Frag(ip, PatchList::Mk(&ip->out_));
+  return Frag(id, PatchList::Mk(id << 1));
 }
 
 // Returns a no-op fragment.  Sometimes unavoidable.
 Frag Compiler::Nop() {
-  if (!CanAllocInst())
+  int id = AllocInst(1);
+  if (id < 0)
     return NoMatch();
-
-  Inst* ip = prog_->AllocInst();
-  ip->InitNop(NULL);
-  return Frag(ip, PatchList::Mk(&ip->out_));
+  inst_[id].InitNop(0);
+  return Frag(id, PatchList::Mk(id << 1));
 }
 
 // Returns a fragment that signals a match.
 Frag Compiler::Match() {
-  if (!CanAllocInst())
+  int id = AllocInst(1);
+  if (id < 0)
     return NoMatch();
-
-  Inst* ip = prog_->AllocInst();
-  ip->InitMatch();
-  return Frag(ip, NULL);
+  inst_[id].InitMatch();
+  return Frag(id, nullPatchList);
 }
 
 // Returns a fragment matching a particular empty-width op (like ^ or $)
 Frag Compiler::EmptyWidth(EmptyOp empty) {
-  if (!CanAllocInst())
+  int id = AllocInst(1);
+  if (id < 0)
     return NoMatch();
-
-  Inst* ip = prog_->AllocInst();
-  ip->InitEmptyWidth(empty, NULL);
+  inst_[id].InitEmptyWidth(empty, 0);
   if (empty & (kEmptyBeginLine|kEmptyEndLine))
     prog_->MarkByteRange('\n', '\n');
   if (empty & (kEmptyWordBoundary|kEmptyNonWordBoundary)) {
@@ -376,22 +423,19 @@ Frag Compiler::EmptyWidth(EmptyOp empty) {
       prog_->MarkByteRange(i, j-1);
     }
   }
-  return Frag(ip, PatchList::Mk(&ip->out_));
+  return Frag(id, PatchList::Mk(id << 1));
 }
 
 // Given a fragment a, returns a fragment with capturing parens around a.
 Frag Compiler::Capture(Frag a, int n) {
-  if (!CanAllocInst() || !CanAllocInst())
+  int id = AllocInst(2);
+  if (id < 0)
     return NoMatch();
+  inst_[id].InitCapture(2*n, a.begin);
+  inst_[id+1].InitCapture(2*n+1, 0);
+  PatchList::Patch(inst_, a.end, id+1);
 
-  Inst* left = prog_->AllocInst();
-  left->InitCapture(2*n, a.begin);
-
-  Inst* right = prog_->AllocInst();
-  right->InitCapture(2*n+1, NULL);
-  PatchList::Patch(a.end, right);
-
-  return Frag(left, PatchList::Mk(&right->out_));
+  return Frag(id, PatchList::Mk((id+1) << 1));
 }
 
 // A Rune is a name for a Unicode code point.
@@ -416,20 +460,20 @@ static int MaxRune(int len) {
 void Compiler::BeginRange() {
   rune_cache_.clear();
   rune_range_.begin = NULL;
-  rune_range_.end = NULL;
+  rune_range_.end = nullPatchList;
 }
 
-Inst* Compiler::UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, Inst* next) {
+int Compiler::UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next) {
   Frag f = ByteRange(lo, hi, foldcase);
-  if (next != NULL) {
-    PatchList::Patch(f.end, next);
+  if (next != 0) {
+    PatchList::Patch(inst_, f.end, next);
   } else {
-    rune_range_.end = PatchList::Append(rune_range_.end, f.end);
+    rune_range_.end = PatchList::Append(inst_, rune_range_.end, f.end);
   }
   return f.begin;
 }
 
-Inst* Compiler::RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, Inst* next) {
+int Compiler::RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next) {
   // In Latin1 mode, there's no point in caching.
   // In forward UTF-8 mode, only need to cache continuation bytes.
   if (encoding_ == kEncodingLatin1 ||
@@ -437,26 +481,27 @@ Inst* Compiler::RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, Inst* next) {
     return UncachedRuneByteSuffix(lo, hi, foldcase, next);
   }
 
-  uint64 key =  ((uint64)next->id() << 17) | (lo<<9) | (hi<<1) | foldcase;
-  map<uint64, Inst*>::iterator it = rune_cache_.find(key);
+  uint64 key = ((uint64)next << 17) | (lo<<9) | (hi<<1) | foldcase;
+  map<uint64, int>::iterator it = rune_cache_.find(key);
   if (it != rune_cache_.end())
     return it->second;
-  Inst* inst = UncachedRuneByteSuffix(lo, hi, foldcase, next);
-  rune_cache_[key] = inst;
-  return inst;
+  int id = UncachedRuneByteSuffix(lo, hi, foldcase, next);
+  rune_cache_[key] = id;
+  return id;
 }
 
-void Compiler::AddSuffix(Inst* ip) {
-  if (rune_range_.begin == NULL) {
-    rune_range_.begin = ip;
+void Compiler::AddSuffix(int id) {
+  if (rune_range_.begin == 0) {
+    rune_range_.begin = id;
     return;
   }
 
-  if (!CanAllocInst())
-    rune_range_.begin = fail_inst_;
-
-  Inst* alt = prog_->AllocInst();
-  alt->InitAlt(rune_range_.begin, ip);
+  int alt = AllocInst(1);
+  if (alt < 0) {
+    rune_range_.begin = 0;
+    return;
+  }
+  inst_[alt].InitAlt(rune_range_.begin, id);
   rune_range_.begin = alt;
 }
 
@@ -488,7 +533,7 @@ void Compiler::AddRuneRangeLatin1(Rune lo, Rune hi, bool foldcase) {
     return;
   if (hi > 0xFF)
     hi = 0xFF;
-  AddSuffix(RuneByteSuffix(lo, hi, foldcase, NULL));
+  AddSuffix(RuneByteSuffix(lo, hi, foldcase, 0));
 }
 
 // Table describing how to make a UTF-8 matching machine
@@ -523,10 +568,10 @@ static struct ByteRangeProg {
 };
 
 void Compiler::Add_80_10ffff() {
-  Inst* inst[arraysize(prog_80_10ffff)];
+  int inst[arraysize(prog_80_10ffff)];
   for (int i = 0; i < arraysize(prog_80_10ffff); i++) {
     const ByteRangeProg& p = prog_80_10ffff[i];
-    Inst* next = NULL;
+    int next = 0;
     if (p.next >= 0)
       next = inst[p.next];
     inst[i] = UncachedRuneByteSuffix(p.lo, p.hi, false, next);
@@ -558,7 +603,7 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
 
   // ASCII range is always a special case.
   if (hi < Runeself) {
-    AddSuffix(RuneByteSuffix(lo, hi, foldcase, NULL));
+    AddSuffix(RuneByteSuffix(lo, hi, foldcase, 0));
     return;
   }
 
@@ -583,17 +628,18 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
   uint8 ulo[UTFmax], uhi[UTFmax];
   int n = runetochar(reinterpret_cast<char*>(ulo), &lo);
   int m = runetochar(reinterpret_cast<char*>(uhi), &hi);
+  (void)m;  // USED(m)
   DCHECK_EQ(n, m);
 
-  Inst* ip = NULL;
+  int id = 0;
   if (reversed_) {
     for (int i = 0; i < n; i++)
-      ip = RuneByteSuffix(ulo[i], uhi[i], false, ip);
+      id = RuneByteSuffix(ulo[i], uhi[i], false, id);
   } else {
     for (int i = n-1; i >= 0; i--)
-      ip = RuneByteSuffix(ulo[i], uhi[i], false, ip);
+      id = RuneByteSuffix(ulo[i], uhi[i], false, id);
   }
-  AddSuffix(ip);
+  AddSuffix(id);
 }
 
 // Should not be called.
@@ -853,7 +899,7 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
     // No room for anything.
     c.max_inst_ = 0;
   } else {
-    int64 m = (max_mem - sizeof(Prog)) / sizeof(Inst);
+    int64 m = (max_mem - sizeof(Prog)) / sizeof(Prog::Inst);
     // Limit instruction count so that inst->id() fits nicely in an int.
     // SparseArray also assumes that the indices (inst->id()) are ints.
     // The call to WalkExponential uses 2*c.max_inst_ below,
@@ -864,6 +910,11 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
     // on the program.)
     if (m >= 1<<24)
       m = 1<<24;
+    
+    // Inst imposes its own limit (currently bigger than 2^24 but be safe).
+    if (m > Prog::Inst::kMaxInst)
+      m = Prog::Inst::kMaxInst;
+
     c.max_inst_ = m;
   }
 
@@ -909,6 +960,17 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
     Frag unanchored = c.Cat(dotloop, all);
     c.prog_->set_start_unanchored(unanchored.begin);
   }
+  
+  if (c.prog_->start() == 0 && c.prog_->start_unanchored() == 0) {
+    // No possible matches; keep Fail instruction only.
+    c.inst_len_ = 1;
+  }
+
+  // Trim instruction to minimum array and transfer to Prog.
+  c.Trim();
+  c.prog_->inst_ = c.inst_;
+  c.prog_->size_ = c.inst_len_;
+  c.inst_ = NULL;
 
   // Record whether prog is reversed.
   c.prog_->set_reversed(reversed);
@@ -922,7 +984,7 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
   if (max_mem <= 0) {
     c.prog_->set_dfa_mem(1<<20);
   } else {
-    int64 m = max_mem - sizeof(Prog) - c.inst_count_*sizeof(Inst);
+    int64 m = max_mem - sizeof(Prog) - c.inst_len_*sizeof(Prog::Inst);
     if (m < 0)
       m = 0;
     c.prog_->set_dfa_mem(m);

@@ -27,6 +27,7 @@
 #include "re2/prog.h"
 #include "re2/regexp.h"
 #include "util/sparse_array.h"
+#include "util/sparse_set.h"
 
 namespace re2 {
 
@@ -55,7 +56,7 @@ class NFA {
  private:
   struct Thread {
     union {
-      Inst* ip;
+      int id;
       Thread* next;  // when on free list
     };
     const char** capture;
@@ -63,16 +64,16 @@ class NFA {
 
   // State for explicit stack in AddToThreadq.
   struct AddState {
-    Inst* ip;           // Inst to process
-    const char* cap_j;  // if j>=0, set capture[j] = cap_j before processing ip
+    int id;           // Inst to process
     int j;
+    const char* cap_j;  // if j>=0, set capture[j] = cap_j before processing ip
 
     AddState()
-      : ip(NULL), cap_j(NULL), j(-1) {}
-    explicit AddState(Inst* ip)
-      : ip(ip), cap_j(NULL), j(-1) {}
-    AddState(Inst* ip, const char* cap_j, int j)
-      : ip(ip), cap_j(cap_j), j(j) {}
+      : id(0), j(-1), cap_j(NULL) {}
+    explicit AddState(int id)
+      : id(id), j(-1), cap_j(NULL) {}
+    AddState(int id, const char* cap_j, int j)
+      : id(id), j(j), cap_j(cap_j) {}
   };
 
   // Threadq is a list of threads.  The list is sorted by the order
@@ -85,7 +86,7 @@ class NFA {
 
   // Add r (or its children, following unlabeled arrows)
   // to the workqueue q with associated capture info.
-  void AddToThreadq(Threadq* q, Inst* ip, int flag,
+  void AddToThreadq(Threadq* q, int id, int flag,
                     const char* p, const char** capture);
 
   // Run runq on byte c, appending new states to nextq.
@@ -94,7 +95,7 @@ class NFA {
   // in the input string, used when processing capturing parens.
   // flag is the bitwise or of Bol, Eol, etc., specifying whether
   // ^, $ and \b match the current input point (after c).
-  inline Inst* Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p);
+  inline int Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p);
 
   // Returns text version of capture information, for debugging.
   string FormatCapture(const char** capture);
@@ -106,7 +107,7 @@ class NFA {
   int ComputeFirstByte();
 
   Prog* prog_;          // underlying program
-  Inst* start_;         // start instruction in program
+  int start_;           // start instruction in program
   int ncapture_;        // number of submatches to track
   bool longest_;        // whether searching for longest match
   bool endmatch_;       // whether match must end at text.end()
@@ -182,9 +183,9 @@ void NFA::CopyCapture(const char** dst, const char** src) {
 // The bits in flag (Bol, Eol, etc.) specify whether ^, $ and \b match.
 // The pointer p is the current input position, and m is the
 // current set of match boundaries.
-void NFA::AddToThreadq(Threadq* q, Inst* ip0, int flag,
+void NFA::AddToThreadq(Threadq* q, int id0, int flag,
                        const char* p, const char** capture) {
-  if (ip0 == NULL)
+  if (id0 == 0)
     return;
 
   // Astack_ is pre-allocated to avoid resize operations.
@@ -194,7 +195,7 @@ void NFA::AddToThreadq(Threadq* q, Inst* ip0, int flag,
 
   int nstk = 0;
   AddState* stk = astack_;
-  stk[nstk++] = AddState(ip0);
+  stk[nstk++] = AddState(id0);
 
   while (nstk > 0) {
     DCHECK_LE(nstk, nastack_);
@@ -202,23 +203,24 @@ void NFA::AddToThreadq(Threadq* q, Inst* ip0, int flag,
     if (a.j >= 0)
       capture[a.j] = a.cap_j;
 
-    Inst* ip = a.ip;
-    if (ip == NULL)
+    int id = a.id;
+    if (id == 0)
       continue;
-    if (q->has_index(ip->id())) {
+    if (q->has_index(id)) {
       if (Debug)
-        fprintf(stderr, "  [%d%s]\n", ip->id(), FormatCapture(capture).c_str());
+        fprintf(stderr, "  [%d%s]\n", id, FormatCapture(capture).c_str());
       continue;
     }
 
     // Create entry in q no matter what.  We might fill it in below,
     // or we might not.  Even if not, it is necessary to have it,
     // so that we don't revisit r during the recursion.
-    q->set_new(ip->id(), NULL);
+    q->set_new(id, NULL);
 
-    Thread** tp = &q->find(ip->id())->second;
+    Thread** tp = &q->find(id)->second;
     int j;
     Thread* t;
+    Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
     default:
       LOG(DFATAL) << "unhandled " << ip->opcode() << " in AddToThreadq";
@@ -230,7 +232,7 @@ void NFA::AddToThreadq(Threadq* q, Inst* ip0, int flag,
     case kInstAltMatch:
       // Save state; will pick up at next byte.
       t = AllocThread();
-      t->ip = ip;
+      t->id = id;
       CopyCapture(t->capture, capture);
       *tp = t;
       // fall through
@@ -262,11 +264,11 @@ void NFA::AddToThreadq(Threadq* q, Inst* ip0, int flag,
     case kInstByteRange:
       // Save state; will pick up at next byte.
       t = AllocThread();
-      t->ip = ip;
+      t->id = id;
       CopyCapture(t->capture, capture);
       *tp = t;
       if (Debug)
-        fprintf(stderr, " + %d%s [%p]\n", ip->id(), FormatCapture(t->capture).c_str(), t);
+        fprintf(stderr, " + %d%s [%p]\n", id, FormatCapture(t->capture).c_str(), t);
       break;
 
     case kInstEmptyWidth:
@@ -287,15 +289,13 @@ void NFA::AddToThreadq(Threadq* q, Inst* ip0, int flag,
 // ^, $ and \b match the current input point (after c).
 // Frees all the threads on runq.
 // If there is a shortcut to the end, returns that shortcut.
-Inst* NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
+int NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
   nextq->clear();
 
   for (Threadq::iterator i = runq->begin(); i != runq->end(); ++i) {
     Thread* t = i->second;
     if (t == NULL)
       continue;
-
-    Inst* ip = t->ip;
 
     if (longest_) {
       // Can skip any threads started after our current best match.
@@ -304,6 +304,9 @@ Inst* NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
         continue;
       }
     }
+
+    int id = t->id;
+    Prog::Inst* ip = prog_->inst(id);
 
     switch (ip->opcode()) {
       default:
@@ -320,14 +323,14 @@ Inst* NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
         if (i != runq->begin())
           break;
         // The match is ours if we want it.
-        if (ip->greedy() || longest_) {
+        if (ip->greedy(prog_) || longest_) {
           CopyCapture((const char**)match_, t->capture);
           FreeThread(t);
           for (++i; i != runq->end(); ++i)
             FreeThread(i->second);
           runq->clear();
           matched_ = true;
-          if (ip->greedy())
+          if (ip->greedy(prog_))
             return ip->out1();
           return ip->out();
         }
@@ -397,11 +400,8 @@ static bool StringPieceContains(const StringPiece haystack, const StringPiece ne
 bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
             bool anchored, bool longest,
             StringPiece* submatch, int nsubmatch) {
-  // Can't happen -- set during constructor.
-  if (start_ == NULL) {
-    LOG(DFATAL) << "start_ == NULL";
+  if (start_ == 0)
     return false;
-  }
 
   StringPiece context = const_context;
   if (context.begin() == NULL)
@@ -504,7 +504,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
         Thread* t = i->second;
         if (t == NULL)
           continue;
-        fprintf(stderr, " %d%s", t->ip->id(),
+        fprintf(stderr, " %d%s", t->id,
                 FormatCapture((const char**)t->capture).c_str());
       }
       fprintf(stderr, "\n");
@@ -514,14 +514,15 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
     // repeating the flag computation above).
     // This is a no-op the first time around the loop, because
     // runq is empty.
-    Inst* ip = Step(runq, nextq, c, flag, p-1);
+    int id = Step(runq, nextq, c, flag, p-1);
     DCHECK_EQ(runq->size(), 0);
     swap(nextq, runq);
     nextq->clear();
-    if (ip != NULL) {
+    if (id != 0) {
       // We're done: full match ahead.
       p = text.end();
       for (;;) {
+        Prog::Inst* ip = prog_->inst(id);
         switch (ip->opcode()) {
           default:
             LOG(DFATAL) << "Unexpected opcode in short circuit: " << ip->opcode();
@@ -529,11 +530,11 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
 
           case kInstCapture:
             match_[ip->cap()] = p;
-            ip = ip->out();
+            id = ip->out();
             continue;
 
           case kInstNop:
-            ip = ip->out();
+            id = ip->out();
             continue;
 
           case kInstMatch:
@@ -546,7 +547,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
               LOG(DFATAL) << "Unexpected empty-width in short circuit: " << ip->empty();
               break;
             }
-            ip = ip->out();
+            id = ip->out();
             continue;
         }
         break;
@@ -620,16 +621,17 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
 // Computes whether all successful matches have a common first byte,
 // and if so, returns that byte.  If not, returns -1.
 int NFA::ComputeFirstByte() {
-  if (start_ == NULL)
+  if (start_ == 0)
     return -1;
 
   int b = -1;  // first byte, not yet computed
 
-  typedef SparseArray<Inst*> Workq;
+  typedef SparseSet Workq;
   Workq q(prog_->size());
-  q.set(start_->id(), start_);
+  q.insert(start_);
   for (Workq::iterator it = q.begin(); it != q.end(); ++it) {
-    Inst* ip = it->value();
+    int id = *it;
+    Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       default:
         LOG(DFATAL) << "unhandled " << ip->opcode() << " in ComputeFirstByte";
@@ -661,16 +663,16 @@ int NFA::ComputeFirstByte() {
         // in order to be as conservative as possible
         // (assume all possible empty-width flags are true).
         if (ip->out())
-          q.set(ip->out()->id(), ip->out());
+          q.insert(ip->out());
         break;
 
       case kInstAlt:
       case kInstAltMatch:
         // Explore alternatives.
         if (ip->out())
-          q.set(ip->out()->id(), ip->out());
+          q.insert(ip->out());
         if (ip->out1())
-          q.set(ip->out1()->id(), ip->out1());
+          q.insert(ip->out1());
         break;
 
       case kInstFail:
