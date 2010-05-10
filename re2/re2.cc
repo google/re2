@@ -110,6 +110,7 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
   prog_ = NULL;
   rprog_ = NULL;
   named_groups_ = NULL;
+  num_captures_ = -1;
 
   RegexpStatus status;
   int flags = Regexp::ClassNL;
@@ -796,7 +797,11 @@ bool RE2::Rewrite(string *out, const StringPiece &rewrite,
 int RE2::NumberOfCapturingGroups() const {
   if (suffix_regexp_ == NULL)
     return -1;
-  return suffix_regexp_->NumCaptures();
+  ANNOTATE_BENIGN_RACE(&num_captures_, "benign race: in the worst case"
+    " multiple threads end up doing the same work in parallel.");
+  if (num_captures_ == -1)
+    num_captures_ = suffix_regexp_->NumCaptures();
+  return num_captures_;
 }
 
 // Checks that the rewrite string is well-formed with respect to this

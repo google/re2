@@ -675,6 +675,7 @@ class RE2 {
                                            // (or points to empty string)
   mutable ErrorCode        error_code_;    // Error code
   mutable string           error_arg_;     // Fragment of regexp showing error
+  mutable int              num_captures_;  // Number of capturing groups
 
   // Map from capture names to indices
   mutable const map<string, int>* named_groups_;

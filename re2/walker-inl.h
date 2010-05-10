@@ -191,12 +191,13 @@ template<typename T> T Regexp::Walker<T>::WalkInternal(Regexp* re, T top_arg,
       }
       default: {
         if (re->nsub_ > 0) {
+          Regexp** sub = re->sub();
           if (s->n < re->nsub_) {
-            if (use_copy && s->n > 0 && re->sub_[s->n - 1] == re->sub_[s->n]) {
+            if (use_copy && s->n > 0 && sub[s->n - 1] == sub[s->n]) {
               s->child_args[s->n] = Copy(s->child_args[s->n - 1]);
               s->n++;
             } else {
-              stack_->push(WalkState<T>(re->sub_[s->n], s->pre_arg));
+              stack_->push(WalkState<T>(sub[s->n], s->pre_arg));
             }
             continue;
           }

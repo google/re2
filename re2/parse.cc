@@ -102,6 +102,11 @@ class Regexp::ParseState {
 
   // Processes the end of input, returning the final regexp.
   Regexp* DoFinish();
+  
+  // Finishes the regexp if necessary, preparing it for use
+  // in a more complicated expression.
+  // If it is a CharClassBuilder, converts into a CharClass.
+  Regexp* FinishRegexp(Regexp*);
 
   // These routines don't manipulate the parse stack
   // directly, but they do need to look at flags_.
@@ -174,6 +179,24 @@ Regexp::ParseState::~ParseState() {
   }
 }
 
+// Finishes the regexp if necessary, preparing it for use in
+// a more complex expression.
+// If it is a CharClassBuilder, converts into a CharClass.
+Regexp* Regexp::ParseState::FinishRegexp(Regexp* re) {
+  if (re == NULL)
+    return NULL;
+  re->down_ = NULL;
+
+  if (re->op_ == kRegexpCharClass && re->ccb_ != NULL) {
+    CharClassBuilder* ccb = re->ccb_;
+    re->ccb_ = NULL;
+    re->cc_ = ccb->GetCharClass();
+    delete ccb;
+  }
+
+  return re;
+}
+
 // Pushes the given regular expression onto the stack.
 // Could check for too much memory used here.
 bool Regexp::ParseState::PushRegexp(Regexp* re) {
@@ -185,14 +208,14 @@ bool Regexp::ParseState::PushRegexp(Regexp* re) {
   // analysis does better with fewer character classes.
   // Similarly, [Aa] can be rewritten as a literal A with ASCII case folding.
   if (re->op_ == kRegexpCharClass) {
-    if (re->cc_->size() == 1) {
-      Rune r = re->cc_->begin()->lo;
+    if (re->ccb_->size() == 1) {
+      Rune r = re->ccb_->begin()->lo;
       re->Decref();
       re = new Regexp(kRegexpLiteral, flags_);
       re->rune_ = r;
-    } else if (re->cc_->size() == 2) {
-      Rune r = re->cc_->begin()->lo;
-      if ('A' <= r && r <= 'Z' && re->cc_->Contains(r + 'a' - 'A')) {
+    } else if (re->ccb_->size() == 2) {
+      Rune r = re->ccb_->begin()->lo;
+      if ('A' <= r && r <= 'Z' && re->ccb_->Contains(r + 'a' - 'A')) {
         re->Decref();
         re = new Regexp(kRegexpLiteral, flags_ | FoldCase);
         re->rune_ = r + 'a' - 'A';
@@ -279,7 +302,7 @@ Rune CycleFoldRune(Rune r) {
 // Add lo-hi to the class, along with their fold-equivalent characters.
 // If lo-hi is already in the class, assume that the fold-equivalent
 // chars are there too, so there's no work to do.
-static void AddFoldedRange(CharClass* cc, Rune lo, Rune hi, int depth) {
+static void AddFoldedRange(CharClassBuilder* cc, Rune lo, Rune hi, int depth) {
   // AddFoldedRange calls itself recursively for each rune in the fold cycle.
   // Most folding cycles are small: there aren't any bigger than four in the
   // current Unicode tables.  make_unicode_casefold.py checks that
@@ -335,14 +358,15 @@ bool Regexp::ParseState::PushLiteral(Rune r) {
   // Do case folding if needed.
   if ((flags_ & FoldCase) && CycleFoldRune(r) != r) {
     Regexp* re = new Regexp(kRegexpCharClass, flags_ & ~FoldCase);
+    re->ccb_ = new CharClassBuilder;
     Rune r1 = r;
     do {
       if (!(flags_ & NeverNL) || r != '\n') {
-        re->cc()->AddRange(r, r);
+        re->ccb_->AddRange(r, r);
       }
       r = CycleFoldRune(r);
     } while (r != r1);
-    re->cc()->RemoveAbove(rune_max_);
+    re->ccb_->RemoveAbove(rune_max_);
     return PushRegexp(re);
   }
 
@@ -394,8 +418,9 @@ bool Regexp::ParseState::PushDot() {
     return PushSimpleOp(kRegexpAnyChar);
   // Rewrite . into [^\n]
   Regexp* re = new Regexp(kRegexpCharClass, flags_ & ~FoldCase);
-  re->cc_->AddRange(0, '\n' - 1);
-  re->cc_->AddRange('\n' + 1, rune_max_);
+  re->ccb_ = new CharClassBuilder;
+  re->ccb_->AddRange(0, '\n' - 1);
+  re->ccb_->AddRange('\n' + 1, rune_max_);
   return PushRegexp(re);
 }
 
@@ -420,9 +445,9 @@ bool Regexp::ParseState::PushRepeatOp(RegexpOp op, const StringPiece& s,
     fl = fl ^ NonGreedy;
   Regexp* re = new Regexp(op, fl);
   re->AllocSub(1);
-  re->sub_[0] = stacktop_;
-  re->simple_ = re->ComputeSimple();
   re->down_ = stacktop_->down_;
+  re->sub()[0] = FinishRegexp(stacktop_);
+  re->simple_ = re->ComputeSimple();
   stacktop_ = re;
   return true;
 }
@@ -449,16 +474,17 @@ bool Regexp::ParseState::PushRepetition(int min, int max,
   re->min_ = min;
   re->max_ = max;
   re->AllocSub(1);
-  re->sub_[0] = stacktop_;
+  re->down_ = stacktop_->down_;
+  re->sub()[0] = FinishRegexp(stacktop_);
   re->simple_ = re->ComputeSimple();
 
-  re->down_ = stacktop_->down_;
   stacktop_ = re;
   return true;
 }
 
-// Pseudo-operators marking left paren and pipe operators
-// in the regexp stack.
+// Pseudo-operators - only on parse stack.
+
+// Markers for left paren and pipe operators in the regexp stack.
 const RegexpOp kLeftParen = static_cast<RegexpOp>(kMaxRegexpOp+1);
 const RegexpOp kVerticalBar = static_cast<RegexpOp>(kMaxRegexpOp+2);
 
@@ -485,7 +511,7 @@ bool Regexp::ParseState::DoLeftParenNoCapture() {
 }
 
 // Adds r to cc, along with r's upper case if foldascii is set.
-static void AddLiteral(CharClass* cc, Rune r, bool foldascii) {
+static void AddLiteral(CharClassBuilder* cc, Rune r, bool foldascii) {
   cc->AddRange(r, r);
   if (foldascii && 'a' <= r && r <= 'z')
     cc->AddRange(r + 'A' - 'a', r + 'A' - 'a');
@@ -513,21 +539,24 @@ bool Regexp::ParseState::DoVerticalBar() {
          r1->op() == kRegexpCharClass ||
          r1->op() == kRegexpAnyChar) &&
         (r3 = r2->down_) != NULL) {
+      Rune rune;
       switch (r3->op()) {
         case kRegexpLiteral:  // convert to char class
+          rune = r3->rune_;
           r3->op_ = kRegexpCharClass;
-          r3->cc_ = new CharClass;
-          AddLiteral(r3->cc_, r3->rune_, r3->parse_flags_ & Regexp::FoldCase);
+          r3->cc_ = NULL;
+          r3->ccb_ = new CharClassBuilder;
+          AddLiteral(r3->ccb_, rune, r3->parse_flags_ & Regexp::FoldCase);
           // fall through
         case kRegexpCharClass:
           if (r1->op() == kRegexpLiteral)
-            AddLiteral(r3->cc_, r1->rune_, r1->parse_flags_ & Regexp::FoldCase);
+            AddLiteral(r3->ccb_, r1->rune_, r1->parse_flags_ & Regexp::FoldCase);
           else if (r1->op() == kRegexpCharClass)
-            r3->cc_->AddCharClass(r1->cc());
-          if (r1->op() == kRegexpAnyChar || r3->cc_->full()) {
+            r3->ccb_->AddCharClass(r1->ccb_);
+          if (r1->op() == kRegexpAnyChar || r3->ccb_->full()) {
+            delete r3->ccb_;
+            r3->ccb_ = NULL;
             r3->op_ = kRegexpAnyChar;
-            delete r3->cc_;
-            r3->cc_ = NULL;
           }
           // fall through
         case kRegexpAnyChar:
@@ -579,7 +608,7 @@ bool Regexp::ParseState::DoRightParen() {
     re->op_ = kRegexpCapture;
     // re->cap_ is already set
     re->AllocSub(1);
-    re->sub_[0] = r1;
+    re->sub()[0] = FinishRegexp(r1);
     re->simple_ = re->ComputeSimple();
   } else {
     re->Decref();
@@ -598,7 +627,7 @@ Regexp* Regexp::ParseState::DoFinish() {
     return NULL;
   }
   stacktop_ = NULL;
-  return re;
+  return FinishRegexp(re);
 }
 
 // Collapse the regexps on top of the stack, down to the
@@ -623,19 +652,23 @@ void Regexp::ParseState::DoCollapse(RegexpOp op) {
     return;
 
   // Construct op (alternation or concatenation), flattening op of op.
-  Regexp* re = new Regexp(op, flags_);
-  re->AllocSub(n);
+  Regexp** subs = new Regexp*[n];
   next = NULL;
+  int i = n;
   for (sub = stacktop_; sub != NULL && !IsMarker(sub->op()); sub = next) {
-    next = sub->down_;  // in case we sub->Decref().
+    next = sub->down_;
     if (sub->op_ == op) {
+      Regexp** sub_subs = sub->sub();
       for (int k = sub->nsub_ - 1; k >= 0; k--)
-        re->sub_[--n] = sub->sub_[k]->Incref();
+        subs[--i] = sub_subs[k]->Incref();
       sub->Decref();
     } else {
-      re->sub_[--n] = sub;
+      subs[--i] = FinishRegexp(sub);
     }
   }
+  
+  Regexp* re = ConcatOrAlternate(op, subs, n, flags_);
+  delete[] subs;
   re->simple_ = re->ComputeSimple();
   re->down_ = next;
   stacktop_ = re;
@@ -665,8 +698,8 @@ void Regexp::ParseState::DoAlternation() {
 }
 
 // Incremental conversion of concatenated literals into strings.
-// If top of stack is literal, literal or literal, string or string, literal
-// or string, string, collapse into single string.
+// If top of stack is (literal, literal) or (literal, string) or (string, literal)
+// or (string, string), collapse into single string.
 // Don't walk down the stack -- the parser calls this frequently
 // enough that below the bottom two is known to be collapsed.
 // Only called when another regexp is about to be pushed
@@ -689,8 +722,11 @@ bool Regexp::ParseState::MaybeConcatString(int r, ParseFlags flags) {
 
   if (re2->op_ == kRegexpLiteral) {
     // convert into string
+    Rune rune = re2->rune_;
     re2->op_ = kRegexpLiteralString;
-    re2->AddRuneToString(re2->rune_);
+    re2->nrunes_ = 0;
+    re2->runes_ = NULL;
+    re2->AddRuneToString(rune);
   }
 
   // push re1 into re2.
@@ -983,7 +1019,7 @@ BadEscape:
 
 // Add a range to the character class, but exclude newline if asked.
 // Also handle case folding.
-static void AddRange(CharClass* cc, Rune lo, Rune hi,
+static void AddRange(CharClassBuilder* cc, Rune lo, Rune hi,
                      Regexp::ParseFlags parse_flags) {
 
   // Take out \n if the flags say so.
@@ -1037,7 +1073,7 @@ static UGroup* LookupUnicodeGroup(const StringPiece& name) {
 }
 
 // Add a UGroup to the character class.
-static void AddUGroup(CharClass *cc, UGroup *g,
+static void AddUGroup(CharClassBuilder *cc, UGroup *g,
                       Regexp::ParseFlags parse_flags) {
   for (int i = 0; i < g->nr16; i++) {
     AddRange(cc, g->r16[i].lo, g->r16[i].hi, parse_flags);
@@ -1048,7 +1084,7 @@ static void AddUGroup(CharClass *cc, UGroup *g,
 }
 
 // Add the negation of a UGroup to the character class.
-static void AddNegatedUGroup(CharClass* cc, UGroup *g,
+static void AddNegatedUGroup(CharClassBuilder* cc, UGroup *g,
                              Regexp::ParseFlags parse_flags) {
   int next = 0;
   for (int i = 0; i < g->nr16; i++) {
@@ -1095,7 +1131,7 @@ enum ParseStatus {
 // Maybe parses a Unicode character group like \p{Han} or \P{Han}
 // (the latter is a negated group).
 ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
-                              CharClass *cc,
+                              CharClassBuilder *cc,
                               RegexpStatus* status) {
   // Decide whether to parse.
   if (!(parse_flags & Regexp::UnicodeGroups))
@@ -1160,7 +1196,7 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
 // Sets *s to span the remainder of the string.
 // Adds the ranges corresponding to the class to ranges.
 static ParseStatus ParseCCName(StringPiece* s, Regexp::ParseFlags parse_flags,
-                               CharClass *cc,
+                               CharClassBuilder *cc,
                                RegexpStatus* status) {
   // Check begins with [:
   const char* p = s->data();
@@ -1257,6 +1293,7 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
   }
   bool negated = false;
   Regexp* re = new Regexp(kRegexpCharClass, flags_ & ~FoldCase);
+  re->ccb_ = new CharClassBuilder;
   s->remove_prefix(1);  // '['
   if (s->size() > 0 && (*s)[0] == '^') {
     s->remove_prefix(1);  // '^'
@@ -1264,7 +1301,7 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
     if (!(flags_ & ClassNL) || (flags_ & NeverNL)) {
       // If NL can't match implicitly, then pretend
       // negated classes include a leading \n.
-      re->cc_->AddRange('\n', '\n');
+      re->ccb_->AddRange('\n', '\n');
     }
   }
   bool first = true;  // ] is okay as first char in class
@@ -1290,7 +1327,7 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
 
     // Look for [:alnum:] etc.
     if (s->size() > 2 && (*s)[0] == '[' && (*s)[1] == ':') {
-      switch (ParseCCName(s, flags_, re->cc_, status)) {
+      switch (ParseCCName(s, flags_, re->ccb_, status)) {
         case kParseOk:
           continue;
         case kParseError:
@@ -1305,7 +1342,7 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
     if (s->size() > 2 &&
         (*s)[0] == '\\' &&
         ((*s)[1] == 'p' || (*s)[1] == 'P')) {
-      switch (ParseUnicodeGroup(s, flags_, re->cc_, status)) {
+      switch (ParseUnicodeGroup(s, flags_, re->ccb_, status)) {
         case kParseOk:
           continue;
         case kParseError:
@@ -1319,7 +1356,7 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
     // Look for Perl character class symbols (extension).
     UGroup *g = MaybeParsePerlCCEscape(s, flags_);
     if (g != NULL) {
-      AddUGroup(re->cc_, g, flags_);
+      AddUGroup(re->ccb_, g, flags_);
       continue;
     }
 
@@ -1334,7 +1371,7 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
     // Regexp::ClassNL is set.  In an explicit range or singleton
     // like we just parsed, we do not filter \n out, so set ClassNL
     // in the flags.
-    AddRange(re->cc_, rr.lo, rr.hi, flags_ | Regexp::ClassNL);
+    AddRange(re->ccb_, rr.lo, rr.hi, flags_ | Regexp::ClassNL);
   }
   if (s->size() == 0) {
     status->set_code(kRegexpMissingBracket);
@@ -1345,8 +1382,8 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
   s->remove_prefix(1);  // ']'
 
   if (negated)
-    re->cc_->Negate();
-  re->cc_->RemoveAbove(rune_max_);
+    re->ccb_->Negate();
+  re->ccb_->RemoveAbove(rune_max_);
 
   *out_re = re;
   return true;
@@ -1752,7 +1789,8 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
 
         if (t[1] == 'p' || t[1] == 'P') {
           Regexp* re = new Regexp(kRegexpCharClass, ps.flags() & ~FoldCase);
-          switch (ParseUnicodeGroup(&t, ps.flags(), re->cc_, status)) {
+          re->ccb_ = new CharClassBuilder;
+          switch (ParseUnicodeGroup(&t, ps.flags(), re->ccb_, status)) {
             case kParseOk:
               if (!ps.PushRegexp(re))
                 return NULL;
@@ -1769,7 +1807,8 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
         UGroup *g = MaybeParsePerlCCEscape(&t, ps.flags());
         if (g != NULL) {
           Regexp* re = new Regexp(kRegexpCharClass, ps.flags() & ~FoldCase);
-          AddUGroup(re->cc_, g, ps.flags());
+          re->ccb_ = new CharClassBuilder;
+          AddUGroup(re->ccb_, g, ps.flags());
           if (!ps.PushRegexp(re))
             return NULL;
           break;

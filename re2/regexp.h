@@ -146,7 +146,7 @@ enum RegexpOp {
   // Matches empty string at end of text.
   kRegexpEndText,
 
-  // Matches character class given by ranges_.
+  // Matches character class given by cc_.
   kRegexpCharClass,
 
   kMaxRegexpOp = kRegexpCharClass,
@@ -228,12 +228,44 @@ struct RuneRangeLess {
   }
 };
 
-// Character class: contains non-overlapping, non-abutting RuneRanges.
-typedef set<RuneRange, RuneRangeLess> RuneRangeSet;
+class CharClassBuilder;
 
 class CharClass {
  public:
-  CharClass();
+  void Delete();
+
+  typedef RuneRange* iterator;
+  iterator begin() { return ranges_; }
+  iterator end() { return ranges_ + nranges_; }
+
+  int size() { return nrunes_; }
+  bool empty() { return nrunes_ == 0; }
+  bool full() { return nrunes_ == Runemax+1; }
+  bool FoldsASCII() { return folds_ascii_; }
+
+  bool Contains(Rune r);
+  CharClass* Negate();
+
+ private:
+  CharClass();  // not implemented
+  ~CharClass();  // not implemented
+  static CharClass* New(int maxranges);
+  
+  friend class CharClassBuilder;
+
+  bool folds_ascii_;
+  int nrunes_;
+  RuneRange *ranges_;
+  int nranges_;
+  DISALLOW_EVIL_CONSTRUCTORS(CharClass);
+};
+
+// Character class set: contains non-overlapping, non-abutting RuneRanges.
+typedef set<RuneRange, RuneRangeLess> RuneRangeSet;
+
+class CharClassBuilder {
+ public:
+  CharClassBuilder();
 
   typedef RuneRangeSet::iterator iterator;
   iterator begin() { return ranges_.begin(); }
@@ -243,14 +275,14 @@ class CharClass {
   bool empty() { return nrunes_ == 0; }
   bool full() { return nrunes_ == Runemax+1; }
 
-  const RuneRangeSet& ranges() { return ranges_; }
   bool Contains(Rune r);
   bool FoldsASCII();
   bool AddRange(Rune lo, Rune hi);  // returns whether class changed
-  CharClass* Copy();
-  bool AddCharClass(CharClass* cc);
+  CharClassBuilder* Copy();
+  void AddCharClass(CharClassBuilder* cc);
   void Negate();
   void RemoveAbove(Rune r);
+  CharClass* GetCharClass();
 
  private:
   static const uint32 AlphaMask = (1<<26) - 1;
@@ -258,7 +290,7 @@ class CharClass {
   uint32 lower_;  // bitmap of a-z
   int nrunes_;
   RuneRangeSet ranges_;
-  DISALLOW_EVIL_CONSTRUCTORS(CharClass);
+  DISALLOW_EVIL_CONSTRUCTORS(CharClassBuilder);
 };
 
 class Regexp {
@@ -302,29 +334,37 @@ class Regexp {
                    UnicodeGroups,
 
     // Internal use only.
-    WasDollar    = 1<<30,  // on kRegexpEndText: was $ in regexp text
+    WasDollar    = 1<<15,  // on kRegexpEndText: was $ in regexp text
   };
 
   // Get.  No set, Regexps are logically immutable once created.
-  RegexpOp op() { return op_; }
-  Regexp** sub() { return sub_; }
+  RegexpOp op() { return static_cast<RegexpOp>(op_); }
   int nsub() { return nsub_; }
-  int min() { return min_; }
-  int max() { return max_; }
-  Rune rune() { return rune_; }
-  CharClass* cc() { return cc_; }
-  enum ParseFlags parse_flags() { return parse_flags_; }
-  int cap() { return cap_; }
-  const string* name() { return name_; }
   bool simple() { return simple_; }
-  Rune* runes() { return runes_; }
-  int nrunes() { return nrunes_; }
+  enum ParseFlags parse_flags() { return static_cast<ParseFlags>(parse_flags_); }
+  int Ref();  // For testing.
+
+  Regexp** sub() {
+    if(nsub_ <= 1)
+      return &subone_;
+    else
+      return submany_;
+  }
+
+  int min() { DCHECK_EQ(op_, kRegexpRepeat); return min_; }
+  int max() { DCHECK_EQ(op_, kRegexpRepeat); return max_; }
+  Rune rune() { DCHECK_EQ(op_, kRegexpLiteral); return rune_; }
+  CharClass* cc() { DCHECK_EQ(op_, kRegexpCharClass); return cc_; }
+  int cap() { DCHECK_EQ(op_, kRegexpCapture); return cap_; }
+  const string* name() { DCHECK_EQ(op_, kRegexpCapture); return name_; }
+  Rune* runes() { DCHECK_EQ(op_, kRegexpLiteralString); return runes_; }
+  int nrunes() { DCHECK_EQ(op_, kRegexpLiteralString); return nrunes_; }
 
   // Increments reference count, returns object as convenience.
-  Regexp* Incref() { ref_++; return this; }
+  Regexp* Incref();
 
   // Decrements reference count and deletes this object if count reaches 0.
-  void Decref() { if(--ref_ <= 0) Destroy(); }
+  void Decref();
 
   // Parses string s to produce regular expression, returned.
   // Caller must release return value with re->Decref().
@@ -426,12 +466,17 @@ class Regexp {
   // Computes whether Regexp is already simple.
   bool ComputeSimple();
 
+  // Constructor that generates a concatenation or alternation,
+  // enforcing the limit on the number of subexpressions for
+  // a particular Regexp.
+  static Regexp* ConcatOrAlternate(RegexpOp op, Regexp** subs, int nsubs, ParseFlags flags);
+
   // Allocate space for n sub-regexps.
   void AllocSub(int n) {
-    if (n <= arraysize(smallsub_))
-      sub_ = smallsub_;
-    else
-      sub_ = new Regexp*[n];
+    if (n < 0 || static_cast<uint16>(n) != n)
+      LOG(FATAL) << "Cannot AllocSub " << n;
+    if (n > 1)
+      submany_ = new Regexp*[n];
     nsub_ = n;
   }
 
@@ -439,40 +484,70 @@ class Regexp {
   void AddRuneToString(Rune r);
 
   // Operator.  See description of operators above.
-  enum RegexpOp op_;
+  // uint8 instead of RegexpOp to control space usage.
+  uint8 op_;
+
+  // Is this regexp structure already simple
+  // (has it been returned by Simplify)?
+  // uint8 instead of bool to control space usage.
+  uint8 simple_;
 
   // Flags saved from parsing and used during execution.
   // (Only FoldCase is used.)
-  ParseFlags parse_flags_;
+  // uint16 instead of ParseFlags to control space usage.
+  uint16 parse_flags_;
 
   // Reference count.  Exists so that SimplifyRegexp can build
   // regexp structures that are dags rather than trees to avoid
   // exponential blowup in space requirements.
-  int ref_;
+  // uint16 to control space usage.
+  // The standard regexp routines will never generate a
+  // ref greater than the maximum repeat count (100),
+  // but even so, Incref and Decref consult an overflow map
+  // when ref_ reaches kMaxRef.
+  uint16 ref_;
+  static const uint16 kMaxRef = 0xffff;
 
-  // Is this regexp structure already simple
-  // (has it been returned by Simplify)?
-  bool simple_;
-
-  // How many capturing groups?  -1 if unknown.
-  int num_captures_;
-
-  // Arguments to operator.  See description of operators above.
-  int cap_;
-  int max_;
-  int min_;
-  int nrunes_;
-  int nsub_;
-  Rune rune_;
-
-  CharClass* cc_;
-  Regexp* smallsub_[2];
-  Regexp** sub_;
-  Rune* runes_;
-  string* name_;
+  // Subexpressions.
+  // uint16 to control space usage.
+  // Concat and Alternate handle larger numbers of subexpressions
+  // by building concatenation or alternation trees.
+  // Other routines should call Concat or Alternate instead of
+  // filling in sub() by hand.
+  uint16 nsub_;
+  static const uint16 kMaxNsub = 0xffff;
+  union {
+    Regexp** submany_;  // if nsub_ > 1
+    Regexp* subone_;  // if nsub_ == 1
+  };
 
   // Extra space for parse and teardown stacks.
   Regexp* down_;
+
+  // Arguments to operator.  See description of operators above.
+  union {
+    struct {  // Repeat
+      int max_;
+      int min_;
+    };
+    struct {  // Capture
+      int cap_;
+      string* name_;
+    };
+    struct {  // LiteralString
+      int nrunes_;
+      Rune* runes_;
+    };
+    struct {  // CharClass
+      // These two could be in separate union members,
+      // but it wouldn't save any space (there are other two-word structs)
+      // and keeping them separate avoids confusion during parsing.
+      CharClass* cc_;
+      CharClassBuilder* ccb_;
+    };
+    Rune rune_;  // Literal
+    void *the_union_[2];  // as big as any other element, for memset
+  };
 
   DISALLOW_EVIL_CONSTRUCTORS(Regexp);
 };

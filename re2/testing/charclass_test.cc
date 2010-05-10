@@ -82,21 +82,26 @@ static CCTest tests[] = {
     { {-1} } },
 };
 
+template<class CharClass>
 static void Broke(const char *desc, const CCTest* t, CharClass* cc) {
-  printf("\n");
-  printf("CharClass added: [%s]", desc);
-  for (int k = 0; t->add[k].lo >= 0; k++)
-    printf(" %d-%d", t->add[k].lo, t->add[k].hi);
-  printf("\n");
-  if (t->remove >= 0)
-    printf("Removed > %d\n", t->remove);
-  printf("\twant:");
-  for (int k = 0; t->final[k].lo >= 0; k++)
-    printf(" %d-%d", t->final[k].lo, t->final[k].hi);
-  printf("\n");
+  if (t == NULL) {
+    printf("\t%s:", desc);
+  } else {
+    printf("\n");
+    printf("CharClass added: [%s]", desc);
+    for (int k = 0; t->add[k].lo >= 0; k++)
+      printf(" %d-%d", t->add[k].lo, t->add[k].hi);
+    printf("\n");
+    if (t->remove >= 0)
+      printf("Removed > %d\n", t->remove);
+    printf("\twant:");
+    for (int k = 0; t->final[k].lo >= 0; k++)
+      printf(" %d-%d", t->final[k].lo, t->final[k].hi);
+    printf("\n");
+    printf("\thave:");
+  }
 
-  printf("\thave:");
-  for (CharClass::iterator it = cc->begin(); it != cc->end(); ++it)
+  for (typename CharClass::iterator it = cc->begin(); it != cc->end(); ++it)
     printf(" %d-%d", it->lo, it->hi);
   printf("\n");
 }
@@ -108,8 +113,29 @@ bool ShouldContain(CCTest *t, int x) {
   return false;
 }
 
+// Helpers to make templated CorrectCC work with both CharClass and CharClassBuilder.
+
+CharClass* Negate(CharClass *cc) {
+  return cc->Negate();
+}
+
+void Delete(CharClass* cc) {
+  cc->Delete();
+}
+
+CharClassBuilder* Negate(CharClassBuilder* cc) {
+  CharClassBuilder* ncc = cc->Copy();
+  ncc->Negate();
+  return ncc;
+}
+
+void Delete(CharClassBuilder* cc) {
+  delete cc;
+}
+
+template<class CharClass>
 bool CorrectCC(CharClass *cc, CCTest *t, const char *desc) {
-  CharClass::iterator it = cc->begin();
+  typename CharClass::iterator it = cc->begin();
   int size = 0;
   for (int j = 0; t->final[j].lo >= 0; j++, ++it) {
     if (it == cc->end() ||
@@ -141,46 +167,55 @@ bool CorrectCC(CharClass *cc, CCTest *t, const char *desc) {
     }
   }
 
-  CharClass* ncc = cc->Copy();
-  ncc->Negate();
+  CharClass* ncc = Negate(cc);
   for (int j = 0; j < 101; j++) {
     if (j == 100)
       j = Runemax;
     if (ShouldContain(t, j) == ncc->Contains(j)) {
       Broke(desc, t, cc);
+      Broke("ncc", NULL, ncc);
       printf("want ncc contains(%d)!=%d, got %d\n",
              j, ShouldContain(t, j), ncc->Contains(j));
-      delete ncc;
+      Delete(ncc);
       return false;
     }
     if (ncc->size() != Runemax+1 - cc->size()) {
       Broke(desc, t, cc);
+      Broke("ncc", NULL, ncc);
       printf("ncc size should be %d is %d\n",
              Runemax+1 - cc->size(), ncc->size());
-      delete ncc;
+      Delete(ncc);
       return false;
     }
   }
-  delete ncc;
+  Delete(ncc);
   return true;
 }
 
-TEST(TestCharClass, Adds) {
+TEST(TestCharClassBuilder, Adds) {
   int nfail = 0;
   for (int i = 0; i < arraysize(tests); i++) {
-    CharClass cc;
+    CharClassBuilder ccb;
     CCTest* t = &tests[i];
     for (int j = 0; t->add[j].lo >= 0; j++)
-      cc.AddRange(t->add[j].lo, t->add[j].hi);
+      ccb.AddRange(t->add[j].lo, t->add[j].hi);
     if (t->remove >= 0)
-      cc.RemoveAbove(t->remove);
-    if (!CorrectCC(&cc, t, "before copy"))
+      ccb.RemoveAbove(t->remove);
+    if (!CorrectCC(&ccb, t, "before copy (CharClassBuilder)"))
       nfail++;
+    CharClass* cc = ccb.GetCharClass();
+    if (!CorrectCC(cc, t, "before copy (CharClass)"))
+      nfail++;
+    cc->Delete();
 
-    CharClass *cc1 = cc.Copy();
-    if (!CorrectCC(cc1, t, "after copy"))
+    CharClassBuilder *ccb1 = ccb.Copy();
+    if (!CorrectCC(ccb1, t, "after copy (CharClassBuilder)"))
       nfail++;
-    delete cc1;
+    cc = ccb.GetCharClass();
+    if (!CorrectCC(cc, t, "after copy (CharClass)"))
+      nfail++;
+    cc->Delete();
+    delete ccb1;
   }
   EXPECT_EQ(nfail, 0);
 }

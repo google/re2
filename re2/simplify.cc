@@ -40,6 +40,7 @@ bool Regexp::SimplifyRegexp(const StringPiece& src, ParseFlags flags,
 // Assuming the simple_ flags on the children are accurate,
 // is this Regexp* simple?
 bool Regexp::ComputeSimple() {
+  Regexp** subs;
   switch (op_) {
     case kRegexpNoMatch:
     case kRegexpEmptyMatch:
@@ -57,21 +58,26 @@ bool Regexp::ComputeSimple() {
     case kRegexpConcat:
     case kRegexpAlternate:
       // These are simple as long as the subpieces are simple.
+      subs = sub();
       for (int i = 0; i < nsub_; i++)
-        if (!sub_[i]->simple_)
+        if (!subs[i]->simple_)
           return false;
       return true;
     case kRegexpCharClass:
       // Simple as long as the char class is not empty, not full.
+      if (ccb_ != NULL)
+        return !ccb_->empty() && !ccb_->full();
       return !cc_->empty() && !cc_->full();
     case kRegexpCapture:
-      return sub_[0]->simple_;
+      subs = sub();
+      return subs[0]->simple_;
     case kRegexpStar:
     case kRegexpPlus:
     case kRegexpQuest:
-      if (!sub_[0]->simple_)
+      subs = sub();
+      if (!subs[0]->simple_)
         return false;
-      switch (sub_[0]->op_) {
+      switch (subs[0]->op_) {
         case kRegexpStar:
         case kRegexpPlus:
         case kRegexpQuest:
@@ -168,7 +174,7 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
                                   Regexp* pre_arg,
                                   Regexp** child_args,
                                   int nchild_args) {
-  switch (re->op_) {
+  switch (re->op()) {
     case kRegexpNoMatch:
     case kRegexpEmptyMatch:
     case kRegexpLiteral:
@@ -190,8 +196,9 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
       // These are simple as long as the subpieces are simple.
       // Two passes to avoid allocation in the common case.
       bool changed = false;
+      Regexp** subs = re->sub();
       for (int i = 0; i < re->nsub_; i++) {
-        Regexp* sub = re->sub_[i];
+        Regexp* sub = subs[i];
         Regexp* newsub = child_args[i];
         if (newsub != sub) {
           changed = true;
@@ -206,24 +213,25 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
         re->simple_ = true;
         return re->Incref();
       }
-      Regexp* nre = new Regexp(re->op_, re->parse_flags_);
+      Regexp* nre = new Regexp(re->op(), re->parse_flags());
       nre->AllocSub(re->nsub_);
+      Regexp** nre_subs = nre->sub();
       for (int i = 0; i <re->nsub_; i++)
-        nre->sub_[i] = child_args[i];
+        nre_subs[i] = child_args[i];
       nre->simple_ = true;
       return nre;
     }
 
     case kRegexpCapture: {
       Regexp* newsub = child_args[0];
-      if (newsub == re->sub_[0]) {
+      if (newsub == re->sub()[0]) {
         newsub->Decref();
         re->simple_ = true;
         return re->Incref();
       }
-      Regexp* nre = new Regexp(kRegexpCapture, re->parse_flags_);
+      Regexp* nre = new Regexp(kRegexpCapture, re->parse_flags());
       nre->AllocSub(1);
-      nre->sub_[0] = newsub;
+      nre->sub()[0] = newsub;
       nre->cap_ = re->cap_;
       nre->simple_ = true;
       return nre;
@@ -235,11 +243,11 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
       Regexp* newsub = child_args[0];
       // Special case: repeat the empty string as much as
       // you want, but it's still the empty string.
-      if (newsub->op_ == kRegexpEmptyMatch)
+      if (newsub->op() == kRegexpEmptyMatch)
         return newsub;
 
       // These are simple as long as the subpiece is simple.
-      if (newsub == re->sub_[0]) {
+      if (newsub == re->sub()[0]) {
         newsub->Decref();
         re->simple_ = true;
         return re->Incref();
@@ -250,9 +258,9 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
           re->parse_flags() == newsub->parse_flags())
         return newsub;
 
-      Regexp* nre = new Regexp(re->op_, re->parse_flags_);
+      Regexp* nre = new Regexp(re->op(), re->parse_flags());
       nre->AllocSub(1);
-      nre->sub_[0] = newsub;
+      nre->sub()[0] = newsub;
       nre->simple_ = true;
       return nre;
     }
@@ -261,11 +269,11 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
       Regexp* newsub = child_args[0];
       // Special case: repeat the empty string as much as
       // you want, but it's still the empty string.
-      if (newsub->op_ == kRegexpEmptyMatch)
+      if (newsub->op() == kRegexpEmptyMatch)
         return newsub;
 
       Regexp* nre = SimplifyRepeat(newsub, re->min_, re->max_,
-                                   re->parse_flags_);
+                                   re->parse_flags());
       newsub->Decref();
       nre->simple_ = true;
       return nre;
@@ -278,7 +286,7 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
     }
   }
 
-  LOG(ERROR) << "Simplify case not handled: " << re->op_;
+  LOG(ERROR) << "Simplify case not handled: " << re->op();
   return re->Incref();
 }
 
@@ -288,8 +296,9 @@ Regexp* SimplifyWalker::Concat2(Regexp* re1, Regexp* re2,
                                 Regexp::ParseFlags parse_flags) {
   Regexp* re = new Regexp(kRegexpConcat, parse_flags);
   re->AllocSub(2);
-  re->sub_[0] = re1;
-  re->sub_[1] = re2;
+  Regexp** subs = re->sub();
+  subs[0] = re1;
+  subs[1] = re2;
   return re;
 }
 
@@ -315,9 +324,10 @@ Regexp* SimplifyWalker::SimplifyRepeat(Regexp* re, int min, int max,
     Regexp* nre = new Regexp(kRegexpConcat, f);
     nre->AllocSub(min);
     VLOG(1) << "Simplify " << min;
+    Regexp** nre_subs = nre->sub();
     for (int i = 0; i < min-1; i++)
-      nre->sub_[i] = re->Incref();
-    nre->sub_[min-1] = Regexp::Plus(re->Incref(), f);
+      nre_subs[i] = re->Incref();
+    nre_subs[min-1] = Regexp::Plus(re->Incref(), f);
     return nre;
   }
 
@@ -338,8 +348,9 @@ Regexp* SimplifyWalker::SimplifyRepeat(Regexp* re, int min, int max,
   if (min > 0) {
     nre = new Regexp(kRegexpConcat, f);
     nre->AllocSub(min);
+    Regexp** nre_subs = nre->sub();
     for (int i = 0; i < min; i++)
-      nre->sub_[i] = re->Incref();
+      nre_subs[i] = re->Incref();
   }
 
   // Build and attach suffix: (x(x(x)?)?)?
@@ -370,9 +381,9 @@ Regexp* SimplifyWalker::SimplifyCharClass(Regexp* re) {
 
   // Special cases
   if (cc->empty())
-    return new Regexp(kRegexpNoMatch, re->parse_flags_);
+    return new Regexp(kRegexpNoMatch, re->parse_flags());
   if (cc->full())
-    return new Regexp(kRegexpAnyChar, re->parse_flags_);
+    return new Regexp(kRegexpAnyChar, re->parse_flags());
 
   return re->Incref();
 }

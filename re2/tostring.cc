@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Format a regular expression structure as a string.
-// Tested by parse_unittest.cc
+// Tested by parse_test.cc
 
 #include "util/util.h"
 #include "re2/regexp.h"
@@ -250,8 +250,6 @@ int ToStringWalker::PostVisit(Regexp* re, int parent_arg, int pre_arg,
 
     case kRegexpCharClass: {
       if (re->cc()->size() == 0) {
-        // Simplify is supposed to rewrite this to NoMatch.
-        LOG(DFATAL) << "Empty char class in ToString.";
         t_->append("[^\\x00-\\x{10ffff}]");
         break;
       }
@@ -260,14 +258,13 @@ int ToStringWalker::PostVisit(Regexp* re, int parent_arg, int pre_arg,
       // non-character 0xFFFE.
       CharClass* cc = re->cc();
       if (cc->Contains(0xFFFE)) {
-        cc = cc->Copy();
-        cc->Negate();
+        cc = cc->Negate();
         t_->append("^");
       }
       for (CharClass::iterator i = cc->begin(); i != cc->end(); ++i)
         AppendCCRange(t_, i->lo, i->hi);
       if (cc != re->cc())
-        delete cc;
+        cc->Delete();
       t_->append("]");
       break;
     }
