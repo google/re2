@@ -158,6 +158,10 @@ class Regexp::ParseState {
   DISALLOW_EVIL_CONSTRUCTORS(ParseState);
 };
 
+// Pseudo-operators - only on parse stack.
+const RegexpOp kLeftParen = static_cast<RegexpOp>(kMaxRegexpOp+1);
+const RegexpOp kVerticalBar = static_cast<RegexpOp>(kMaxRegexpOp+2);
+
 Regexp::ParseState::ParseState(ParseFlags flags,
                                const StringPiece& whole_regexp,
                                RegexpStatus* status)
@@ -175,6 +179,8 @@ Regexp::ParseState::~ParseState() {
   for (Regexp* re = stacktop_; re != NULL; re = next) {
     next = re->down_;
     re->down_ = NULL;
+    if (re->op() == kLeftParen)
+      delete re->name_;
     re->Decref();
   }
 }
@@ -481,12 +487,6 @@ bool Regexp::ParseState::PushRepetition(int min, int max,
   stacktop_ = re;
   return true;
 }
-
-// Pseudo-operators - only on parse stack.
-
-// Markers for left paren and pipe operators in the regexp stack.
-const RegexpOp kLeftParen = static_cast<RegexpOp>(kMaxRegexpOp+1);
-const RegexpOp kVerticalBar = static_cast<RegexpOp>(kMaxRegexpOp+2);
 
 // Checks whether a particular regexp op is a marker.
 bool Regexp::ParseState::IsMarker(RegexpOp op) {
@@ -1109,9 +1109,9 @@ static void AddNegatedUGroup(CharClassBuilder* cc, UGroup *g,
 // The StringPiece must *NOT* be edited unless the call succeeds.
 UGroup* MaybeParsePerlCCEscape(StringPiece* s, Regexp::ParseFlags parse_flags) {
   if (!(parse_flags & Regexp::PerlClasses))
-    return false;
+    return NULL;
   if (s->size() < 2 || (*s)[0] != '\\')
-    return false;
+    return NULL;
   // Could use StringPieceToRune, but there aren't
   // any non-ASCII Perl group names.
   StringPiece name(s->begin(), 2);

@@ -95,7 +95,7 @@ void MemoryUsage() {
           static_cast<int>(sizeof(PCRE)),
           static_cast<int>(sizeof(RE2)),
           static_cast<int>(sizeof(Prog)),
-          static_cast<int>(sizeof(Inst)));
+          static_cast<int>(sizeof(Prog::Inst)));
 }
 
 // Regular expression implementation wrappers.
