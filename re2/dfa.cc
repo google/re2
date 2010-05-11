@@ -253,7 +253,7 @@ class DFA {
   struct StartInfo {
     StartInfo() : start(NULL), firstbyte(kFbUnknown) { }
     State* start;
-    int firstbyte;
+    volatile int firstbyte;
   };
 
   // Fills in params->start and params->firstbyte using
@@ -1605,12 +1605,17 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
 
   params->start = info->start;
   params->firstbyte = info->firstbyte;
+
   return true;
 }
 
 // Fills in info if needed.  Returns true on success, false on failure.
 bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
                               uint flags) {
+  // Quick check; okay because of memory barriers below.
+  if (info->firstbyte != kFbUnknown)
+    return true;
+
   MutexLock l(&mutex_);
   if (info->firstbyte != kFbUnknown)
     return true;
@@ -1624,11 +1629,13 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
     return false;
 
   if (info->start == DeadState) {
+    WriteMemoryBarrier();  // Synchronize with "quick check" above.
     info->firstbyte = kFbNone;
     return true;
   }
 
   if (info->start == FullMatchState) {
+    WriteMemoryBarrier();  // Synchronize with "quick check" above.
     info->firstbyte = kFbNone;	// will be ignored
     return true;
   }
@@ -1636,21 +1643,26 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
   // Compute info->firstbyte by running state on all
   // possible byte values, looking for a single one that
   // leads to a different state.
-  info->firstbyte = kFbNone;
+  int firstbyte = kFbNone;
   for (int i = 0; i < 256; i++) {
     State* s = RunStateOnByte(info->start, i);
-    if (s == NULL)
+    if (s == NULL) {
+      WriteMemoryBarrier();  // Synchronize with "quick check" above.
+      info->firstbyte = firstbyte;
       return false;
+    }
     if (s == info->start)
       continue;
     // Goes to new state...
-    if (info->firstbyte == kFbNone) {
-      info->firstbyte = i;        // ... first one
+    if (firstbyte == kFbNone) {
+      firstbyte = i;        // ... first one
     } else {
-      info->firstbyte = kFbMany;  // ... too many
+      firstbyte = kFbMany;  // ... too many
       break;
     }
   }
+  WriteMemoryBarrier();  // Synchronize with "quick check" above.
+  info->firstbyte = firstbyte;
   return true;
 }
 
@@ -1720,32 +1732,43 @@ static void DeleteDFA(DFA* dfa) {
 }
 
 DFA* Prog::GetDFA(MatchKind kind) {
-  DFA** dfa;
+  DFA*volatile* pdfa;
   if (kind == kFirstMatch) {
-    dfa = &dfa_first_;
+    pdfa = &dfa_first_;
   } else {
     kind = kLongestMatch;
-    dfa = &dfa_longest_;
+    pdfa = &dfa_longest_;
   }
+
+  // Quick check; okay because of memory barrier below.
+  DFA *dfa = *pdfa;
+  if (dfa != NULL)
+    return dfa;
 
   MutexLock l(&dfa_mutex_);
-  if (*dfa == NULL) {
-    // For a forward DFA, half the memory goes to each DFA.
-    // For a reverse DFA, all the memory goes to the
-    // "longest match" DFA, because RE2 never does reverse
-    // "first match" searches.
-    int64 m = dfa_mem_/2;
-    if (reversed_) {
-      if (kind == kLongestMatch)
-        m = dfa_mem_;
-      else
-        m = 0;
-    }
-    *dfa = new DFA(this, kind, m);
-    delete_dfa_ = DeleteDFA;
-  }
+  dfa = *pdfa;
+  if (dfa != NULL)
+    return dfa;
 
-  return *dfa;
+  // For a forward DFA, half the memory goes to each DFA.
+  // For a reverse DFA, all the memory goes to the
+  // "longest match" DFA, because RE2 never does reverse
+  // "first match" searches.
+  int64 m = dfa_mem_/2;
+  if (reversed_) {
+    if (kind == kLongestMatch)
+      m = dfa_mem_;
+    else
+      m = 0;
+  }
+  dfa = new DFA(this, kind, m);
+  delete_dfa_ = DeleteDFA;
+
+  // Synchronize with "quick check" above.
+  WriteMemoryBarrier();
+  *pdfa = dfa;
+
+  return dfa;
 }
 
 
