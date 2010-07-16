@@ -220,19 +220,14 @@ void PossibleMatchTester::HandleRegexp(const string& regexp) {
   }
 }
 
-// Try all regular expressions made from up to
-// 3 instances of a b [0-9] and up to 4 egrep operators,
-// and then try all strings of length up to 6 using
-// the characters {a,b,4}.
-// Try less in debug mode, because it's so slow.
 TEST(PossibleMatchRange, Exhaustive) {
   int natom = 3;
-  int noperator = 4;
-  int stringlen = 6;
+  int noperator = 3;
+  int stringlen = 5;
   if (DEBUG_MODE) {
     natom = 2;
     noperator = 3;
-    stringlen = 4;
+    stringlen = 3;
   }
   PossibleMatchTester t(natom, noperator, Split(" ", "a b [0-9]"),
                  RegexpGenerator::EgrepOps(),

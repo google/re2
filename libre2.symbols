@@ -1,15 +1,15 @@
 {
 	global:
-		extern "C++" {
-			re2::Mutex::*;
-			re2::Prog::*;
-			re2::RE2::*;
-			re2::Regexp::*;
-			re2::StringPiece::*;
-			"operator==(re2::StringPiece const&, re2::StringPiece const&)";
-			"operator<<(std::ostream&, re2::StringPiece const&)";
-			re2::VariadicFunction2::*;
-		};
+		# re2::RE2*
+		_ZN3re23RE2*;
+		_ZNK3re23RE2*;
+		# re2::StringPiece*
+		_ZN3re211StringPiece*;
+		_ZNK3re211StringPiece*;
+		# operator==(re2::StringPiece const&, re2::StringPiece const&)
+		_ZeqRKN3re211StringPieceES2_;
+		# operator<<(std::ostream&, re2::StringPiece const&)
+		_ZlsRSoRKN3re211StringPieceE;
 	local:
 		*;
 };

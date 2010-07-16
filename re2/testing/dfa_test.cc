@@ -12,14 +12,9 @@
 
 DECLARE_bool(re2_dfa_bail_when_slow);
 
-// These parameters take 3s (opt) to run to completion
-// on a 3.6GHz Xeon.  They repeatedly make the old unlocked
-// grep crash.  In fact the old DFA crashes with just
-// 1 or 2 repetitions, so 10 is plenty of a safety margin.
-// Have to drop the dbg settings because dbg is very slow.
 DEFINE_int32(size, 8, "log2(number of DFA nodes)");
-DEFINE_int32(repeat, DEBUG_MODE ? 2 : 10, "Repetition count.");
-DEFINE_int32(threads, DEBUG_MODE ? 2 : 8, "number of threads");
+DEFINE_int32(repeat, 2, "Repetition count.");
+DEFINE_int32(threads, 4, "number of threads");
 
 namespace re2 {
 
@@ -100,9 +95,7 @@ TEST(SingleThreaded, BuildEntireDFA) {
   //LOG(INFO) << s;
   Regexp* re = Regexp::Parse(s.c_str(), Regexp::LikePerl, NULL);
   CHECK(re);
-  int max = 28;
-  if (DEBUG_MODE)
-    max = 24;
+  int max = 24;
   for (int i = 17; i < max; i++) {
     int limit = 1<<i;
     int usage, progusage, dfamem;
