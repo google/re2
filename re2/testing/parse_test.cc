@@ -191,10 +191,24 @@ Test nomatchnl_tests[] = {
   { "[a\\n]", "cc{0xa 0x61}" },
 };
 
-
 // Test that parsing without MatchNL works.
 TEST(TestParse, NoMatchNL) {
   TestParse(nomatchnl_tests, arraysize(nomatchnl_tests), Regexp::NoParseFlags, "without MatchNL");
+}
+
+Test prefix_tests[] = {
+  { "abc|abd", "cat{str{ab}cc{0x63-0x64}}" },
+  { "a(?:b)c|abd", "cat{str{ab}cc{0x63-0x64}}" },
+  { "abc|abd|aef|bcx|bcy",
+    "alt{cat{lit{a}alt{cat{lit{b}cc{0x63-0x64}}str{ef}}}"
+      "cat{str{bc}cc{0x78-0x79}}}" },
+  { "abc|x|abd", "alt{str{abc}lit{x}str{abd}}" },
+  { "(?i)abc|ABD", "cat{strfold{ab}cc{0x43-0x44 0x63-0x64}}" },
+};
+
+// Test that prefix factoring works.
+TEST(TestParse, Prefix) {
+  TestParse(prefix_tests, arraysize(prefix_tests), Regexp::PerlX, "prefix");
 }
 
 // Invalid regular expressions

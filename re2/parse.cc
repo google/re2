@@ -102,7 +102,7 @@ class Regexp::ParseState {
 
   // Processes the end of input, returning the final regexp.
   Regexp* DoFinish();
-  
+
   // Finishes the regexp if necessary, preparing it for use
   // in a more complicated expression.
   // If it is a CharClassBuilder, converts into a CharClass.
@@ -133,7 +133,20 @@ class Regexp::ParseState {
   // Parse a Perl flag set or non-capturing group from s.
   bool ParsePerlFlags(StringPiece* s);
 
- private:
+
+  // Returns the leading string that re starts with.
+  // The returned Rune* points into a piece of re,
+  // so it must not be used after the caller calls re->Decref().
+  Rune* LeadingString(Regexp* re, int *nrune, Regexp::ParseFlags *flags);
+
+  // Removes the first n leading runes from the beginning of re.
+  void RemoveLeadingString(Regexp* re, int n);
+
+  // Simplifies an alternation of literal strings by factoring out
+  // common prefixes.
+  int SimplifyAlternation(Regexp** sub, int n, Regexp::ParseFlags altflags,
+                          int maxdepth);
+
   // Finishes the current concatenation,
   // collapsing it into a single regexp on the stack.
   void DoConcatenation();
@@ -148,6 +161,7 @@ class Regexp::ParseState {
   // Maybe concatenate Literals into LiteralString.
   bool MaybeConcatString(int r, ParseFlags flags);
 
+private:
   ParseFlags flags_;
   StringPiece whole_regexp_;
   RegexpStatus* status_;
@@ -161,6 +175,11 @@ class Regexp::ParseState {
 // Pseudo-operators - only on parse stack.
 const RegexpOp kLeftParen = static_cast<RegexpOp>(kMaxRegexpOp+1);
 const RegexpOp kVerticalBar = static_cast<RegexpOp>(kMaxRegexpOp+2);
+
+// Add a range to the character class, but exclude newline if asked.
+// Also handle case folding.
+static void AddRange(CharClassBuilder* cc, Rune lo, Rune hi,
+                     Regexp::ParseFlags parse_flags);
 
 Regexp::ParseState::ParseState(ParseFlags flags,
                                const StringPiece& whole_regexp,
@@ -550,7 +569,8 @@ bool Regexp::ParseState::DoVerticalBar() {
           // fall through
         case kRegexpCharClass:
           if (r1->op() == kRegexpLiteral)
-            AddLiteral(r3->ccb_, r1->rune_, r1->parse_flags_ & Regexp::FoldCase);
+            AddLiteral(r3->ccb_, r1->rune_,
+                       r1->parse_flags_ & Regexp::FoldCase);
           else if (r1->op() == kRegexpCharClass)
             r3->ccb_->AddCharClass(r1->ccb_);
           if (r1->op() == kRegexpAnyChar || r3->ccb_->full()) {
@@ -630,6 +650,205 @@ Regexp* Regexp::ParseState::DoFinish() {
   return FinishRegexp(re);
 }
 
+// Returns the leading string that re starts with.
+// The returned Rune* points into a piece of re,
+// so it must not be used after the caller calls re->Decref().
+Rune* Regexp::ParseState::LeadingString(Regexp* re, int *nrune,
+                                        Regexp::ParseFlags *flags) {
+  while (re->op() == kRegexpConcat && re->nsub() > 0)
+    re = re->sub()[0];
+
+  *flags = static_cast<Regexp::ParseFlags>(re->parse_flags_ & Regexp::FoldCase);
+
+  if (re->op() == kRegexpLiteral) {
+    *nrune = 1;
+    return &re->rune_;
+  }
+
+  if (re->op() == kRegexpLiteralString) {
+    *nrune = re->nrunes_;
+    return re->runes_;
+  }
+
+  *nrune = 0;
+  return NULL;
+}
+
+// Removes the first n leading runes from the beginning of re.
+// Edits re in place.
+void Regexp::ParseState::RemoveLeadingString(Regexp* re, int n) {
+  while (re->op() == kRegexpConcat && re->nsub() > 0)
+    re = re->sub()[0];
+
+  if (re->op() == kRegexpLiteral) {
+    re->op_ = kRegexpEmptyMatch;
+    return;
+  }
+
+  if (re->op() == kRegexpLiteralString) {
+    if (n >= re->nrunes_) {
+      delete[] re->runes_;
+      re->runes_ = NULL;
+      re->nrunes_ = 0;
+      re->op_ = kRegexpEmptyMatch;
+    } else if (n == re->nrunes_ - 1) {
+      Rune rune = re->runes_[re->nrunes_ - 1];
+      delete[] re->runes_;
+      re->runes_ = NULL;
+      re->nrunes_ = 0;
+      re->rune_ = rune;
+      re->op_ = kRegexpLiteral;
+
+    } else {
+      re->nrunes_ -= n;
+      memmove(re->runes_, re->runes_ + n, re->nrunes_ * sizeof re->runes_[0]);
+    }
+    return;
+  }
+}
+
+// Simplifies an alternation of literal strings by factoring out
+// common prefixes.  For example,
+//     ABC|ABD|AEF|BCX|BCY
+// simplifies to
+//     A(B(C|D)|EF)|BC(X|Y)
+// which the normal parse state routines will further simplify to
+//     A(B[CD]|EF)|BC[XY]
+//
+// Rewrites sub to contain simplified list to alternate and returns
+// the new length of sub.  Adjusts reference counts accordingly
+// (incoming sub[i] decremented, outgoing sub[i] incremented).
+
+// It's too much of a pain to explicitly write out the recursion,
+// so instead we let the caller specify a maximum depth and
+// don't simplify beyond that.  There are around 15 words of local
+// variables and parameters in the frame, so allowing 8 levels
+// on a 64-bit machine is still less than a kilobyte of stack and
+// probably enough benefit for practical uses.
+const int kSimplifyAlternationMaxDepth = 8;
+
+int Regexp::ParseState::SimplifyAlternation(
+    Regexp** sub, int n,
+    Regexp::ParseFlags altflags,
+    int maxdepth) {
+
+  if (maxdepth <= 0)
+    return n;
+
+  // Round 1: Factor out common prefixes.
+  Rune *rune = NULL;
+  int nrune = 0;
+  Regexp::ParseFlags runeflags = Regexp::NoParseFlags;
+  int start = 0;
+  int out = 0;
+  for (int i = 0; i <= n; i++) {
+    // Invariant: what was in sub[0:start] has been Decref'ed
+    // and that space has been reused for sub[0:out] (out <= start).
+    //
+    // Invariant: sub[start:i] consists of regexps that all begin
+    // with the string rune[0:nrune].
+
+    Rune* rune_i = NULL;
+    int nrune_i = 0;
+    Regexp::ParseFlags runeflags_i = Regexp::NoParseFlags;
+    if (i < n) {
+      rune_i = LeadingString(sub[i], &nrune_i, &runeflags_i);
+      if (runeflags_i == runeflags) {
+        int same = 0;
+        while (same < nrune && same < nrune_i && rune[same] == rune_i[same])
+          same++;
+        if (same > 0) {
+          // Matches at least one rune in current range.  Keep going around.
+          nrune = same;
+          continue;
+        }
+      }
+    }
+
+    // Found end of a run with common leading literal string:
+    // sub[start:i] all begin with rune[0:nrune] but sub[i]
+    // does not even begin with rune[0].
+    //
+    // Factor out common string and append factored expression to sub[0:out].
+    if (i == start) {
+      // Nothing to do - first iteration.
+    } else if (i == start+1) {
+      // Just one: don't bother factoring.
+      sub[out++] = sub[start];
+    } else {
+      // Construct factored form: prefix(suffix1|suffix2|...)
+      Regexp* x[2];  // x[0] = prefix, x[1] = suffix1|suffix2|...
+      x[0] = LiteralString(rune, nrune, runeflags);
+      for (int j = start; j < i; j++)
+        RemoveLeadingString(sub[j], nrune);
+      int nn = SimplifyAlternation(sub + start, i - start, altflags,
+                                   maxdepth - 1);
+      x[1] = Alternate(sub + start, nn, altflags);
+      sub[out++] = Concat(x, 2, altflags);
+    }
+
+    // Prepare for next round (if there is one).
+    if (i < n) {
+      start = i;
+      rune = rune_i;
+      nrune = nrune_i;
+      runeflags = runeflags_i;
+    }
+  }
+  n = out;
+
+  // Round 2: Collapse runs of single literals into character classes.
+  start = 0;
+  out = 0;
+  for (int i = 0; i <= n; i++) {
+    // Invariant: what was in sub[0:start] has been Decref'ed
+    // and that space has been reused for sub[0:out] (out <= start).
+    //
+    // Invariant: sub[start:i] consists of regexps that are either
+    // literal runes or character classes.
+
+    if (i < n &&
+        (sub[i]->op() == kRegexpLiteral ||
+         sub[i]->op() == kRegexpCharClass))
+      continue;
+
+    // sub[i] is not a char or char class;
+    // emit char class for sub[start:i]...
+    if (i == start) {
+      // Nothing to do.
+    } else if (i == start+1) {
+      // Char class (or not) of one.
+      sub[out++] = sub[start];
+    } else {
+      // Make new char class.
+      CharClassBuilder ccb;
+      for (int j = start; j < i; j++) {
+        Regexp* re = sub[j];
+        if (re->op() == kRegexpCharClass) {
+          CharClass* cc = re->cc();
+          for (CharClass::iterator it = cc->begin(); it != cc->end(); ++it)
+            ccb.AddRange(it->lo, it->hi);
+        } else if (re->op() == kRegexpLiteral) {
+          AddRange(&ccb, re->rune(), re->rune(), re->parse_flags());
+        } else {
+          LOG(DFATAL) << "RE2: unexpected op: " << re->op() << " "
+                      << re->ToString();
+        }
+        re->Decref();
+      }
+      sub[out++] = NewCharClass(ccb.GetCharClass(), altflags);
+    }
+
+    // ... and then emit sub[i].
+    if (i < n)
+      sub[out++] = sub[i];
+    start = i+1;
+  }
+  n = out;
+
+  return n;
+}
+
 // Collapse the regexps on top of the stack, down to the
 // first marker, into a new op node (op == kRegexpAlternate
 // or op == kRegexpConcat).
@@ -666,7 +885,10 @@ void Regexp::ParseState::DoCollapse(RegexpOp op) {
       subs[--i] = FinishRegexp(sub);
     }
   }
-  
+
+  if (op == kRegexpAlternate)
+    n = SimplifyAlternation(subs, n, flags_, kSimplifyAlternationMaxDepth);
+
   Regexp* re = ConcatOrAlternate(op, subs, n, flags_);
   delete[] subs;
   re->simple_ = re->ComputeSimple();
@@ -698,8 +920,8 @@ void Regexp::ParseState::DoAlternation() {
 }
 
 // Incremental conversion of concatenated literals into strings.
-// If top of stack is (literal, literal) or (literal, string) or (string, literal)
-// or (string, string), collapse into single string.
+// If top two elements on stack are both literal or string,
+// collapse into single string.
 // Don't walk down the stack -- the parser calls this frequently
 // enough that below the bottom two is known to be collapsed.
 // Only called when another regexp is about to be pushed

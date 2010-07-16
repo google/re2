@@ -65,7 +65,7 @@ static Mutex ref_mutex;
 int Regexp::Ref() {
   if (ref_ < kMaxRef)
     return ref_;
-  
+
   MutexLock l(&ref_mutex);
   return ref_map[this];
 }
@@ -189,6 +189,9 @@ Regexp* Regexp::Quest(Regexp* sub, Regexp::ParseFlags flags) {
 }
 
 Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub, ParseFlags flags) {
+  if (nsub == 1)
+    return sub[0];
+
   if (nsub > kMaxNsub) {
     // Too many subexpressions to fit in a single Regexp.
     // Make a two-level tree.  Two levels gets us to 65535^2.
@@ -574,7 +577,7 @@ void CharClassBuilder::RemoveAbove(Rune r) {
   }
 
   for (;;) {
-    
+
     iterator it = ranges_.find(RuneRange(r + 1, Runemax));
     if (it == end())
       break;
