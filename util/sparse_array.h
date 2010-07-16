@@ -265,19 +265,24 @@ SparseArray<Value>::iv(int i) const {
 // Change the maximum size of the array.
 // Invalidates all iterators.
 template<typename Value>
-void SparseArray<Value>::resize(int max_size) {
+void SparseArray<Value>::resize(int new_max_size) {
   DebugCheckInvariants();
-  if (max_size > max_size_) {
-    int* a = new int[max_size];
+  if (new_max_size > max_size_) {
+    int* a = new int[new_max_size];
     if (sparse_to_dense_) {
       memmove(a, sparse_to_dense_, max_size_*sizeof a[0]);
+      // Don't need to zero the memory but appease Valgrind.
+      if (RunningOnValgrind()) {
+        for (int i = max_size_; i < new_max_size; i++)
+          a[i] = 0xababababU;
+      }
       delete[] sparse_to_dense_;
     }
     sparse_to_dense_ = a;
 
-    dense_.resize(max_size);
+    dense_.resize(new_max_size);
   }
-  max_size_ = max_size;
+  max_size_ = new_max_size;
   if (size_ > max_size_)
     size_ = max_size_;
   DebugCheckInvariants();
@@ -413,7 +418,13 @@ template<typename Value> SparseArray<Value>::SparseArray(int max_size) {
   max_size_ = max_size;
   sparse_to_dense_ = new int[max_size];
   dense_.resize(max_size);
-  // Don't need to zero the new memory.
+  // Don't need to zero the new memory, but appease Valgrind.
+  if (RunningOnValgrind()) {
+    for (int i = 0; i < max_size; i++) {
+      sparse_to_dense_[i] = 0xababababU;
+      dense_[i].index_ = 0xababababU;
+    }
+  }
   size_ = 0;
   DebugCheckInvariants();
 }

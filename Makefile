@@ -43,6 +43,7 @@ HFILES=\
 	util/test.h\
 	util/utf.h\
 	util/util.h\
+	util/valgrind.h\
 	re2/filtered_re2.h\
 	re2/prefilter.h\
 	re2/prefilter_tree.h\
@@ -67,6 +68,7 @@ OFILES=\
 	obj/util/stringpiece.o\
 	obj/util/stringprintf.o\
 	obj/util/strutil.o\
+	obj/util/valgrind.o\
 	obj/re2/bitstate.o\
 	obj/re2/compile.o\
 	obj/re2/dfa.o\

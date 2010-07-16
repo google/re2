@@ -111,6 +111,8 @@ static inline uint64 Hash64StringWithSeed(const char* s, int len, uint32 seed) {
   return ((uint64)x << 32) | y;
 }
 
+int RunningOnValgrind();
+
 }  // namespace re2
 
 #include "util/arena.h"

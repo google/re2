@@ -60,7 +60,14 @@ class SparseSet {
     max_size_ = max_size;
     sparse_to_dense_ = new int[max_size];
     dense_ = new int[max_size];
-    // Don't need to zero the memory.
+    // Don't need to zero the memory, but do so anyway
+    // to appease Valgrind.
+    if (RunningOnValgrind()) {
+      for (int i = 0; i < max_size; i++) {
+        dense_[i] = 0xababababU;
+        sparse_to_dense_[i] = 0xababababU;
+      }
+    }
     size_ = 0;
   }
 
@@ -80,25 +87,33 @@ class SparseSet {
 
   // Change the maximum size of the array.
   // Invalidates all iterators.
-  void resize(int max_size) {
+  void resize(int new_max_size) {
     if (size_ > max_size_)
       size_ = max_size_;
-    if (max_size > max_size_) {
-      int* a = new int[max_size];
+    if (new_max_size > max_size_) {
+      int* a = new int[new_max_size];
       if (sparse_to_dense_) {
         memmove(a, sparse_to_dense_, max_size_*sizeof a[0]);
+        if (RunningOnValgrind()) {
+          for (int i = max_size_; i < new_max_size; i++)
+            a[i] = 0xababababU;
+        }
         delete[] sparse_to_dense_;
       }
       sparse_to_dense_ = a;
 
-      a = new int[max_size_];
+      a = new int[new_max_size];
       if (dense_) {
         memmove(a, dense_, size_*sizeof a[0]);
+        if (RunningOnValgrind()) {
+          for (int i = size_; i < new_max_size; i++)
+            a[i] = 0xababababU;
+        }
         delete[] dense_;
       }
       dense_ = a;
     }
-    max_size_ = max_size;
+    max_size_ = new_max_size;
   }
 
   // Return the maximum size of the array.
