@@ -167,6 +167,7 @@ TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
     flags_(flags),
     error_(false),
     regexp_(NULL),
+    num_captures_(0),
     prog_(NULL),
     rprog_(NULL),
     re_(NULL),
@@ -184,6 +185,7 @@ TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
     error_ = true;
     return;
   }
+  num_captures_ = regexp_->NumCaptures();
   prog_ = regexp_->CompileToProg(0);
   if (prog_ == NULL) {
     LOG(INFO) << "Cannot compile: " << CEscape(regexp_str_);
@@ -286,7 +288,7 @@ void TestInstance::RunSearch(Engine type,
     result->skipped = true;
     return;
   }
-  int nsubmatch = 1 + regexp_->NumCaptures();  // NumCaptures doesn't count $0
+  int nsubmatch = 1 + num_captures_;  // NumCaptures doesn't count $0
   if (nsubmatch > kMaxSubmatch)
     nsubmatch = kMaxSubmatch;
 
@@ -552,7 +554,7 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
         continue;
       }
     }
-    for (int i = 0; i < 1+regexp_->NumCaptures(); i++) {
+    for (int i = 0; i < 1+num_captures_; i++) {
       if (r.submatch[i].begin() != correct.submatch[i].begin() ||
           r.submatch[i].end() != correct.submatch[i].end()) {
         LOG(INFO) <<

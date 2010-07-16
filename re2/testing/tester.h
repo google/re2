@@ -65,6 +65,7 @@ class TestInstance {
   bool error_;                      // error during constructor?
 
   Regexp* regexp_;                  // parsed regexp
+  int num_captures_;                // regexp_->NumCaptures() cached
   Prog* prog_;                      // compiled program
   Prog* rprog_;                     // compiled reverse program
   PCRE* re_;                        // PCRE implementation
