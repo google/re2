@@ -1402,7 +1402,7 @@ static UGroup* LookupGroup(const StringPiece& name,
                            UGroup *groups, int ngroups) {
   // Simple name lookup.
   for (int i = 0; i < ngroups; i++)
-    if (groups[i].name == name)
+    if (StringPiece(groups[i].name) == name)
       return &groups[i];
   return NULL;
 }
@@ -1424,7 +1424,7 @@ static UGroup* LookupPerlGroup(const StringPiece& name) {
 // Look for a Unicode group with the given name (e.g., "Han")
 static UGroup* LookupUnicodeGroup(const StringPiece& name) {
   // Special case: "Any" means any.
-  if (name == "Any")
+  if (name == StringPiece("Any"))
     return &anygroup;
   return LookupGroup(name, unicode_groups, num_unicode_groups);
 }
