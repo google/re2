@@ -9,6 +9,7 @@
 // The Compiler class defined in this file is private.
 
 #include "re2/prog.h"
+#include "re2/re2.h"
 #include "re2/regexp.h"
 #include "re2/walker-inl.h"
 
@@ -90,7 +91,7 @@ PatchList PatchList::Append(Prog::Inst* inst0, PatchList l1, PatchList l2) {
       break;
     l = next;
   }
-  
+
   Prog::Inst* ip = &inst0[l.p>>1];
   if(l.p&1)
     ip->out1_ = l2.p;
@@ -128,6 +129,11 @@ class Compiler : public Regexp::Walker<Frag> {
   // string backward (reverses all concatenations).
   static Prog *Compile(Regexp* re, bool reversed, int64 max_mem);
 
+  // Compiles alternation of all the re to a new Prog.
+  // Each re has a match with an id equal to its index in the vector.
+  static Prog* CompileSet(const RE2::Options& options, RE2::Anchor anchor,
+                          const vector<Regexp*>& re);
+
   // Interface for Regexp::Walker, which helps traverse the Regexp.
   // The walk is purely post-recursive: given the machines for the
   // children, PostVisit combines them to create the machine for
@@ -158,7 +164,7 @@ class Compiler : public Regexp::Walker<Frag> {
   Frag NoMatch();
 
   // Returns a fragment that matches the empty string.
-  Frag Match();
+  Frag Match(int32 id);
 
   // Returns a no-op fragment.
   Frag Nop();
@@ -173,7 +179,7 @@ class Compiler : public Regexp::Walker<Frag> {
   // Returns the index of the first one.
   // Returns -1 if no more instructions are available.
   int AllocInst(int n);
-  
+
   // Deletes unused instructions.
   void Trim();
 
@@ -201,6 +207,12 @@ class Compiler : public Regexp::Walker<Frag> {
   // Single rune.
   Frag Literal(Rune r, bool foldcase);
 
+  void Setup(Regexp::ParseFlags, int64);
+  Prog* Finish();
+
+  // Returns .* where dot = any byte
+  Frag DotStar();
+
  private:
   Prog* prog_;         // Program being built.
   bool failed_;        // Did we give up compiling?
@@ -208,10 +220,12 @@ class Compiler : public Regexp::Walker<Frag> {
   bool reversed_;      // Should program run backward over text?
 
   int max_inst_;       // Maximum number of instructions.
-  
+
   Prog::Inst* inst_;   // Pointer to first instruction.
   int inst_len_;       // Number of instructions used.
   int inst_cap_;       // Number of instructions allocated.
+
+  int64 max_mem_;      // Total memory budget.
 
   map<uint64, int> rune_cache_;
   Frag rune_range_;
@@ -228,6 +242,7 @@ Compiler::Compiler() {
   inst_len_ = 0;
   inst_cap_ = 0;
   max_inst_ = 1;  // make AllocInst for fail instruction okay
+  max_mem_ = 0;
   int fail = AllocInst(1);
   inst_[fail].InitFail();
   max_inst_ = 0;  // Caller must change
@@ -399,11 +414,11 @@ Frag Compiler::Nop() {
 }
 
 // Returns a fragment that signals a match.
-Frag Compiler::Match() {
+Frag Compiler::Match(int32 match_id) {
   int id = AllocInst(1);
   if (id < 0)
     return NoMatch();
-  inst_[id].InitMatch();
+  inst_[id].InitMatch(match_id);
   return Frag(id, nullPatchList);
 }
 
@@ -881,28 +896,22 @@ static bool IsAnchorEnd(Regexp** pre) {
   }
 }
 
-// Compiles re, returning program.
-// Caller is responsible for deleting prog_.
-// If reversed is true, compiles a program that expects
-// to run over the input string backward (reverses all concatenations).
-// The reversed flag is also recorded in the returned program.
-Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
-  Compiler c;
-  c.prog_->set_flags(re->parse_flags());
+void Compiler::Setup(Regexp::ParseFlags flags, int64 max_mem) {
+  prog_->set_flags(flags);
 
-  if (re->parse_flags() & Regexp::Latin1)
-    c.encoding_ = kEncodingLatin1;
-  c.reversed_ = reversed;
+  if (flags & Regexp::Latin1)
+    encoding_ = kEncodingLatin1;
+  max_mem_ = max_mem;
   if (max_mem <= 0) {
-    c.max_inst_ = 100000;  // more than enough
+    max_inst_ = 100000;  // more than enough
   } else if (max_mem <= sizeof(Prog)) {
     // No room for anything.
-    c.max_inst_ = 0;
+    max_inst_ = 0;
   } else {
     int64 m = (max_mem - sizeof(Prog)) / sizeof(Prog::Inst);
     // Limit instruction count so that inst->id() fits nicely in an int.
     // SparseArray also assumes that the indices (inst->id()) are ints.
-    // The call to WalkExponential uses 2*c.max_inst_ below,
+    // The call to WalkExponential uses 2*max_inst_ below,
     // and other places in the code use 2 or 3 * prog->size().
     // Limiting to 2^24 should avoid overflow in those places.
     // (The point of allowing more than 32 bits of memory is to
@@ -910,13 +919,25 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
     // on the program.)
     if (m >= 1<<24)
       m = 1<<24;
-    
+
     // Inst imposes its own limit (currently bigger than 2^24 but be safe).
     if (m > Prog::Inst::kMaxInst)
       m = Prog::Inst::kMaxInst;
 
-    c.max_inst_ = m;
+    max_inst_ = m;
   }
+}
+
+// Compiles re, returning program.
+// Caller is responsible for deleting prog_.
+// If reversed is true, compiles a program that expects
+// to run over the input string backward (reverses all concatenations).
+// The reversed flag is also recorded in the returned program.
+Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
+  Compiler c;
+
+  c.Setup(re->parse_flags(), max_mem);
+  c.reversed_ = reversed;
 
   // Simplify to remove things like counted repetitions
   // and character classes like \d.
@@ -939,7 +960,7 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
   // Turn off c.reversed_ (if it is set) to force the remaining concatenations
   // to behave normally.
   c.reversed_ = false;
-  Frag all = c.Cat(f, c.Match());
+  Frag all = c.Cat(f, c.Match(0));
   c.prog_->set_start(all.begin);
 
   if (reversed) {
@@ -954,46 +975,48 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
   if (c.prog_->anchor_start()) {
     c.prog_->set_start_unanchored(c.prog_->start());
   } else {
-    Frag dot;
-    dot = c.ByteRange(0x00, 0xFF, false);
-    Frag dotloop = c.Star(dot, true);
-    Frag unanchored = c.Cat(dotloop, all);
+    Frag unanchored = c.Cat(c.DotStar(), all);
     c.prog_->set_start_unanchored(unanchored.begin);
   }
-  
-  if (c.prog_->start() == 0 && c.prog_->start_unanchored() == 0) {
+
+  c.prog_->set_reversed(reversed);
+
+  // Hand ownership of prog_ to caller.
+  return c.Finish();
+}
+
+Prog* Compiler::Finish() {
+  if (failed_)
+    return NULL;
+
+  if (prog_->start() == 0 && prog_->start_unanchored() == 0) {
     // No possible matches; keep Fail instruction only.
-    c.inst_len_ = 1;
+    inst_len_ = 1;
   }
 
   // Trim instruction to minimum array and transfer to Prog.
-  c.Trim();
-  c.prog_->inst_ = c.inst_;
-  c.prog_->size_ = c.inst_len_;
-  c.inst_ = NULL;
-
-  // Record whether prog is reversed.
-  c.prog_->set_reversed(reversed);
+  Trim();
+  prog_->inst_ = inst_;
+  prog_->size_ = inst_len_;
+  inst_ = NULL;
 
   // Compute byte map.
-  c.prog_->ComputeByteMap();
+  prog_->ComputeByteMap();
 
-  c.prog_->Optimize();
+  prog_->Optimize();
 
   // Record remaining memory for DFA.
-  if (max_mem <= 0) {
-    c.prog_->set_dfa_mem(1<<20);
+  if (max_mem_ <= 0) {
+    prog_->set_dfa_mem(1<<20);
   } else {
-    int64 m = max_mem - sizeof(Prog) - c.inst_len_*sizeof(Prog::Inst);
+    int64 m = max_mem_ - sizeof(Prog) - inst_len_*sizeof(Prog::Inst);
     if (m < 0)
       m = 0;
-    c.prog_->set_dfa_mem(m);
+    prog_->set_dfa_mem(m);
   }
 
-  // Hand ownership of prog_ to caller.
-  Prog* p = c.prog_;
-  c.prog_ = NULL;
-
+  Prog* p = prog_;
+  prog_ = NULL;
   return p;
 }
 
@@ -1004,6 +1027,74 @@ Prog* Regexp::CompileToProg(int64 max_mem) {
 
 Prog* Regexp::CompileToReverseProg(int64 max_mem) {
   return Compiler::Compile(this, true, max_mem);
+}
+
+Frag Compiler::DotStar() {
+  return Star(ByteRange(0x00, 0xff, false), true);
+}
+
+// Compiles RE set to Prog.
+Prog* Compiler::CompileSet(const RE2::Options& options, RE2::Anchor anchor,
+                           const vector<Regexp*>& re) {
+  Compiler c;
+
+  c.Setup(static_cast<Regexp::ParseFlags>(options.ParseFlags()),
+          options.max_mem());
+
+  // Accumulate alternation of fragments.
+  Frag all = kNullFrag;
+  for (int i = 0; i < re.size(); i++) {
+    Frag f = c.WalkExponential(re[i], kNullFrag, 2*c.max_inst_);
+    if (c.failed_)
+      return NULL;
+    switch (anchor) {
+      case RE2::UNANCHORED:
+        f = c.Cat(c.Cat(c.DotStar(), f), c.DotStar());
+        break;
+      case RE2::ANCHOR_START:
+        f = c.Cat(f, c.DotStar());
+        break;
+      case RE2::ANCHOR_BOTH:
+        break;
+    }
+    f = c.Cat(f, c.Match(i));
+    all = c.Alt(all, f);
+  }
+
+  c.prog_->set_start(all.begin);
+  c.prog_->set_start_unanchored(all.begin);
+  c.prog_->set_anchor_start(true);
+  c.prog_->set_anchor_end(true);
+
+  // Also create unanchored version, which starts with a .*? loop.
+  if (c.prog_->anchor_start()) {
+    c.prog_->set_start_unanchored(c.prog_->start());
+  } else {
+    Frag unanchored = c.Cat(c.DotStar(), all);
+    c.prog_->set_start_unanchored(unanchored.begin);
+  }
+
+  Prog* prog = c.Finish();
+  if (prog == NULL)
+    return NULL;
+
+  // Make sure DFA has enough memory to operate,
+  // since we're not going to fall back to the NFA.
+  bool failed;
+  StringPiece sp = "hello, world";
+  prog->SearchDFA(sp, sp, Prog::kAnchored, Prog::kManyMatch,
+                  NULL, &failed, NULL);
+  if (failed) {
+    delete prog;
+    return NULL;
+  }
+
+  return prog;
+}
+
+Prog* Prog::CompileSet(const RE2::Options& options, RE2::Anchor anchor,
+                       const vector<Regexp*>& re) {
+  return Compiler::CompileSet(options, anchor, re);
 }
 
 }  // namespace re2

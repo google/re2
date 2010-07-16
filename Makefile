@@ -49,6 +49,7 @@ HFILES=\
 	re2/prog.h\
 	re2/re2.h\
 	re2/regexp.h\
+	re2/set.h\
 	re2/stringpiece.h\
 	re2/testing/exhaustive_tester.h\
 	re2/testing/regexp_generator.h\
@@ -80,6 +81,7 @@ OFILES=\
 	obj/re2/prog.o\
 	obj/re2/re2.o\
 	obj/re2/regexp.o\
+	obj/re2/set.o\
 	obj/re2/simplify.o\
 	obj/re2/tostring.o\
 	obj/re2/unicode_casefold.o\
@@ -109,6 +111,7 @@ TESTS=\
 	obj/test/regexp_test\
 	obj/test/required_prefix_test\
 	obj/test/search_test\
+	obj/test/set_test\
 	obj/test/simplify_test\
 	obj/test/string_generator_test\
 	obj/test/dfa_test\
@@ -212,6 +215,7 @@ benchmark: obj/test/regexp_benchmark
 install: obj/libre2.a obj/so/libre2.so.0
 	mkdir -p /usr/local/include/re2
 	install -m 444 re2/re2.h /usr/local/include/re2/re2.h
+	install -m 444 re2/set.h /usr/local/include/re2/set.h
 	install -m 444 re2/stringpiece.h /usr/local/include/re2/stringpiece.h
 	install -m 444 re2/variadic_function.h /usr/local/include/re2/variadic_function.h
 	install -m 444 obj/libre2.a /usr/local/lib/libre2.a

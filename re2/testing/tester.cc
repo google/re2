@@ -116,6 +116,8 @@ static string FormatKind(Prog::MatchKind kind) {
       return "longest match";
     case Prog::kFirstMatch:
       return "first match";
+    case Prog::kManyMatch:
+      return "many match";
   }
   return "???";
 }
@@ -323,7 +325,7 @@ void TestInstance::RunSearch(Engine type,
         break;
       }
       result->matched = prog_->SearchDFA(text, context, anchor, kind_, NULL,
-                                         &result->skipped);
+                                         &result->skipped, NULL);
       break;
 
     case kEngineDFA1:
@@ -333,14 +335,14 @@ void TestInstance::RunSearch(Engine type,
       }
       result->matched =
         prog_->SearchDFA(text, context, anchor, kind_, result->submatch,
-                         &result->skipped);
+                         &result->skipped, NULL);
       // If anchored, no need for second run,
       // but do it anyway to find more bugs.
       if (result->matched) {
         if (!rprog_->SearchDFA(result->submatch[0], context,
                                Prog::kAnchored, Prog::kLongestMatch,
                                result->submatch,
-                               &result->skipped)) {
+                               &result->skipped, NULL)) {
           LOG(ERROR) << "Reverse DFA inconsistency: " << CEscape(regexp_str_)
                      << " on " << CEscape(text);
           result->matched = false;

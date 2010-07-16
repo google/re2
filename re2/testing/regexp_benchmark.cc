@@ -807,7 +807,7 @@ void SearchDFA(int iters, const char* regexp, const StringPiece& text,
     CHECK(prog);
     bool failed = false;
     CHECK_EQ(prog->SearchDFA(text, NULL, anchor, Prog::kFirstMatch,
-                             NULL, &failed),
+                             NULL, &failed, NULL),
              expect_match);
     CHECK(!failed);
     delete prog;
@@ -895,7 +895,7 @@ void SearchCachedDFA(int iters, const char* regexp, const StringPiece& text,
   for (int i = 0; i < iters; i++) {
     bool failed = false;
     CHECK_EQ(prog->SearchDFA(text, NULL, anchor,
-                             Prog::kFirstMatch, NULL, &failed),
+                             Prog::kFirstMatch, NULL, &failed, NULL),
              expect_match);
     CHECK(!failed);
   }

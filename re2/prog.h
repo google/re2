@@ -10,6 +10,7 @@
 #define RE2_PROG_H__
 
 #include "util/util.h"
+#include "re2/re2.h"
 
 namespace re2 {
 
@@ -83,16 +84,16 @@ class Prog {
   class Inst {
    public:
     Inst() : out_opcode_(0), out1_(0) { }
-  
+
     // Constructors per opcode
     void InitAlt(uint32 out, uint32 out1);
     void InitByteRange(int lo, int hi, int foldcase, uint32 out);
     void InitCapture(int cap, uint32 out);
     void InitEmptyWidth(EmptyOp empty, uint32 out);
-    void InitMatch();
+    void InitMatch(int id);
     void InitNop(uint32 out);
     void InitFail();
-  
+
     // Getters
     int id(Prog* p) { return this - p->inst_; }
     InstOp opcode() { return static_cast<InstOp>(out_opcode_&7); }
@@ -102,12 +103,13 @@ class Prog {
     int lo()        { DCHECK_EQ(opcode(), kInstByteRange); return lo_; }
     int hi()        { DCHECK_EQ(opcode(), kInstByteRange); return hi_; }
     int foldcase()  { DCHECK_EQ(opcode(), kInstByteRange); return foldcase_; }
+    int match_id()  { DCHECK_EQ(opcode(), kInstMatch); return match_id_; }
     EmptyOp empty() { DCHECK_EQ(opcode(), kInstEmptyWidth); return empty_; }
     bool greedy(Prog *p) {
       DCHECK_EQ(opcode(), kInstAltMatch);
       return p->inst(out())->opcode() == kInstByteRange;
     }
-  
+
     // Does this inst (an kInstByteRange) match c?
     inline bool Matches(int c) {
       DCHECK_EQ(opcode(), kInstByteRange);
@@ -115,53 +117,56 @@ class Prog {
         c += 'a' - 'A';
       return lo_ <= c && c <= hi_;
     }
-  
+
     // Returns string representation for debugging.
     string Dump();
-  
+
     // Maximum instruction id.
     // (Must fit in out_opcode_, and PatchList steals another bit.)
     static const int kMaxInst = (1<<28) - 1;
-  
+
    private:
     void set_opcode(InstOp opcode) {
       out_opcode_ = (out()<<3) | opcode;
     }
-  
+
     void set_out(int out) {
       out_opcode_ = (out<<3) | opcode();
     }
-    
+
     void set_out_opcode(int out, InstOp opcode) {
       out_opcode_ = (out<<3) | opcode;
     }
-    
+
     uint32 out_opcode_;  // 29 bits of out, 3 (low) bits opcode
     union {              // additional instruction arguments:
       uint32 out1_;      // opcode == kInstAlt
                          //   alternate next instruction
-  
+
       int32 cap_;        // opcode == kInstCapture
                          //   Index of capture register (holds text
                          //   position recorded by capturing parentheses).
                          //   For \n (the submatch for the nth parentheses),
                          //   the left parenthesis captures into register 2*n
                          //   and the right one captures into register 2*n+1.
-  
+
+      int32 match_id_;   // opcode == kInstMatch
+                         //   Match ID to identify this match (for re2::Set).
+
       struct {           // opcode == kInstByteRange
         uint8 lo_;       //   byte range is lo_-hi_ inclusive
         uint8 hi_;       //
         uint8 foldcase_; //   convert A-Z to a-z before checking range.
       };
-  
+
       EmptyOp empty_;    // opcode == kInstEmptyWidth
                          //   empty_ is bitwise OR of kEmpty* flags above.
     };
-  
+
     friend class Compiler;
     friend class PatchList;
     friend class Prog;
-  
+
     DISALLOW_EVIL_CONSTRUCTORS(Inst);
   };
 
@@ -186,7 +191,8 @@ class Prog {
   enum MatchKind {
     kFirstMatch,     // like Perl, PCRE
     kLongestMatch,   // like egrep or POSIX
-    kFullMatch       // match only entire text; implies anchor==kAnchored
+    kFullMatch,      // match only entire text; implies anchor==kAnchored
+    kManyMatch       // for SearchDFA, records set of matches
   };
 
   Inst *inst(int id) { return &inst_[id]; }
@@ -261,9 +267,12 @@ class Prog {
   // end of match and can use a lot more memory.
   // Returns whether a match was found.
   // If the DFA runs out of memory, sets *failed to true and returns false.
+  // If matches != NULL and kind == kManyMatch and there is a match,
+  // SearchDFA fills matches with the match IDs of the final matching state.
   bool SearchDFA(const StringPiece& text, const StringPiece& context,
                  Anchor anchor, MatchKind kind,
-                 StringPiece* match0, bool* failed);
+                 StringPiece* match0, bool* failed,
+                 vector<int>* matches);
 
   // Build the entire DFA for the given match kind.  FOR TESTING ONLY.
   // Usually the DFA is built out incrementally, as needed, which
@@ -320,11 +329,16 @@ class Prog {
   // Returns true on success, false on error.
   bool PossibleMatchRange(string* min, string* max, int maxlen);
 
+  // Compiles a collection of regexps to Prog.  Each regexp will have
+  // its own Match instruction recording the index in the vector.
+  static Prog* CompileSet(const RE2::Options& options, RE2::Anchor anchor,
+                          const vector<Regexp*>& re);
+
  private:
   friend class Compiler;
 
   DFA* GetDFA(MatchKind kind);
-  
+
   bool anchor_start_;       // regexp has explicit start anchor
   bool anchor_end_;         // regexp has explicit end anchor
   bool reversed_;           // whether program runs backward over input

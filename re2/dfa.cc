@@ -74,7 +74,7 @@ class DFA {
   //   memory), it sets *failed and returns false.
   bool Search(const StringPiece& text, const StringPiece& context,
               bool anchored, bool want_earliest_match, bool run_forward,
-              bool* failed, const char** ep);
+              bool* failed, const char** ep, vector<int>* matches);
 
   // Builds out all states for the entire DFA.  FOR TESTING ONLY
   // Returns number of states.
@@ -95,6 +95,8 @@ class DFA {
   // byte c, the next state should be s->next_[c].
   struct State {
     inline bool IsMatch() const { return flag_ & kFlagMatch; }
+    void SaveMatch(vector<int>* v);
+
     int* inst_;         // Instruction pointers in the state.
     int ninst_;         // # of inst_ pointers.
     uint flag_;         // Empty string bitfield flags in effect on the way
@@ -230,7 +232,8 @@ class DFA {
         firstbyte(kFbUnknown),
         cache_lock(cache_lock),
         failed(false),
-        ep(NULL) { }
+        ep(NULL),
+        matches(NULL) { }
 
     StringPiece text;
     StringPiece context;
@@ -242,6 +245,7 @@ class DFA {
     RWLocker *cache_lock;
     bool failed;     // "out" parameter: whether search gave up
     const char* ep;  // "out" parameter: end pointer for match
+    vector<int>* matches;
 
    private:
     DISALLOW_EVIL_CONSTRUCTORS(SearchParams);
@@ -596,7 +600,9 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       case kInstAltMatch:
-        if (kind_ != Prog::kFirstMatch || (it == q->begin() && ip->greedy(prog_))) {
+        if (kind_ != Prog::kManyMatch &&
+            (kind_ != Prog::kFirstMatch ||
+             (it == q->begin() && ip->greedy(prog_)))) {
           delete[] inst;
           return FullMatchState;
         }
@@ -1403,6 +1409,20 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     }
   }
 
+  // Peek in state to see if a match is coming up.
+  if (params->matches && kind_ == Prog::kManyMatch) {
+    vector<int>* v = params->matches;
+    v->clear();
+    if (s > SpecialStateMax) {
+      for (int i = 0; i < s->ninst_; i++) {
+        Prog::Inst* ip = prog_->inst(s->inst_[i]);
+        if (ip->opcode() == kInstMatch)
+          v->push_back(ip->match_id());
+      }
+    }
+  }
+
+
   // Process one more byte to see if it triggers a match.
   // (Remember, matches are delayed one byte.)
   int lastbyte;
@@ -1673,7 +1693,8 @@ bool DFA::Search(const StringPiece& text,
                  bool want_earliest_match,
                  bool run_forward,
                  bool* failed,
-                 const char** epp) {
+                 const char** epp,
+                 vector<int>* matches) {
   *epp = NULL;
   if (!ok()) {
     *failed = true;
@@ -1693,6 +1714,7 @@ bool DFA::Search(const StringPiece& text,
   params.anchored = anchored;
   params.want_earliest_match = want_earliest_match;
   params.run_forward = run_forward;
+  params.matches = matches;
 
   if (!AnalyzeSearch(&params)) {
     *failed = true;
@@ -1733,7 +1755,7 @@ static void DeleteDFA(DFA* dfa) {
 
 DFA* Prog::GetDFA(MatchKind kind) {
   DFA*volatile* pdfa;
-  if (kind == kFirstMatch) {
+  if (kind == kFirstMatch || kind == kManyMatch) {
     pdfa = &dfa_first_;
   } else {
     kind = kLongestMatch;
@@ -1758,7 +1780,7 @@ DFA* Prog::GetDFA(MatchKind kind) {
   // "first match" searches.
   int64 m = dfa_mem_/2;
   if (reversed_) {
-    if (kind == kLongestMatch)
+    if (kind == kLongestMatch || kind == kManyMatch)
       m = dfa_mem_;
     else
       m = 0;
@@ -1787,7 +1809,7 @@ DFA* Prog::GetDFA(MatchKind kind) {
 //
 bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
                      Anchor anchor, MatchKind kind,
-                     StringPiece* match0, bool* failed) {
+                     StringPiece* match0, bool* failed, vector<int>* matches) {
   *failed = false;
 
   StringPiece context = const_context;
@@ -1809,7 +1831,9 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   // and then checking if it covers all of text.
   bool anchored = anchor == kAnchored || anchor_start() || kind == kFullMatch;
   bool endmatch = false;
-  if (kind == kFullMatch || anchor_end()) {
+  if (kind == kManyMatch) {
+    endmatch = true;
+  } else if (kind == kFullMatch || anchor_end()) {
     endmatch = true;
     kind = kLongestMatch;
   }
@@ -1827,7 +1851,7 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   const char* ep;
   bool matched = dfa->Search(text, context, anchored,
                              want_shortest_match, !reversed_,
-                             failed, &ep);
+                             failed, &ep, matches);
   if (*failed)
     return false;
   if (!matched)

@@ -40,9 +40,10 @@ void Prog::Inst::InitEmptyWidth(EmptyOp empty, uint32 out) {
   empty_ = empty;
 }
 
-void Prog::Inst::InitMatch() {
+void Prog::Inst::InitMatch(int32 id) {
   DCHECK_EQ(out_opcode_, 0);
   set_opcode(kInstMatch);
+  match_id_ = id;
 }
 
 void Prog::Inst::InitNop(uint32 out) {
@@ -92,12 +93,15 @@ string Prog::Inst::Dump() {
 Prog::Prog()
   : anchor_start_(false),
     anchor_end_(false),
+    reversed_(false),
     did_onepass_(false),
-    start_(NULL),
+    start_(0),
+    start_unanchored_(0),
     size_(0),
     byte_inst_count_(0),
     bytemap_range_(0),
     flags_(0),
+    onepass_statesize_(0),
     inst_(NULL),
     dfa_first_(NULL),
     dfa_longest_(NULL),
@@ -321,7 +325,7 @@ void Prog::ComputeByteMap() {
   bytemap_range_ = bytemap_[255] + 1;
   unbytemap_ = new uint8[bytemap_range_];
   for (int i = 0; i < 256; i++)
-    unbytemap_[bytemap_[i]] = i;  
+    unbytemap_[bytemap_[i]] = i;
 
   if (0) {  // For debugging: use trivial byte map.
     for (int i = 0; i < 256; i++) {

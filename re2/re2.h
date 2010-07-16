@@ -199,6 +199,9 @@ class RE2 {
   class Arg;
   class Options;
 
+  // Defined in set.h.
+  class Set;
+
   enum ErrorCode {
     NoError = 0,
 
@@ -576,6 +579,8 @@ class RE2 {
       word_boundary_ = src.word_boundary_;
       one_line_ = src.one_line_;
     }
+
+    int ParseFlags() const;
 
    private:
     // Private constructor for defining constants like RE2::Latin1.

@@ -83,6 +83,13 @@ static RE2::ErrorCode RegexpErrorToRE2(re2::RegexpStatusCode code) {
   return RE2::ErrorInternal;
 }
 
+static string trunc(const StringPiece& pattern) {
+  if (pattern.size() < 100)
+    return pattern.as_string();
+  return pattern.substr(0, 100).as_string() + "...";
+}
+
+
 RE2::RE2(const char* pattern) {
   Init(pattern, DefaultOptions);
 }
@@ -95,8 +102,45 @@ RE2::RE2(const StringPiece& pattern) {
   Init(pattern, DefaultOptions);
 }
 
-RE2::RE2(const StringPiece& pattern, const Options& option) {
-  Init(pattern, option);
+RE2::RE2(const StringPiece& pattern, const Options& options) {
+  Init(pattern, options);
+}
+
+int RE2::Options::ParseFlags() const {
+  int flags = Regexp::ClassNL;
+  switch (encoding()) {
+    default:
+      LOG(ERROR) << "Unknown encoding " << encoding();
+      break;
+    case RE2::Options::EncodingUTF8:
+      break;
+    case RE2::Options::EncodingLatin1:
+      flags |= Regexp::Latin1;
+      break;
+  }
+
+  if (!posix_syntax())
+    flags |= Regexp::LikePerl;
+
+  if (literal())
+    flags |= Regexp::Literal;
+
+  if (never_nl())
+    flags |= Regexp::NeverNL;
+
+  if (!case_sensitive())
+    flags |= Regexp::FoldCase;
+
+  if (perl_classes())
+    flags |= Regexp::PerlClasses;
+
+  if (word_boundary())
+    flags |= Regexp::PerlB;
+
+  if (one_line())
+    flags |= Regexp::OneLine;
+
+  return flags;
 }
 
 void RE2::Init(const StringPiece& pattern, const Options& options) {
@@ -113,45 +157,17 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
   num_captures_ = -1;
 
   RegexpStatus status;
-  int flags = Regexp::ClassNL;
-  switch (options_.encoding()) {
-    default:
-      LOG(ERROR) << "Unknown encoding " << options_.encoding();
-      break;
-    case RE2::Options::EncodingUTF8:
-      break;
-    case RE2::Options::EncodingLatin1:
-      flags |= Regexp::Latin1;
-      break;
-  }
-
-  if (!options_.posix_syntax())
-    flags |= Regexp::LikePerl;
-
-  if (options_.literal())
-    flags |= Regexp::Literal;
-
-  if (options_.never_nl())
-    flags |= Regexp::NeverNL;
-
-  if (!options_.case_sensitive())
-    flags |= Regexp::FoldCase;
-
-  if (options_.perl_classes())
-    flags |= Regexp::PerlClasses;
-
-  if (options_.word_boundary())
-    flags |= Regexp::PerlB;
-
-  if (options_.one_line())
-    flags |= Regexp::OneLine;
-
-  entire_regexp_ = Regexp::Parse(pattern_, static_cast<Regexp::ParseFlags>(flags), &status);
+  entire_regexp_ = Regexp::Parse(
+    pattern_,
+    static_cast<Regexp::ParseFlags>(options_.ParseFlags()),
+    &status);
   if (entire_regexp_ == NULL) {
     if (error_ == &empty_string)
       error_ = new string(status.Text());
-    if (options_.log_errors())
-      LOG(ERROR) << "Error parsing '" << pattern_ << "': " << status.Text();
+    if (options_.log_errors()) {
+      LOG(ERROR) << "Error parsing '" << trunc(pattern_) << "': "
+                 << status.Text();
+    }
     error_arg_ = status.error_arg().as_string();
     error_code_ = RegexpErrorToRE2(status.code());
     return;
@@ -171,7 +187,7 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
   prog_ = suffix_regexp_->CompileToProg(options_.max_mem()*2/3);
   if (prog_ == NULL) {
     if (options_.log_errors())
-      LOG(ERROR) << "Error compiling '" << pattern_ << "'";
+      LOG(ERROR) << "Error compiling '" << trunc(pattern_) << "'";
     error_ = new string("pattern too large - compile failed");
     error_code_ = RE2::ErrorPatternTooLarge;
     return;
@@ -192,7 +208,7 @@ re2::Prog* RE2::ReverseProg() const {
     rprog_ = suffix_regexp_->CompileToReverseProg(options_.max_mem()/3);
     if (rprog_ == NULL) {
       if (options_.log_errors())
-        LOG(ERROR) << "Error reverse compiling '" << pattern_ << "'";
+        LOG(ERROR) << "Error reverse compiling '" << trunc(pattern_) << "'";
       error_ = new string("pattern too large - reverse compile failed");
       error_code_ = RE2::ErrorPatternTooLarge;
       return NULL;
@@ -540,22 +556,26 @@ bool RE2::Match(const StringPiece& text,
   switch (re_anchor) {
     default:
     case UNANCHORED: {
-      if (!prog_->SearchDFA(subtext, text, anchor, kind, matchp, &dfa_failed)) {
+      if (!prog_->SearchDFA(subtext, text, anchor, kind,
+                            matchp, &dfa_failed, NULL)) {
         if (dfa_failed) {
           // Fall back to NFA below.
           skipped_test = true;
           if (FLAGS_trace_re2)
-            LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+            LOG(INFO) << "Match " << trunc(pattern_)
+                      << " [" << CEscape(subtext) << "]"
                       << " DFA failed.";
           break;
         }
         if (FLAGS_trace_re2)
-          LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+          LOG(INFO) << "Match " << trunc(pattern_)
+                    << " [" << CEscape(subtext) << "]"
                     << " used DFA - no match.";
         return false;
       }
       if (FLAGS_trace_re2)
-        LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+        LOG(INFO) << "Match " << trunc(pattern_)
+                  << " [" << CEscape(subtext) << "]"
                   << " used DFA - match";
       if (matchp == NULL)  // Matched.  Don't care where
         return true;
@@ -566,23 +586,26 @@ bool RE2::Match(const StringPiece& text,
       if (prog == NULL)
         return false;
       if (!prog->SearchDFA(match, text, Prog::kAnchored,
-                                    Prog::kLongestMatch, &match, &dfa_failed)) {
+                           Prog::kLongestMatch, &match, &dfa_failed, NULL)) {
         if (dfa_failed) {
           // Fall back to NFA below.
           skipped_test = true;
           if (FLAGS_trace_re2)
-            LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+            LOG(INFO) << "Match " << trunc(pattern_)
+                      << " [" << CEscape(subtext) << "]"
                       << " reverse DFA failed.";
           break;
         }
         if (FLAGS_trace_re2)
-          LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+          LOG(INFO) << "Match " << trunc(pattern_)
+                    << " [" << CEscape(subtext) << "]"
                     << " DFA inconsistency.";
         LOG(ERROR) << "DFA inconsistency";
         return false;
       }
       if (FLAGS_trace_re2)
-        LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+        LOG(INFO) << "Match " << trunc(pattern_)
+                  << " [" << CEscape(subtext) << "]"
                   << " used reverse DFA.";
       break;
     }
@@ -600,30 +623,36 @@ bool RE2::Match(const StringPiece& text,
       // On tiny texts, OnePass outruns even the DFA, and
       // it doesn't have the shared state and occasional mutex that
       // the DFA does.
-      if (can_one_pass && text.size() <= 4096 && (ncap > 1 || text.size() <= 8)) {
+      if (can_one_pass && text.size() <= 4096 &&
+          (ncap > 1 || text.size() <= 8)) {
         if (FLAGS_trace_re2)
-          LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+          LOG(INFO) << "Match " << trunc(pattern_)
+                    << " [" << CEscape(subtext) << "]"
                     << " skipping DFA for OnePass.";
         skipped_test = true;
         break;
       }
       if (can_bit_state && text.size() <= bit_state_text_max && ncap > 1) {
         if (FLAGS_trace_re2)
-          LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+          LOG(INFO) << "Match " << trunc(pattern_)
+                    << " [" << CEscape(subtext) << "]"
                     << " skipping DFA for BitState.";
         skipped_test = true;
         break;
       }
-      if (!prog_->SearchDFA(subtext, text, anchor, kind, &match, &dfa_failed)) {
+      if (!prog_->SearchDFA(subtext, text, anchor, kind,
+                            &match, &dfa_failed, NULL)) {
         if (dfa_failed) {
           if (FLAGS_trace_re2)
-            LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+            LOG(INFO) << "Match " << trunc(pattern_)
+                      << " [" << CEscape(subtext) << "]"
                       << " DFA failed.";
           skipped_test = true;
           break;
         }
         if (FLAGS_trace_re2)
-          LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+          LOG(INFO) << "Match " << trunc(pattern_)
+                    << " [" << CEscape(subtext) << "]"
                     << " used DFA - no match.";
         return false;
       }
@@ -651,7 +680,8 @@ bool RE2::Match(const StringPiece& text,
 
     if (can_one_pass && anchor != Prog::kUnanchored) {
       if (FLAGS_trace_re2)
-        LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+        LOG(INFO) << "Match " << trunc(pattern_)
+                  << " [" << CEscape(subtext) << "]"
                   << " using OnePass.";
       if (!prog_->SearchOnePass(subtext1, text, anchor, kind, submatch, ncap)) {
         if (!skipped_test)
@@ -660,7 +690,8 @@ bool RE2::Match(const StringPiece& text,
       }
     } else if (can_bit_state && subtext1.size() <= bit_state_text_max) {
       if (FLAGS_trace_re2)
-        LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+        LOG(INFO) << "Match " << trunc(pattern_)
+                  << " [" << CEscape(subtext) << "]"
                   << " using BitState.";
       if (!prog_->SearchBitState(subtext1, text, anchor,
                                  kind, submatch, ncap)) {
@@ -670,7 +701,8 @@ bool RE2::Match(const StringPiece& text,
       }
     } else {
       if (FLAGS_trace_re2)
-        LOG(INFO) << "Match " << pattern_ << " [" << CEscape(subtext) << "]"
+        LOG(INFO) << "Match " << trunc(pattern_)
+                  << " [" << CEscape(subtext) << "]"
                   << " using NFA.";
       if (!prog_->SearchNFA(subtext1, text, anchor, kind, submatch, ncap)) {
         if (!skipped_test)
