@@ -31,11 +31,11 @@ int RE2::Set::Add(const StringPiece& pattern, string* error) {
     return -1;
   }
 
+  Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
+    options_.ParseFlags());
+
   RegexpStatus status;
-  re2::Regexp* re = Regexp::Parse(
-    pattern,
-    static_cast<Regexp::ParseFlags>(options_.ParseFlags()),
-    &status);
+  re2::Regexp* re = Regexp::Parse(pattern, pf, &status);
   if (re == NULL) {
     if (error != NULL)
       *error = status.Text();
@@ -44,18 +44,24 @@ int RE2::Set::Add(const StringPiece& pattern, string* error) {
     return -1;
   }
 
-  re2::Regexp* sre = re->Simplify();
-  re->Decref();
-  re = sre;
-  if(re == NULL) {
-    if (error != NULL)
-      *error = "simplification failed";
-    if (options_.log_errors())
-      LOG(ERROR) << "Error simplifying '" << pattern << "'";
-    return -1;
-  }
-
+  // Concatenate with match index and push on vector.
   int n = re_.size();
+  re2::Regexp* m = re2::Regexp::HaveMatch(n, pf);
+  if (re->op() == kRegexpConcat) {
+    int nsub = re->nsub();
+    re2::Regexp** sub = new re2::Regexp*[nsub + 1];
+    for (int i = 0; i < nsub; i++)
+      sub[i] = re->sub()[i]->Incref();
+    sub[nsub] = m;
+    re->Decref();
+    re = re2::Regexp::Concat(sub, nsub + 1, pf);
+    delete[] sub;
+  } else {
+    re2::Regexp* sub[2];
+    sub[0] = re;
+    sub[1] = m;
+    re = re2::Regexp::Concat(sub, 2, pf);
+  }
   re_.push_back(re);
   return n;
 }
@@ -66,7 +72,22 @@ bool RE2::Set::Compile() {
     return false;
   }
   compiled_ = true;
-  prog_ = Prog::CompileSet(options_, anchor_, re_);
+
+  Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
+    options_.ParseFlags());
+  re2::Regexp* re = re2::Regexp::Alternate(const_cast<re2::Regexp**>(&re_[0]),
+                                           re_.size(), pf);
+  re_.clear();
+  re2::Regexp* sre = re->Simplify();
+  re->Decref();
+  re = sre;
+  if (re == NULL) {
+    if (options_.log_errors())
+      LOG(ERROR) << "Error simplifying during Compile.";
+    return false;
+  }
+
+  prog_ = Prog::CompileSet(options_, anchor_, re);
   return prog_ != NULL;
 }
 
@@ -79,6 +100,9 @@ bool RE2::Set::Match(const StringPiece& text, vector<int>* v) const {
   bool failed;
   bool ret = prog_->SearchDFA(text, text, Prog::kAnchored,
                               Prog::kManyMatch, NULL, &failed, v);
+  if (failed)
+    LOG(DFATAL) << "RE2::Set::Match: DFA ran out of cache space";
+
   if (ret == false)
     return false;
   if (v->size() == 0) {

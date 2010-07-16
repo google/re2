@@ -80,7 +80,7 @@ string Prog::Inst::Dump() {
                           static_cast<int>(empty_), out());
 
     case kInstMatch:
-      return StringPrintf("match!");
+      return StringPrintf("match! %d", match_id());
 
     case kInstNop:
       return StringPrintf("nop -> %d", out());

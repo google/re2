@@ -332,7 +332,7 @@ class Prog {
   // Compiles a collection of regexps to Prog.  Each regexp will have
   // its own Match instruction recording the index in the vector.
   static Prog* CompileSet(const RE2::Options& options, RE2::Anchor anchor,
-                          const vector<Regexp*>& re);
+                          Regexp* re);
 
  private:
   friend class Compiler;

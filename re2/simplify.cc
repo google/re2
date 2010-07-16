@@ -54,6 +54,7 @@ bool Regexp::ComputeSimple() {
     case kRegexpEndText:
     case kRegexpAnyChar:
     case kRegexpAnyByte:
+    case kRegexpHaveMatch:
       return true;
     case kRegexpConcat:
     case kRegexpAlternate:
@@ -187,6 +188,7 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
     case kRegexpEndText:
     case kRegexpAnyChar:
     case kRegexpAnyByte:
+    case kRegexpHaveMatch:
       // All these are always simple.
       re->simple_ = true;
       return re->Incref();

@@ -49,12 +49,13 @@ static const char* kOpcodeNames[] = {
   "bot",
   "eot",
   "cc",
+  "match",
 };
 
 // Create string representation of regexp with explicit structure.
 // Nothing pretty, just for testing.
 static void DumpRegexpAppending(Regexp* re, string* s) {
-  if (re->op() < 0 || re->op() > kMaxRegexpOp) {
+  if (re->op() < 0 || re->op() >= arraysize(kOpcodeNames)) {
     StringAppendF(s, "op%d", re->op());
   } else {
     switch (re->op()) {
@@ -87,6 +88,11 @@ static void DumpRegexpAppending(Regexp* re, string* s) {
   s->append("{");
   switch (re->op()) {
     default:
+      break;
+    case kRegexpEndText:
+      if (!(re->parse_flags() & Regexp::WasDollar)) {
+        s->append("\\z");
+      }
       break;
     case kRegexpLiteral: {
       Rune r = re->rune();
@@ -123,12 +129,6 @@ static void DumpRegexpAppending(Regexp* re, string* s) {
     case kRegexpRepeat:
       s->append(StringPrintf("%d,%d ", re->min(), re->max()));
       DumpRegexpAppending(re->sub()[0], s);
-      break;
-    case kRegexpAnyChar:
-    case kRegexpBeginLine:
-    case kRegexpEndLine:
-    case kRegexpWordBoundary:
-    case kRegexpNoWordBoundary:
       break;
     case kRegexpCharClass: {
       string sep;

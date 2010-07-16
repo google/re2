@@ -41,7 +41,8 @@ static Test tests[] = {
   { "a{2,3}?", "nrep{2,3 lit{a}}" },
   { "a{2,}?", "nrep{2,-1 lit{a}}" },
   { "", "emp{}" },
-  { "|", "alt{emp{}emp{}}" },
+  { "|", "emp{}" },  // alt{emp{}emp{}} but got factored
+  { "|x|", "alt{emp{}lit{x}emp{}}" },
   { ".", "dot{}" },
   { "^", "bol{}" },
   { "$", "eol{}" },
@@ -111,9 +112,9 @@ static Test tests[] = {
   { "(?-m)^", "bot{}" },
   { "(?-m)$", "eot{}" },
   { "(?m)\\A", "bot{}" },
-  { "(?m)\\z", "eot{}" },
+  { "(?m)\\z", "eot{\\z}" },
   { "(?-m)\\A", "bot{}" },
-  { "(?-m)\\z", "eot{}" },
+  { "(?-m)\\z", "eot{\\z}" },
 
   // Test named captures
   { "(?P<name>a)", "cap{name:lit{a}}" },
@@ -128,16 +129,33 @@ static Test tests[] = {
 
 static Regexp::ParseFlags kTestFlags = Regexp::MatchNL | Regexp::PerlX | Regexp::PerlClasses;
 
-void TestParse(const Test* tests, int ntests, Regexp::ParseFlags flags, const string& title) {
+bool RegexpEqualTestingOnly(Regexp* a, Regexp* b) {
+  return Regexp::Equal(a, b);
+}
+
+void TestParse(const Test* tests, int ntests, Regexp::ParseFlags flags,
+               const string& title) {
+  Regexp** re = new Regexp*[ntests];
   for (int i = 0; i < ntests; i++) {
     RegexpStatus status;
-    Regexp* re = Regexp::Parse(tests[i].regexp, flags, &status);
-    CHECK(re != NULL) << " " << tests[i].regexp << " "
-                      << status.Text();
-    string s = re->Dump();
-    EXPECT_EQ(string(tests[i].parse), s) << " " << tests[i].regexp;
-    re->Decref();
+    re[i] = Regexp::Parse(tests[i].regexp, flags, &status);
+    CHECK(re[i] != NULL) << " " << tests[i].regexp << " "
+                         << status.Text();
+    string s = re[i]->Dump();
+    EXPECT_EQ(string(tests[i].parse), s) << "Regexp: " << tests[i].regexp;
   }
+
+  for (int i = 0; i < ntests; i++) {
+    for (int j = 0; j < ntests; j++) {
+      EXPECT_EQ(string(tests[i].parse) == tests[j].parse,
+                RegexpEqualTestingOnly(re[i], re[j]))
+        << "Regexp: " << tests[i].regexp << " " << tests[j].regexp;
+    }
+  }
+
+  for (int i = 0; i < ntests; i++)
+    re[i]->Decref();
+  delete[] re;
 }
 
 // Test that regexps parse to expected structures.
@@ -204,6 +222,13 @@ Test prefix_tests[] = {
       "cat{str{bc}cc{0x78-0x79}}}" },
   { "abc|x|abd", "alt{str{abc}lit{x}str{abd}}" },
   { "(?i)abc|ABD", "cat{strfold{ab}cc{0x43-0x44 0x63-0x64}}" },
+  { "[ab]c|[ab]d", "cat{cc{0x61-0x62}cc{0x63-0x64}}" },
+  { "(?:xx|yy)c|(?:xx|yy)d",
+    "cat{alt{str{xx}str{yy}}cc{0x63-0x64}}" },
+  { "x{2}|x{2}[0-9]",
+    "cat{rep{2,2 lit{x}}alt{emp{}cc{0x30-0x39}}}" },
+  { "x{2}y|x{2}[0-9]y",
+    "cat{rep{2,2 lit{x}}alt{lit{y}cat{cc{0x30-0x39}lit{y}}}}" },
 };
 
 // Test that prefix factoring works.

@@ -123,7 +123,7 @@ static Test tests[] = {
   // explicit (?:) in place of non-parenthesized empty strings,
   // to make them easier to spot for other parsers.
   { "(a|b|)", "([a-b]|(?:))" },
-  { "(|)", "((?:)|(?:))" },
+  { "(|)", "()" },
   { "a()", "a()" },
   { "(()|())", "(()|())" },
   { "(a|)", "(a|(?:))" },

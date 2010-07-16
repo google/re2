@@ -151,6 +151,7 @@ bool EmptyStringWalker::PostVisit(Regexp* re, bool parent_arg, bool pre_arg,
     case kRegexpEndText:
     case kRegexpStar:                  // can always be empty
     case kRegexpQuest:
+    case kRegexpHaveMatch:
       return true;
 
     case kRegexpConcat:                // can be empty if all children can

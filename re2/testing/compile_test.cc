@@ -28,77 +28,77 @@ struct Test {
 static Test tests[] = {
   { "a",
     "1. byte [61-61] -> 2\n"
-    "2. match!\n" },
+    "2. match! 0\n" },
   { "ab",
     "1. byte [61-61] -> 2\n"
     "2. byte [62-62] -> 3\n"
-    "3. match!\n" },
+    "3. match! 0\n" },
   { "a|c",
     "3. alt -> 1 | 2\n"
     "1. byte [61-61] -> 4\n"
     "2. byte [63-63] -> 4\n"
-    "4. match!\n" },
+    "4. match! 0\n" },
   { "a|b",
     "1. byte [61-62] -> 2\n"
-    "2. match!\n" },
+    "2. match! 0\n" },
   { "[ab]",
     "1. byte [61-62] -> 2\n"
-    "2. match!\n" },
+    "2. match! 0\n" },
   { "a+",
     "1. byte [61-61] -> 2\n"
     "2. alt -> 1 | 3\n"
-    "3. match!\n" },
+    "3. match! 0\n" },
   { "a+?",
     "1. byte [61-61] -> 2\n"
     "2. alt -> 3 | 1\n"
-    "3. match!\n" },
+    "3. match! 0\n" },
   { "a*",
     "2. alt -> 1 | 3\n"
     "1. byte [61-61] -> 2\n"
-    "3. match!\n" },
+    "3. match! 0\n" },
   { "a*?",
     "2. alt -> 3 | 1\n"
-    "3. match!\n"
+    "3. match! 0\n"
     "1. byte [61-61] -> 2\n" },
   { "a?",
     "2. alt -> 1 | 3\n"
     "1. byte [61-61] -> 3\n"
-    "3. match!\n" },
+    "3. match! 0\n" },
   { "a??",
     "2. alt -> 3 | 1\n"
-    "3. match!\n"
+    "3. match! 0\n"
     "1. byte [61-61] -> 3\n" },
   { "a{4}",
     "1. byte [61-61] -> 2\n"
     "2. byte [61-61] -> 3\n"
     "3. byte [61-61] -> 4\n"
     "4. byte [61-61] -> 5\n"
-    "5. match!\n" },
+    "5. match! 0\n" },
   { "(a)",
     "2. capture 2 -> 1\n"
     "1. byte [61-61] -> 3\n"
     "3. capture 3 -> 4\n"
-    "4. match!\n" },
+    "4. match! 0\n" },
   { "(?:a)",
     "1. byte [61-61] -> 2\n"
-    "2. match!\n" },
+    "2. match! 0\n" },
   { "",
-    "2. match!\n" },
+    "2. match! 0\n" },
   { ".",
     "3. alt -> 1 | 2\n"
     "1. byte [00-09] -> 4\n"
     "2. byte [0b-ff] -> 4\n"
-    "4. match!\n" },
+    "4. match! 0\n" },
   { "[^ab]",
     "5. alt -> 3 | 4\n"
     "3. alt -> 1 | 2\n"
     "4. byte [63-ff] -> 6\n"
     "1. byte [00-09] -> 6\n"
     "2. byte [0b-60] -> 6\n"
-    "6. match!\n" },
+    "6. match! 0\n" },
   { "[Aa]",
     "1. byte/i [61-61] -> 2\n"
-    "2. match!\n" },
+    "2. match! 0\n" },
 };
 
 TEST(TestRegexpCompileToProg, Simple) {

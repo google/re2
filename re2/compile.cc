@@ -93,7 +93,7 @@ PatchList PatchList::Append(Prog::Inst* inst0, PatchList l1, PatchList l2) {
   }
 
   Prog::Inst* ip = &inst0[l.p>>1];
-  if(l.p&1)
+  if (l.p&1)
     ip->out1_ = l2.p;
   else
     ip->set_out(l2.p);
@@ -132,7 +132,7 @@ class Compiler : public Regexp::Walker<Frag> {
   // Compiles alternation of all the re to a new Prog.
   // Each re has a match with an id equal to its index in the vector.
   static Prog* CompileSet(const RE2::Options& options, RE2::Anchor anchor,
-                          const vector<Regexp*>& re);
+                          Regexp* re);
 
   // Interface for Regexp::Walker, which helps traverse the Regexp.
   // The walk is purely post-recursive: given the machines for the
@@ -207,7 +207,7 @@ class Compiler : public Regexp::Walker<Frag> {
   // Single rune.
   Frag Literal(Rune r, bool foldcase);
 
-  void Setup(Regexp::ParseFlags, int64);
+  void Setup(Regexp::ParseFlags, int64, RE2::Anchor);
   Prog* Finish();
 
   // Returns .* where dot = any byte
@@ -229,6 +229,8 @@ class Compiler : public Regexp::Walker<Frag> {
 
   map<uint64, int> rune_cache_;
   Frag rune_range_;
+
+  RE2::Anchor anchor_;  // anchor mode for RE2::Set
 
   DISALLOW_EVIL_CONSTRUCTORS(Compiler);
 };
@@ -478,7 +480,8 @@ void Compiler::BeginRange() {
   rune_range_.end = nullPatchList;
 }
 
-int Compiler::UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next) {
+int Compiler::UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase,
+                                     int next) {
   Frag f = ByteRange(lo, hi, foldcase);
   if (next != 0) {
     PatchList::Patch(inst_, f.end, next);
@@ -492,7 +495,9 @@ int Compiler::RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next) {
   // In Latin1 mode, there's no point in caching.
   // In forward UTF-8 mode, only need to cache continuation bytes.
   if (encoding_ == kEncodingLatin1 ||
-      (encoding_ == kEncodingUTF8 && !reversed_ && !(0x80 <= lo && hi <= 0xbf))) {
+      (encoding_ == kEncodingUTF8 &&
+       !reversed_ &&
+       !(0x80 <= lo && hi <= 0xbf))) {
     return UncachedRuneByteSuffix(lo, hi, foldcase, next);
   }
 
@@ -723,6 +728,14 @@ Frag Compiler::PostVisit(Regexp* re, Frag, Frag, Frag* child_frags,
     case kRegexpEmptyMatch:
       return Nop();
 
+    case kRegexpHaveMatch: {
+      Frag f = Match(re->match_id());
+      // Remember unanchored match to end of string.
+      if (anchor_ != RE2::ANCHOR_BOTH)
+        f = Cat(DotStar(), f);
+      return f;
+    }
+
     case kRegexpConcat: {
       Frag f = child_frags[0];
       for (int i = 1; i < nchild_frags; i++)
@@ -896,7 +909,8 @@ static bool IsAnchorEnd(Regexp** pre) {
   }
 }
 
-void Compiler::Setup(Regexp::ParseFlags flags, int64 max_mem) {
+void Compiler::Setup(Regexp::ParseFlags flags, int64 max_mem,
+                     RE2::Anchor anchor) {
   prog_->set_flags(flags);
 
   if (flags & Regexp::Latin1)
@@ -926,6 +940,8 @@ void Compiler::Setup(Regexp::ParseFlags flags, int64 max_mem) {
 
     max_inst_ = m;
   }
+
+  anchor_ = anchor;
 }
 
 // Compiles re, returning program.
@@ -936,7 +952,7 @@ void Compiler::Setup(Regexp::ParseFlags flags, int64 max_mem) {
 Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
   Compiler c;
 
-  c.Setup(re->parse_flags(), max_mem);
+  c.Setup(re->parse_flags(), max_mem, RE2::ANCHOR_BOTH /* unused */);
   c.reversed_ = reversed;
 
   // Simplify to remove things like counted repetitions
@@ -1035,44 +1051,28 @@ Frag Compiler::DotStar() {
 
 // Compiles RE set to Prog.
 Prog* Compiler::CompileSet(const RE2::Options& options, RE2::Anchor anchor,
-                           const vector<Regexp*>& re) {
+                           Regexp* re) {
   Compiler c;
 
-  c.Setup(static_cast<Regexp::ParseFlags>(options.ParseFlags()),
-          options.max_mem());
+  Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(options.ParseFlags());
+  c.Setup(pf, options.max_mem(), anchor);
 
-  // Accumulate alternation of fragments.
-  Frag all = kNullFrag;
-  for (int i = 0; i < re.size(); i++) {
-    Frag f = c.WalkExponential(re[i], kNullFrag, 2*c.max_inst_);
-    if (c.failed_)
-      return NULL;
-    switch (anchor) {
-      case RE2::UNANCHORED:
-        f = c.Cat(c.Cat(c.DotStar(), f), c.DotStar());
-        break;
-      case RE2::ANCHOR_START:
-        f = c.Cat(f, c.DotStar());
-        break;
-      case RE2::ANCHOR_BOTH:
-        break;
-    }
-    f = c.Cat(f, c.Match(i));
-    all = c.Alt(all, f);
+  // Compile alternation of fragments.
+  Frag all = c.WalkExponential(re, kNullFrag, 2*c.max_inst_);
+  re->Decref();
+  if (c.failed_)
+    return NULL;
+
+  if (anchor == RE2::UNANCHORED) {
+    // The trailing .* was added while handling kRegexpHaveMatch.
+    // We just have to add the leading one.
+    all = c.Cat(c.DotStar(), all);
   }
 
   c.prog_->set_start(all.begin);
   c.prog_->set_start_unanchored(all.begin);
   c.prog_->set_anchor_start(true);
   c.prog_->set_anchor_end(true);
-
-  // Also create unanchored version, which starts with a .*? loop.
-  if (c.prog_->anchor_start()) {
-    c.prog_->set_start_unanchored(c.prog_->start());
-  } else {
-    Frag unanchored = c.Cat(c.DotStar(), all);
-    c.prog_->set_start_unanchored(unanchored.begin);
-  }
 
   Prog* prog = c.Finish();
   if (prog == NULL)
@@ -1093,7 +1093,7 @@ Prog* Compiler::CompileSet(const RE2::Options& options, RE2::Anchor anchor,
 }
 
 Prog* Prog::CompileSet(const RE2::Options& options, RE2::Anchor anchor,
-                       const vector<Regexp*>& re) {
+                       Regexp* re) {
   return Compiler::CompileSet(options, anchor, re);
 }
 

@@ -149,7 +149,11 @@ enum RegexpOp {
   // Matches character class given by cc_.
   kRegexpCharClass,
 
-  kMaxRegexpOp = kRegexpCharClass,
+  // Forces match of entire expression right now,
+  // with match ID match_id_ (used by RE2::Set).
+  kRegexpHaveMatch,
+
+  kMaxRegexpOp = kRegexpHaveMatch,
 };
 
 // Keep in sync with string list in regexp.cc
@@ -250,7 +254,7 @@ class CharClass {
   CharClass();  // not implemented
   ~CharClass();  // not implemented
   static CharClass* New(int maxranges);
-  
+
   friend class CharClassBuilder;
 
   bool folds_ascii_;
@@ -258,39 +262,6 @@ class CharClass {
   RuneRange *ranges_;
   int nranges_;
   DISALLOW_EVIL_CONSTRUCTORS(CharClass);
-};
-
-// Character class set: contains non-overlapping, non-abutting RuneRanges.
-typedef set<RuneRange, RuneRangeLess> RuneRangeSet;
-
-class CharClassBuilder {
- public:
-  CharClassBuilder();
-
-  typedef RuneRangeSet::iterator iterator;
-  iterator begin() { return ranges_.begin(); }
-  iterator end() { return ranges_.end(); }
-
-  int size() { return nrunes_; }
-  bool empty() { return nrunes_ == 0; }
-  bool full() { return nrunes_ == Runemax+1; }
-
-  bool Contains(Rune r);
-  bool FoldsASCII();
-  bool AddRange(Rune lo, Rune hi);  // returns whether class changed
-  CharClassBuilder* Copy();
-  void AddCharClass(CharClassBuilder* cc);
-  void Negate();
-  void RemoveAbove(Rune r);
-  CharClass* GetCharClass();
-
- private:
-  static const uint32 AlphaMask = (1<<26) - 1;
-  uint32 upper_;  // bitmap of A-Z
-  uint32 lower_;  // bitmap of a-z
-  int nrunes_;
-  RuneRangeSet ranges_;
-  DISALLOW_EVIL_CONSTRUCTORS(CharClassBuilder);
 };
 
 class Regexp {
@@ -359,6 +330,7 @@ class Regexp {
   const string* name() { DCHECK_EQ(op_, kRegexpCapture); return name_; }
   Rune* runes() { DCHECK_EQ(op_, kRegexpLiteralString); return runes_; }
   int nrunes() { DCHECK_EQ(op_, kRegexpLiteralString); return nrunes_; }
+  int match_id() { DCHECK_EQ(op_, kRegexpHaveMatch); return match_id_; }
 
   // Increments reference count, returns object as convenience.
   Regexp* Incref();
@@ -415,6 +387,10 @@ class Regexp {
   static Regexp* NewLiteral(Rune rune, ParseFlags flags);
   static Regexp* NewCharClass(CharClass* cc, ParseFlags flags);
   static Regexp* LiteralString(Rune* runes, int nrunes, ParseFlags flags);
+  static Regexp* HaveMatch(int match_id, ParseFlags flags);
+
+  // Like Alternate but does not factor out common prefixes.
+  static Regexp* AlternateNoFactor(Regexp** subs, int nsubs, ParseFlags flags);
 
   // Debugging function.  Returns string format for regexp
   // that makes structure clear.  Does NOT use regexp syntax.
@@ -463,13 +439,46 @@ class Regexp {
   friend bool ParseCharClass(StringPiece* s, Regexp** out_re,
                              RegexpStatus* status);
 
+  // Helper for testing [sic].
+  friend bool RegexpEqualTestingOnly(Regexp*, Regexp*);
+
   // Computes whether Regexp is already simple.
   bool ComputeSimple();
 
   // Constructor that generates a concatenation or alternation,
   // enforcing the limit on the number of subexpressions for
   // a particular Regexp.
-  static Regexp* ConcatOrAlternate(RegexpOp op, Regexp** subs, int nsubs, ParseFlags flags);
+  static Regexp* ConcatOrAlternate(RegexpOp op, Regexp** subs, int nsubs,
+                                   ParseFlags flags, bool can_factor);
+
+  // Returns the leading string that re starts with.
+  // The returned Rune* points into a piece of re,
+  // so it must not be used after the caller calls re->Decref().
+  static Rune* LeadingString(Regexp* re, int* nrune, ParseFlags* flags);
+
+  // Removes the first n leading runes from the beginning of re.
+  // Edits re in place.
+  static void RemoveLeadingString(Regexp* re, int n);
+
+  // Returns the leading regexp in re's top-level concatenation.
+  // The returned Regexp* points at re or a sub-expression of re,
+  // so it must not be used after the caller calls re->Decref().
+  static Regexp* LeadingRegexp(Regexp* re);
+
+  // Removes LeadingRegexp(re) from re and returns the remainder.
+  // Might edit re in place.
+  static Regexp* RemoveLeadingRegexp(Regexp* re);
+
+  // Simplifies an alternation of literal strings by factoring out
+  // common prefixes.
+  static int FactorAlternation(Regexp** sub, int nsub, ParseFlags flags);
+  static int FactorAlternationRecursive(Regexp** sub, int nsub,
+                                        ParseFlags flags, int maxdepth);
+
+  // Is a == b?  Only efficient on regexps that have not been through
+  // Simplify yet - the expansion of a kRegexpRepeat will make this
+  // take a long time.  Do not call on such regexps, hence private.
+  static bool Equal(Regexp* a, Regexp* b);
 
   // Allocate space for n sub-regexps.
   void AllocSub(int n) {
@@ -482,6 +491,9 @@ class Regexp {
 
   // Add Rune to LiteralString
   void AddRuneToString(Rune r);
+
+  // Swaps this with that, in place.
+  void Swap(Regexp *that);
 
   // Operator.  See description of operators above.
   // uint8 instead of RegexpOp to control space usage.
@@ -546,10 +558,45 @@ class Regexp {
       CharClassBuilder* ccb_;
     };
     Rune rune_;  // Literal
+    int match_id_;  // HaveMatch
     void *the_union_[2];  // as big as any other element, for memset
   };
 
   DISALLOW_EVIL_CONSTRUCTORS(Regexp);
+};
+
+// Character class set: contains non-overlapping, non-abutting RuneRanges.
+typedef set<RuneRange, RuneRangeLess> RuneRangeSet;
+
+class CharClassBuilder {
+ public:
+  CharClassBuilder();
+
+  typedef RuneRangeSet::iterator iterator;
+  iterator begin() { return ranges_.begin(); }
+  iterator end() { return ranges_.end(); }
+
+  int size() { return nrunes_; }
+  bool empty() { return nrunes_ == 0; }
+  bool full() { return nrunes_ == Runemax+1; }
+
+  bool Contains(Rune r);
+  bool FoldsASCII();
+  bool AddRange(Rune lo, Rune hi);  // returns whether class changed
+  CharClassBuilder* Copy();
+  void AddCharClass(CharClassBuilder* cc);
+  void Negate();
+  void RemoveAbove(Rune r);
+  CharClass* GetCharClass();
+  void AddRangeFlags(Rune lo, Rune hi, Regexp::ParseFlags parse_flags);
+
+ private:
+  static const uint32 AlphaMask = (1<<26) - 1;
+  uint32 upper_;  // bitmap of A-Z
+  uint32 lower_;  // bitmap of a-z
+  int nrunes_;
+  RuneRangeSet ranges_;
+  DISALLOW_EVIL_CONSTRUCTORS(CharClassBuilder);
 };
 
 // Tell g++ that bitwise ops on ParseFlags produce ParseFlags.

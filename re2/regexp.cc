@@ -126,6 +126,8 @@ void Regexp::Destroy() {
       Regexp** subs = re->sub();
       for (int i = 0; i < re->nsub_; i++) {
         Regexp* sub = subs[i];
+        if (sub == NULL)
+          continue;
         if (sub->ref_ == kMaxRef)
           sub->Decref();
         else
@@ -160,8 +162,13 @@ void Regexp::AddRuneToString(Rune r) {
   runes_[nrunes_++] = r;
 }
 
+Regexp* Regexp::HaveMatch(int match_id, ParseFlags flags) {
+  Regexp* re = new Regexp(kRegexpHaveMatch, flags);
+  re->match_id_ = match_id;
+  return re;
+}
 
-Regexp* Regexp::Plus(Regexp* sub, Regexp::ParseFlags flags) {
+Regexp* Regexp::Plus(Regexp* sub, ParseFlags flags) {
   if (sub->op() == kRegexpPlus && sub->parse_flags() == flags)
     return sub;
   Regexp* re = new Regexp(kRegexpPlus, flags);
@@ -170,7 +177,7 @@ Regexp* Regexp::Plus(Regexp* sub, Regexp::ParseFlags flags) {
   return re;
 }
 
-Regexp* Regexp::Star(Regexp* sub, Regexp::ParseFlags flags) {
+Regexp* Regexp::Star(Regexp* sub, ParseFlags flags) {
   if (sub->op() == kRegexpStar && sub->parse_flags() == flags)
     return sub;
   Regexp* re = new Regexp(kRegexpStar, flags);
@@ -179,7 +186,7 @@ Regexp* Regexp::Star(Regexp* sub, Regexp::ParseFlags flags) {
   return re;
 }
 
-Regexp* Regexp::Quest(Regexp* sub, Regexp::ParseFlags flags) {
+Regexp* Regexp::Quest(Regexp* sub, ParseFlags flags) {
   if (sub->op() == kRegexpQuest && sub->parse_flags() == flags)
     return sub;
   Regexp* re = new Regexp(kRegexpQuest, flags);
@@ -188,9 +195,24 @@ Regexp* Regexp::Quest(Regexp* sub, Regexp::ParseFlags flags) {
   return re;
 }
 
-Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub, ParseFlags flags) {
+Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub,
+                                  ParseFlags flags, bool can_factor) {
   if (nsub == 1)
     return sub[0];
+
+  Regexp** subcopy = NULL;
+  if (op == kRegexpAlternate && can_factor) {
+    // Going to edit sub; make a copy so we don't step on caller.
+    subcopy = new Regexp*[nsub];
+    memmove(subcopy, sub, nsub * sizeof sub[0]);
+    sub = subcopy;
+    nsub = FactorAlternation(sub, nsub, flags);
+    if (nsub == 1) {
+      Regexp* re = sub[0];
+      delete[] subcopy;
+      return re;
+    }
+  }
 
   if (nsub > kMaxNsub) {
     // Too many subexpressions to fit in a single Regexp.
@@ -200,8 +222,11 @@ Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub, ParseFlag
     re->AllocSub(nbigsub);
     Regexp** subs = re->sub();
     for (int i = 0; i < nbigsub - 1; i++)
-      subs[i] = ConcatOrAlternate(op, sub+i*kMaxNsub, kMaxNsub, flags);
-    subs[nbigsub - 1] = ConcatOrAlternate(op, sub+(nbigsub-1)*kMaxNsub, nsub - (nbigsub-1)*kMaxNsub, flags);
+      subs[i] = ConcatOrAlternate(op, sub+i*kMaxNsub, kMaxNsub, flags, false);
+    subs[nbigsub - 1] = ConcatOrAlternate(op, sub+(nbigsub-1)*kMaxNsub,
+                                          nsub - (nbigsub-1)*kMaxNsub, flags,
+                                          false);
+    delete[] subcopy;
     return re;
   }
 
@@ -210,15 +235,21 @@ Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub, ParseFlag
   Regexp** subs = re->sub();
   for (int i = 0; i < nsub; i++)
     subs[i] = sub[i];
+
+  delete[] subcopy;
   return re;
 }
 
 Regexp* Regexp::Concat(Regexp** sub, int nsub, ParseFlags flags) {
-  return ConcatOrAlternate(kRegexpConcat, sub, nsub, flags);
+  return ConcatOrAlternate(kRegexpConcat, sub, nsub, flags, false);
 }
 
 Regexp* Regexp::Alternate(Regexp** sub, int nsub, ParseFlags flags) {
-  return ConcatOrAlternate(kRegexpAlternate, sub, nsub, flags);
+  return ConcatOrAlternate(kRegexpAlternate, sub, nsub, flags, true);
+}
+
+Regexp* Regexp::AlternateNoFactor(Regexp** sub, int nsub, ParseFlags flags) {
+  return ConcatOrAlternate(kRegexpAlternate, sub, nsub, flags, false);
 }
 
 Regexp* Regexp::Capture(Regexp* sub, ParseFlags flags, int cap) {
@@ -261,6 +292,159 @@ Regexp* Regexp::NewCharClass(CharClass* cc, ParseFlags flags) {
   return re;
 }
 
+// Swaps this and that in place.
+void Regexp::Swap(Regexp* that) {
+  // Can use memmove because Regexp is just a struct (no vtable).
+  char tmp[sizeof *this];
+  memmove(tmp, this, sizeof tmp);
+  memmove(this, that, sizeof tmp);
+  memmove(that, tmp, sizeof tmp);
+}
+
+// Tests equality of all top-level structure but not subregexps.
+static bool TopEqual(Regexp* a, Regexp* b) {
+  if (a->op() != b->op())
+    return false;
+
+  switch (a->op()) {
+    case kRegexpNoMatch:
+    case kRegexpEmptyMatch:
+    case kRegexpAnyChar:
+    case kRegexpAnyByte:
+    case kRegexpBeginLine:
+    case kRegexpEndLine:
+    case kRegexpWordBoundary:
+    case kRegexpNoWordBoundary:
+    case kRegexpBeginText:
+      return true;
+
+    case kRegexpEndText:
+      // The parse flags remember whether it's \z or (?-m:$),
+      // which matters when testing against PCRE.
+      return ((a->parse_flags() ^ b->parse_flags()) & Regexp::WasDollar) == 0;
+
+    case kRegexpLiteral:
+      return a->rune() == b->rune() &&
+             ((a->parse_flags() ^ b->parse_flags()) & Regexp::FoldCase) == 0;
+
+    case kRegexpLiteralString:
+      return a->nrunes() == b->nrunes() &&
+             ((a->parse_flags() ^ b->parse_flags()) & Regexp::FoldCase) == 0 &&
+             memcmp(a->runes(), b->runes(),
+                    a->nrunes() * sizeof a->runes()[0]) == 0;
+
+    case kRegexpAlternate:
+    case kRegexpConcat:
+      return a->nsub() == b->nsub();
+
+    case kRegexpStar:
+    case kRegexpPlus:
+    case kRegexpQuest:
+      return ((a->parse_flags() ^ b->parse_flags()) & Regexp::NonGreedy) == 0;
+
+    case kRegexpRepeat:
+      return ((a->parse_flags() ^ b->parse_flags()) & Regexp::NonGreedy) == 0 &&
+             a->min() == b->min() &&
+             a->max() == b->max();
+
+    case kRegexpCapture:
+      return a->cap() == b->cap() && a->name() == b->name();
+
+    case kRegexpHaveMatch:
+      return a->match_id() == b->match_id();
+
+    case kRegexpCharClass: {
+      CharClass* acc = a->cc();
+      CharClass* bcc = b->cc();
+      return acc->size() == bcc->size() &&
+             acc->end() - acc->begin() == bcc->end() - bcc->begin() &&
+             memcmp(acc->begin(), bcc->begin(),
+                    (acc->end() - acc->begin()) * sizeof acc->begin()[0]) == 0;
+    }
+  }
+
+  LOG(DFATAL) << "Unexpected op in Regexp::Equal: " << a->op();
+  return 0;
+}
+
+bool Regexp::Equal(Regexp* a, Regexp* b) {
+  if (a == NULL || b == NULL)
+    return a == b;
+
+  if (!TopEqual(a, b))
+    return false;
+
+  // Fast path:
+  // return without allocating vector if there are no subregexps.
+  switch (a->op()) {
+    case kRegexpAlternate:
+    case kRegexpConcat:
+    case kRegexpStar:
+    case kRegexpPlus:
+    case kRegexpQuest:
+    case kRegexpRepeat:
+    case kRegexpCapture:
+      break;
+
+    default:
+      return true;
+  }
+
+  // Committed to doing real work.
+  // The stack (vector) has pairs of regexps waiting to
+  // be compared.  The regexps are only equal if
+  // all the pairs end up being equal.
+  vector<Regexp*> stk;
+
+  for (;;) {
+    // Invariant: TopEqual(a, b) == true.
+    Regexp* a2;
+    Regexp* b2;
+    switch (a->op()) {
+      default:
+        break;
+      case kRegexpAlternate:
+      case kRegexpConcat:
+        for (int i = 0; i < a->nsub(); i++) {
+          a2 = a->sub()[i];
+          b2 = b->sub()[i];
+          if (!TopEqual(a2, b2))
+            return false;
+          stk.push_back(a2);
+          stk.push_back(b2);
+        }
+        break;
+
+      case kRegexpStar:
+      case kRegexpPlus:
+      case kRegexpQuest:
+      case kRegexpRepeat:
+      case kRegexpCapture:
+        a2 = a->sub()[0];
+        b2 = b->sub()[0];
+        if (!TopEqual(a2, b2))
+          return false;
+        // Really:
+        //   stk.push_back(a2);
+        //   stk.push_back(b2);
+        //   break;
+        // but faster to assign directly and loop.
+        a = a2;
+        b = b2;
+        continue;
+    }
+
+    int n = stk.size();
+    if (n == 0)
+      break;
+
+    a = stk[n-2];
+    b = stk[n-1];
+    stk.resize(n-2);
+  }
+
+  return true;
+}
 
 // Keep in sync with enum RegexpStatusCode in regexp.h
 static const string kErrorStrings[] = {
