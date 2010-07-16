@@ -83,6 +83,8 @@ template<bool> struct CompileAssert {};
 #define ANNOTATE_IGNORE_WRITES_END()
 #define ANNOTATE_BENIGN_RACE(a, b)
 #define NO_THREAD_SAFETY_ANALYSIS
+#define ANNOTATE_HAPPENS_BEFORE(x)
+#define ANNOTATE_HAPPENS_AFTER(x)
 
 struct StringPiece;
 

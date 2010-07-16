@@ -1742,8 +1742,10 @@ DFA* Prog::GetDFA(MatchKind kind) {
 
   // Quick check; okay because of memory barrier below.
   DFA *dfa = *pdfa;
-  if (dfa != NULL)
+  if (dfa != NULL) {
+    ANNOTATE_HAPPENS_AFTER(dfa);
     return dfa;
+  }
 
   MutexLock l(&dfa_mutex_);
   dfa = *pdfa;
@@ -1765,6 +1767,7 @@ DFA* Prog::GetDFA(MatchKind kind) {
   delete_dfa_ = DeleteDFA;
 
   // Synchronize with "quick check" above.
+  ANNOTATE_HAPPENS_BEFORE(dfa);
   WriteMemoryBarrier();
   *pdfa = dfa;
 
