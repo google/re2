@@ -10,10 +10,13 @@
 // allow the user of the class to use their favorite string match
 // engine. The overall flow is: Add all the regexps using Add, then
 // Compile the FilteredRE2. The compile returns strings that need to
-// be matched. For applying regexps to a search text, the caller does
-// the string matching using the strings returned. Then call
-// FirstMatch or AllMatches with a vector of indices of strings that
-// were found in the text to get the actual regexp matches.
+// be matched. Note that all returned strings are lowercase. For
+// applying regexps to a search text, the caller does the string
+// matching using the strings returned. When doing the string match,
+// note that the caller has to do that on lower cased version of the
+// search text. Then call FirstMatch or AllMatches with a vector of
+// indices of strings that were found in the text to get the actual
+// regexp matches.
 
 #ifndef RE2_FILTERED_RE2_H_
 #define RE2_FILTERED_RE2_H_
@@ -39,7 +42,10 @@ class FilteredRE2 {
 
   // Prepares the regexps added by Add for filtering.  Returns a set
   // of strings that the caller should check for in candidate texts.
-  // Call after all Add calls are done.
+  // The returned strings are lowercased. When doing string matching,
+  // the search text should be lowercased first to find matching
+  // strings from the set of strings returned by Compile.  Call after
+  // all Add calls are done.
   void Compile(vector<string>* strings_to_match);
 
   // Returns the index of the first matching regexp.
