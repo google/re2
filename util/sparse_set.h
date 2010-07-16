@@ -88,8 +88,8 @@ class SparseSet {
   // Change the maximum size of the array.
   // Invalidates all iterators.
   void resize(int new_max_size) {
-    if (size_ > max_size_)
-      size_ = max_size_;
+    if (size_ > new_max_size)
+      size_ = new_max_size;
     if (new_max_size > max_size_) {
       int* a = new int[new_max_size];
       if (sparse_to_dense_) {
