@@ -586,6 +586,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
   int n = 0;
   uint needflags = 0;     // flags needed by kInstEmptyWidth instructions
   bool sawmatch = false;  // whether queue contains guaranteed kInstMatch
+  bool sawmark = false;  // whether queue contains a Mark
   if (DebugDFA)
     fprintf(stderr, "WorkqToCachedState %s [%#x]", DumpWorkq(q).c_str(), flag);
   for (Workq::iterator it = q->begin(); it != q->end(); ++it) {
@@ -593,17 +594,26 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
     if (sawmatch && (kind_ == Prog::kFirstMatch || q->is_mark(id)))
       break;
     if (q->is_mark(id)) {
-      if (n > 0 && inst[n-1] != Mark)
+      if (n > 0 && inst[n-1] != Mark) {
+        sawmark = true;
         inst[n++] = Mark;
+      }
       continue;
     }
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       case kInstAltMatch:
+        // This state will continue to a match no matter what
+        // the rest of the input is.  If it is the highest priority match
+        // being considered, return the special FullMatchState
+        // to indicate that it's all matches from here out.
         if (kind_ != Prog::kManyMatch &&
             (kind_ != Prog::kFirstMatch ||
-             (it == q->begin() && ip->greedy(prog_)))) {
+             (it == q->begin() && ip->greedy(prog_))) &&
+            (kind_ != Prog::kLongestMatch || !sawmark)) {
           delete[] inst;
+          if (DebugDFA)
+            fprintf(stderr, " -> FullMatchState\n");
           return FullMatchState;
         }
         // Fall through.
@@ -663,6 +673,8 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
   // if the state is *not* a matching state.
   if (n == 0 && flag == 0) {
     delete[] inst;
+    if (DebugDFA)
+      fprintf(stderr, " -> DeadState\n");
     return DeadState;
   }
 

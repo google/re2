@@ -23,6 +23,14 @@ static void RandomTest(int maxatoms, int maxops,
                        const vector<string>& ops,
                        int maxstrlen, const vector<string>& stralphabet,
                        const string& wrapper) {
+  // Limit to smaller test cases in debug mode,
+  // because everything is so much slower.
+  if (DEBUG_MODE) {
+    maxatoms--;
+    maxops--;
+    maxstrlen /= 2;
+  }
+
   ExhaustiveTester t(maxatoms, maxops, alphabet, ops,
                      maxstrlen, stralphabet, wrapper, "");
   t.RandomStrings(FLAGS_stringseed, FLAGS_stringcount);
@@ -35,14 +43,14 @@ static void RandomTest(int maxatoms, int maxops,
 // Tests random small regexps involving literals and egrep operators.
 TEST(Random, SmallEgrepLiterals) {
   RandomTest(5, 5, Explode("abc."), RegexpGenerator::EgrepOps(),
-             20, Explode("abc"),
+             15, Explode("abc"),
              "");
 }
 
 // Tests random bigger regexps involving literals and egrep operators.
 TEST(Random, BigEgrepLiterals) {
   RandomTest(10, 10, Explode("abc."), RegexpGenerator::EgrepOps(),
-             20, Explode("abc"),
+             15, Explode("abc"),
              "");
 }
 
@@ -50,7 +58,7 @@ TEST(Random, BigEgrepLiterals) {
 // and egrep operators.
 TEST(Random, SmallEgrepCaptures) {
   RandomTest(5, 5, Split(" ", "a (b) ."), RegexpGenerator::EgrepOps(),
-             20, Explode("abc"),
+             15, Explode("abc"),
              "");
 }
 
@@ -58,7 +66,7 @@ TEST(Random, SmallEgrepCaptures) {
 // and egrep operators.
 TEST(Random, BigEgrepCaptures) {
   RandomTest(10, 10, Split(" ", "a (b) ."), RegexpGenerator::EgrepOps(),
-             20, Explode("abc"),
+             15, Explode("abc"),
              "");
 }
 

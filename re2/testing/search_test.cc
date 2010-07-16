@@ -264,6 +264,8 @@ RegexpTest simple_tests[] = {
   { "[^\\\\]+", "Aa\\" },
   { "[acegikmoqsuwy]+", "acegikmoqsuwyACEGIKMOQSUWY" },
 
+  // Former bugs.
+  { "a\\C*|ba\\C", "baba" },
 };
 
 TEST(Regexp, SearchTests) {

@@ -100,7 +100,10 @@ TEST(SingleThreaded, BuildEntireDFA) {
   //LOG(INFO) << s;
   Regexp* re = Regexp::Parse(s.c_str(), Regexp::LikePerl, NULL);
   CHECK(re);
-  for (int i = 17; i < 28; i++) {
+  int max = 28;
+  if (DEBUG_MODE)
+    max = 24;
+  for (int i = 17; i < max; i++) {
     int limit = 1<<i;
     int usage, progusage, dfamem;
     {
