@@ -1123,7 +1123,7 @@ static bool ParseInteger(StringPiece* s, int* np) {
     return false;
   int n = 0;
   int c;
-  while (s->size() > 0 && isdigit(c = (*s)[0]) & 0xFF) {
+  while (s->size() > 0 && isdigit(c = (*s)[0] & 0xFF)) {
     // Avoid overflow.
     if (n >= 100000000)
       return false;
