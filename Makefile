@@ -258,8 +258,8 @@ shared-bigtest: $(STESTS) $(SBIGTESTS)
 benchmark: obj/test/regexp_benchmark
 
 install: obj/libre2.a obj/so/libre2.so.0
-	mkdir -p $(DESTDIR)$(includedir)/re2
-	$(INSTALL_DATA) $(DESTDIR)$(INSTALL_HFILES) $(includedir)/re2
+	mkdir -p $(DESTDIR)$(includedir)/re2 $(DESTDIR)$(libdir)
+	$(INSTALL_DATA) $(INSTALL_HFILES) $(DESTDIR)$(includedir)/re2
 	$(INSTALL) obj/libre2.a $(DESTDIR)$(libdir)/libre2.a
 	$(INSTALL) obj/so/libre2.so $(DESTDIR)$(libdir)/libre2.so.$(SONAME).0.0
 	ln -sf libre2.so.$(SONAME).0.0 $(DESTDIR)$(libdir)/libre2.so.$(SONAME)
