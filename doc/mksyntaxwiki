@@ -11,7 +11,7 @@ sam -d syntax.wiki <<'!'
 ,s! perl$! <font size="1">PERL</font>!g
 ,s!(^[^	]+)	(.*)\n!`\1`	\2\n!g
 ,x g/NOT SUPPORTED/ s!^[^	]+!<font color="#808080">&</font>!
-,s!NOT SUPPORTED!!g
+,s!NOT SUPPORTED!<font size="1">(&)</font>!g
 ,s!(^[^	]+)	(.*)\n!<tr><td>\1</td><td>\2</td></tr>\n!g
 ,s!.*:$!<b>&</b>!g
 ,s!^$!<tr><td></td></tr>!g
