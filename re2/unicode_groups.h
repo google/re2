@@ -37,6 +37,7 @@ struct URange32
 struct UGroup
 {
   const char *name;
+  int sign;  // +1 for [abc], -1 for [^abc]
   URange16 *r16;
   int nr16;
   URange32 *r32;

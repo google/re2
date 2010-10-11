@@ -5,204 +5,114 @@
 
 namespace re2 {
 
-static URange32 code1[] = {  /* \d */
+static URange16 code1[] = {  /* \d */
 	{ 0x30, 0x39 },
 };
-static URange32 code2[] = {  /* \D */
-	{ 0x0, 0x2f },
-	{ 0x3a, 0x10ffff },
-};
-static URange32 code3[] = {  /* \s */
+static URange16 code2[] = {  /* \s */
 	{ 0x9, 0xa },
 	{ 0xc, 0xd },
 	{ 0x20, 0x20 },
 };
-static URange32 code4[] = {  /* \S */
-	{ 0x0, 0x8 },
-	{ 0xb, 0xb },
-	{ 0xe, 0x1f },
-	{ 0x21, 0x10ffff },
-};
-static URange32 code5[] = {  /* \w */
+static URange16 code3[] = {  /* \w */
 	{ 0x30, 0x39 },
 	{ 0x41, 0x5a },
 	{ 0x5f, 0x5f },
 	{ 0x61, 0x7a },
 };
-static URange32 code6[] = {  /* \W */
-	{ 0x0, 0x2f },
-	{ 0x3a, 0x40 },
-	{ 0x5b, 0x5e },
-	{ 0x60, 0x60 },
-	{ 0x7b, 0x10ffff },
-};
-static URange32 code7[] = {  /* \D */
-	{ 0x0, 0x2f },
-	{ 0x3a, 0x10ffff },
-};
 UGroup perl_groups[] = {
-	{ "\\d", 0, 0, code1, 1 },
-	{ "\\D", 0, 0, code2, 2 },
-	{ "\\s", 0, 0, code3, 3 },
-	{ "\\S", 0, 0, code4, 4 },
-	{ "\\w", 0, 0, code5, 4 },
-	{ "\\W", 0, 0, code6, 5 },
-	{ "\\D", 0, 0, code7, 2 },
+	{ "\\d", +1, code1, 1 },
+	{ "\\D", -1, code1, 1 },
+	{ "\\s", +1, code2, 3 },
+	{ "\\S", -1, code2, 3 },
+	{ "\\w", +1, code3, 4 },
+	{ "\\W", -1, code3, 4 },
 };
-int num_perl_groups = 7;
-static URange32 code8[] = {  /* [:alnum:] */
+int num_perl_groups = 6;
+static URange16 code4[] = {  /* [:alnum:] */
 	{ 0x30, 0x39 },
 	{ 0x41, 0x5a },
 	{ 0x61, 0x7a },
 };
-static URange32 code9[] = {  /* [:^alnum:] */
-	{ 0x0, 0x2f },
-	{ 0x3a, 0x40 },
-	{ 0x5b, 0x60 },
-	{ 0x7b, 0x10ffff },
-};
-static URange32 code10[] = {  /* [:alpha:] */
+static URange16 code5[] = {  /* [:alpha:] */
 	{ 0x41, 0x5a },
 	{ 0x61, 0x7a },
 };
-static URange32 code11[] = {  /* [:^alpha:] */
-	{ 0x0, 0x40 },
-	{ 0x5b, 0x60 },
-	{ 0x7b, 0x10ffff },
-};
-static URange32 code12[] = {  /* [:ascii:] */
+static URange16 code6[] = {  /* [:ascii:] */
 	{ 0x0, 0x7f },
 };
-static URange32 code13[] = {  /* [:^ascii:] */
-	{ 0x80, 0x10ffff },
-};
-static URange32 code14[] = {  /* [:blank:] */
+static URange16 code7[] = {  /* [:blank:] */
 	{ 0x9, 0x9 },
 	{ 0x20, 0x20 },
 };
-static URange32 code15[] = {  /* [:^blank:] */
-	{ 0x0, 0x8 },
-	{ 0xa, 0x1f },
-	{ 0x21, 0x10ffff },
-};
-static URange32 code16[] = {  /* [:cntrl:] */
+static URange16 code8[] = {  /* [:cntrl:] */
 	{ 0x0, 0x1f },
 	{ 0x7f, 0x7f },
 };
-static URange32 code17[] = {  /* [:^cntrl:] */
-	{ 0x20, 0x7e },
-	{ 0x80, 0x10ffff },
-};
-static URange32 code18[] = {  /* [:digit:] */
+static URange16 code9[] = {  /* [:digit:] */
 	{ 0x30, 0x39 },
 };
-static URange32 code19[] = {  /* [:^digit:] */
-	{ 0x0, 0x2f },
-	{ 0x3a, 0x10ffff },
-};
-static URange32 code20[] = {  /* [:graph:] */
+static URange16 code10[] = {  /* [:graph:] */
 	{ 0x21, 0x7e },
 };
-static URange32 code21[] = {  /* [:^graph:] */
-	{ 0x0, 0x20 },
-	{ 0x7f, 0x10ffff },
-};
-static URange32 code22[] = {  /* [:lower:] */
+static URange16 code11[] = {  /* [:lower:] */
 	{ 0x61, 0x7a },
 };
-static URange32 code23[] = {  /* [:^lower:] */
-	{ 0x0, 0x60 },
-	{ 0x7b, 0x10ffff },
-};
-static URange32 code24[] = {  /* [:print:] */
+static URange16 code12[] = {  /* [:print:] */
 	{ 0x20, 0x7e },
 };
-static URange32 code25[] = {  /* [:^print:] */
-	{ 0x0, 0x1f },
-	{ 0x7f, 0x10ffff },
-};
-static URange32 code26[] = {  /* [:punct:] */
+static URange16 code13[] = {  /* [:punct:] */
 	{ 0x21, 0x2f },
 	{ 0x3a, 0x40 },
 	{ 0x5b, 0x60 },
 	{ 0x7b, 0x7e },
 };
-static URange32 code27[] = {  /* [:^punct:] */
-	{ 0x0, 0x20 },
-	{ 0x30, 0x39 },
-	{ 0x41, 0x5a },
-	{ 0x61, 0x7a },
-	{ 0x7f, 0x10ffff },
-};
-static URange32 code28[] = {  /* [:space:] */
+static URange16 code14[] = {  /* [:space:] */
 	{ 0x9, 0xd },
 	{ 0x20, 0x20 },
 };
-static URange32 code29[] = {  /* [:^space:] */
-	{ 0x0, 0x8 },
-	{ 0xe, 0x1f },
-	{ 0x21, 0x10ffff },
-};
-static URange32 code30[] = {  /* [:upper:] */
+static URange16 code15[] = {  /* [:upper:] */
 	{ 0x41, 0x5a },
 };
-static URange32 code31[] = {  /* [:^upper:] */
-	{ 0x0, 0x40 },
-	{ 0x5b, 0x10ffff },
-};
-static URange32 code32[] = {  /* [:word:] */
+static URange16 code16[] = {  /* [:word:] */
 	{ 0x30, 0x39 },
 	{ 0x41, 0x5a },
 	{ 0x5f, 0x5f },
 	{ 0x61, 0x7a },
 };
-static URange32 code33[] = {  /* [:^word:] */
-	{ 0x0, 0x2f },
-	{ 0x3a, 0x40 },
-	{ 0x5b, 0x5e },
-	{ 0x60, 0x60 },
-	{ 0x7b, 0x10ffff },
-};
-static URange32 code34[] = {  /* [:xdigit:] */
+static URange16 code17[] = {  /* [:xdigit:] */
 	{ 0x30, 0x39 },
 	{ 0x41, 0x46 },
 	{ 0x61, 0x66 },
 };
-static URange32 code35[] = {  /* [:^xdigit:] */
-	{ 0x0, 0x2f },
-	{ 0x3a, 0x40 },
-	{ 0x47, 0x60 },
-	{ 0x67, 0x10ffff },
-};
 UGroup posix_groups[] = {
-	{ "[:alnum:]", 0, 0, code8, 3 },
-	{ "[:^alnum:]", 0, 0, code9, 4 },
-	{ "[:alpha:]", 0, 0, code10, 2 },
-	{ "[:^alpha:]", 0, 0, code11, 3 },
-	{ "[:ascii:]", 0, 0, code12, 1 },
-	{ "[:^ascii:]", 0, 0, code13, 1 },
-	{ "[:blank:]", 0, 0, code14, 2 },
-	{ "[:^blank:]", 0, 0, code15, 3 },
-	{ "[:cntrl:]", 0, 0, code16, 2 },
-	{ "[:^cntrl:]", 0, 0, code17, 2 },
-	{ "[:digit:]", 0, 0, code18, 1 },
-	{ "[:^digit:]", 0, 0, code19, 2 },
-	{ "[:graph:]", 0, 0, code20, 1 },
-	{ "[:^graph:]", 0, 0, code21, 2 },
-	{ "[:lower:]", 0, 0, code22, 1 },
-	{ "[:^lower:]", 0, 0, code23, 2 },
-	{ "[:print:]", 0, 0, code24, 1 },
-	{ "[:^print:]", 0, 0, code25, 2 },
-	{ "[:punct:]", 0, 0, code26, 4 },
-	{ "[:^punct:]", 0, 0, code27, 5 },
-	{ "[:space:]", 0, 0, code28, 2 },
-	{ "[:^space:]", 0, 0, code29, 3 },
-	{ "[:upper:]", 0, 0, code30, 1 },
-	{ "[:^upper:]", 0, 0, code31, 2 },
-	{ "[:word:]", 0, 0, code32, 4 },
-	{ "[:^word:]", 0, 0, code33, 5 },
-	{ "[:xdigit:]", 0, 0, code34, 3 },
-	{ "[:^xdigit:]", 0, 0, code35, 4 },
+	{ "[:alnum:]", +1, code4, 3 },
+	{ "[:^alnum:]", -1, code4, 3 },
+	{ "[:alpha:]", +1, code5, 2 },
+	{ "[:^alpha:]", -1, code5, 2 },
+	{ "[:ascii:]", +1, code6, 1 },
+	{ "[:^ascii:]", -1, code6, 1 },
+	{ "[:blank:]", +1, code7, 2 },
+	{ "[:^blank:]", -1, code7, 2 },
+	{ "[:cntrl:]", +1, code8, 2 },
+	{ "[:^cntrl:]", -1, code8, 2 },
+	{ "[:digit:]", +1, code9, 1 },
+	{ "[:^digit:]", -1, code9, 1 },
+	{ "[:graph:]", +1, code10, 1 },
+	{ "[:^graph:]", -1, code10, 1 },
+	{ "[:lower:]", +1, code11, 1 },
+	{ "[:^lower:]", -1, code11, 1 },
+	{ "[:print:]", +1, code12, 1 },
+	{ "[:^print:]", -1, code12, 1 },
+	{ "[:punct:]", +1, code13, 4 },
+	{ "[:^punct:]", -1, code13, 4 },
+	{ "[:space:]", +1, code14, 2 },
+	{ "[:^space:]", -1, code14, 2 },
+	{ "[:upper:]", +1, code15, 1 },
+	{ "[:^upper:]", -1, code15, 1 },
+	{ "[:word:]", +1, code16, 4 },
+	{ "[:^word:]", -1, code16, 4 },
+	{ "[:xdigit:]", +1, code17, 3 },
+	{ "[:^xdigit:]", -1, code17, 3 },
 };
 int num_posix_groups = 28;
 

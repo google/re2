@@ -68,16 +68,29 @@ static Test tests[] = {
 
   // Posix and Perl extensions
   { "[[:lower:]]", "cc{0x61-0x7a}" },
+  { "[a-z]", "cc{0x61-0x7a}" },
   { "[^[:lower:]]", "cc{0-0x60 0x7b-0x10ffff}" },
   { "[[:^lower:]]", "cc{0-0x60 0x7b-0x10ffff}" },
+  { "(?i)[[:lower:]]", "cc{0x41-0x5a 0x61-0x7a 0x17f 0x212a}" },
+  { "(?i)[a-z]", "cc{0x41-0x5a 0x61-0x7a 0x17f 0x212a}" },
+  { "(?i)[^[:lower:]]", "cc{0-0x40 0x5b-0x60 0x7b-0x17e 0x180-0x2129 0x212b-0x10ffff}" },
+  { "(?i)[[:^lower:]]", "cc{0-0x40 0x5b-0x60 0x7b-0x17e 0x180-0x2129 0x212b-0x10ffff}" },
   { "\\d", "cc{0x30-0x39}" },
   { "\\D", "cc{0-0x2f 0x3a-0x10ffff}" },
   { "\\s", "cc{0x9-0xa 0xc-0xd 0x20}" },
   { "\\S", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}" },
   { "\\w", "cc{0x30-0x39 0x41-0x5a 0x5f 0x61-0x7a}" },
   { "\\W", "cc{0-0x2f 0x3a-0x40 0x5b-0x5e 0x60 0x7b-0x10ffff}" },
+  { "(?i)\\w", "cc{0x30-0x39 0x41-0x5a 0x5f 0x61-0x7a 0x17f 0x212a}" },
+  { "(?i)\\W", "cc{0-0x2f 0x3a-0x40 0x5b-0x5e 0x60 0x7b-0x17e 0x180-0x2129 0x212b-0x10ffff}" },
   { "[^\\\\]", "cc{0-0x5b 0x5d-0x10ffff}" },
   { "\\C", "byte{}" },
+
+  // Unicode, negatives, and a double negative.
+  { "\\p{Braille}", "cc{0x2800-0x28ff}" },
+  { "\\P{Braille}", "cc{0-0x27ff 0x2900-0x10ffff}" },
+  { "\\p{^Braille}", "cc{0-0x27ff 0x2900-0x10ffff}" },
+  { "\\P{^Braille}", "cc{0x2800-0x28ff}" },
 
   // More interesting regular expressions.
   { "a{,2}", "str{a{,2}}" },
@@ -127,7 +140,10 @@ static Test tests[] = {
   { "[Aa][Bb]cd", "cat{strfold{ab}str{cd}}" },
 };
 
-static Regexp::ParseFlags kTestFlags = Regexp::MatchNL | Regexp::PerlX | Regexp::PerlClasses;
+static Regexp::ParseFlags kTestFlags = Regexp::MatchNL |
+                                       Regexp::PerlX |
+                                       Regexp::PerlClasses |
+                                       Regexp::UnicodeGroups;
 
 bool RegexpEqualTestingOnly(Regexp* a, Regexp* b) {
   return Regexp::Equal(a, b);
@@ -142,7 +158,8 @@ void TestParse(const Test* tests, int ntests, Regexp::ParseFlags flags,
     CHECK(re[i] != NULL) << " " << tests[i].regexp << " "
                          << status.Text();
     string s = re[i]->Dump();
-    EXPECT_EQ(string(tests[i].parse), s) << "Regexp: " << tests[i].regexp;
+    EXPECT_EQ(string(tests[i].parse), s) << "Regexp: " << tests[i].regexp
+      << "\nparse: " << tests[i].parse << " s: " << s;
   }
 
   for (int i = 0; i < ntests; i++) {

@@ -1410,7 +1410,7 @@ static UGroup* LookupGroup(const StringPiece& name,
 // Fake UGroup containing all Runes
 static URange16 any16[] = { { 0, 65535 } };
 static URange32 any32[] = { { 65536, Runemax } };
-static UGroup anygroup = { "Any", any16, 1, any32, 1 };
+static UGroup anygroup = { "Any", +1, any16, 1, any32, 1 };
 
 // Look for a POSIX group with the given name (e.g., "[:^alpha:]")
 static UGroup* LookupPosixGroup(const StringPiece& name) {
@@ -1429,33 +1429,43 @@ static UGroup* LookupUnicodeGroup(const StringPiece& name) {
   return LookupGroup(name, unicode_groups, num_unicode_groups);
 }
 
-// Add a UGroup to the character class.
-static void AddUGroup(CharClassBuilder *cc, UGroup *g,
+// Add a UGroup or its negation to the character class.
+static void AddUGroup(CharClassBuilder *cc, UGroup *g, int sign,
                       Regexp::ParseFlags parse_flags) {
-  for (int i = 0; i < g->nr16; i++) {
-    cc->AddRangeFlags(g->r16[i].lo, g->r16[i].hi, parse_flags);
+  if (sign == +1) {
+    for (int i = 0; i < g->nr16; i++) {
+      cc->AddRangeFlags(g->r16[i].lo, g->r16[i].hi, parse_flags);
+    }
+    for (int i = 0; i < g->nr32; i++) {
+      cc->AddRangeFlags(g->r32[i].lo, g->r32[i].hi, parse_flags);
+    }
+  } else {
+    if (parse_flags & Regexp::FoldCase) {
+      // Normally adding a case-folded group means
+      // adding all the extra fold-equivalent runes too.
+      // But if we're adding the negation of the group,
+      // we have to exclude all the runes that are fold-equivalent
+      // to what's already missing.  Too hard, so do in two steps.
+      CharClassBuilder ccb1;
+      AddUGroup(&ccb1, g, +1, parse_flags);
+      ccb1.Negate();
+      cc->AddCharClass(&ccb1);
+      return;
+    }
+    int next = 0;
+    for (int i = 0; i < g->nr16; i++) {
+      if (next < g->r16[i].lo)
+        cc->AddRangeFlags(next, g->r16[i].lo - 1, parse_flags);
+      next = g->r16[i].hi + 1;
+    }
+    for (int i = 0; i < g->nr32; i++) {
+      if (next < g->r32[i].lo)
+        cc->AddRangeFlags(next, g->r32[i].lo - 1, parse_flags);
+      next = g->r32[i].hi + 1;
+    }
+    if (next <= Runemax)
+      cc->AddRangeFlags(next, Runemax, parse_flags);
   }
-  for (int i = 0; i < g->nr32; i++) {
-    cc->AddRangeFlags(g->r32[i].lo, g->r32[i].hi, parse_flags);
-  }
-}
-
-// Add the negation of a UGroup to the character class.
-static void AddNegatedUGroup(CharClassBuilder* cc, UGroup *g,
-                             Regexp::ParseFlags parse_flags) {
-  int next = 0;
-  for (int i = 0; i < g->nr16; i++) {
-    if (next < g->r16[i].lo)
-      cc->AddRangeFlags(next, g->r16[i].lo - 1, parse_flags);
-    next = g->r16[i].hi + 1;
-  }
-  for (int i = 0; i < g->nr32; i++) {
-    if (next < g->r32[i].lo)
-      cc->AddRangeFlags(next, g->r32[i].lo - 1, parse_flags);
-    next = g->r32[i].hi + 1;
-  }
-  if (next <= Runemax)
-    cc->AddRangeFlags(next, Runemax, parse_flags);
 }
 
 // Maybe parse a Perl character class escape sequence.
@@ -1500,7 +1510,9 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
     return kParseNothing;
 
   // Committed to parse.  Results:
-  bool positive = c == 'p';  // false = negated char class
+  int sign = +1;  // -1 = negated char class
+  if (c == 'P')
+    sign = -1;
   StringPiece seq = *s;  // \p{Han} or \pL
   StringPiece name;  // Han or L
   s->remove_prefix(2);  // '\\', 'p'
@@ -1532,7 +1544,7 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
 
   // Look up group
   if (name.size() > 0 && name[0] == '^') {
-    positive = !positive;
+    sign = -sign;
     name.remove_prefix(1);  // '^'
   }
   UGroup *g = LookupUnicodeGroup(name);
@@ -1542,10 +1554,7 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
     return kParseError;
   }
 
-  if (positive)
-    AddUGroup(cc, g, parse_flags);
-  else
-    AddNegatedUGroup(cc, g, parse_flags);
+  AddUGroup(cc, g, sign, parse_flags);
   return kParseOk;
 }
 
@@ -1582,7 +1591,7 @@ static ParseStatus ParseCCName(StringPiece* s, Regexp::ParseFlags parse_flags,
   }
 
   s->remove_prefix(name.size());
-  AddUGroup(cc, g, parse_flags);
+  AddUGroup(cc, g, g->sign, parse_flags);
   return kParseOk;
 }
 
@@ -1713,7 +1722,7 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
     // Look for Perl character class symbols (extension).
     UGroup *g = MaybeParsePerlCCEscape(s, flags_);
     if (g != NULL) {
-      AddUGroup(re->ccb_, g, flags_);
+      AddUGroup(re->ccb_, g, g->sign, flags_);
       continue;
     }
 
@@ -2165,7 +2174,7 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
         if (g != NULL) {
           Regexp* re = new Regexp(kRegexpCharClass, ps.flags() & ~FoldCase);
           re->ccb_ = new CharClassBuilder;
-          AddUGroup(re->ccb_, g, ps.flags());
+          AddUGroup(re->ccb_, g, g->sign, ps.flags());
           if (!ps.PushRegexp(re))
             return NULL;
           break;

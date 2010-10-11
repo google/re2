@@ -11,48 +11,26 @@
 
 @posixclasses = (
 	"[:alnum:]",
-	"[:^alnum:]",
 	"[:alpha:]",
-	"[:^alpha:]",
 	"[:ascii:]",
-	"[:^ascii:]",
 	"[:blank:]",
-	"[:^blank:]",
 	"[:cntrl:]",
-	"[:^cntrl:]",
 	"[:digit:]",
-	"[:^digit:]",
 	"[:graph:]",
-	"[:^graph:]",
 	"[:lower:]",
-	"[:^lower:]",
 	"[:print:]",
-	"[:^print:]",
 	"[:punct:]",
-	"[:^punct:]",
 	"[:space:]",
-	"[:^space:]",
 	"[:upper:]",
-	"[:^upper:]",
 	"[:word:]",
-	"[:^word:]",
 	"[:xdigit:]",
-	"[:^xdigit:]"
 );
 
 @perlclasses = (
 	"\\d",
-	"\\D",
 	"\\s",
-	"\\S",
 	"\\w",
-	"\\W",
-	"\\D"
 );
-
-# We extend the tables to Unicode by saying that
-# 0x80-0x10FFFF matches if and only if byte 0x80 matches.
-$Runemax = 0x10ffff;
 
 sub ComputeClass($) {
   my @ranges;
@@ -60,7 +38,7 @@ sub ComputeClass($) {
   my $regexp = "[$class]";
   my $start = -1;
   for (my $i=0; $i<=129; $i++) {
-    if ($i == 129) { $i = $Runemax+1; }
+    if ($i == 129) { $i = 256; }
     if ($i <= 128 && chr($i) =~ $regexp) {
       if ($start < 0) {
         $start = $i;
@@ -76,10 +54,8 @@ sub ComputeClass($) {
 }
 
 sub PrintClass($$@) {
-  # We could split the codes into URange16 and URange32 like
-  # make_unicode_groups.py does, but these are too small to bother.
   my ($cname, $name, @ranges) = @_;
-  print "static URange32 code${cname}[] = {  /* $name */\n";
+  print "static URange16 code${cname}[] = {  /* $name */\n";
   for (my $i=0; $i<@ranges; $i++) {
     my @a = @{$ranges[$i]};
     printf "\t{ 0x%x, 0x%x },\n", $a[0], $a[1];
@@ -88,7 +64,13 @@ sub PrintClass($$@) {
   my $n = @ranges;
   my $escname = $name;
   $escname =~ s/\\/\\\\/g;
-  return "{ \"$escname\", 0, 0, code$cname, $n }";
+  $negname = $escname;
+  if ($negname =~ /:/) {
+    $negname =~ s/:/:^/;
+  } else {
+    $negname =~ y/a-z/A-Z/;
+  }
+  return "{ \"$escname\", +1, code$cname, $n }", "{ \"$negname\", -1, code$cname, $n }";
 }
 
 my $gen = 0;

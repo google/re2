@@ -72,7 +72,7 @@ def PrintGroup(name, codes):
   n16 += len(range16)
   n32 += len(range32)
 
-  ugroup = "{ \"%s\"" % (name,)
+  ugroup = "{ \"%s\", +1" % (name,)
   # if len(code16) > 0:
   #   PrintCodes("uint16", name+"_code16", code16)
   #   ugroup += ", %s_code16, %d" % (name, len(code16))
