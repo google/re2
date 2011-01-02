@@ -392,7 +392,7 @@ Frag Compiler::ByteRange(int lo, int hi, bool foldcase) {
   int id = AllocInst(1);
   if (id < 0)
     return NoMatch();
-  inst_[id].InitByteRange(lo, hi, foldcase, NULL);
+  inst_[id].InitByteRange(lo, hi, foldcase, 0);
   prog_->byte_inst_count_++;
   prog_->MarkByteRange(lo, hi);
   if (foldcase && lo <= 'z' && hi >= 'a') {
@@ -476,7 +476,7 @@ static int MaxRune(int len) {
 
 void Compiler::BeginRange() {
   rune_cache_.clear();
-  rune_range_.begin = NULL;
+  rune_range_.begin = 0;
   rune_range_.end = nullPatchList;
 }
 

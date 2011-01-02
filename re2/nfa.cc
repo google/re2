@@ -252,7 +252,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
       if ((j=ip->cap()) < ncapture_) {
         // Push a dummy whose only job is to restore capture[j]
         // once we finish exploring this possibility.
-        stk[nstk++] = AddState(NULL, capture[j], j);
+        stk[nstk++] = AddState(0, capture[j], j);
 
         // Record capture.
         capture[j] = p;
@@ -363,7 +363,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
             FreeThread(i->second);
           runq->clear();
           matched_ = true;
-          return NULL;
+          return 0;
         }
         t->capture[0] = old;
         matched_ = true;
@@ -372,7 +372,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
     FreeThread(t);
   }
   runq->clear();
-  return NULL;
+  return 0;
 }
 
 string NFA::FormatCapture(const char** capture) {
