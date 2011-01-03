@@ -86,7 +86,7 @@ template<bool> struct CompileAssert {};
 #define ANNOTATE_HAPPENS_BEFORE(x)
 #define ANNOTATE_HAPPENS_AFTER(x)
 
-struct StringPiece;
+class StringPiece;
 
 string CEscape(const StringPiece& src);
 int CEscapeString(const char* src, int src_len, char* dest, int dest_len);
