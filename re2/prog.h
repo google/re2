@@ -164,7 +164,7 @@ class Prog {
     };
 
     friend class Compiler;
-    friend class PatchList;
+    friend struct PatchList;
     friend class Prog;
 
     DISALLOW_EVIL_CONSTRUCTORS(Inst);
