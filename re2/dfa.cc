@@ -115,7 +115,7 @@ class DFA {
     kFlagNeedShift = 16,        // needed kEmpty bits are or'ed in shifted left
   };
 
-  // STL function structures for use with hash_set.
+  // STL function structures for use with unordered_set.
   struct StateEqual {
     bool operator()(const State* a, const State* b) const {
       if (a == b)
@@ -145,7 +145,7 @@ class DFA {
     }
   };
 
-  typedef hash_set<State*, StateHash, StateEqual> StateSet;
+  typedef unordered_set<State*, StateHash, StateEqual> StateSet;
 
 
  private:

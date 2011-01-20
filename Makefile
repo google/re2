@@ -54,7 +54,6 @@ HFILES=\
 	util/atomicops.h\
 	util/benchmark.h\
 	util/flags.h\
-	util/hash_map.h\
 	util/logging.h\
 	util/mutex.h\
 	util/pcre.h\

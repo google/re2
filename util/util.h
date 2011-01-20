@@ -26,10 +26,6 @@
 #include <utility>
 #include <set>
 
-#define _BACKWARD_BACKWARD_WARNING_H
-#include <ext/hash_set>
-#include <ext/hash_map>
-
 // Use std names.
 using std::set;
 using std::pair;
@@ -43,10 +39,18 @@ using std::stack;
 using std::sort;
 using std::swap;
 using std::make_pair;
-using __gnu_cxx::hash_set;
-using __gnu_cxx::hash;
 
-// Needed on OS X.
+#if defined(__GNUC__) && !defined(USE_CXX0X)
+
+#include <tr1/unordered_set>
+using std::tr1::unordered_set;
+
+#else
+
+#include <unordered_set>
+using std::unordered_set;
+
+#endif
 
 namespace re2 {
 

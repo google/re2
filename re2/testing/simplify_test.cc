@@ -151,9 +151,10 @@ TEST(TestSimplify, SimpleRegexps) {
     CHECK(sre != NULL);
 
     // Check that already-simple regexps don't allocate new ones.
-    if (strcmp(tests[i].regexp, tests[i].simplified) == 0)
+    if (strcmp(tests[i].regexp, tests[i].simplified) == 0) {
       CHECK(re == sre) << " " << tests[i].regexp
         << " " << re->ToString() << " " << sre->ToString();
+    }
 
     EXPECT_EQ(tests[i].simplified, sre->ToString())
       << " " << tests[i].regexp << " " << sre->Dump();
