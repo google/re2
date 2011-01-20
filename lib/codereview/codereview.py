@@ -1,12 +1,14 @@
-#!/usr/bin/env python
-#
+# coding=utf-8
+# (The line above is necessary so that I can use 世界 in the
+# *comment* below without Python getting all bent out of shape.)
+
 # Copyright 2007-2009 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#	http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,6 +55,12 @@ try:
 except:
 	from mercurial.version import version as v
 	hgversion = v.get_version()
+
+try:
+	from mercurial.discovery import findcommonincoming
+except:
+	def findcommonincoming(repo, remote):
+		return repo.findcommonincoming(remote)
 
 oldMessage = """
 The code review extension requires Mercurial 1.3 or newer.
@@ -101,6 +109,36 @@ if __name__ == "__main__":
 server = "codereview.appspot.com"
 server_url_base = None
 defaultcc = None
+contributors = {}
+missing_codereview = None
+
+#######################################################################
+# RE: UNICODE STRING HANDLING
+#
+# Python distinguishes between the str (string of bytes)
+# and unicode (string of code points) types.  Most operations
+# work on either one just fine, but some (like regexp matching)
+# require unicode, and others (like write) require str.
+#
+# As befits the language, Python hides the distinction between
+# unicode and str by converting between them silently, but
+# *only* if all the bytes/code points involved are 7-bit ASCII.
+# This means that if you're not careful, your program works
+# fine on "hello, world" and fails on "hello, 世界".  And of course,
+# the obvious way to be careful - use static types - is unavailable.
+# So the only way is trial and error to find where to put explicit
+# conversions.
+#
+# Because more functions do implicit conversion to str (string of bytes)
+# than do implicit conversion to unicode (string of code points),
+# the convention in this module is to represent all text as str,
+# converting to unicode only when calling a unicode-only function
+# and then converting back to str as soon as possible.
+
+def typecheck(s, t):
+	if type(s) != t:
+		raise util.Abort("type check failed: %s has type %s != %s" % (repr(s), type(s), t))
+
 
 #######################################################################
 # Change list parsing.
@@ -119,9 +157,9 @@ diff --git a/~rietveld~placeholder~ b/~rietveld~placeholder~
 new file mode 100644
 """
 
-
 class CL(object):
 	def __init__(self, name):
+		typecheck(name, str)
 		self.name = name
 		self.desc = ''
 		self.files = []
@@ -144,6 +182,7 @@ class CL(object):
 		s += "Files:\n"
 		for f in cl.files:
 			s += "\t" + f + "\n"
+		typecheck(s, str)
 		return s
 
 	def EditorText(self):
@@ -168,6 +207,7 @@ class CL(object):
 			for f in cl.files:
 				s += "\t" + f + "\n"
 			s += "\n"
+		typecheck(s, str)
 		return s
 
 	def PendingText(self):
@@ -182,6 +222,7 @@ class CL(object):
 		s += "\tFiles:\n"
 		for f in cl.files:
 			s += "\t\t" + f + "\n"
+		typecheck(s, str)
 		return s
 
 	def Flush(self, ui, repo):
@@ -209,13 +250,15 @@ class CL(object):
 			s = s[0:55] + "..."
 		if self.name != "new":
 			s = "code review %s: %s" % (self.name, s)
+		typecheck(s, str)
 		return s
 
 	def Upload(self, ui, repo, send_mail=False, gofmt=True, gofmt_just_warn=False):
 		if not self.files:
 			ui.warn("no files in change list\n")
 		if ui.configbool("codereview", "force_gofmt", True) and gofmt:
-			CheckGofmt(ui, repo, self.files, just_warn=gofmt_just_warn)
+			CheckFormat(ui, repo, self.files, just_warn=gofmt_just_warn)
+		set_status("uploading CL metadata + diffs")
 		os.chdir(repo.root)
 		form_fields = [
 			("content_upload", "1"),
@@ -228,13 +271,11 @@ class CL(object):
 			("subject", self.Subject()),
 		]
 
-		# NOTE(rsc): This duplicates too much of RealMain,
-		# but RealMain doesn't have the most reusable interface.
 		if self.name != "new":
 			form_fields.append(("issue", self.name))
 		vcs = None
 		if self.files:
-			vcs = GuessVCS(upload_options)
+			vcs = MercurialVCS(upload_options, ui, repo)
 			data = vcs.GenerateDiff(self.files)
 			files = vcs.GetBaseFiles(data)
 			if len(data) > MAX_UPLOAD_SIZE:
@@ -254,6 +295,7 @@ class CL(object):
 			patchset = lines[1].strip()
 			patches = [x.split(" ", 1) for x in lines[2:]]
 		ui.status(msg + "\n")
+		set_status("uploaded CL metadata + diffs")
 		if not response_body.startswith("Issue created.") and not response_body.startswith("Issue updated."):
 			raise util.Abort("failed to update issue: " + response_body)
 		issue = msg[msg.rfind("/")+1:]
@@ -261,12 +303,16 @@ class CL(object):
 		if not self.url:
 			self.url = server_url_base + self.name
 		if not uploaded_diff_file:
+			set_status("uploading patches")
 			patches = UploadSeparatePatches(issue, rpc, patchset, data, upload_options)
 		if vcs:
+			set_status("uploading base files")
 			vcs.UploadBaseFiles(issue, rpc, patches, patchset, upload_options, files)
 		if send_mail:
+			set_status("sending mail")
 			MySend("/" + issue + "/mail", payload="")
 		self.web = True
+		set_status("flushing changes to disk")
 		self.Flush(ui, repo)
 		return
 
@@ -280,14 +326,18 @@ class CL(object):
 			pmsg += "I'd like you to review this change.\n"
 		else:
 			pmsg += "Please take another look.\n"
+		typecheck(pmsg, str)
 		PostMessage(ui, self.name, pmsg, subject=self.Subject())
 		self.mailed = True
 		self.Flush(ui, repo)
 
 def GoodCLName(name):
+	typecheck(name, str)
 	return re.match("^[0-9]+$", name)
 
 def ParseCL(text, name):
+	typecheck(text, str)
+	typecheck(name, str)
 	sname = None
 	lineno = 0
 	sections = {
@@ -331,6 +381,7 @@ def ParseCL(text, name):
 		i = line.find('#')
 		if i >= 0:
 			line = line[0:i].rstrip()
+		line = line.strip()
 		if line == '':
 			continue
 		cl.files.append(line)
@@ -348,18 +399,22 @@ def ParseCL(text, name):
 	return cl, 0, ''
 
 def SplitCommaSpace(s):
+	typecheck(s, str)
 	s = s.strip()
 	if s == "":
 		return []
 	return re.split(", *", s)
 
 def CutDomain(s):
+	typecheck(s, str)
 	i = s.find('@')
 	if i >= 0:
 		s = s[0:i]
 	return s
 
 def JoinComma(l):
+	for s in l:
+		typecheck(s, str)
 	return ", ".join(l)
 
 def ExceptionDetail():
@@ -378,6 +433,8 @@ def IsLocalCL(ui, repo, name):
 
 # Load CL from disk and/or the web.
 def LoadCL(ui, repo, name, web=True):
+	typecheck(name, str)
+	set_status("loading CL " + name)
 	if not GoodCLName(name):
 		return None, "invalid CL name"
 	dir = CodeReviewDir(ui, repo)
@@ -411,7 +468,39 @@ def LoadCL(ui, repo, name, web=True):
 			cl.desc = f['description']
 		cl.url = server_url_base + name
 		cl.web = True
+	set_status("loaded CL " + name)
 	return cl, ''
+
+global_status = None
+
+def set_status(s):
+	# print >>sys.stderr, "\t", time.asctime(), s
+	global global_status
+	global_status = s
+
+class StatusThread(threading.Thread):
+	def __init__(self):
+		threading.Thread.__init__(self)
+	def run(self):
+		# pause a reasonable amount of time before
+		# starting to display status messages, so that
+		# most hg commands won't ever see them.
+		time.sleep(30)
+
+		# now show status every 15 seconds
+		while True:
+			time.sleep(15 - time.time() % 15)
+			s = global_status
+			if s is None:
+				continue
+			if s == "":
+				s = "(unknown status)"
+			print >>sys.stderr, time.asctime(), s
+
+def start_status_thread():
+	t = StatusThread()
+	t.setDaemon(True)  # allowed to exit if t is still running
+	t.start()
 
 class LoadCLThread(threading.Thread):
 	def __init__(self, ui, repo, dir, f, web):
@@ -466,6 +555,7 @@ def RepoDir(ui, repo):
 	url = url[5:]
 	if url.endswith('/'):
 		url = url[:-1]
+	typecheck(url, str)
 	return url
 
 # Find (or make) code review directory.  On error, ui.warn and return None
@@ -480,10 +570,12 @@ def CodeReviewDir(ui, repo):
 		except:
 			ui.warn('cannot mkdir %s: %s\n' % (dir, ExceptionDetail()))
 			return None
+	typecheck(dir, str)
 	return dir
 
 # Strip maximal common leading white space prefix from text
 def StripCommon(text):
+	typecheck(text, str)
 	ws = None
 	for line in text.split('\n'):
 		line = line.rstrip()
@@ -512,17 +604,22 @@ def StripCommon(text):
 		t += line + '\n'
 	while len(t) >= 2 and t[-2:] == '\n\n':
 		t = t[:-1]
+	typecheck(t, str)
 	return t
 
 # Indent text with indent.
 def Indent(text, indent):
+	typecheck(text, str)
+	typecheck(indent, str)
 	t = ''
 	for line in text.split('\n'):
 		t += indent + line + '\n'
+	typecheck(t, str)
 	return t
 
 # Return the first line of l
 def line1(text):
+	typecheck(text, str)
 	return text.split('\n')[0]
 
 _change_prolog = """# Change list.
@@ -533,11 +630,18 @@ _change_prolog = """# Change list.
 #######################################################################
 # Mercurial helper functions
 
+# Get effective change nodes taking into account applied MQ patches
+def effective_revpair(repo):
+    try:
+	return cmdutil.revpair(repo, ['qparent'])
+    except:
+	return cmdutil.revpair(repo, None)
+
 # Return list of changed files in repository that match pats.
 def ChangedFiles(ui, repo, pats, opts):
 	# Find list of files being operated on.
 	matcher = cmdutil.match(repo, pats, opts)
-	node1, node2 = cmdutil.revpair(repo, None)
+	node1, node2 = effective_revpair(repo)
 	modified, added, removed = repo.status(node1, node2, matcher)[:3]
 	l = modified + added + removed
 	l.sort()
@@ -546,7 +650,7 @@ def ChangedFiles(ui, repo, pats, opts):
 # Return list of changed files in repository that match pats and still exist.
 def ChangedExistingFiles(ui, repo, pats, opts):
 	matcher = cmdutil.match(repo, pats, opts)
-	node1, node2 = cmdutil.revpair(repo, None)
+	node1, node2 = effective_revpair(repo)
 	modified, added, _ = repo.status(node1, node2, matcher)[:3]
 	l = modified + added
 	l.sort()
@@ -584,16 +688,21 @@ def getremote(ui, repo, opts):
 	# delete it in an attempt to "help"
 	proxy = os.environ.get('http_proxy')
 	source = hg.parseurl(ui.expandpath("default"), None)[0]
-	other = hg.repository(cmdutil.remoteui(repo, opts), source)
+	try:
+		remoteui = hg.remoteui # hg 1.6
+	except:
+		remoteui = cmdutil.remoteui
+	other = hg.repository(remoteui(repo, opts), source)
 	if proxy is not None:
 		os.environ['http_proxy'] = proxy
 	return other
 
 def Incoming(ui, repo, opts):
-	_, incoming, _ = repo.findcommonincoming(getremote(ui, repo, opts))
+	_, incoming, _ = findcommonincoming(repo, getremote(ui, repo, opts))
 	return incoming
 
 def EditCL(ui, repo, cl):
+	set_status(None)	# do not show status
 	s = cl.EditorText()
 	while True:
 		s = ui.edit(s, ui.username())
@@ -652,6 +761,7 @@ original_match = None
 def ReplacementForCmdutilMatch(repo, pats=[], opts={}, globbed=False, default='relpath'):
 	taken = []
 	files = []
+	pats = pats or []
 	for p in pats:
 		if p.startswith('@'):
 			taken.append(p)
@@ -661,10 +771,10 @@ def ReplacementForCmdutilMatch(repo, pats=[], opts={}, globbed=False, default='r
 			cl, err = LoadCL(repo.ui, repo, clname, web=False)
 			if err != '':
 				raise util.Abort("loading CL " + clname + ": " + err)
-			if cl.files == None:
+			if not cl.files:
 				raise util.Abort("no files in CL " + clname)
 			files = Add(files, cl.files)
-	pats = Sub(pats, taken)	+ ['path:'+f for f in files]
+	pats = Sub(pats, taken) + ['path:'+f for f in files]
 	return original_match(repo, pats=pats, opts=opts, globbed=globbed, default=default)
 
 def RelativePath(path, cwd):
@@ -673,14 +783,21 @@ def RelativePath(path, cwd):
 		return path[n+1:]
 	return path
 
+def CheckFormat(ui, repo, files, just_warn=False):
+	set_status("running gofmt")
+	CheckGofmt(ui, repo, files, just_warn)
+	CheckTabfmt(ui, repo, files, just_warn)
+
 # Check that gofmt run on the list of files does not change them
-def CheckGofmt(ui, repo, files, just_warn=False):
+def CheckGofmt(ui, repo, files, just_warn):
 	files = [f for f in files if (f.startswith('src/') or f.startswith('test/bench/')) and f.endswith('.go')]
 	if not files:
 		return
 	cwd = os.getcwd()
 	files = [RelativePath(repo.root + '/' + f, cwd) for f in files]
 	files = [f for f in files if os.access(f, 0)]
+	if not files:
+		return
 	try:
 		cmd = subprocess.Popen(["gofmt", "-l"] + files, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
 		cmd.stdin.close()
@@ -689,11 +806,38 @@ def CheckGofmt(ui, repo, files, just_warn=False):
 	data = cmd.stdout.read()
 	errors = cmd.stderr.read()
 	cmd.wait()
+	set_status("done with gofmt")
 	if len(errors) > 0:
 		ui.warn("gofmt errors:\n" + errors.rstrip() + "\n")
 		return
 	if len(data) > 0:
 		msg = "gofmt needs to format these files (run hg gofmt):\n" + Indent(data, "\t").rstrip()
+		if just_warn:
+			ui.warn("warning: " + msg + "\n")
+		else:
+			raise util.Abort(msg)
+	return
+
+# Check that *.[chys] files indent using tabs.
+def CheckTabfmt(ui, repo, files, just_warn):
+	files = [f for f in files if f.startswith('src/') and re.search(r"\.[chys]$", f)]
+	if not files:
+		return
+	cwd = os.getcwd()
+	files = [RelativePath(repo.root + '/' + f, cwd) for f in files]
+	files = [f for f in files if os.access(f, 0)]
+	badfiles = []
+	for f in files:
+		try:
+			for line in open(f, 'r'):
+				if line.startswith('    '):
+					badfiles.append(f)
+					break
+		except:
+			# ignore cannot open file, etc.
+			pass
+	if len(badfiles) > 0:
+		msg = "these files use spaces for indentation (use tabs instead):\n\t" + "\n\t".join(badfiles)
 		if just_warn:
 			ui.warn("warning: " + msg + "\n")
 		else:
@@ -712,9 +856,9 @@ def CheckGofmt(ui, repo, files, just_warn=False):
 #
 
 def change(ui, repo, *pats, **opts):
-	"""create or edit a change list
+	"""create, edit or delete a change list
 
-	Create or edit a change list.
+	Create, edit or delete a change list.
 	A change list is a group of files to be reviewed and submitted together,
 	plus a textual description of the change.
 	Change lists are referred to by simple alphanumeric names.
@@ -732,6 +876,9 @@ def change(ui, repo, *pats, **opts):
 
 	before running hg change -d 123456.
 	"""
+
+	if missing_codereview:
+		return missing_codereview
 
 	dirty = {}
 	if len(pats) > 0 and GoodCLName(pats[0]):
@@ -767,7 +914,7 @@ def change(ui, repo, *pats, **opts):
 		if opts["delete"]:
 			if cl.copied_from:
 				return "original author must delete CL; hg change -D will remove locally"
-			PostMessage(ui, cl.name, "*** Abandoned ***")
+			PostMessage(ui, cl.name, "*** Abandoned ***", send_mail=cl.mailed)
 			EditDesc(cl.name, closed="checked")
 		cl.Delete(ui, repo)
 		return
@@ -816,6 +963,9 @@ def code_login(ui, repo, **opts):
 	Logs in to the code review server, saving a cookie in
 	a file in your home directory.
 	"""
+	if missing_codereview:
+		return missing_codereview
+
 	MySend(None)
 
 def clpatch(ui, repo, clname, **opts):
@@ -828,10 +978,11 @@ def clpatch(ui, repo, clname, **opts):
 	Submitting an imported patch will keep the original author's
 	name as the Author: line but add your own name to a Committer: line.
 	"""
+	if missing_codereview:
+		return missing_codereview
+
 	cl, patch, err = DownloadCL(ui, repo, clname)
 	argv = ["hgpatch"]
-	if opts["fuzzy"]:
-		argv += ["--fuzzy"]
 	if opts["no_incoming"]:
 		argv += ["--checksync=false"]
 	if err != "":
@@ -862,6 +1013,9 @@ def download(ui, repo, clname, **opts):
 	Download prints a description of the given change list
 	followed by its diff, downloaded from the code review server.
 	"""
+	if missing_codereview:
+		return missing_codereview
+
 	cl, patch, err = DownloadCL(ui, repo, clname)
 	if err != "":
 		return err
@@ -877,6 +1031,9 @@ def file(ui, repo, clname, pat, *pats, **opts):
 	The -d option only removes files from the change list.
 	It does not edit them or remove them from the repository.
 	"""
+	if missing_codereview:
+		return missing_codereview
+
 	pats = tuple([pat] + list(pats))
 	if not GoodCLName(clname):
 		return "invalid CL name " + clname
@@ -934,6 +1091,9 @@ def gofmt(ui, repo, *pats, **opts):
 	Applies gofmt to the modified files in the repository that match
 	the given patterns.
 	"""
+	if missing_codereview:
+		return missing_codereview
+
 	files = ChangedExistingFiles(ui, repo, pats, opts)
 	files = [f for f in files if f.endswith(".go")]
 	if not files:
@@ -958,6 +1118,9 @@ def mail(ui, repo, *pats, **opts):
 	Uploads a patch to the code review server and then sends mail
 	to the reviewer and CC list asking for a review.
 	"""
+	if missing_codereview:
+		return missing_codereview
+
 	cl, err = CommandLineCL(ui, repo, pats, opts, defaultcc=defaultcc)
 	if err != "":
 		return err
@@ -971,8 +1134,12 @@ def mail(ui, repo, *pats, **opts):
 			return "no reviewers listed in CL"
 		cl.cc = Sub(cl.cc, defaultcc)
 		cl.reviewer = defaultcc
-		cl.Flush(ui, repo)		
-	cl.Mail(ui, repo)
+		cl.Flush(ui, repo)
+
+	if cl.files == []:
+		return "no changed files, not sending mail"
+
+	cl.Mail(ui, repo)		
 
 def nocommit(ui, repo, *pats, **opts):
 	"""(disabled when using this extension)"""
@@ -983,6 +1150,9 @@ def pending(ui, repo, *pats, **opts):
 
 	Lists pending changes followed by a list of unassigned but modified files.
 	"""
+	if missing_codereview:
+		return missing_codereview
+
 	m = LoadAllCL(ui, repo, web=True)
 	names = m.keys()
 	names.sort()
@@ -1000,11 +1170,13 @@ def pending(ui, repo, *pats, **opts):
 def reposetup(ui, repo):
 	global original_match
 	if original_match is None:
+		start_status_thread()
 		original_match = cmdutil.match
 		cmdutil.match = ReplacementForCmdutilMatch
 		RietveldSetup(ui, repo)
 
 def CheckContributor(ui, repo, user=None):
+	set_status("checking CONTRIBUTORS file")
 	if not user:
 		user = ui.config("ui", "username")
 		if not user:
@@ -1015,22 +1187,18 @@ def CheckContributor(ui, repo, user=None):
 	return userline
 
 def FindContributor(ui, repo, user, warn=True):
-	try:
-		f = open(repo.root + '/CONTRIBUTORS', 'r')
-	except:
-		raise util.Abort("cannot open %s: %s" % (repo.root+'/CONTRIBUTORS', ExceptionDetail()))
-	for line in f.readlines():
-		line = line.rstrip()
-		if line.startswith('#'):
-			continue
-		match = re.match(r"(.*) <(.*)>", line)
-		if not match:
-			continue
-		if line == user or match.group(2).lower() == user.lower():
-			return match.group(2), line
-	if warn:
-		ui.warn("warning: cannot find %s in CONTRIBUTORS\n" % (user,))
-	return None, None
+	user = user.lower()
+	m = re.match(r".*<(.*)>", user)
+	if m:
+		user = m.group(1)
+
+	if user not in contributors:
+		if warn:
+			ui.warn("warning: cannot find %s in CONTRIBUTORS\n" % (user,))
+		return None, None
+	
+	user, email = contributors[user]
+	return email, "%s <%s>" % (user, email)
 
 def submit(ui, repo, *pats, **opts):
 	"""submit change to remote repository
@@ -1038,6 +1206,9 @@ def submit(ui, repo, *pats, **opts):
 	Submits change to remote repository.
 	Bails out if the local repository is not in sync with the remote one.
 	"""
+	if missing_codereview:
+		return missing_codereview
+
 	repo.ui.quiet = True
 	if not opts["no_incoming"] and Incoming(ui, repo, opts):
 		return "local repository out of date; must sync before submit"
@@ -1073,7 +1244,7 @@ def submit(ui, repo, *pats, **opts):
 
 	# check gofmt for real; allowed upload to warn in order to save CL.
 	cl.Flush(ui, repo)
-	CheckGofmt(ui, repo, cl.files)
+	CheckFormat(ui, repo, cl.files)
 
 	about += "%s%s\n" % (server_url_base, cl.name)
 
@@ -1150,6 +1321,9 @@ def sync(ui, repo, **opts):
 	Incorporates recent changes from the remote repository
 	into the local repository.
 	"""
+	if missing_codereview:
+		return missing_codereview
+
 	if not opts["local"]:
 		ui.status = sync_note
 		ui.note = sync_note
@@ -1224,15 +1398,14 @@ def sync_changes(ui, repo):
 			ui.warn("CL %s has no files; suggest hg change -d %s\n" % (cl.name, cl.name))
 	return
 
-def uisetup(ui):
-	if "^commit|ci" in commands.table:
-		commands.table["^commit|ci"] = (nocommit, [], "")
-
 def upload(ui, repo, name, **opts):
 	"""upload diffs to the code review server
 
 	Uploads the current modifications for a given change to the server.
 	"""
+	if missing_codereview:
+		return missing_codereview
+
 	repo.ui.quiet = True
 	cl, err = LoadCL(ui, repo, name, web=True)
 	if err != "":
@@ -1268,7 +1441,6 @@ cmdtable = {
 		[
 			('', 'ignore_hgpatch_failure', None, 'create CL metadata even if hgpatch fails'),
 			('', 'no_incoming', None, 'disable check for incoming changes'),
-			('', 'fuzzy', None, 'attempt to adjust patch line numbers'),
 		],
 		"change#"
 	),
@@ -1277,11 +1449,6 @@ cmdtable = {
 	# instead of the help for the extension.
 	"code-login": (
 		code_login,
-		[],
-		"",
-	),
-	"commit|ci": (
-		nocommit,
 		[],
 		"",
 	),
@@ -1382,7 +1549,7 @@ class FormParser(HTMLParser):
 			self.handle_data("&" + name + ";")
 	def handle_data(self, data):
 		if self.curdata is not None:
-			self.curdata += data.decode("utf-8").encode("utf-8")
+			self.curdata += data
 
 # XML parser
 def XMLGet(ui, path):
@@ -1398,13 +1565,14 @@ def IsRietveldSubmitted(ui, clname, hex):
 	if feed is None:
 		return False
 	for sum in feed.findall("{http://www.w3.org/2005/Atom}entry/{http://www.w3.org/2005/Atom}summary"):
-		text = sum.findtext("", None).strip()
+		text = sum.text.strip()
 		m = re.match('\*\*\* Submitted as [^*]*?([0-9a-f]+) \*\*\*', text)
 		if m is not None and len(m.group(1)) >= 8 and hex.startswith(m.group(1)):
 			return True
 	return False
 
 def DownloadCL(ui, repo, clname):
+	set_status("downloading CL " + clname)
 	cl, err = LoadCL(ui, repo, clname)
 	if err != "":
 		return None, None, "error loading CL %s: %s" % (clname, ExceptionDetail())
@@ -1431,7 +1599,7 @@ def DownloadCL(ui, repo, clname):
 	# Find author - first entry will be author who created CL.
 	nick = None
 	for author in feed.findall("{http://www.w3.org/2005/Atom}entry/{http://www.w3.org/2005/Atom}author/{http://www.w3.org/2005/Atom}name"):
-		nick = author.findtext("", None).strip()
+		nick = author.text.strip()
 		break
 	if not nick:
 		return None, None, "CL has no author"
@@ -1459,96 +1627,102 @@ def DownloadCL(ui, repo, clname):
 	return cl, diffdata, ""
 
 def MySend(request_path, payload=None,
-           content_type="application/octet-stream",
-           timeout=None, force_auth=True,
-           **kwargs):
-     """Run MySend1 maybe twice, because Rietveld is unreliable."""
-     try:
-         return MySend1(request_path, payload, content_type, timeout, force_auth, **kwargs)
-     except Exception, e:
-         if type(e) == urllib2.HTTPError and e.code == 403:	# forbidden, it happens
-         	raise
-         print >>sys.stderr, "Loading "+request_path+": "+ExceptionDetail()+"; trying again in 2 seconds."
-     time.sleep(2)
-     return MySend1(request_path, payload, content_type, timeout, force_auth, **kwargs)
-
+		content_type="application/octet-stream",
+		timeout=None, force_auth=True,
+		**kwargs):
+	"""Run MySend1 maybe twice, because Rietveld is unreliable."""
+	try:
+		return MySend1(request_path, payload, content_type, timeout, force_auth, **kwargs)
+	except Exception, e:
+		if type(e) == urllib2.HTTPError and e.code == 403:	# forbidden, it happens
+			raise
+		print >>sys.stderr, "Loading "+request_path+": "+ExceptionDetail()+"; trying again in 2 seconds."
+		time.sleep(2)
+		return MySend1(request_path, payload, content_type, timeout, force_auth, **kwargs)
 
 # Like upload.py Send but only authenticates when the
 # redirect is to www.google.com/accounts.  This keeps
 # unnecessary redirects from happening during testing.
 def MySend1(request_path, payload=None,
-           content_type="application/octet-stream",
-           timeout=None, force_auth=True,
-           **kwargs):
-    """Sends an RPC and returns the response.
+				content_type="application/octet-stream",
+				timeout=None, force_auth=True,
+				**kwargs):
+	"""Sends an RPC and returns the response.
 
-    Args:
-      request_path: The path to send the request to, eg /api/appversion/create.
-      payload: The body of the request, or None to send an empty request.
-      content_type: The Content-Type header to use.
-      timeout: timeout in seconds; default None i.e. no timeout.
-        (Note: for large requests on OS X, the timeout doesn't work right.)
-      kwargs: Any keyword arguments are converted into query string parameters.
+	Args:
+		request_path: The path to send the request to, eg /api/appversion/create.
+		payload: The body of the request, or None to send an empty request.
+		content_type: The Content-Type header to use.
+		timeout: timeout in seconds; default None i.e. no timeout.
+			(Note: for large requests on OS X, the timeout doesn't work right.)
+		kwargs: Any keyword arguments are converted into query string parameters.
 
-    Returns:
-      The response body, as a string.
-    """
-    # TODO: Don't require authentication.  Let the server say
-    # whether it is necessary.
-    global rpc
-    if rpc == None:
-    	rpc = GetRpcServer(upload_options)
-    self = rpc
-    if not self.authenticated and force_auth:
-      self._Authenticate()
-    if request_path is None:
-      return
+	Returns:
+		The response body, as a string.
+	"""
+	# TODO: Don't require authentication.  Let the server say
+	# whether it is necessary.
+	global rpc
+	if rpc == None:
+		rpc = GetRpcServer(upload_options)
+	self = rpc
+	if not self.authenticated and force_auth:
+		self._Authenticate()
+	if request_path is None:
+		return
 
-    old_timeout = socket.getdefaulttimeout()
-    socket.setdefaulttimeout(timeout)
-    try:
-      tries = 0
-      while True:
-        tries += 1
-        args = dict(kwargs)
-        url = "http://%s%s" % (self.host, request_path)
-        if args:
-          url += "?" + urllib.urlencode(args)
-        req = self._CreateRequest(url=url, data=payload)
-        req.add_header("Content-Type", content_type)
-        try:
-          f = self.opener.open(req)
-          response = f.read()
-          f.close()
-          # Translate \r\n into \n, because Rietveld doesn't.
-          response = response.replace('\r\n', '\n')
-          return response
-        except urllib2.HTTPError, e:
-          if tries > 3:
-            raise
-          elif e.code == 401:
-            self._Authenticate()
-          elif e.code == 302:
-            loc = e.info()["location"]
-            if not loc.startswith('https://www.google.com/a') or loc.find('/ServiceLogin') < 0:
-              return ''
-            self._Authenticate()
-          else:
-            raise
-    finally:
-      socket.setdefaulttimeout(old_timeout)
+	old_timeout = socket.getdefaulttimeout()
+	socket.setdefaulttimeout(timeout)
+	try:
+		tries = 0
+		while True:
+			tries += 1
+			args = dict(kwargs)
+			url = "http://%s%s" % (self.host, request_path)
+			if args:
+				url += "?" + urllib.urlencode(args)
+			req = self._CreateRequest(url=url, data=payload)
+			req.add_header("Content-Type", content_type)
+			try:
+				f = self.opener.open(req)
+				response = f.read()
+				f.close()
+				# Translate \r\n into \n, because Rietveld doesn't.
+				response = response.replace('\r\n', '\n')
+				# who knows what urllib will give us
+				if type(response) == unicode:
+					response = response.encode("utf-8")
+				typecheck(response, str)
+				return response
+			except urllib2.HTTPError, e:
+				if tries > 3:
+					raise
+				elif e.code == 401:
+					self._Authenticate()
+				elif e.code == 302:
+					loc = e.info()["location"]
+					if not loc.startswith('https://www.google.com/a') or loc.find('/ServiceLogin') < 0:
+						return ''
+					self._Authenticate()
+				else:
+					raise
+	finally:
+		socket.setdefaulttimeout(old_timeout)
 
 def GetForm(url):
 	f = FormParser()
-	f.feed(MySend(url))
+	f.feed(MySend(url).decode("utf-8"))	# f.feed wants unicode
 	f.close()
+	# convert back to utf-8 to restore sanity
+	m = {}
 	for k,v in f.map.items():
-		f.map[k] = v.replace("\r\n", "\n");
-	return f.map
+		m[k.encode("utf-8")] = v.replace("\r\n", "\n").encode("utf-8")
+	return m
 
 # Fetch the settings for the CL, like reviewer and CC list, by
 # scraping the Rietveld editing forms.
 def GetSettings(issue):
+	set_status("getting issue metadata from web")
 	# The /issue/edit page has everything but only the
 	# CL owner is allowed to fetch it (and submit it).
 	f = None
@@ -1565,6 +1739,7 @@ def GetSettings(issue):
 	return f
 
 def EditDesc(issue, subject=None, desc=None, reviewers=None, cc=None, closed=None):
+	set_status("uploading change to description")
 	form_fields = GetForm("/" + issue + "/edit")
 	if subject is not None:
 		form_fields['subject'] = subject
@@ -1583,6 +1758,7 @@ def EditDesc(issue, subject=None, desc=None, reviewers=None, cc=None, closed=Non
 		sys.exit(2)
 
 def PostMessage(ui, issue, message, reviewers=None, cc=None, send_mail=True, subject=None):
+	set_status("uploading message")
 	form_fields = GetForm("/" + issue + "/publish")
 	if reviewers is not None:
 		form_fields['reviewers'] = reviewers
@@ -1609,25 +1785,55 @@ def PostMessage(ui, issue, message, reviewers=None, cc=None, send_mail=True, sub
 class opt(object):
 	pass
 
-def RietveldSetup(ui, repo):
-	global defaultcc, upload_options, rpc, server, server_url_base, force_google_account, verbosity
+def disabled(*opts, **kwopts):
+	raise util.Abort("commit is disabled when codereview is in use")
 
+def RietveldSetup(ui, repo):
+	global defaultcc, upload_options, rpc, server, server_url_base, force_google_account, verbosity, contributors
+	global missing_codereview
+
+	repo_config_path = ''
 	# Read repository-specific options from lib/codereview/codereview.cfg
 	try:
-		f = open(repo.root + '/lib/codereview/codereview.cfg')
+		repo_config_path = repo.root + '/lib/codereview/codereview.cfg'
+		f = open(repo_config_path)
 		for line in f:
 			if line.startswith('defaultcc: '):
 				defaultcc = SplitCommaSpace(line[10:])
 	except:
-		pass
+		# If there are no options, chances are good this is not
+		# a code review repository; stop now before we foul
+		# things up even worse.  Might also be that repo doesn't
+		# even have a root.  See issue 959.
+		if repo_config_path == '':
+			missing_codereview = 'codereview disabled: repository has no root'
+		else:
+			missing_codereview = 'codereview disabled: cannot open ' + repo_config_path
+		return
 
-	# TODO(rsc): If the repository config has no codereview section,
-	# do not enable the extension.  This allows users to
-	# put the extension in their global .hgrc but only
-	# enable it for some repositories.
-	# if not ui.has_section("codereview"):
-	# 	cmdtable = {}
-	# 	return
+	# Should only modify repository with hg submit.
+	# Disable the built-in Mercurial commands that might
+	# trip things up.
+	cmdutil.commit = disabled
+
+	try:
+		f = open(repo.root + '/CONTRIBUTORS', 'r')
+	except:
+		raise util.Abort("cannot open %s: %s" % (repo.root+'/CONTRIBUTORS', ExceptionDetail()))
+	for line in f:
+		# CONTRIBUTORS is a list of lines like:
+		#	Person <email>
+		#	Person <email> <alt-email>
+		# The first email address is the one used in commit logs.
+		if line.startswith('#'):
+			continue
+		m = re.match(r"([^<>]+\S)\s+(<[^<>\s]+>)((\s+<[^<>\s]+>)*)\s*$", line)
+		if m:
+			name = m.group(1)
+			email = m.group(2)[1:-1]
+			contributors[email.lower()] = (name, email)
+			for extra in m.group(3).split():
+				contributors[extra[1:-1].lower()] = (name, email)
 
 	if not ui.verbose:
 		verbosity = 0
@@ -1672,11 +1878,7 @@ def RietveldSetup(ui, repo):
 	rpc = None
 
 #######################################################################
-# We keep a full copy of upload.py here to avoid import path hell.
-# It would be nice if hg added the hg repository root
-# to the default PYTHONPATH.
-
-# Edit .+2,<hget http://codereview.appspot.com/static/upload.py
+# http://codereview.appspot.com/static/upload.py, heavily edited.
 
 #!/usr/bin/env python
 #
@@ -1686,7 +1888,7 @@ def RietveldSetup(ui, repo):
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#	http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -1701,9 +1903,9 @@ Usage summary: upload.py [options] [-- diff_options]
 Diff options are passed to the diff command of the underlying system.
 
 Supported version control systems:
-  Git
-  Mercurial
-  Subversion
+	Git
+	Mercurial
+	Subversion
 
 It is important for Git/Mercurial users to specify a tree/node/branch to diff
 against by using the '--rev' option.
@@ -1727,14 +1929,14 @@ import urlparse
 
 # The md5 module was deprecated in Python 2.5.
 try:
-  from hashlib import md5
+	from hashlib import md5
 except ImportError:
-  from md5 import md5
+	from md5 import md5
 
 try:
-  import readline
+	import readline
 except ImportError:
-  pass
+	pass
 
 # The logging verbosity:
 #  0: Errors only.
@@ -1746,1460 +1948,827 @@ verbosity = 1
 # Max size of patch or base file.
 MAX_UPLOAD_SIZE = 900 * 1024
 
-# Constants for version control names.  Used by GuessVCSName.
-VCS_GIT = "Git"
-VCS_MERCURIAL = "Mercurial"
-VCS_SUBVERSION = "Subversion"
-VCS_UNKNOWN = "Unknown"
-
 # whitelist for non-binary filetypes which do not start with "text/"
 # .mm (Objective-C) shows up as application/x-freemind on my Linux box.
-TEXT_MIMETYPES = ['application/javascript', 'application/x-javascript',
-                  'application/x-freemind']
-
-VCS_ABBREVIATIONS = {
-  VCS_MERCURIAL.lower(): VCS_MERCURIAL,
-  "hg": VCS_MERCURIAL,
-  VCS_SUBVERSION.lower(): VCS_SUBVERSION,
-  "svn": VCS_SUBVERSION,
-  VCS_GIT.lower(): VCS_GIT,
-}
-
+TEXT_MIMETYPES = [
+	'application/javascript',
+	'application/x-javascript',
+	'application/x-freemind'
+]
 
 def GetEmail(prompt):
-  """Prompts the user for their email address and returns it.
+	"""Prompts the user for their email address and returns it.
 
-  The last used email address is saved to a file and offered up as a suggestion
-  to the user. If the user presses enter without typing in anything the last
-  used email address is used. If the user enters a new address, it is saved
-  for next time we prompt.
+	The last used email address is saved to a file and offered up as a suggestion
+	to the user. If the user presses enter without typing in anything the last
+	used email address is used. If the user enters a new address, it is saved
+	for next time we prompt.
 
-  """
-  last_email_file_name = os.path.expanduser("~/.last_codereview_email_address")
-  last_email = ""
-  if os.path.exists(last_email_file_name):
-    try:
-      last_email_file = open(last_email_file_name, "r")
-      last_email = last_email_file.readline().strip("\n")
-      last_email_file.close()
-      prompt += " [%s]" % last_email
-    except IOError, e:
-      pass
-  email = raw_input(prompt + ": ").strip()
-  if email:
-    try:
-      last_email_file = open(last_email_file_name, "w")
-      last_email_file.write(email)
-      last_email_file.close()
-    except IOError, e:
-      pass
-  else:
-    email = last_email
-  return email
+	"""
+	last_email_file_name = os.path.expanduser("~/.last_codereview_email_address")
+	last_email = ""
+	if os.path.exists(last_email_file_name):
+		try:
+			last_email_file = open(last_email_file_name, "r")
+			last_email = last_email_file.readline().strip("\n")
+			last_email_file.close()
+			prompt += " [%s]" % last_email
+		except IOError, e:
+			pass
+	email = raw_input(prompt + ": ").strip()
+	if email:
+		try:
+			last_email_file = open(last_email_file_name, "w")
+			last_email_file.write(email)
+			last_email_file.close()
+		except IOError, e:
+			pass
+	else:
+		email = last_email
+	return email
 
 
 def StatusUpdate(msg):
-  """Print a status message to stdout.
+	"""Print a status message to stdout.
 
-  If 'verbosity' is greater than 0, print the message.
+	If 'verbosity' is greater than 0, print the message.
 
-  Args:
-    msg: The string to print.
-  """
-  if verbosity > 0:
-    print msg
+	Args:
+		msg: The string to print.
+	"""
+	if verbosity > 0:
+		print msg
 
 
 def ErrorExit(msg):
-  """Print an error message to stderr and exit."""
-  print >>sys.stderr, msg
-  sys.exit(1)
+	"""Print an error message to stderr and exit."""
+	print >>sys.stderr, msg
+	sys.exit(1)
 
 
 class ClientLoginError(urllib2.HTTPError):
-  """Raised to indicate there was an error authenticating with ClientLogin."""
+	"""Raised to indicate there was an error authenticating with ClientLogin."""
 
-  def __init__(self, url, code, msg, headers, args):
-    urllib2.HTTPError.__init__(self, url, code, msg, headers, None)
-    self.args = args
-    self.reason = args["Error"]
+	def __init__(self, url, code, msg, headers, args):
+		urllib2.HTTPError.__init__(self, url, code, msg, headers, None)
+		self.args = args
+		self.reason = args["Error"]
 
 
 class AbstractRpcServer(object):
-  """Provides a common interface for a simple RPC server."""
+	"""Provides a common interface for a simple RPC server."""
 
-  def __init__(self, host, auth_function, host_override=None, extra_headers={},
-               save_cookies=False):
-    """Creates a new HttpRpcServer.
+	def __init__(self, host, auth_function, host_override=None, extra_headers={}, save_cookies=False):
+		"""Creates a new HttpRpcServer.
 
-    Args:
-      host: The host to send requests to.
-      auth_function: A function that takes no arguments and returns an
-        (email, password) tuple when called. Will be called if authentication
-        is required.
-      host_override: The host header to send to the server (defaults to host).
-      extra_headers: A dict of extra headers to append to every request.
-      save_cookies: If True, save the authentication cookies to local disk.
-        If False, use an in-memory cookiejar instead.  Subclasses must
-        implement this functionality.  Defaults to False.
-    """
-    self.host = host
-    self.host_override = host_override
-    self.auth_function = auth_function
-    self.authenticated = False
-    self.extra_headers = extra_headers
-    self.save_cookies = save_cookies
-    self.opener = self._GetOpener()
-    if self.host_override:
-      logging.info("Server: %s; Host: %s", self.host, self.host_override)
-    else:
-      logging.info("Server: %s", self.host)
+		Args:
+			host: The host to send requests to.
+			auth_function: A function that takes no arguments and returns an
+				(email, password) tuple when called. Will be called if authentication
+				is required.
+			host_override: The host header to send to the server (defaults to host).
+			extra_headers: A dict of extra headers to append to every request.
+			save_cookies: If True, save the authentication cookies to local disk.
+				If False, use an in-memory cookiejar instead.  Subclasses must
+				implement this functionality.  Defaults to False.
+		"""
+		self.host = host
+		self.host_override = host_override
+		self.auth_function = auth_function
+		self.authenticated = False
+		self.extra_headers = extra_headers
+		self.save_cookies = save_cookies
+		self.opener = self._GetOpener()
+		if self.host_override:
+			logging.info("Server: %s; Host: %s", self.host, self.host_override)
+		else:
+			logging.info("Server: %s", self.host)
 
-  def _GetOpener(self):
-    """Returns an OpenerDirector for making HTTP requests.
+	def _GetOpener(self):
+		"""Returns an OpenerDirector for making HTTP requests.
 
-    Returns:
-      A urllib2.OpenerDirector object.
-    """
-    raise NotImplementedError()
+		Returns:
+			A urllib2.OpenerDirector object.
+		"""
+		raise NotImplementedError()
 
-  def _CreateRequest(self, url, data=None):
-    """Creates a new urllib request."""
-    logging.debug("Creating request for: '%s' with payload:\n%s", url, data)
-    req = urllib2.Request(url, data=data)
-    if self.host_override:
-      req.add_header("Host", self.host_override)
-    for key, value in self.extra_headers.iteritems():
-      req.add_header(key, value)
-    return req
+	def _CreateRequest(self, url, data=None):
+		"""Creates a new urllib request."""
+		logging.debug("Creating request for: '%s' with payload:\n%s", url, data)
+		req = urllib2.Request(url, data=data)
+		if self.host_override:
+			req.add_header("Host", self.host_override)
+		for key, value in self.extra_headers.iteritems():
+			req.add_header(key, value)
+		return req
 
-  def _GetAuthToken(self, email, password):
-    """Uses ClientLogin to authenticate the user, returning an auth token.
+	def _GetAuthToken(self, email, password):
+		"""Uses ClientLogin to authenticate the user, returning an auth token.
 
-    Args:
-      email:    The user's email address
-      password: The user's password
+		Args:
+			email:    The user's email address
+			password: The user's password
 
-    Raises:
-      ClientLoginError: If there was an error authenticating with ClientLogin.
-      HTTPError: If there was some other form of HTTP error.
+		Raises:
+			ClientLoginError: If there was an error authenticating with ClientLogin.
+			HTTPError: If there was some other form of HTTP error.
 
-    Returns:
-      The authentication token returned by ClientLogin.
-    """
-    account_type = "GOOGLE"
-    if self.host.endswith(".google.com") and not force_google_account:
-      # Needed for use inside Google.
-      account_type = "HOSTED"
-    req = self._CreateRequest(
-        url="https://www.google.com/accounts/ClientLogin",
-        data=urllib.urlencode({
-            "Email": email,
-            "Passwd": password,
-            "service": "ah",
-            "source": "rietveld-codereview-upload",
-            "accountType": account_type,
-        }),
-    )
-    try:
-      response = self.opener.open(req)
-      response_body = response.read()
-      response_dict = dict(x.split("=")
-                           for x in response_body.split("\n") if x)
-      return response_dict["Auth"]
-    except urllib2.HTTPError, e:
-      if e.code == 403:
-        body = e.read()
-        response_dict = dict(x.split("=", 1) for x in body.split("\n") if x)
-        raise ClientLoginError(req.get_full_url(), e.code, e.msg,
-                               e.headers, response_dict)
-      else:
-        raise
+		Returns:
+			The authentication token returned by ClientLogin.
+		"""
+		account_type = "GOOGLE"
+		if self.host.endswith(".google.com") and not force_google_account:
+			# Needed for use inside Google.
+			account_type = "HOSTED"
+		req = self._CreateRequest(
+				url="https://www.google.com/accounts/ClientLogin",
+				data=urllib.urlencode({
+						"Email": email,
+						"Passwd": password,
+						"service": "ah",
+						"source": "rietveld-codereview-upload",
+						"accountType": account_type,
+				}),
+		)
+		try:
+			response = self.opener.open(req)
+			response_body = response.read()
+			response_dict = dict(x.split("=") for x in response_body.split("\n") if x)
+			return response_dict["Auth"]
+		except urllib2.HTTPError, e:
+			if e.code == 403:
+				body = e.read()
+				response_dict = dict(x.split("=", 1) for x in body.split("\n") if x)
+				raise ClientLoginError(req.get_full_url(), e.code, e.msg, e.headers, response_dict)
+			else:
+				raise
 
-  def _GetAuthCookie(self, auth_token):
-    """Fetches authentication cookies for an authentication token.
+	def _GetAuthCookie(self, auth_token):
+		"""Fetches authentication cookies for an authentication token.
 
-    Args:
-      auth_token: The authentication token returned by ClientLogin.
+		Args:
+			auth_token: The authentication token returned by ClientLogin.
 
-    Raises:
-      HTTPError: If there was an error fetching the authentication cookies.
-    """
-    # This is a dummy value to allow us to identify when we're successful.
-    continue_location = "http://localhost/"
-    args = {"continue": continue_location, "auth": auth_token}
-    req = self._CreateRequest("http://%s/_ah/login?%s" %
-                              (self.host, urllib.urlencode(args)))
-    try:
-      response = self.opener.open(req)
-    except urllib2.HTTPError, e:
-      response = e
-    if (response.code != 302 or
-        response.info()["location"] != continue_location):
-      raise urllib2.HTTPError(req.get_full_url(), response.code, response.msg,
-                              response.headers, response.fp)
-    self.authenticated = True
+		Raises:
+			HTTPError: If there was an error fetching the authentication cookies.
+		"""
+		# This is a dummy value to allow us to identify when we're successful.
+		continue_location = "http://localhost/"
+		args = {"continue": continue_location, "auth": auth_token}
+		req = self._CreateRequest("http://%s/_ah/login?%s" % (self.host, urllib.urlencode(args)))
+		try:
+			response = self.opener.open(req)
+		except urllib2.HTTPError, e:
+			response = e
+		if (response.code != 302 or
+				response.info()["location"] != continue_location):
+			raise urllib2.HTTPError(req.get_full_url(), response.code, response.msg, response.headers, response.fp)
+		self.authenticated = True
 
-  def _Authenticate(self):
-    """Authenticates the user.
+	def _Authenticate(self):
+		"""Authenticates the user.
 
-    The authentication process works as follows:
-     1) We get a username and password from the user
-     2) We use ClientLogin to obtain an AUTH token for the user
-        (see http://code.google.com/apis/accounts/AuthForInstalledApps.html).
-     3) We pass the auth token to /_ah/login on the server to obtain an
-        authentication cookie. If login was successful, it tries to redirect
-        us to the URL we provided.
+		The authentication process works as follows:
+		1) We get a username and password from the user
+		2) We use ClientLogin to obtain an AUTH token for the user
+				(see http://code.google.com/apis/accounts/AuthForInstalledApps.html).
+		3) We pass the auth token to /_ah/login on the server to obtain an
+				authentication cookie. If login was successful, it tries to redirect
+				us to the URL we provided.
 
-    If we attempt to access the upload API without first obtaining an
-    authentication cookie, it returns a 401 response (or a 302) and
-    directs us to authenticate ourselves with ClientLogin.
-    """
-    for i in range(3):
-      credentials = self.auth_function()
-      try:
-        auth_token = self._GetAuthToken(credentials[0], credentials[1])
-      except ClientLoginError, e:
-        if e.reason == "BadAuthentication":
-          print >>sys.stderr, "Invalid username or password."
-          continue
-        if e.reason == "CaptchaRequired":
-          print >>sys.stderr, (
-              "Please go to\n"
-              "https://www.google.com/accounts/DisplayUnlockCaptcha\n"
-              "and verify you are a human.  Then try again.")
-          break
-        if e.reason == "NotVerified":
-          print >>sys.stderr, "Account not verified."
-          break
-        if e.reason == "TermsNotAgreed":
-          print >>sys.stderr, "User has not agreed to TOS."
-          break
-        if e.reason == "AccountDeleted":
-          print >>sys.stderr, "The user account has been deleted."
-          break
-        if e.reason == "AccountDisabled":
-          print >>sys.stderr, "The user account has been disabled."
-          break
-        if e.reason == "ServiceDisabled":
-          print >>sys.stderr, ("The user's access to the service has been "
-                               "disabled.")
-          break
-        if e.reason == "ServiceUnavailable":
-          print >>sys.stderr, "The service is not available; try again later."
-          break
-        raise
-      self._GetAuthCookie(auth_token)
-      return
+		If we attempt to access the upload API without first obtaining an
+		authentication cookie, it returns a 401 response (or a 302) and
+		directs us to authenticate ourselves with ClientLogin.
+		"""
+		for i in range(3):
+			credentials = self.auth_function()
+			try:
+				auth_token = self._GetAuthToken(credentials[0], credentials[1])
+			except ClientLoginError, e:
+				if e.reason == "BadAuthentication":
+					print >>sys.stderr, "Invalid username or password."
+					continue
+				if e.reason == "CaptchaRequired":
+					print >>sys.stderr, (
+						"Please go to\n"
+						"https://www.google.com/accounts/DisplayUnlockCaptcha\n"
+						"and verify you are a human.  Then try again.")
+					break
+				if e.reason == "NotVerified":
+					print >>sys.stderr, "Account not verified."
+					break
+				if e.reason == "TermsNotAgreed":
+					print >>sys.stderr, "User has not agreed to TOS."
+					break
+				if e.reason == "AccountDeleted":
+					print >>sys.stderr, "The user account has been deleted."
+					break
+				if e.reason == "AccountDisabled":
+					print >>sys.stderr, "The user account has been disabled."
+					break
+				if e.reason == "ServiceDisabled":
+					print >>sys.stderr, "The user's access to the service has been disabled."
+					break
+				if e.reason == "ServiceUnavailable":
+					print >>sys.stderr, "The service is not available; try again later."
+					break
+				raise
+			self._GetAuthCookie(auth_token)
+			return
 
-  def Send(self, request_path, payload=None,
-           content_type="application/octet-stream",
-           timeout=None,
-           **kwargs):
-    """Sends an RPC and returns the response.
+	def Send(self, request_path, payload=None,
+					content_type="application/octet-stream",
+					timeout=None,
+					**kwargs):
+		"""Sends an RPC and returns the response.
 
-    Args:
-      request_path: The path to send the request to, eg /api/appversion/create.
-      payload: The body of the request, or None to send an empty request.
-      content_type: The Content-Type header to use.
-      timeout: timeout in seconds; default None i.e. no timeout.
-        (Note: for large requests on OS X, the timeout doesn't work right.)
-      kwargs: Any keyword arguments are converted into query string parameters.
+		Args:
+			request_path: The path to send the request to, eg /api/appversion/create.
+			payload: The body of the request, or None to send an empty request.
+			content_type: The Content-Type header to use.
+			timeout: timeout in seconds; default None i.e. no timeout.
+				(Note: for large requests on OS X, the timeout doesn't work right.)
+			kwargs: Any keyword arguments are converted into query string parameters.
 
-    Returns:
-      The response body, as a string.
-    """
-    # TODO: Don't require authentication.  Let the server say
-    # whether it is necessary.
-    if not self.authenticated:
-      self._Authenticate()
+		Returns:
+			The response body, as a string.
+		"""
+		# TODO: Don't require authentication.  Let the server say
+		# whether it is necessary.
+		if not self.authenticated:
+			self._Authenticate()
 
-    old_timeout = socket.getdefaulttimeout()
-    socket.setdefaulttimeout(timeout)
-    try:
-      tries = 0
-      while True:
-        tries += 1
-        args = dict(kwargs)
-        url = "http://%s%s" % (self.host, request_path)
-        if args:
-          url += "?" + urllib.urlencode(args)
-        req = self._CreateRequest(url=url, data=payload)
-        req.add_header("Content-Type", content_type)
-        try:
-          f = self.opener.open(req)
-          response = f.read()
-          f.close()
-          return response
-        except urllib2.HTTPError, e:
-          if tries > 3:
-            raise
-          elif e.code == 401 or e.code == 302:
-            self._Authenticate()
-          else:
-            raise
-    finally:
-      socket.setdefaulttimeout(old_timeout)
+		old_timeout = socket.getdefaulttimeout()
+		socket.setdefaulttimeout(timeout)
+		try:
+			tries = 0
+			while True:
+				tries += 1
+				args = dict(kwargs)
+				url = "http://%s%s" % (self.host, request_path)
+				if args:
+					url += "?" + urllib.urlencode(args)
+				req = self._CreateRequest(url=url, data=payload)
+				req.add_header("Content-Type", content_type)
+				try:
+					f = self.opener.open(req)
+					response = f.read()
+					f.close()
+					return response
+				except urllib2.HTTPError, e:
+					if tries > 3:
+						raise
+					elif e.code == 401 or e.code == 302:
+						self._Authenticate()
+					else:
+						raise
+		finally:
+			socket.setdefaulttimeout(old_timeout)
 
 
 class HttpRpcServer(AbstractRpcServer):
-  """Provides a simplified RPC-style interface for HTTP requests."""
+	"""Provides a simplified RPC-style interface for HTTP requests."""
 
-  def _Authenticate(self):
-    """Save the cookie jar after authentication."""
-    super(HttpRpcServer, self)._Authenticate()
-    if self.save_cookies:
-      StatusUpdate("Saving authentication cookies to %s" % self.cookie_file)
-      self.cookie_jar.save()
+	def _Authenticate(self):
+		"""Save the cookie jar after authentication."""
+		super(HttpRpcServer, self)._Authenticate()
+		if self.save_cookies:
+			StatusUpdate("Saving authentication cookies to %s" % self.cookie_file)
+			self.cookie_jar.save()
 
-  def _GetOpener(self):
-    """Returns an OpenerDirector that supports cookies and ignores redirects.
+	def _GetOpener(self):
+		"""Returns an OpenerDirector that supports cookies and ignores redirects.
 
-    Returns:
-      A urllib2.OpenerDirector object.
-    """
-    opener = urllib2.OpenerDirector()
-    opener.add_handler(urllib2.ProxyHandler())
-    opener.add_handler(urllib2.UnknownHandler())
-    opener.add_handler(urllib2.HTTPHandler())
-    opener.add_handler(urllib2.HTTPDefaultErrorHandler())
-    opener.add_handler(urllib2.HTTPSHandler())
-    opener.add_handler(urllib2.HTTPErrorProcessor())
-    if self.save_cookies:
-      self.cookie_file = os.path.expanduser("~/.codereview_upload_cookies_" + server)
-      self.cookie_jar = cookielib.MozillaCookieJar(self.cookie_file)
-      if os.path.exists(self.cookie_file):
-        try:
-          self.cookie_jar.load()
-          self.authenticated = True
-          StatusUpdate("Loaded authentication cookies from %s" %
-                       self.cookie_file)
-        except (cookielib.LoadError, IOError):
-          # Failed to load cookies - just ignore them.
-          pass
-      else:
-        # Create an empty cookie file with mode 600
-        fd = os.open(self.cookie_file, os.O_CREAT, 0600)
-        os.close(fd)
-      # Always chmod the cookie file
-      os.chmod(self.cookie_file, 0600)
-    else:
-      # Don't save cookies across runs of update.py.
-      self.cookie_jar = cookielib.CookieJar()
-    opener.add_handler(urllib2.HTTPCookieProcessor(self.cookie_jar))
-    return opener
-
-
-parser = optparse.OptionParser(usage="%prog [options] [-- diff_options]")
-parser.add_option("-y", "--assume_yes", action="store_true",
-                  dest="assume_yes", default=False,
-                  help="Assume that the answer to yes/no questions is 'yes'.")
-# Logging
-group = parser.add_option_group("Logging options")
-group.add_option("-q", "--quiet", action="store_const", const=0,
-                 dest="verbose", help="Print errors only.")
-group.add_option("-v", "--verbose", action="store_const", const=2,
-                 dest="verbose", default=1,
-                 help="Print info level logs (default).")
-group.add_option("--noisy", action="store_const", const=3,
-                 dest="verbose", help="Print all logs.")
-# Review server
-group = parser.add_option_group("Review server options")
-group.add_option("-s", "--server", action="store", dest="server",
-                 default="codereview.appspot.com",
-                 metavar="SERVER",
-                 help=("The server to upload to. The format is host[:port]. "
-                       "Defaults to '%default'."))
-group.add_option("-e", "--email", action="store", dest="email",
-                 metavar="EMAIL", default=None,
-                 help="The username to use. Will prompt if omitted.")
-group.add_option("-H", "--host", action="store", dest="host",
-                 metavar="HOST", default=None,
-                 help="Overrides the Host header sent with all RPCs.")
-group.add_option("--no_cookies", action="store_false",
-                 dest="save_cookies", default=True,
-                 help="Do not save authentication cookies to local disk.")
-# Issue
-group = parser.add_option_group("Issue options")
-group.add_option("-d", "--description", action="store", dest="description",
-                 metavar="DESCRIPTION", default=None,
-                 help="Optional description when creating an issue.")
-group.add_option("-f", "--description_file", action="store",
-                 dest="description_file", metavar="DESCRIPTION_FILE",
-                 default=None,
-                 help="Optional path of a file that contains "
-                      "the description when creating an issue.")
-group.add_option("-r", "--reviewers", action="store", dest="reviewers",
-                 metavar="REVIEWERS", default=None,
-                 help="Add reviewers (comma separated email addresses).")
-group.add_option("--cc", action="store", dest="cc",
-                 metavar="CC", default=None,
-                 help="Add CC (comma separated email addresses).")
-group.add_option("--private", action="store_true", dest="private",
-                 default=False,
-                 help="Make the issue restricted to reviewers and those CCed")
-# Upload options
-group = parser.add_option_group("Patch options")
-group.add_option("-m", "--message", action="store", dest="message",
-                 metavar="MESSAGE", default=None,
-                 help="A message to identify the patch. "
-                      "Will prompt if omitted.")
-group.add_option("-i", "--issue", type="int", action="store",
-                 metavar="ISSUE", default=None,
-                 help="Issue number to which to add. Defaults to new issue.")
-group.add_option("--download_base", action="store_true",
-                 dest="download_base", default=False,
-                 help="Base files will be downloaded by the server "
-                 "(side-by-side diffs may not work on files with CRs).")
-group.add_option("--rev", action="store", dest="revision",
-                 metavar="REV", default=None,
-                 help="Branch/tree/revision to diff against (used by DVCS).")
-group.add_option("--send_mail", action="store_true",
-                 dest="send_mail", default=False,
-                 help="Send notification email to reviewers.")
-group.add_option("--vcs", action="store", dest="vcs",
-                 metavar="VCS", default=None,
-                 help=("Version control system (optional, usually upload.py "
-                       "already guesses the right VCS)."))
+		Returns:
+			A urllib2.OpenerDirector object.
+		"""
+		opener = urllib2.OpenerDirector()
+		opener.add_handler(urllib2.ProxyHandler())
+		opener.add_handler(urllib2.UnknownHandler())
+		opener.add_handler(urllib2.HTTPHandler())
+		opener.add_handler(urllib2.HTTPDefaultErrorHandler())
+		opener.add_handler(urllib2.HTTPSHandler())
+		opener.add_handler(urllib2.HTTPErrorProcessor())
+		if self.save_cookies:
+			self.cookie_file = os.path.expanduser("~/.codereview_upload_cookies_" + server)
+			self.cookie_jar = cookielib.MozillaCookieJar(self.cookie_file)
+			if os.path.exists(self.cookie_file):
+				try:
+					self.cookie_jar.load()
+					self.authenticated = True
+					StatusUpdate("Loaded authentication cookies from %s" % self.cookie_file)
+				except (cookielib.LoadError, IOError):
+					# Failed to load cookies - just ignore them.
+					pass
+			else:
+				# Create an empty cookie file with mode 600
+				fd = os.open(self.cookie_file, os.O_CREAT, 0600)
+				os.close(fd)
+			# Always chmod the cookie file
+			os.chmod(self.cookie_file, 0600)
+		else:
+			# Don't save cookies across runs of update.py.
+			self.cookie_jar = cookielib.CookieJar()
+		opener.add_handler(urllib2.HTTPCookieProcessor(self.cookie_jar))
+		return opener
 
 
 def GetRpcServer(options):
-  """Returns an instance of an AbstractRpcServer.
+	"""Returns an instance of an AbstractRpcServer.
 
-  Returns:
-    A new AbstractRpcServer, on which RPC calls can be made.
-  """
+	Returns:
+		A new AbstractRpcServer, on which RPC calls can be made.
+	"""
 
-  rpc_server_class = HttpRpcServer
+	rpc_server_class = HttpRpcServer
 
-  def GetUserCredentials():
-    """Prompts the user for a username and password."""
-    email = options.email
-    if email is None:
-      email = GetEmail("Email (login for uploading to %s)" % options.server)
-    password = getpass.getpass("Password for %s: " % email)
-    return (email, password)
+	def GetUserCredentials():
+		"""Prompts the user for a username and password."""
+		email = options.email
+		if email is None:
+			email = GetEmail("Email (login for uploading to %s)" % options.server)
+		password = getpass.getpass("Password for %s: " % email)
+		return (email, password)
 
-  # If this is the dev_appserver, use fake authentication.
-  host = (options.host or options.server).lower()
-  if host == "localhost" or host.startswith("localhost:"):
-    email = options.email
-    if email is None:
-      email = "test@example.com"
-      logging.info("Using debug user %s.  Override with --email" % email)
-    server = rpc_server_class(
-        options.server,
-        lambda: (email, "password"),
-        host_override=options.host,
-        extra_headers={"Cookie":
-                       'dev_appserver_login="%s:False"' % email},
-        save_cookies=options.save_cookies)
-    # Don't try to talk to ClientLogin.
-    server.authenticated = True
-    return server
+	# If this is the dev_appserver, use fake authentication.
+	host = (options.host or options.server).lower()
+	if host == "localhost" or host.startswith("localhost:"):
+		email = options.email
+		if email is None:
+			email = "test@example.com"
+			logging.info("Using debug user %s.  Override with --email" % email)
+		server = rpc_server_class(
+				options.server,
+				lambda: (email, "password"),
+				host_override=options.host,
+				extra_headers={"Cookie": 'dev_appserver_login="%s:False"' % email},
+				save_cookies=options.save_cookies)
+		# Don't try to talk to ClientLogin.
+		server.authenticated = True
+		return server
 
-  return rpc_server_class(options.server, GetUserCredentials,
-                          host_override=options.host,
-                          save_cookies=options.save_cookies)
+	return rpc_server_class(options.server, GetUserCredentials,
+		host_override=options.host, save_cookies=options.save_cookies)
 
 
 def EncodeMultipartFormData(fields, files):
-  """Encode form fields for multipart/form-data.
+	"""Encode form fields for multipart/form-data.
 
-  Args:
-    fields: A sequence of (name, value) elements for regular form fields.
-    files: A sequence of (name, filename, value) elements for data to be
-           uploaded as files.
-  Returns:
-    (content_type, body) ready for httplib.HTTP instance.
+	Args:
+		fields: A sequence of (name, value) elements for regular form fields.
+		files: A sequence of (name, filename, value) elements for data to be
+					uploaded as files.
+	Returns:
+		(content_type, body) ready for httplib.HTTP instance.
 
-  Source:
-    http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/146306
-  """
-  BOUNDARY = '-M-A-G-I-C---B-O-U-N-D-A-R-Y-'
-  CRLF = '\r\n'
-  lines = []
-  for (key, value) in fields:
-    lines.append('--' + BOUNDARY)
-    lines.append('Content-Disposition: form-data; name="%s"' % key)
-    lines.append('')
-    if type(value) == unicode:
-      value = value.encode("utf-8")
-    lines.append(value)
-  for (key, filename, value) in files:
-    if type(filename) == unicode:
-      filename = filename.encode("utf-8")
-    if type(value) == unicode:
-      value = value.encode("utf-8")
-    lines.append('--' + BOUNDARY)
-    lines.append('Content-Disposition: form-data; name="%s"; filename="%s"' %
-             (key, filename))
-    lines.append('Content-Type: %s' % GetContentType(filename))
-    lines.append('')
-    lines.append(value)
-  lines.append('--' + BOUNDARY + '--')
-  lines.append('')
-  body = CRLF.join(lines)
-  content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
-  return content_type, body
+	Source:
+		http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/146306
+	"""
+	BOUNDARY = '-M-A-G-I-C---B-O-U-N-D-A-R-Y-'
+	CRLF = '\r\n'
+	lines = []
+	for (key, value) in fields:
+		typecheck(key, str)
+		typecheck(value, str)
+		lines.append('--' + BOUNDARY)
+		lines.append('Content-Disposition: form-data; name="%s"' % key)
+		lines.append('')
+		lines.append(value)
+	for (key, filename, value) in files:
+		typecheck(key, str)
+		typecheck(filename, str)
+		typecheck(value, str)
+		lines.append('--' + BOUNDARY)
+		lines.append('Content-Disposition: form-data; name="%s"; filename="%s"' % (key, filename))
+		lines.append('Content-Type: %s' % GetContentType(filename))
+		lines.append('')
+		lines.append(value)
+	lines.append('--' + BOUNDARY + '--')
+	lines.append('')
+	body = CRLF.join(lines)
+	content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
+	return content_type, body
 
 
 def GetContentType(filename):
-  """Helper to guess the content-type from the filename."""
-  return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+	"""Helper to guess the content-type from the filename."""
+	return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
 
 
 # Use a shell for subcommands on Windows to get a PATH search.
 use_shell = sys.platform.startswith("win")
 
 def RunShellWithReturnCode(command, print_output=False,
-                           universal_newlines=True,
-                           env=os.environ):
-  """Executes a command and returns the output from stdout and the return code.
+		universal_newlines=True, env=os.environ):
+	"""Executes a command and returns the output from stdout and the return code.
 
-  Args:
-    command: Command to execute.
-    print_output: If True, the output is printed to stdout.
-                  If False, both stdout and stderr are ignored.
-    universal_newlines: Use universal_newlines flag (default: True).
+	Args:
+		command: Command to execute.
+		print_output: If True, the output is printed to stdout.
+			If False, both stdout and stderr are ignored.
+		universal_newlines: Use universal_newlines flag (default: True).
 
-  Returns:
-    Tuple (output, return code)
-  """
-  logging.info("Running %s", command)
-  p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                       shell=use_shell, universal_newlines=universal_newlines,
-                       env=env)
-  if print_output:
-    output_array = []
-    while True:
-      line = p.stdout.readline()
-      if not line:
-        break
-      print line.strip("\n")
-      output_array.append(line)
-    output = "".join(output_array)
-  else:
-    output = p.stdout.read()
-  p.wait()
-  errout = p.stderr.read()
-  if print_output and errout:
-    print >>sys.stderr, errout
-  p.stdout.close()
-  p.stderr.close()
-  return output, p.returncode
+	Returns:
+		Tuple (output, return code)
+	"""
+	logging.info("Running %s", command)
+	p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+		shell=use_shell, universal_newlines=universal_newlines, env=env)
+	if print_output:
+		output_array = []
+		while True:
+			line = p.stdout.readline()
+			if not line:
+				break
+			print line.strip("\n")
+			output_array.append(line)
+		output = "".join(output_array)
+	else:
+		output = p.stdout.read()
+	p.wait()
+	errout = p.stderr.read()
+	if print_output and errout:
+		print >>sys.stderr, errout
+	p.stdout.close()
+	p.stderr.close()
+	return output, p.returncode
 
 
 def RunShell(command, silent_ok=False, universal_newlines=True,
-             print_output=False, env=os.environ):
-  data, retcode = RunShellWithReturnCode(command, print_output,
-                                         universal_newlines, env)
-  if retcode:
-    ErrorExit("Got error status from %s:\n%s" % (command, data))
-  if not silent_ok and not data:
-    ErrorExit("No output from %s" % command)
-  return data
+		print_output=False, env=os.environ):
+	data, retcode = RunShellWithReturnCode(command, print_output, universal_newlines, env)
+	if retcode:
+		ErrorExit("Got error status from %s:\n%s" % (command, data))
+	if not silent_ok and not data:
+		ErrorExit("No output from %s" % command)
+	return data
 
 
 class VersionControlSystem(object):
-  """Abstract base class providing an interface to the VCS."""
+	"""Abstract base class providing an interface to the VCS."""
 
-  def __init__(self, options):
-    """Constructor.
+	def __init__(self, options):
+		"""Constructor.
 
-    Args:
-      options: Command line options.
-    """
-    self.options = options
+		Args:
+			options: Command line options.
+		"""
+		self.options = options
 
-  def GenerateDiff(self, args):
-    """Return the current diff as a string.
+	def GenerateDiff(self, args):
+		"""Return the current diff as a string.
 
-    Args:
-      args: Extra arguments to pass to the diff command.
-    """
-    raise NotImplementedError(
-        "abstract method -- subclass %s must override" % self.__class__)
+		Args:
+			args: Extra arguments to pass to the diff command.
+		"""
+		raise NotImplementedError(
+				"abstract method -- subclass %s must override" % self.__class__)
 
-  def GetUnknownFiles(self):
-    """Return a list of files unknown to the VCS."""
-    raise NotImplementedError(
-        "abstract method -- subclass %s must override" % self.__class__)
+	def GetUnknownFiles(self):
+		"""Return a list of files unknown to the VCS."""
+		raise NotImplementedError(
+				"abstract method -- subclass %s must override" % self.__class__)
 
-  def CheckForUnknownFiles(self):
-    """Show an "are you sure?" prompt if there are unknown files."""
-    unknown_files = self.GetUnknownFiles()
-    if unknown_files:
-      print "The following files are not added to version control:"
-      for line in unknown_files:
-        print line
-      prompt = "Are you sure to continue?(y/N) "
-      answer = raw_input(prompt).strip()
-      if answer != "y":
-        ErrorExit("User aborted")
+	def CheckForUnknownFiles(self):
+		"""Show an "are you sure?" prompt if there are unknown files."""
+		unknown_files = self.GetUnknownFiles()
+		if unknown_files:
+			print "The following files are not added to version control:"
+			for line in unknown_files:
+				print line
+			prompt = "Are you sure to continue?(y/N) "
+			answer = raw_input(prompt).strip()
+			if answer != "y":
+				ErrorExit("User aborted")
 
-  def GetBaseFile(self, filename):
-    """Get the content of the upstream version of a file.
+	def GetBaseFile(self, filename):
+		"""Get the content of the upstream version of a file.
 
-    Returns:
-      A tuple (base_content, new_content, is_binary, status)
-        base_content: The contents of the base file.
-        new_content: For text files, this is empty.  For binary files, this is
-          the contents of the new file, since the diff output won't contain
-          information to reconstruct the current file.
-        is_binary: True iff the file is binary.
-        status: The status of the file.
-    """
+		Returns:
+			A tuple (base_content, new_content, is_binary, status)
+				base_content: The contents of the base file.
+				new_content: For text files, this is empty.  For binary files, this is
+					the contents of the new file, since the diff output won't contain
+					information to reconstruct the current file.
+				is_binary: True iff the file is binary.
+				status: The status of the file.
+		"""
 
-    raise NotImplementedError(
-        "abstract method -- subclass %s must override" % self.__class__)
-
-
-  def GetBaseFiles(self, diff):
-    """Helper that calls GetBase file for each file in the patch.
-
-    Returns:
-      A dictionary that maps from filename to GetBaseFile's tuple.  Filenames
-      are retrieved based on lines that start with "Index:" or
-      "Property changes on:".
-    """
-    files = {}
-    for line in diff.splitlines(True):
-      if line.startswith('Index:') or line.startswith('Property changes on:'):
-        unused, filename = line.split(':', 1)
-        # On Windows if a file has property changes its filename uses '\'
-        # instead of '/'.
-        filename = filename.strip().replace('\\', '/')
-        files[filename] = self.GetBaseFile(filename)
-    return files
+		raise NotImplementedError(
+				"abstract method -- subclass %s must override" % self.__class__)
 
 
-  def UploadBaseFiles(self, issue, rpc_server, patch_list, patchset, options,
-                      files):
-    """Uploads the base files (and if necessary, the current ones as well)."""
+	def GetBaseFiles(self, diff):
+		"""Helper that calls GetBase file for each file in the patch.
 
-    def UploadFile(filename, file_id, content, is_binary, status, is_base):
-      """Uploads a file to the server."""
-      file_too_large = False
-      if is_base:
-        type = "base"
-      else:
-        type = "current"
-      if len(content) > MAX_UPLOAD_SIZE:
-        print ("Not uploading the %s file for %s because it's too large." %
-               (type, filename))
-        file_too_large = True
-        content = ""
-      checksum = md5(content).hexdigest()
-      if options.verbose > 0 and not file_too_large:
-        print "Uploading %s file for %s" % (type, filename)
-      url = "/%d/upload_content/%d/%d" % (int(issue), int(patchset), file_id)
-      form_fields = [("filename", filename),
-                     ("status", status),
-                     ("checksum", checksum),
-                     ("is_binary", str(is_binary)),
-                     ("is_current", str(not is_base)),
-                    ]
-      if file_too_large:
-        form_fields.append(("file_too_large", "1"))
-      if options.email:
-        form_fields.append(("user", options.email))
-      ctype, body = EncodeMultipartFormData(form_fields,
-                                            [("data", filename, content)])
-      response_body = rpc_server.Send(url, body,
-                                      content_type=ctype)
-      if not response_body.startswith("OK"):
-        StatusUpdate("  --> %s" % response_body)
-        sys.exit(1)
-
-    patches = dict()
-    [patches.setdefault(v, k) for k, v in patch_list]
-    for filename in patches.keys():
-      base_content, new_content, is_binary, status = files[filename]
-      file_id_str = patches.get(filename)
-      if file_id_str.find("nobase") != -1:
-        base_content = None
-        file_id_str = file_id_str[file_id_str.rfind("_") + 1:]
-      file_id = int(file_id_str)
-      if base_content != None:
-        UploadFile(filename, file_id, base_content, is_binary, status, True)
-      if new_content != None:
-        UploadFile(filename, file_id, new_content, is_binary, status, False)
-
-  def IsImage(self, filename):
-    """Returns true if the filename has an image extension."""
-    mimetype =  mimetypes.guess_type(filename)[0]
-    if not mimetype:
-      return False
-    return mimetype.startswith("image/")
-
-  def IsBinary(self, filename):
-    """Returns true if the guessed mimetyped isnt't in text group."""
-    mimetype = mimetypes.guess_type(filename)[0]
-    if not mimetype:
-      return False  # e.g. README, "real" binaries usually have an extension
-    # special case for text files which don't start with text/
-    if mimetype in TEXT_MIMETYPES:
-      return False
-    return not mimetype.startswith("text/")
+		Returns:
+			A dictionary that maps from filename to GetBaseFile's tuple.  Filenames
+			are retrieved based on lines that start with "Index:" or
+			"Property changes on:".
+		"""
+		files = {}
+		for line in diff.splitlines(True):
+			if line.startswith('Index:') or line.startswith('Property changes on:'):
+				unused, filename = line.split(':', 1)
+				# On Windows if a file has property changes its filename uses '\'
+				# instead of '/'.
+				filename = filename.strip().replace('\\', '/')
+				files[filename] = self.GetBaseFile(filename)
+		return files
 
 
-class SubversionVCS(VersionControlSystem):
-  """Implementation of the VersionControlSystem interface for Subversion."""
+	def UploadBaseFiles(self, issue, rpc_server, patch_list, patchset, options,
+											files):
+		"""Uploads the base files (and if necessary, the current ones as well)."""
 
-  def __init__(self, options):
-    super(SubversionVCS, self).__init__(options)
-    if self.options.revision:
-      match = re.match(r"(\d+)(:(\d+))?", self.options.revision)
-      if not match:
-        ErrorExit("Invalid Subversion revision %s." % self.options.revision)
-      self.rev_start = match.group(1)
-      self.rev_end = match.group(3)
-    else:
-      self.rev_start = self.rev_end = None
-    # Cache output from "svn list -r REVNO dirname".
-    # Keys: dirname, Values: 2-tuple (ouput for start rev and end rev).
-    self.svnls_cache = {}
-    # SVN base URL is required to fetch files deleted in an older revision.
-    # Result is cached to not guess it over and over again in GetBaseFile().
-    required = self.options.download_base or self.options.revision is not None
-    self.svn_base = self._GuessBase(required)
+		def UploadFile(filename, file_id, content, is_binary, status, is_base):
+			"""Uploads a file to the server."""
+			set_status("uploading " + filename)
+			file_too_large = False
+			if is_base:
+				type = "base"
+			else:
+				type = "current"
+			if len(content) > MAX_UPLOAD_SIZE:
+				print ("Not uploading the %s file for %s because it's too large." %
+							(type, filename))
+				file_too_large = True
+				content = ""
+			checksum = md5(content).hexdigest()
+			if options.verbose > 0 and not file_too_large:
+				print "Uploading %s file for %s" % (type, filename)
+			url = "/%d/upload_content/%d/%d" % (int(issue), int(patchset), file_id)
+			form_fields = [
+				("filename", filename),
+				("status", status),
+				("checksum", checksum),
+				("is_binary", str(is_binary)),
+				("is_current", str(not is_base)),
+			]
+			if file_too_large:
+				form_fields.append(("file_too_large", "1"))
+			if options.email:
+				form_fields.append(("user", options.email))
+			ctype, body = EncodeMultipartFormData(form_fields, [("data", filename, content)])
+			response_body = rpc_server.Send(url, body, content_type=ctype)
+			if not response_body.startswith("OK"):
+				StatusUpdate("  --> %s" % response_body)
+				sys.exit(1)
 
-  def GuessBase(self, required):
-    """Wrapper for _GuessBase."""
-    return self.svn_base
+		# Don't want to spawn too many threads, nor do we want to
+		# hit Rietveld too hard, or it will start serving 500 errors.
+		# When 8 works, it's no better than 4, and sometimes 8 is
+		# too many for Rietveld to handle.
+		MAX_PARALLEL_UPLOADS = 4
 
-  def _GuessBase(self, required):
-    """Returns the SVN base URL.
+		sema = threading.BoundedSemaphore(MAX_PARALLEL_UPLOADS)
+		upload_threads = []
+		finished_upload_threads = []
+		
+		class UploadFileThread(threading.Thread):
+			def __init__(self, args):
+				threading.Thread.__init__(self)
+				self.args = args
+			def run(self):
+				UploadFile(*self.args)
+				finished_upload_threads.append(self)
+				sema.release()
 
-    Args:
-      required: If true, exits if the url can't be guessed, otherwise None is
-        returned.
-    """
-    info = RunShell(["svn", "info"])
-    for line in info.splitlines():
-      words = line.split()
-      if len(words) == 2 and words[0] == "URL:":
-        url = words[1]
-        scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
-        username, netloc = urllib.splituser(netloc)
-        if username:
-          logging.info("Removed username from base URL")
-        if netloc.endswith("svn.python.org"):
-          if netloc == "svn.python.org":
-            if path.startswith("/projects/"):
-              path = path[9:]
-          elif netloc != "pythondev@svn.python.org":
-            ErrorExit("Unrecognized Python URL: %s" % url)
-          base = "http://svn.python.org/view/*checkout*%s/" % path
-          logging.info("Guessed Python base = %s", base)
-        elif netloc.endswith("svn.collab.net"):
-          if path.startswith("/repos/"):
-            path = path[6:]
-          base = "http://svn.collab.net/viewvc/*checkout*%s/" % path
-          logging.info("Guessed CollabNet base = %s", base)
-        elif netloc.endswith(".googlecode.com"):
-          path = path + "/"
-          base = urlparse.urlunparse(("http", netloc, path, params,
-                                      query, fragment))
-          logging.info("Guessed Google Code base = %s", base)
-        else:
-          path = path + "/"
-          base = urlparse.urlunparse((scheme, netloc, path, params,
-                                      query, fragment))
-          logging.info("Guessed base = %s", base)
-        return base
-    if required:
-      ErrorExit("Can't find URL in output from svn info")
-    return None
+		def StartUploadFile(*args):
+			sema.acquire()
+			while len(finished_upload_threads) > 0:
+				t = finished_upload_threads.pop()
+				upload_threads.remove(t)
+				t.join()
+			t = UploadFileThread(args)
+			upload_threads.append(t)
+			t.start()
 
-  def GenerateDiff(self, args):
-    cmd = ["svn", "diff"]
-    if self.options.revision:
-      cmd += ["-r", self.options.revision]
-    cmd.extend(args)
-    data = RunShell(cmd)
-    count = 0
-    for line in data.splitlines():
-      if line.startswith("Index:") or line.startswith("Property changes on:"):
-        count += 1
-        logging.info(line)
-    if not count:
-      ErrorExit("No valid patches found in output from svn diff")
-    return data
+		def WaitForUploads():			
+			for t in upload_threads:
+				t.join()
 
-  def _CollapseKeywords(self, content, keyword_str):
-    """Collapses SVN keywords."""
-    # svn cat translates keywords but svn diff doesn't. As a result of this
-    # behavior patching.PatchChunks() fails with a chunk mismatch error.
-    # This part was originally written by the Review Board development team
-    # who had the same problem (http://reviews.review-board.org/r/276/).
-    # Mapping of keywords to known aliases
-    svn_keywords = {
-      # Standard keywords
-      'Date':                ['Date', 'LastChangedDate'],
-      'Revision':            ['Revision', 'LastChangedRevision', 'Rev'],
-      'Author':              ['Author', 'LastChangedBy'],
-      'HeadURL':             ['HeadURL', 'URL'],
-      'Id':                  ['Id'],
+		patches = dict()
+		[patches.setdefault(v, k) for k, v in patch_list]
+		for filename in patches.keys():
+			base_content, new_content, is_binary, status = files[filename]
+			file_id_str = patches.get(filename)
+			if file_id_str.find("nobase") != -1:
+				base_content = None
+				file_id_str = file_id_str[file_id_str.rfind("_") + 1:]
+			file_id = int(file_id_str)
+			if base_content != None:
+				StartUploadFile(filename, file_id, base_content, is_binary, status, True)
+			if new_content != None:
+				StartUploadFile(filename, file_id, new_content, is_binary, status, False)
+		WaitForUploads()
 
-      # Aliases
-      'LastChangedDate':     ['LastChangedDate', 'Date'],
-      'LastChangedRevision': ['LastChangedRevision', 'Rev', 'Revision'],
-      'LastChangedBy':       ['LastChangedBy', 'Author'],
-      'URL':                 ['URL', 'HeadURL'],
-    }
+	def IsImage(self, filename):
+		"""Returns true if the filename has an image extension."""
+		mimetype =  mimetypes.guess_type(filename)[0]
+		if not mimetype:
+			return False
+		return mimetype.startswith("image/")
 
-    def repl(m):
-       if m.group(2):
-         return "$%s::%s$" % (m.group(1), " " * len(m.group(3)))
-       return "$%s$" % m.group(1)
-    keywords = [keyword
-                for name in keyword_str.split(" ")
-                for keyword in svn_keywords.get(name, [])]
-    return re.sub(r"\$(%s):(:?)([^\$]+)\$" % '|'.join(keywords), repl, content)
+	def IsBinary(self, filename):
+		"""Returns true if the guessed mimetyped isnt't in text group."""
+		mimetype = mimetypes.guess_type(filename)[0]
+		if not mimetype:
+			return False  # e.g. README, "real" binaries usually have an extension
+		# special case for text files which don't start with text/
+		if mimetype in TEXT_MIMETYPES:
+			return False
+		return not mimetype.startswith("text/")
 
-  def GetUnknownFiles(self):
-    status = RunShell(["svn", "status", "--ignore-externals"], silent_ok=True)
-    unknown_files = []
-    for line in status.split("\n"):
-      if line and line[0] == "?":
-        unknown_files.append(line)
-    return unknown_files
+class FakeMercurialUI(object):
+	def __init__(self):
+		self.quiet = True
+		self.output = ''
+	
+	def write(self, *args, **opts):
+		self.output += ' '.join(args)
 
-  def ReadFile(self, filename):
-    """Returns the contents of a file."""
-    file = open(filename, 'rb')
-    result = ""
-    try:
-      result = file.read()
-    finally:
-      file.close()
-    return result
-
-  def GetStatus(self, filename):
-    """Returns the status of a file."""
-    if not self.options.revision:
-      status = RunShell(["svn", "status", "--ignore-externals", filename])
-      if not status:
-        ErrorExit("svn status returned no output for %s" % filename)
-      status_lines = status.splitlines()
-      # If file is in a cl, the output will begin with
-      # "\n--- Changelist 'cl_name':\n".  See
-      # http://svn.collab.net/repos/svn/trunk/notes/changelist-design.txt
-      if (len(status_lines) == 3 and
-          not status_lines[0] and
-          status_lines[1].startswith("--- Changelist")):
-        status = status_lines[2]
-      else:
-        status = status_lines[0]
-    # If we have a revision to diff against we need to run "svn list"
-    # for the old and the new revision and compare the results to get
-    # the correct status for a file.
-    else:
-      dirname, relfilename = os.path.split(filename)
-      if dirname not in self.svnls_cache:
-        cmd = ["svn", "list", "-r", self.rev_start, dirname or "."]
-        out, returncode = RunShellWithReturnCode(cmd)
-        if returncode:
-          ErrorExit("Failed to get status for %s." % filename)
-        old_files = out.splitlines()
-        args = ["svn", "list"]
-        if self.rev_end:
-          args += ["-r", self.rev_end]
-        cmd = args + [dirname or "."]
-        out, returncode = RunShellWithReturnCode(cmd)
-        if returncode:
-          ErrorExit("Failed to run command %s" % cmd)
-        self.svnls_cache[dirname] = (old_files, out.splitlines())
-      old_files, new_files = self.svnls_cache[dirname]
-      if relfilename in old_files and relfilename not in new_files:
-        status = "D   "
-      elif relfilename in old_files and relfilename in new_files:
-        status = "M   "
-      else:
-        status = "A   "
-    return status
-
-  def GetBaseFile(self, filename):
-    status = self.GetStatus(filename)
-    base_content = None
-    new_content = None
-
-    # If a file is copied its status will be "A  +", which signifies
-    # "addition-with-history".  See "svn st" for more information.  We need to
-    # upload the original file or else diff parsing will fail if the file was
-    # edited.
-    if status[0] == "A" and status[3] != "+":
-      # We'll need to upload the new content if we're adding a binary file
-      # since diff's output won't contain it.
-      mimetype = RunShell(["svn", "propget", "svn:mime-type", filename],
-                          silent_ok=True)
-      base_content = ""
-      is_binary = bool(mimetype) and not mimetype.startswith("text/")
-      if is_binary and self.IsImage(filename):
-        new_content = self.ReadFile(filename)
-    elif (status[0] in ("M", "D", "R") or
-          (status[0] == "A" and status[3] == "+") or  # Copied file.
-          (status[0] == " " and status[1] == "M")):  # Property change.
-      args = []
-      if self.options.revision:
-        url = "%s/%s@%s" % (self.svn_base, filename, self.rev_start)
-      else:
-        # Don't change filename, it's needed later.
-        url = filename
-        args += ["-r", "BASE"]
-      cmd = ["svn"] + args + ["propget", "svn:mime-type", url]
-      mimetype, returncode = RunShellWithReturnCode(cmd)
-      if returncode:
-        # File does not exist in the requested revision.
-        # Reset mimetype, it contains an error message.
-        mimetype = ""
-      get_base = False
-      is_binary = bool(mimetype) and not mimetype.startswith("text/")
-      if status[0] == " ":
-        # Empty base content just to force an upload.
-        base_content = ""
-      elif is_binary:
-        if self.IsImage(filename):
-          get_base = True
-          if status[0] == "M":
-            if not self.rev_end:
-              new_content = self.ReadFile(filename)
-            else:
-              url = "%s/%s@%s" % (self.svn_base, filename, self.rev_end)
-              new_content = RunShell(["svn", "cat", url],
-                                     universal_newlines=True, silent_ok=True)
-        else:
-          base_content = ""
-      else:
-        get_base = True
-
-      if get_base:
-        if is_binary:
-          universal_newlines = False
-        else:
-          universal_newlines = True
-        if self.rev_start:
-          # "svn cat -r REV delete_file.txt" doesn't work. cat requires
-          # the full URL with "@REV" appended instead of using "-r" option.
-          url = "%s/%s@%s" % (self.svn_base, filename, self.rev_start)
-          base_content = RunShell(["svn", "cat", url],
-                                  universal_newlines=universal_newlines,
-                                  silent_ok=True)
-        else:
-          base_content = RunShell(["svn", "cat", filename],
-                                  universal_newlines=universal_newlines,
-                                  silent_ok=True)
-        if not is_binary:
-          args = []
-          if self.rev_start:
-            url = "%s/%s@%s" % (self.svn_base, filename, self.rev_start)
-          else:
-            url = filename
-            args += ["-r", "BASE"]
-          cmd = ["svn"] + args + ["propget", "svn:keywords", url]
-          keywords, returncode = RunShellWithReturnCode(cmd)
-          if keywords and not returncode:
-            base_content = self._CollapseKeywords(base_content, keywords)
-    else:
-      StatusUpdate("svn status returned unexpected output: %s" % status)
-      sys.exit(1)
-    return base_content, new_content, is_binary, status[0:5]
-
-
-class GitVCS(VersionControlSystem):
-  """Implementation of the VersionControlSystem interface for Git."""
-
-  def __init__(self, options):
-    super(GitVCS, self).__init__(options)
-    # Map of filename -> (hash before, hash after) of base file.
-    # Hashes for "no such file" are represented as None.
-    self.hashes = {}
-    # Map of new filename -> old filename for renames.
-    self.renames = {}
-
-  def GenerateDiff(self, extra_args):
-    # This is more complicated than svn's GenerateDiff because we must convert
-    # the diff output to include an svn-style "Index:" line as well as record
-    # the hashes of the files, so we can upload them along with our diff.
-
-    # Special used by git to indicate "no such content".
-    NULL_HASH = "0"*40
-
-    extra_args = extra_args[:]
-    if self.options.revision:
-      extra_args = [self.options.revision] + extra_args
-    extra_args.append('-M')
-
-    # --no-ext-diff is broken in some versions of Git, so try to work around
-    # this by overriding the environment (but there is still a problem if the
-    # git config key "diff.external" is used).
-    env = os.environ.copy()
-    if 'GIT_EXTERNAL_DIFF' in env: del env['GIT_EXTERNAL_DIFF']
-    gitdiff = RunShell(["git", "diff", "--no-ext-diff", "--full-index"]
-                       + extra_args, env=env)
-    svndiff = []
-    filecount = 0
-    filename = None
-    for line in gitdiff.splitlines():
-      match = re.match(r"diff --git a/(.*) b/(.*)$", line)
-      if match:
-        filecount += 1
-        # Intentionally use the "after" filename so we can show renames.
-        filename = match.group(2)
-        svndiff.append("Index: %s\n" % filename)
-        if match.group(1) != match.group(2):
-          self.renames[match.group(2)] = match.group(1)
-      else:
-        # The "index" line in a git diff looks like this (long hashes elided):
-        #   index 82c0d44..b2cee3f 100755
-        # We want to save the left hash, as that identifies the base file.
-        match = re.match(r"index (\w+)\.\.(\w+)", line)
-        if match:
-          before, after = (match.group(1), match.group(2))
-          if before == NULL_HASH:
-            before = None
-          if after == NULL_HASH:
-            after = None
-          self.hashes[filename] = (before, after)
-      svndiff.append(line + "\n")
-    if not filecount:
-      ErrorExit("No valid patches found in output from git diff")
-    return "".join(svndiff)
-
-  def GetUnknownFiles(self):
-    status = RunShell(["git", "ls-files", "--exclude-standard", "--others"],
-                      silent_ok=True)
-    return status.splitlines()
-
-  def GetFileContent(self, file_hash, is_binary):
-    """Returns the content of a file identified by its git hash."""
-    data, retcode = RunShellWithReturnCode(["git", "show", file_hash],
-                                            universal_newlines=not is_binary)
-    if retcode:
-      ErrorExit("Got error status from 'git show %s'" % file_hash)
-    return data
-
-  def GetBaseFile(self, filename):
-    hash_before, hash_after = self.hashes.get(filename, (None,None))
-    base_content = None
-    new_content = None
-    is_binary = self.IsBinary(filename)
-    status = None
-
-    if filename in self.renames:
-      status = "A +"  # Match svn attribute name for renames.
-      if filename not in self.hashes:
-        # If a rename doesn't change the content, we never get a hash.
-        base_content = RunShell(["git", "show", filename])
-    elif not hash_before:
-      status = "A"
-      base_content = ""
-    elif not hash_after:
-      status = "D"
-    else:
-      status = "M"
-
-    is_image = self.IsImage(filename)
-
-    # Grab the before/after content if we need it.
-    # We should include file contents if it's text or it's an image.
-    if not is_binary or is_image:
-      # Grab the base content if we don't have it already.
-      if base_content is None and hash_before:
-        base_content = self.GetFileContent(hash_before, is_binary)
-      # Only include the "after" file if it's an image; otherwise it
-      # it is reconstructed from the diff.
-      if is_image and hash_after:
-        new_content = self.GetFileContent(hash_after, is_binary)
-
-    return (base_content, new_content, is_binary, status)
-
+use_hg_shell = False	# set to True to shell out to hg always; slower
 
 class MercurialVCS(VersionControlSystem):
-  """Implementation of the VersionControlSystem interface for Mercurial."""
+	"""Implementation of the VersionControlSystem interface for Mercurial."""
 
-  def __init__(self, options, repo_dir):
-    super(MercurialVCS, self).__init__(options)
-    # Absolute path to repository (we can be in a subdir)
-    self.repo_dir = os.path.normpath(repo_dir)
-    # Compute the subdir
-    cwd = os.path.normpath(os.getcwd())
-    assert cwd.startswith(self.repo_dir)
-    self.subdir = cwd[len(self.repo_dir):].lstrip(r"\/")
-    if self.options.revision:
-      self.base_rev = self.options.revision
-    else:
-      self.base_rev = RunShell(["hg", "parent", "-q"]).split(':')[1].strip()
+	def __init__(self, options, ui, repo):
+		super(MercurialVCS, self).__init__(options)
+		self.ui = ui
+		self.repo = repo
+		# Absolute path to repository (we can be in a subdir)
+		self.repo_dir = os.path.normpath(repo.root)
+		# Compute the subdir
+		cwd = os.path.normpath(os.getcwd())
+		assert cwd.startswith(self.repo_dir)
+		self.subdir = cwd[len(self.repo_dir):].lstrip(r"\/")
+		if self.options.revision:
+			self.base_rev = self.options.revision
+		else:
+			mqparent, err = RunShellWithReturnCode(['hg', 'log', '--rev', 'qparent', '--template={node}'])
+			if not err and mqparent != "":
+				self.base_rev = mqparent
+			else:
+				self.base_rev = RunShell(["hg", "parents", "-q"]).split(':')[1].strip()
+	def _GetRelPath(self, filename):
+		"""Get relative path of a file according to the current directory,
+		given its logical path in the repo."""
+		assert filename.startswith(self.subdir), (filename, self.subdir)
+		return filename[len(self.subdir):].lstrip(r"\/")
 
-  def _GetRelPath(self, filename):
-    """Get relative path of a file according to the current directory,
-    given its logical path in the repo."""
-    assert filename.startswith(self.subdir), (filename, self.subdir)
-    return filename[len(self.subdir):].lstrip(r"\/")
+	def GenerateDiff(self, extra_args):
+		# If no file specified, restrict to the current subdir
+		extra_args = extra_args or ["."]
+		cmd = ["hg", "diff", "--git", "-r", self.base_rev] + extra_args
+		data = RunShell(cmd, silent_ok=True)
+		svndiff = []
+		filecount = 0
+		for line in data.splitlines():
+			m = re.match("diff --git a/(\S+) b/(\S+)", line)
+			if m:
+				# Modify line to make it look like as it comes from svn diff.
+				# With this modification no changes on the server side are required
+				# to make upload.py work with Mercurial repos.
+				# NOTE: for proper handling of moved/copied files, we have to use
+				# the second filename.
+				filename = m.group(2)
+				svndiff.append("Index: %s" % filename)
+				svndiff.append("=" * 67)
+				filecount += 1
+				logging.info(line)
+			else:
+				svndiff.append(line)
+		if not filecount:
+			ErrorExit("No valid patches found in output from hg diff")
+		return "\n".join(svndiff) + "\n"
 
-  def GenerateDiff(self, extra_args):
-    # If no file specified, restrict to the current subdir
-    extra_args = extra_args or ["."]
-    cmd = ["hg", "diff", "--git", "-r", self.base_rev] + extra_args
-    data = RunShell(cmd, silent_ok=True)
-    svndiff = []
-    filecount = 0
-    for line in data.splitlines():
-      m = re.match("diff --git a/(\S+) b/(\S+)", line)
-      if m:
-        # Modify line to make it look like as it comes from svn diff.
-        # With this modification no changes on the server side are required
-        # to make upload.py work with Mercurial repos.
-        # NOTE: for proper handling of moved/copied files, we have to use
-        # the second filename.
-        filename = m.group(2)
-        svndiff.append("Index: %s" % filename)
-        svndiff.append("=" * 67)
-        filecount += 1
-        logging.info(line)
-      else:
-        svndiff.append(line)
-    if not filecount:
-      ErrorExit("No valid patches found in output from hg diff")
-    return "\n".join(svndiff) + "\n"
+	def GetUnknownFiles(self):
+		"""Return a list of files unknown to the VCS."""
+		args = []
+		status = RunShell(["hg", "status", "--rev", self.base_rev, "-u", "."],
+				silent_ok=True)
+		unknown_files = []
+		for line in status.splitlines():
+			st, fn = line.split(" ", 1)
+			if st == "?":
+				unknown_files.append(fn)
+		return unknown_files
 
-  def GetUnknownFiles(self):
-    """Return a list of files unknown to the VCS."""
-    args = []
-    status = RunShell(["hg", "status", "--rev", self.base_rev, "-u", "."],
-        silent_ok=True)
-    unknown_files = []
-    for line in status.splitlines():
-      st, fn = line.split(" ", 1)
-      if st == "?":
-        unknown_files.append(fn)
-    return unknown_files
-
-  def GetBaseFile(self, filename):
-    # "hg status" and "hg cat" both take a path relative to the current subdir
-    # rather than to the repo root, but "hg diff" has given us the full path
-    # to the repo root.
-    base_content = ""
-    new_content = None
-    is_binary = False
-    oldrelpath = relpath = self._GetRelPath(filename)
-    # "hg status -C" returns two lines for moved/copied files, one otherwise
-    out = RunShell(["hg", "status", "-C", "--rev", self.base_rev, relpath])
-    out = out.splitlines()
-    # HACK: strip error message about missing file/directory if it isn't in
-    # the working copy
-    if out[0].startswith('%s: ' % relpath):
-      out = out[1:]
-    status, what = out[0].split(' ', 1)
-    if len(out) > 1 and status == "A" and what == relpath:
-      oldrelpath = out[1].strip()
-      status = "M"
-    if ":" in self.base_rev:
-      base_rev = self.base_rev.split(":", 1)[0]
-    else:
-      base_rev = self.base_rev
-    if status != "A":
-      base_content = RunShell(["hg", "cat", "-r", base_rev, oldrelpath],
-        silent_ok=True)
-      is_binary = "\0" in base_content  # Mercurial's heuristic
-    if status != "R":
-      new_content = open(relpath, "rb").read()
-      is_binary = is_binary or "\0" in new_content
-    if is_binary and base_content:
-      # Fetch again without converting newlines
-      base_content = RunShell(["hg", "cat", "-r", base_rev, oldrelpath],
-        silent_ok=True, universal_newlines=False)
-    if not is_binary or not self.IsImage(relpath):
-      new_content = None
-    return base_content, new_content, is_binary, status
+	def GetBaseFile(self, filename):
+		set_status("inspecting " + filename)
+		# "hg status" and "hg cat" both take a path relative to the current subdir
+		# rather than to the repo root, but "hg diff" has given us the full path
+		# to the repo root.
+		base_content = ""
+		new_content = None
+		is_binary = False
+		oldrelpath = relpath = self._GetRelPath(filename)
+		# "hg status -C" returns two lines for moved/copied files, one otherwise
+		if use_hg_shell:
+			out = RunShell(["hg", "status", "-C", "--rev", self.base_rev, relpath])
+		else:
+			fui = FakeMercurialUI()
+			ret = commands.status(fui, self.repo, *[relpath], **{'rev': [self.base_rev], 'copies': True})
+			if ret:
+				raise util.Abort(ret)
+			out = fui.output
+		out = out.splitlines()
+		# HACK: strip error message about missing file/directory if it isn't in
+		# the working copy
+		if out[0].startswith('%s: ' % relpath):
+			out = out[1:]
+		status, what = out[0].split(' ', 1)
+		if len(out) > 1 and status == "A" and what == relpath:
+			oldrelpath = out[1].strip()
+			status = "M"
+		if ":" in self.base_rev:
+			base_rev = self.base_rev.split(":", 1)[0]
+		else:
+			base_rev = self.base_rev
+		if status != "A":
+			if use_hg_shell:
+				base_content = RunShell(["hg", "cat", "-r", base_rev, oldrelpath], silent_ok=True)
+			else:
+				base_content = str(self.repo[base_rev][oldrelpath].data())
+			is_binary = "\0" in base_content  # Mercurial's heuristic
+		if status != "R":
+			new_content = open(relpath, "rb").read()
+			is_binary = is_binary or "\0" in new_content
+		if is_binary and base_content and use_hg_shell:
+			# Fetch again without converting newlines
+			base_content = RunShell(["hg", "cat", "-r", base_rev, oldrelpath],
+				silent_ok=True, universal_newlines=False)
+		if not is_binary or not self.IsImage(relpath):
+			new_content = None
+		return base_content, new_content, is_binary, status
 
 
 # NOTE: The SplitPatch function is duplicated in engine.py, keep them in sync.
 def SplitPatch(data):
-  """Splits a patch into separate pieces for each file.
+	"""Splits a patch into separate pieces for each file.
 
-  Args:
-    data: A string containing the output of svn diff.
+	Args:
+		data: A string containing the output of svn diff.
 
-  Returns:
-    A list of 2-tuple (filename, text) where text is the svn diff output
-      pertaining to filename.
-  """
-  patches = []
-  filename = None
-  diff = []
-  for line in data.splitlines(True):
-    new_filename = None
-    if line.startswith('Index:'):
-      unused, new_filename = line.split(':', 1)
-      new_filename = new_filename.strip()
-    elif line.startswith('Property changes on:'):
-      unused, temp_filename = line.split(':', 1)
-      # When a file is modified, paths use '/' between directories, however
-      # when a property is modified '\' is used on Windows.  Make them the same
-      # otherwise the file shows up twice.
-      temp_filename = temp_filename.strip().replace('\\', '/')
-      if temp_filename != filename:
-        # File has property changes but no modifications, create a new diff.
-        new_filename = temp_filename
-    if new_filename:
-      if filename and diff:
-        patches.append((filename, ''.join(diff)))
-      filename = new_filename
-      diff = [line]
-      continue
-    if diff is not None:
-      diff.append(line)
-  if filename and diff:
-    patches.append((filename, ''.join(diff)))
-  return patches
+	Returns:
+		A list of 2-tuple (filename, text) where text is the svn diff output
+			pertaining to filename.
+	"""
+	patches = []
+	filename = None
+	diff = []
+	for line in data.splitlines(True):
+		new_filename = None
+		if line.startswith('Index:'):
+			unused, new_filename = line.split(':', 1)
+			new_filename = new_filename.strip()
+		elif line.startswith('Property changes on:'):
+			unused, temp_filename = line.split(':', 1)
+			# When a file is modified, paths use '/' between directories, however
+			# when a property is modified '\' is used on Windows.  Make them the same
+			# otherwise the file shows up twice.
+			temp_filename = temp_filename.strip().replace('\\', '/')
+			if temp_filename != filename:
+				# File has property changes but no modifications, create a new diff.
+				new_filename = temp_filename
+		if new_filename:
+			if filename and diff:
+				patches.append((filename, ''.join(diff)))
+			filename = new_filename
+			diff = [line]
+			continue
+		if diff is not None:
+			diff.append(line)
+	if filename and diff:
+		patches.append((filename, ''.join(diff)))
+	return patches
 
 
 def UploadSeparatePatches(issue, rpc_server, patchset, data, options):
-  """Uploads a separate patch for each file in the diff output.
+	"""Uploads a separate patch for each file in the diff output.
 
-  Returns a list of [patch_key, filename] for each file.
-  """
-  patches = SplitPatch(data)
-  rv = []
-  for patch in patches:
-    if len(patch[1]) > MAX_UPLOAD_SIZE:
-      print ("Not uploading the patch for " + patch[0] +
-             " because the file is too large.")
-      continue
-    form_fields = [("filename", patch[0])]
-    if not options.download_base:
-      form_fields.append(("content_upload", "1"))
-    files = [("data", "data.diff", patch[1])]
-    ctype, body = EncodeMultipartFormData(form_fields, files)
-    url = "/%d/upload_patch/%d" % (int(issue), int(patchset))
-    print "Uploading patch for " + patch[0]
-    response_body = rpc_server.Send(url, body, content_type=ctype)
-    lines = response_body.splitlines()
-    if not lines or lines[0] != "OK":
-      StatusUpdate("  --> %s" % response_body)
-      sys.exit(1)
-    rv.append([lines[1], patch[0]])
-  return rv
-
-
-def GuessVCSName():
-  """Helper to guess the version control system.
-
-  This examines the current directory, guesses which VersionControlSystem
-  we're using, and returns an string indicating which VCS is detected.
-
-  Returns:
-    A pair (vcs, output).  vcs is a string indicating which VCS was detected
-    and is one of VCS_GIT, VCS_MERCURIAL, VCS_SUBVERSION, or VCS_UNKNOWN.
-    output is a string containing any interesting output from the vcs
-    detection routine, or None if there is nothing interesting.
-  """
-  # Mercurial has a command to get the base directory of a repository
-  # Try running it, but don't die if we don't have hg installed.
-  # NOTE: we try Mercurial first as it can sit on top of an SVN working copy.
-  try:
-    out, returncode = RunShellWithReturnCode(["hg", "root"])
-    if returncode == 0:
-      return (VCS_MERCURIAL, out.strip())
-  except OSError, (errno, message):
-    if errno != 2:  # ENOENT -- they don't have hg installed.
-      raise
-
-  # Subversion has a .svn in all working directories.
-  if os.path.isdir('.svn'):
-    logging.info("Guessed VCS = Subversion")
-    return (VCS_SUBVERSION, None)
-
-  # Git has a command to test if you're in a git tree.
-  # Try running it, but don't die if we don't have git installed.
-  try:
-    out, returncode = RunShellWithReturnCode(["git", "rev-parse",
-                                              "--is-inside-work-tree"])
-    if returncode == 0:
-      return (VCS_GIT, None)
-  except OSError, (errno, message):
-    if errno != 2:  # ENOENT -- they don't have git installed.
-      raise
-
-  return (VCS_UNKNOWN, None)
-
-
-def GuessVCS(options):
-  """Helper to guess the version control system.
-
-  This verifies any user-specified VersionControlSystem (by command line
-  or environment variable).  If the user didn't specify one, this examines
-  the current directory, guesses which VersionControlSystem we're using,
-  and returns an instance of the appropriate class.  Exit with an error
-  if we can't figure it out.
-
-  Returns:
-    A VersionControlSystem instance. Exits if the VCS can't be guessed.
-  """
-  vcs = options.vcs
-  if not vcs:
-    vcs = os.environ.get("CODEREVIEW_VCS")
-  if vcs:
-    v = VCS_ABBREVIATIONS.get(vcs.lower())
-    if v is None:
-      ErrorExit("Unknown version control system %r specified." % vcs)
-    (vcs, extra_output) = (v, None)
-  else:
-    (vcs, extra_output) = GuessVCSName()
-
-  if vcs == VCS_MERCURIAL:
-    if extra_output is None:
-      extra_output = RunShell(["hg", "root"]).strip()
-    return MercurialVCS(options, extra_output)
-  elif vcs == VCS_SUBVERSION:
-    return SubversionVCS(options)
-  elif vcs == VCS_GIT:
-    return GitVCS(options)
-
-  ErrorExit(("Could not guess version control system. "
-             "Are you in a working copy directory?"))
-
-
-def RealMain(argv, data=None):
-  """The real main function.
-
-  Args:
-    argv: Command line arguments.
-    data: Diff contents. If None (default) the diff is generated by
-      the VersionControlSystem implementation returned by GuessVCS().
-
-  Returns:
-    A 2-tuple (issue id, patchset id).
-    The patchset id is None if the base files are not uploaded by this
-    script (applies only to SVN checkouts).
-  """
-  logging.basicConfig(format=("%(asctime).19s %(levelname)s %(filename)s:"
-                              "%(lineno)s %(message)s "))
-  os.environ['LC_ALL'] = 'C'
-  options, args = parser.parse_args(argv[1:])
-  global verbosity
-  verbosity = options.verbose
-  if verbosity >= 3:
-    logging.getLogger().setLevel(logging.DEBUG)
-  elif verbosity >= 2:
-    logging.getLogger().setLevel(logging.INFO)
-  vcs = GuessVCS(options)
-  if isinstance(vcs, SubversionVCS):
-    # base field is only allowed for Subversion.
-    # Note: Fetching base files may become deprecated in future releases.
-    base = vcs.GuessBase(options.download_base)
-  else:
-    base = None
-  if not base and options.download_base:
-    options.download_base = True
-    logging.info("Enabled upload of base file")
-  if not options.assume_yes:
-    vcs.CheckForUnknownFiles()
-  if data is None:
-    data = vcs.GenerateDiff(args)
-  files = vcs.GetBaseFiles(data)
-  if verbosity >= 1:
-    print "Upload server:", options.server, "(change with -s/--server)"
-  if options.issue:
-    prompt = "Message describing this patch set: "
-  else:
-    prompt = "New issue subject: "
-  message = options.message or raw_input(prompt).strip()
-  if not message:
-    ErrorExit("A non-empty message is required")
-  rpc_server = GetRpcServer(options)
-  form_fields = [("subject", message)]
-  if base:
-    form_fields.append(("base", base))
-  if options.issue:
-    form_fields.append(("issue", str(options.issue)))
-  if options.email:
-    form_fields.append(("user", options.email))
-  if options.reviewers:
-    for reviewer in options.reviewers.split(','):
-      if "@" in reviewer and not reviewer.split("@")[1].count(".") == 1:
-        ErrorExit("Invalid email address: %s" % reviewer)
-    form_fields.append(("reviewers", options.reviewers))
-  if options.cc:
-    for cc in options.cc.split(','):
-      if "@" in cc and not cc.split("@")[1].count(".") == 1:
-        ErrorExit("Invalid email address: %s" % cc)
-    form_fields.append(("cc", options.cc))
-  description = options.description
-  if options.description_file:
-    if options.description:
-      ErrorExit("Can't specify description and description_file")
-    file = open(options.description_file, 'r')
-    description = file.read()
-    file.close()
-  if description:
-    form_fields.append(("description", description))
-  # Send a hash of all the base file so the server can determine if a copy
-  # already exists in an earlier patchset.
-  base_hashes = ""
-  for file, info in files.iteritems():
-    if not info[0] is None:
-      checksum = md5(info[0]).hexdigest()
-      if base_hashes:
-        base_hashes += "|"
-      base_hashes += checksum + ":" + file
-  form_fields.append(("base_hashes", base_hashes))
-  if options.private:
-    if options.issue:
-      print "Warning: Private flag ignored when updating an existing issue."
-    else:
-      form_fields.append(("private", "1"))
-  # If we're uploading base files, don't send the email before the uploads, so
-  # that it contains the file status.
-  if options.send_mail and options.download_base:
-    form_fields.append(("send_mail", "1"))
-  if not options.download_base:
-    form_fields.append(("content_upload", "1"))
-  if len(data) > MAX_UPLOAD_SIZE:
-    print "Patch is large, so uploading file patches separately."
-    uploaded_diff_file = []
-    form_fields.append(("separate_patches", "1"))
-  else:
-    uploaded_diff_file = [("data", "data.diff", data)]
-  ctype, body = EncodeMultipartFormData(form_fields, uploaded_diff_file)
-  response_body = rpc_server.Send("/upload", body, content_type=ctype)
-  patchset = None
-  if not options.download_base or not uploaded_diff_file:
-    lines = response_body.splitlines()
-    if len(lines) >= 2:
-      msg = lines[0]
-      patchset = lines[1].strip()
-      patches = [x.split(" ", 1) for x in lines[2:]]
-    else:
-      msg = response_body
-  else:
-    msg = response_body
-  if not response_body.startswith("Issue created.") and \
-  not response_body.startswith("Issue updated."):
-    print >>sys.stderr, msg
-    sys.exit(0)
-  issue = msg[msg.rfind("/")+1:]
-
-  if not uploaded_diff_file:
-    result = UploadSeparatePatches(issue, rpc_server, patchset, data, options)
-    if not options.download_base:
-      patches = result
-
-  if not options.download_base:
-    vcs.UploadBaseFiles(issue, rpc_server, patches, patchset, options, files)
-    if options.send_mail:
-      rpc_server.Send("/" + issue + "/mail", payload="")
-  return issue, patchset
-
-
-def main():
-  try:
-    RealMain(sys.argv)
-  except KeyboardInterrupt:
-    print
-    StatusUpdate("Interrupted.")
-    sys.exit(1)
-
+	Returns a list of [patch_key, filename] for each file.
+	"""
+	patches = SplitPatch(data)
+	rv = []
+	for patch in patches:
+		set_status("uploading patch for " + patch[0])
+		if len(patch[1]) > MAX_UPLOAD_SIZE:
+			print ("Not uploading the patch for " + patch[0] +
+				" because the file is too large.")
+			continue
+		form_fields = [("filename", patch[0])]
+		if not options.download_base:
+			form_fields.append(("content_upload", "1"))
+		files = [("data", "data.diff", patch[1])]
+		ctype, body = EncodeMultipartFormData(form_fields, files)
+		url = "/%d/upload_patch/%d" % (int(issue), int(patchset))
+		print "Uploading patch for " + patch[0]
+		response_body = rpc_server.Send(url, body, content_type=ctype)
+		lines = response_body.splitlines()
+		if not lines or lines[0] != "OK":
+			StatusUpdate("  --> %s" % response_body)
+			sys.exit(1)
+		rv.append([lines[1], patch[0]])
+	return rv
