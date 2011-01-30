@@ -69,7 +69,7 @@ Empty strings:
 ^	at beginning of text or line («m»=true)
 $	at end of text (like «\z» not «\Z») or line («m»=true)
 \A	at beginning of text
-\b	at word boundary («\w» to left and «\W» to right or vice versa)
+\b	at word boundary («\w» on one side and «\W», «\A», or «\z» on the other)
 \B	not a word boundary
 \G	at beginning of subtext being searched NOT SUPPORTED pcre
 \G	at end of last match NOT SUPPORTED perl
