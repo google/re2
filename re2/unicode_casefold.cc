@@ -7,7 +7,7 @@
 namespace re2 {
 
 
-// 1020 groups, 2061 pairs, 279 ranges
+// 1029 groups, 2079 pairs, 282 ranges
 CaseFold unicode_casefold[] = {
 	{ 65, 90, 32 },
 	{ 97, 106, -32 },
@@ -107,6 +107,7 @@ CaseFold unicode_casefold[] = {
 	{ 603, 603, -203 },
 	{ 608, 608, -205 },
 	{ 611, 611, -207 },
+	{ 613, 613, 42280 },
 	{ 616, 616, -209 },
 	{ 617, 617, -211 },
 	{ 619, 619, 10743 },
@@ -181,7 +182,7 @@ CaseFold unicode_casefold[] = {
 	{ 1216, 1216, 15 },
 	{ 1217, 1230, OddEven },
 	{ 1231, 1231, -15 },
-	{ 1232, 1317, EvenOdd },
+	{ 1232, 1319, EvenOdd },
 	{ 1329, 1366, 48 },
 	{ 1377, 1414, -48 },
 	{ 4256, 4293, 7264 },
@@ -275,8 +276,7 @@ CaseFold unicode_casefold[] = {
 	{ 11392, 11491, EvenOdd },
 	{ 11499, 11502, OddEven },
 	{ 11520, 11557, -7264 },
-	{ 42560, 42591, EvenOdd },
-	{ 42594, 42605, EvenOdd },
+	{ 42560, 42605, EvenOdd },
 	{ 42624, 42647, EvenOdd },
 	{ 42786, 42799, EvenOdd },
 	{ 42802, 42863, EvenOdd },
@@ -284,12 +284,15 @@ CaseFold unicode_casefold[] = {
 	{ 42877, 42877, -35332 },
 	{ 42878, 42887, EvenOdd },
 	{ 42891, 42892, OddEven },
+	{ 42893, 42893, -42280 },
+	{ 42896, 42897, EvenOdd },
+	{ 42912, 42921, EvenOdd },
 	{ 65313, 65338, 32 },
 	{ 65345, 65370, -32 },
 	{ 66560, 66599, 40 },
 	{ 66600, 66639, -40 },
 };
-int num_unicode_casefold = 279;
+int num_unicode_casefold = 282;
 
 
 } // namespace re2
