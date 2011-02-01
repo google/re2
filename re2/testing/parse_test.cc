@@ -274,6 +274,8 @@ const char* badtests[] = {
   "(?P<>a)",
   "[a-Z]",
   "(?i)[a-Z]",
+  "a{100000}",
+  "a{100000,}",
 };
 
 // Valid in Perl, bad in POSIX

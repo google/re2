@@ -464,7 +464,7 @@ bool Regexp::ParseState::PushRepeatOp(RegexpOp op, const StringPiece& s,
 bool Regexp::ParseState::PushRepetition(int min, int max,
                                         const StringPiece& s,
                                         bool nongreedy) {
-  if ((max != -1 && max < min) || max > 1000) {
+  if ((max != -1 && max < min) || min > 1000 || max > 1000) {
     status_->set_code(kRegexpRepeatSize);
     status_->set_error_arg(s);
     return false;
