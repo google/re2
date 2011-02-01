@@ -559,6 +559,46 @@ map<string, int>* Regexp::NamedCaptures() {
   return w.TakeMap();
 }
 
+// Walker class to build map from capture group indices to their names.
+class CaptureNamesWalker : public Regexp::Walker<Ignored> {
+ public:
+  CaptureNamesWalker() : map_(NULL) {}
+  ~CaptureNamesWalker() { delete map_; }
+
+  map<int, string>* TakeMap() {
+    map<int, string>* m = map_;
+    map_ = NULL;
+    return m;
+  }
+
+  Ignored PreVisit(Regexp* re, Ignored ignored, bool* stop) {
+    if (re->op() == kRegexpCapture && re->name() != NULL) {
+      // Allocate map once we find a name.
+      if (map_ == NULL)
+        map_ = new map<int, string>;
+
+      (*map_)[re->cap()] = *re->name();
+    }
+    return ignored;
+  }
+
+  virtual Ignored ShortVisit(Regexp* re, Ignored ignored) {
+    // Should never be called: we use Walk not WalkExponential.
+    LOG(DFATAL) << "CaptureNamesWalker::ShortVisit called";
+    return ignored;
+  }
+
+ private:
+  map<int, string>* map_;
+  DISALLOW_EVIL_CONSTRUCTORS(CaptureNamesWalker);
+};
+
+map<int, string>* Regexp::CaptureNames() {
+  CaptureNamesWalker w;
+  w.Walk(this, 0);
+  return w.TakeMap();
+}
+
 // Determines whether regexp matches must be anchored
 // with a fixed string prefix.  If so, returns the prefix and
 // the regexp that remains after the prefix.  The prefix might

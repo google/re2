@@ -154,6 +154,7 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
   prog_ = NULL;
   rprog_ = NULL;
   named_groups_ = NULL;
+  group_names_ = NULL;
   num_captures_ = -1;
 
   RegexpStatus status;
@@ -217,7 +218,8 @@ re2::Prog* RE2::ReverseProg() const {
   return rprog_;
 }
 
-static const map<string, int> empty_map;
+static const map<string, int> empty_named_groups;
+static const map<int, string> empty_group_names;
 
 RE2::~RE2() {
   if (suffix_regexp_)
@@ -229,8 +231,10 @@ RE2::~RE2() {
   delete rprog_;
   if (error_ != &empty_string)
     delete error_;
-  if (named_groups_ != NULL && named_groups_ != &empty_map)
+  if (named_groups_ != NULL && named_groups_ != &empty_named_groups)
     delete named_groups_;
+  if (group_names_ != NULL &&  group_names_ != &empty_group_names)
+    delete group_names_;
 }
 
 int RE2::ProgramSize() const {
@@ -243,13 +247,26 @@ int RE2::ProgramSize() const {
 const map<string, int>&  RE2::NamedCapturingGroups() const {
   MutexLock l(mutex_);
   if (!ok())
-    return empty_map;
+    return empty_named_groups;
   if (named_groups_ == NULL) {
     named_groups_ = suffix_regexp_->NamedCaptures();
     if (named_groups_ == NULL)
-      named_groups_ = &empty_map;
+      named_groups_ = &empty_named_groups;
   }
   return *named_groups_;
+}
+
+// Returns group_names_, computing it if needed.
+const map<int, string>&  RE2::CapturingGroupNames() const {
+  MutexLock l(mutex_);
+  if (!ok())
+    return empty_group_names;
+  if (group_names_ == NULL) {
+    group_names_ = suffix_regexp_->CaptureNames();
+    if (group_names_ == NULL)
+      group_names_ = &empty_group_names;
+  }
+  return *group_names_;
 }
 
 /***** Convenience interfaces *****/

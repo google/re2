@@ -370,6 +370,11 @@ class Regexp {
   // The caller is responsible for deleting the map.
   map<string, int>* NamedCaptures();
 
+  // Returns a map from capturing group indices to capturing group
+  // names or NULL if the regexp contains no named capture groups. The
+  // caller is responsible for deleting the map.
+  map<int, string>* CaptureNames();
+
   // Returns a string representation of the current regexp,
   // using as few parentheses as possible.
   string ToString();

@@ -1270,4 +1270,17 @@ TEST(RE2, Bug3061120) {
   EXPECT_FALSE(RE2::PartialMatch("s", re));  // broke because of latin long s
 }
 
+TEST(RE2, CapturingGroupNames) {
+  // Opening parentheses annotated with group IDs:
+  //      12    3        45   6         7
+  RE2 re("((abc)(?P<G2>)|((e+)(?P<G2>.*)(?P<G1>u+)))");
+  EXPECT_TRUE(re.ok());
+  const map<int, string>& have = re.CapturingGroupNames();
+  map<int, string> want;
+  want[3] = "G2";
+  want[6] = "G2";
+  want[7] = "G1";
+  EXPECT_EQ(want, have);
+}
+
 }  // namespace re2

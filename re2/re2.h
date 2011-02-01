@@ -415,9 +415,17 @@ class RE2 {
   // does not count: if the regexp is "(a)(b)", returns 2.
   int NumberOfCapturingGroups() const;
 
+
   // Return a map from names to capturing indices.
+  // The map records the index of the leftmost group
+  // with the given name.
   // Only valid until the re is deleted.
   const map<string, int>& NamedCapturingGroups() const;
+
+  // Return a map from capturing indices to names.
+  // The map has no entries for unnamed groups.
+  // Only valid until the re is deleted.
+  const map<int, string>& CapturingGroupNames() const;
 
   // General matching routine.
   // Match against text starting at offset startpos.
@@ -687,6 +695,9 @@ class RE2 {
 
   // Map from capture names to indices
   mutable const map<string, int>* named_groups_;
+
+  // Map from capture indices to names
+  mutable const map<int, string>* group_names_;
 
   //DISALLOW_EVIL_CONSTRUCTORS(RE2);
   RE2(const RE2&);
