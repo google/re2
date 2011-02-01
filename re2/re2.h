@@ -349,14 +349,17 @@ class RE2 {
                       const RE2& pattern,
                       const StringPiece& rewrite);
 
-  // Like Replace(), except replaces all occurrences of the pattern in
-  // the string with the rewrite.  Replacements are not subject to
-  // re-matching.  E.g.,
+  // Like Replace(), except replaces successive non-overlapping occurrences
+  // of the pattern in the string with the rewrite. E.g.
   //
   //   string s = "yabba dabba doo";
   //   CHECK(RE2::GlobalReplace(&s, "b+", "d"));
   //
   // will leave "s" containing "yada dada doo"
+  // Replacements are not subject to re-matching.
+  //
+  // Because GlobalReplace only replaces non-overlapping matches,
+  // replacing "ana" within "banana" makes only one replacement, not two.
   //
   // Returns the number of replacements made.
   static int GlobalReplace(string *str,
