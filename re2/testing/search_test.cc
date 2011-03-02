@@ -263,7 +263,40 @@ RegexpTest simple_tests[] = {
   { "[A-Z]+", "aAzZ" },
   { "[^\\\\]+", "Aa\\" },
   { "[acegikmoqsuwy]+", "acegikmoqsuwyACEGIKMOQSUWY" },
+  
+  // Anchoring.  (^abc in aabcdef was a former bug)
+  // The tester checks for a match in the text and
+  // subpieces of the text with a byte removed on either side.
+  { "^abc", "abcdef" },
+  { "^abc", "aabcdef" },
+  { "^[ay]*[bx]+c", "abcdef" },
+  { "^[ay]*[bx]+c", "aabcdef" },
+  { "def$", "abcdef" },
+  { "def$", "abcdeff" },
+  { "d[ex][fy]$", "abcdef" },
+  { "d[ex][fy]$", "abcdeff" },
+  { "[dz][ex][fy]$", "abcdef" },
+  { "[dz][ex][fy]$", "abcdeff" },
+  { "(?m)^abc", "abcdef" },
+  { "(?m)^abc", "aabcdef" },
+  { "(?m)^[ay]*[bx]+c", "abcdef" },
+  { "(?m)^[ay]*[bx]+c", "aabcdef" },
+  { "(?m)def$", "abcdef" },
+  { "(?m)def$", "abcdeff" },
+  { "(?m)d[ex][fy]$", "abcdef" },
+  { "(?m)d[ex][fy]$", "abcdeff" },
+  { "(?m)[dz][ex][fy]$", "abcdef" },
+  { "(?m)[dz][ex][fy]$", "abcdeff" },
+  { "^", "a" },
+  { "^^", "a" },
 
+  // Context.
+  // The tester checks for a match in the text and
+  // subpieces of the text with a byte removed on either side.
+  { "a", "a" },
+  { "ab*", "a" },
+  { "a\\C*", "a" },
+  
   // Former bugs.
   { "a\\C*|ba\\C", "baba" },
 };

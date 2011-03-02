@@ -15,7 +15,7 @@ DEFINE_bool(dump_prog, false, "dump regexp program");
 DEFINE_bool(log_okay, false, "log successful runs");
 DEFINE_bool(dump_rprog, false, "dump reversed regexp program");
 
-DEFINE_int32(max_regexp_failures, 1,
+DEFINE_int32(max_regexp_failures, 100,
              "maximum number of regexp test failures (-1 = unlimited)");
 
 DEFINE_string(regexp_engines, "", "pattern to select regexp engines to test");
@@ -58,9 +58,8 @@ static uint32 Engines() {
   if (FLAGS_regexp_engines.empty()) {
     cached_engines = ~0;
   } else {
-    for (int i = 0; i < kEngineMax; i++)
-      if(strstr(EngineString(static_cast<Engine>(i)).c_str(),
-                            FLAGS_regexp_engines.c_str()))
+    for (Engine i = static_cast<Engine>(0); i < kEngineMax; i++)
+      if (strstr(EngineString(i).c_str(), FLAGS_regexp_engines.c_str()))
         cached_engines |= 1<<i;
   }
 
@@ -68,10 +67,9 @@ static uint32 Engines() {
     LOG(INFO) << "Warning: no engines enabled.";
   if (!UsingPCRE)
     cached_engines &= ~(1<<kEnginePCRE);
-  for (int i = 0; i < kEngineMax; i++) {
+  for (Engine i = static_cast<Engine>(0); i < kEngineMax; i++) {
     if (cached_engines & (1<<i))
-      LOG(INFO) << EngineString(static_cast<Engine>(i))
-                << " enabled";
+      LOG(INFO) << EngineString(i) << " enabled";
   }
   did_parse = true;
   return cached_engines;
@@ -392,7 +390,9 @@ void TestInstance::RunSearch(Engine type,
       if (kind_ == Prog::kFullMatch)
         re_anchor = RE2::ANCHOR_BOTH;
 
-      result->matched = re2_->Match(context, text.begin() - context.begin(),
+      result->matched = re2_->Match(context,
+                                    text.begin() - context.begin(),
+                                    text.end() - context.begin(),
                                     re_anchor, result->submatch, nsubmatch);
       result->have_submatch = nsubmatch > 0;
       break;
@@ -492,30 +492,15 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
 
   // Compare the others.
   bool all_okay = true;
-  for (int i = kEngineBacktrack+1; i < kEngineMax; i++) {
+  for (Engine i = kEngineBacktrack+1; i < kEngineMax; i++) {
     if (!(Engines() & (1<<i)))
       continue;
 
     Result r;
-    RunSearch(static_cast<Engine>(i), text, context, anchor, &r);
+    RunSearch(i, text, context, anchor, &r);
     if (ResultOkay(r, correct)) {
-      if (FLAGS_log_okay) {
-        LOG(INFO) << (r.skipped ? "Skipped: " : "Okay: ")
-                  << EngineString(static_cast<Engine>(i))
-                  << " regexp "
-                  << CEscape(regexp_str_)
-                  << " "
-                  << CEscape(regexp_->ToString())
-                  << " "
-                  << " text "
-                  << CEscape(text)
-                  << " context "
-                  << CEscape(context)
-                  << " (" << FormatKind(kind_)
-                  << ", " << FormatAnchor(anchor)
-                  << ", " << FormatMode(flags_)
-                  << ")";
-      }
+      if (FLAGS_log_okay)
+        LogMatch(r.skipped ? "Skipped: " : "Okay: ", i, text, context, anchor);
       continue;
     }
 
@@ -530,22 +515,8 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
     if (!r.untrusted)
       all_okay = false;
 
-    LOG(INFO) << (r.untrusted ? "(Untrusted) " : "")
-              << "Mismatch: "
-              << EngineString(static_cast<Engine>(i))
-              << " regexp "
-              << CEscape(regexp_str_)
-              << " "
-              << CEscape(regexp_->ToString())
-              << " text "
-              << CEscape(text)
-              << " context "
-              << CEscape(context)
-              << " (" << FormatKind(kind_)
-              << ", " << FormatAnchor(anchor)
-              << ", " << FormatMode(flags_)
-              << ")";
-
+    LogMatch(r.untrusted ? "(Untrusted) Mismatch: " : "Mismatch: ", i, text,
+             context, anchor);
     if (r.matched != correct.matched) {
       if (r.matched) {
         LOG(INFO) << "   Should not match (but does).";
@@ -576,6 +547,29 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
   }
 
   return all_okay;
+}
+
+void TestInstance::LogMatch(const char* prefix, Engine e,
+                            const StringPiece& text, const StringPiece& context,
+                            Prog::Anchor anchor) {
+  LOG(INFO) << prefix
+    << EngineString(e)
+    << " regexp "
+    << CEscape(regexp_str_)
+    << " "
+    << CEscape(regexp_->ToString())
+    << " text "
+    << CEscape(text)
+    << " ("
+    << text.begin() - context.begin()
+    << ","
+    << text.end() - context.begin()
+    << ") of context "
+    << CEscape(context)
+    << " (" << FormatKind(kind_)
+    << ", " << FormatAnchor(anchor)
+    << ", " << FormatMode(flags_)
+    << ")";
 }
 
 static Prog::MatchKind kinds[] = {
@@ -616,7 +610,17 @@ static Prog::Anchor anchors[] = {
 };
 
 bool Tester::TestInput(const StringPiece& text) {
-  return TestInputInContext(text, text);
+  bool okay = TestInputInContext(text, text);
+  if (text.size() > 0) {
+    StringPiece sp;
+    sp = text;
+    sp.remove_prefix(1);
+    okay &= TestInputInContext(sp, text);
+    sp = text;
+    sp.remove_suffix(1);
+    okay &= TestInputInContext(sp, text);
+  }
+  return okay;
 }
 
 bool Tester::TestInputInContext(const StringPiece& text,

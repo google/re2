@@ -428,7 +428,8 @@ class RE2 {
   const map<int, string>& CapturingGroupNames() const;
 
   // General matching routine.
-  // Match against text starting at offset startpos.
+  // Match against text starting at offset startpos
+  // and stopping the search at offset endpos.
   // Returns true if match found, false if not.
   // On a successful match, fills in match[] (up to nmatch entries)
   // with information about submatches.
@@ -448,6 +449,7 @@ class RE2 {
   // either way, match[i] == NULL.
   bool Match(const StringPiece& text,
              int startpos,
+             int endpos,
              Anchor anchor,
              StringPiece *match,
              int nmatch) const;

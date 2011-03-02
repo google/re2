@@ -329,7 +329,7 @@ bool RE2::Replace(string *str,
   int nvec = 1 + MaxSubmatch(rewrite);
   if (nvec > arraysize(vec))
     return false;
-  if (!re.Match(*str, 0, UNANCHORED, vec, nvec))
+  if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
     return false;
 
   string s;
@@ -356,7 +356,7 @@ int RE2::GlobalReplace(string *str,
   string out;
   int count = 0;
   while (p <= ep) {
-    if (!re.Match(*str, p - str->data(), UNANCHORED, vec, nvec))
+    if (!re.Match(*str, p - str->data(), str->size(), UNANCHORED, vec, nvec))
       break;
     if (p < vec[0].begin())
       out.append(p, vec[0].begin() - p);
@@ -391,7 +391,7 @@ bool RE2::Extract(const StringPiece &text,
   if (nvec > arraysize(vec))
     return false;
 
-  if (!re.Match(text, 0, UNANCHORED, vec, nvec))
+  if (!re.Match(text, 0, text.size(), UNANCHORED, vec, nvec))
     return false;
 
   out->clear();
@@ -500,6 +500,7 @@ static int ascii_strcasecmp(const char* a, const char* b, int len) {
 
 bool RE2::Match(const StringPiece& text,
                 int startpos,
+                int endpos,
                 Anchor re_anchor,
                 StringPiece* submatch,
                 int nsubmatch) const {
@@ -508,9 +509,15 @@ bool RE2::Match(const StringPiece& text,
       LOG(ERROR) << "Invalid RE2: " << *error_;
     return false;
   }
+  
+  if (startpos < 0 || startpos > endpos || endpos > text.size()) {
+    LOG(ERROR) << "RE2: invalid startpos, endpos pair.";
+    return false;
+  }
 
   StringPiece subtext = text;
   subtext.remove_prefix(startpos);
+  subtext.remove_suffix(text.size() - endpos);
 
   // Use DFAs to find exact location of match, filter out non-matches.
 
@@ -525,7 +532,11 @@ bool RE2::Match(const StringPiece& text,
   if (ncap > nsubmatch)
     ncap = nsubmatch;
 
-  // If the regexp is explicitly anchored, update re_anchor
+  // If the regexp is anchored explicitly, must not be in middle of text.
+  if (prog_->anchor_start() && startpos != 0)
+    return false;
+
+  // If the regexp is anchored explicitly, update re_anchor
   // so that we can potentially fall into a faster case below.
   if (prog_->anchor_start() && prog_->anchor_end())
     re_anchor = ANCHOR_BOTH;
@@ -535,6 +546,8 @@ bool RE2::Match(const StringPiece& text,
   // Check for the required prefix, if any.
   int prefixlen = 0;
   if (!prefix_.empty()) {
+    if (startpos != 0)
+      return false;
     prefixlen = prefix_.size();
     if (prefixlen > subtext.size())
       return false;
@@ -770,7 +783,7 @@ bool RE2::DoMatch(const StringPiece& text,
     heapvec = vec;
   }
 
-  if (!Match(text, 0, anchor, vec, nvec)) {
+  if (!Match(text, 0, text.size(), anchor, vec, nvec)) {
     delete[] heapvec;
     return false;
   }

@@ -614,58 +614,54 @@ bool Regexp::RequiredPrefix(string *prefix, bool *foldcase, Regexp** suffix) {
   if (op_ != kRegexpConcat)
     return false;
 
-  // Some number of anchors.
+  // Some number of anchors, then a literal or concatenation.
   int i = 0;
   Regexp** sub = this->sub();
   while (i < nsub_ && sub[i]->op_ == kRegexpBeginText)
     i++;
-  if (i == 0)
+  if (i == 0 || i >= nsub_)
     return false;
 
-  // Then a literal or a concatenation.
-  if (i < nsub_) {
-    Regexp* re = sub[i];
-    switch (re->op_) {
-      default:
-        return false;
+  Regexp* re = sub[i];
+  switch (re->op_) {
+    default:
+      return false;
 
-      case kRegexpLiteralString:
-        // Convert to string in proper encoding.
-        if (re->parse_flags() & Latin1) {
-          prefix->resize(re->nrunes_);
-          for (int j = 0; j < re->nrunes_; j++)
-            (*prefix)[j] = re->runes_[j];
-        } else {
-          // Convert to UTF-8 in place.
-          // Assume worst-case space and then trim.
-          prefix->resize(re->nrunes_ * UTFmax);
-          char *p = &(*prefix)[0];
-          for (int j = 0; j < re->nrunes_; j++) {
-            Rune r = re->runes_[j];
-            if (r < Runeself)
-              *p++ = r;
-            else
-              p += runetochar(p, &r);
-          }
-          prefix->resize(p - &(*prefix)[0]);
+    case kRegexpLiteralString:
+      // Convert to string in proper encoding.
+      if (re->parse_flags() & Latin1) {
+        prefix->resize(re->nrunes_);
+        for (int j = 0; j < re->nrunes_; j++)
+          (*prefix)[j] = re->runes_[j];
+      } else {
+        // Convert to UTF-8 in place.
+        // Assume worst-case space and then trim.
+        prefix->resize(re->nrunes_ * UTFmax);
+        char *p = &(*prefix)[0];
+        for (int j = 0; j < re->nrunes_; j++) {
+          Rune r = re->runes_[j];
+          if (r < Runeself)
+            *p++ = r;
+          else
+            p += runetochar(p, &r);
         }
-        break;
+        prefix->resize(p - &(*prefix)[0]);
+      }
+      break;
 
-      case kRegexpLiteral:
-        if ((re->parse_flags() & Latin1) || re->rune_ < Runeself) {
-          prefix->append(1, re->rune_);
-        } else {
-          char buf[UTFmax];
-          prefix->append(buf, runetochar(buf, &re->rune_));
-        }
-        break;
-    }
-    *foldcase = (sub[i]->parse_flags() & FoldCase);
-    i++;
+    case kRegexpLiteral:
+      if ((re->parse_flags() & Latin1) || re->rune_ < Runeself) {
+        prefix->append(1, re->rune_);
+      } else {
+        char buf[UTFmax];
+        prefix->append(buf, runetochar(buf, &re->rune_));
+      }
+      break;
   }
+  *foldcase = (sub[i]->parse_flags() & FoldCase);
+  i++;
 
   // The rest.
-  Regexp* re;
   if (i < nsub_) {
     for (int j = i; j < nsub_; j++)
       sub[j]->Incref();

@@ -610,7 +610,8 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
         if (kind_ != Prog::kManyMatch &&
             (kind_ != Prog::kFirstMatch ||
              (it == q->begin() && ip->greedy(prog_))) &&
-            (kind_ != Prog::kLongestMatch || !sawmark)) {
+            (kind_ != Prog::kLongestMatch || !sawmark) &&
+            (flag & kFlagMatch)) {
           delete[] inst;
           if (DebugDFA)
             fprintf(stderr, " -> FullMatchState\n");

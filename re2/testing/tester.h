@@ -34,6 +34,16 @@ enum Engine {
   kEngineMax,
 };
 
+// Make normal math on the enum preserve the type.
+// By default, C++ doesn't define ++ on enum, and e+1 has type int.
+static inline void operator++(Engine& e, int unused) {
+  e = static_cast<Engine>(e+1);
+}
+
+static inline Engine operator+(Engine e, int i) {
+  return static_cast<Engine>(static_cast<int>(e)+i);
+}
+
 // A TestInstance caches per-regexp state for a given
 // regular expression in a given configuration
 // (UTF-8 vs Latin1, longest vs first match, etc.).
@@ -58,6 +68,9 @@ class TestInstance {
                  const StringPiece& text, const StringPiece& context,
                  Prog::Anchor anchor,
                  Result *result);
+
+  void LogMatch(const char* prefix, Engine e, const StringPiece& text,
+                const StringPiece& context, Prog::Anchor anchor);
 
   const StringPiece& regexp_str_;   // regexp being tested
   Prog::MatchKind kind_;            // kind of match
