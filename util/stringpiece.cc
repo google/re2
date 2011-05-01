@@ -12,7 +12,7 @@ std::ostream& operator<<(std::ostream& o, const StringPiece& piece) {
   return o;
 }
 
-bool operator==(const StringPiece& x, const StringPiece& y) {
+bool StringPiece::_equal(const StringPiece& x, const StringPiece& y) {
   int len = x.size();
   if (len != y.size()) {
     return false;
