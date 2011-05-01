@@ -348,7 +348,6 @@ int PCRE::GlobalReplace(string *str,
   int vec[kVecSize];
   string out;
   int start = 0;
-  int lastend = -1;
   bool last_match_was_empty_string = false;
 
   for (; start <= str->length();) {
@@ -385,7 +384,6 @@ int PCRE::GlobalReplace(string *str,
     out.append(*str, start, matchstart - start);
     pattern.Rewrite(&out, rewrite, *str, vec, matches);
     start = matchend;
-    lastend = matchend;
     count++;
     last_match_was_empty_string = (matchstart == matchend);
   }

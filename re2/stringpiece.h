@@ -20,6 +20,7 @@
 #define STRINGS_STRINGPIECE_H__
 
 #include <string.h>
+#include <cstddef>
 #include <iosfwd>
 #include <string>
 
