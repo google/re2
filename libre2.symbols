@@ -6,8 +6,6 @@
 		# re2::StringPiece*
 		_ZN3re211StringPiece*;
 		_ZNK3re211StringPiece*;
-		# operator==(re2::StringPiece const&, re2::StringPiece const&)
-		_ZeqRKN3re211StringPieceES2_;
 		# operator<<(std::ostream&, re2::StringPiece const&)
 		_ZlsRSoRKN3re211StringPieceE;
 	local:

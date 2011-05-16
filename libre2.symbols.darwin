@@ -5,7 +5,5 @@ __ZNK3re23RE2*
 # re2::StringPiece*
 __ZN3re211StringPiece*
 __ZNK3re211StringPiece*
-# operator==(re2::StringPiece const&, re2::StringPiece const&)
-__ZeqRKN3re211StringPieceES2_
 # operator<<(std::ostream&, re2::StringPiece const&)
 __ZlsRSoRKN3re211StringPieceE
