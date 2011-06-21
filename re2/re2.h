@@ -17,6 +17,9 @@
 // some of the more complicated things thrown away.  In particular,
 // backreferences and generalized assertions are not available, nor is \Z.
 //
+// See http://code.google.com/p/re2/wiki/Syntax for the syntax
+// supported by RE2, and a comparison with PCRE and PERL regexps.
+//
 // For those not familiar with Perl's regular expressions,
 // here are some examples of the most commonly used extensions:
 //
@@ -478,12 +481,13 @@ class RE2 {
     //   never_nl         (false) never match \n, even if it is in regexp
     //   case_sensitive   (true)  match is case-sensitive (regexp can override
     //                              with (?i) unless in posix_syntax mode)
-    //   perl_classes     (false) allow Perl's \d \s \w \D \S \W when in
-    //                              posix_syntax mode
-    //   word_boundary    (false) allow \b \B (word boundary and not) when in
-    //                              posix_syntax mode
+    //
+    // The following options are only consulted when posix_syntax == true.
+    // (When posix_syntax == false these features are always enabled and
+    // cannot be turned off.)
+    //   perl_classes     (false) allow Perl's \d \s \w \D \S \W
+    //   word_boundary    (false) allow Perl's \b \B (word boundary and not)
     //   one_line         (false) ^ and $ only match beginning and end of text
-    //                              when in posix_syntax mode
     //
     // The max_mem option controls how much memory can be used
     // to hold the compiled form of the regexp (the Prog) and
@@ -738,6 +742,7 @@ class RE2::Arg {
 
 
   MAKE_PARSER(char,               parse_char);
+  MAKE_PARSER(signed char,        parse_char);
   MAKE_PARSER(unsigned char,      parse_uchar);
   MAKE_PARSER(short,              parse_short);
   MAKE_PARSER(unsigned short,     parse_ushort);

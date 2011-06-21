@@ -509,12 +509,12 @@ bool RE2::Match(const StringPiece& text,
       LOG(ERROR) << "Invalid RE2: " << *error_;
     return false;
   }
-  
+
   if (startpos < 0 || startpos > endpos || endpos > text.size()) {
     LOG(ERROR) << "RE2: invalid startpos, endpos pair.";
     return false;
   }
-
+  
   StringPiece subtext = text;
   subtext.remove_prefix(startpos);
   subtext.remove_suffix(text.size() - endpos);
@@ -941,32 +941,53 @@ bool RE2::Arg::parse_uchar(const char* str, int n, void* dest) {
 static const int kMaxNumberLength = 32;
 
 // REQUIRES "buf" must have length at least kMaxNumberLength+1
-// REQUIRES "n > 0"
-// Copies "str" into "buf" and null-terminates if necessary.
-// Returns one of:
-//      a. "str" if no termination is needed
-//      b. "buf" if the string was copied and null-terminated
-//      c. "" if the input was invalid and has no hope of being parsed
-static const char* TerminateNumber(char* buf, const char* str, int n) {
-  if ((n > 0) && isspace(*str)) {
+// Copies "str" into "buf" and null-terminates.
+// Overwrites *np with the new length.
+static const char* TerminateNumber(char* buf, const char* str, int* np) {
+  int n = *np;
+  if (n <= 0) return "";
+  if (n > 0 && isspace(*str)) {
     // We are less forgiving than the strtoxxx() routines and do not
     // allow leading spaces.
     return "";
   }
 
-  // See if the character right after the input text may potentially
-  // look like a digit.
-  if (isdigit(str[n]) ||
-      ((str[n] >= 'a') && (str[n] <= 'f')) ||
-      ((str[n] >= 'A') && (str[n] <= 'F'))) {
-    if (n > kMaxNumberLength) return ""; // Input too big to be a valid number
-    memcpy(buf, str, n);
-    buf[n] = '\0';
-    return buf;
-  } else {
-    // We can parse right out of the supplied string, so return it.
-    return str;
+  // Although buf has a fixed maximum size, we can still handle
+  // arbitrarily large integers correctly by omitting leading zeros.
+  // (Numbers that are still too long will be out of range.)
+  // Before deciding whether str is too long,
+  // remove leading zeros with s/000+/00/.
+  // Leaving the leading two zeros in place means that
+  // we don't change 0000x123 (invalid) into 0x123 (valid).
+  // Skip over leading - before replacing.
+  bool neg = false;
+  if (n >= 1 && str[0] == '-') {
+    neg = true;
+    n--;
+    str++;
   }
+
+  if (n >= 3 && str[0] == '0' && str[1] == '0') {
+    while (n >= 3 && str[2] == '0') {
+      n--;
+      str++;
+    }
+  }
+
+  if (neg) {  // make room in buf for -
+    n++;
+    str--;
+  }
+
+  if (n > kMaxNumberLength) return "";
+
+  memmove(buf, str, n);
+  if (neg) {
+    buf[0] = '-';
+  }
+  buf[n] = '\0';
+  *np = n;
+  return buf;
 }
 
 bool RE2::Arg::parse_long_radix(const char* str,
@@ -975,7 +996,7 @@ bool RE2::Arg::parse_long_radix(const char* str,
                                int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
-  str = TerminateNumber(buf, str, n);
+  str = TerminateNumber(buf, str, &n);
   char* end;
   errno = 0;
   long r = strtol(str, &end, radix);
@@ -992,7 +1013,7 @@ bool RE2::Arg::parse_ulong_radix(const char* str,
                                 int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
-  str = TerminateNumber(buf, str, n);
+  str = TerminateNumber(buf, str, &n);
   if (str[0] == '-') {
    // strtoul() will silently accept negative numbers and parse
    // them.  This module is more strict and treats them as errors.
@@ -1063,7 +1084,7 @@ bool RE2::Arg::parse_longlong_radix(const char* str,
                                    int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
-  str = TerminateNumber(buf, str, n);
+  str = TerminateNumber(buf, str, &n);
   char* end;
   errno = 0;
   int64 r = strtoll(str, &end, radix);
@@ -1080,7 +1101,7 @@ bool RE2::Arg::parse_ulonglong_radix(const char* str,
                                     int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
-  str = TerminateNumber(buf, str, n);
+  str = TerminateNumber(buf, str, &n);
   if (str[0] == '-') {
     // strtoull() will silently accept negative numbers and parse
     // them.  This module is more strict and treats them as errors.
@@ -1096,7 +1117,7 @@ bool RE2::Arg::parse_ulonglong_radix(const char* str,
   return true;
 }
 
-bool RE2::Arg::parse_double(const char* str, int n, void* dest) {
+static bool parse_double_float(const char* str, int n, bool isfloat, void *dest) {
   if (n == 0) return false;
   static const int kMaxLength = 200;
   char buf[kMaxLength];
@@ -1105,20 +1126,29 @@ bool RE2::Arg::parse_double(const char* str, int n, void* dest) {
   buf[n] = '\0';
   errno = 0;
   char* end;
-  double r = strtod(buf, &end);
+  double r;
+  if (isfloat) {
+    r = strtof(buf, &end);
+  } else {
+    r = strtod(buf, &end);
+  }
   if (end != buf + n) return false;   // Leftover junk
   if (errno) return false;
   if (dest == NULL) return true;
-  *(reinterpret_cast<double*>(dest)) = r;
+  if (isfloat) {
+    *(reinterpret_cast<float*>(dest)) = r;
+  } else {
+    *(reinterpret_cast<double*>(dest)) = r;
+  }
   return true;
 }
 
+bool RE2::Arg::parse_double(const char* str, int n, void* dest) {
+  return parse_double_float(str, n, false, dest);
+}
+
 bool RE2::Arg::parse_float(const char* str, int n, void* dest) {
-  double r;
-  if (!parse_double(str, n, &r)) return false;
-  if (dest == NULL) return true;
-  *(reinterpret_cast<float*>(dest)) = static_cast<float>(r);
-  return true;
+  return parse_double_float(str, n, true, dest);
 }
 
 

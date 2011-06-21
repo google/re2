@@ -6,10 +6,13 @@
 // TODO: Test extractions for PartialMatch/Consume
 
 #include <sys/types.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <vector>
 #include "util/test.h"
 #include "re2/re2.h"
+#include "re2/regexp.h"
 
 DECLARE_bool(logtostderr);
 
@@ -657,8 +660,30 @@ TEST(RE2, FullMatchTypedNullArg) {
   CHECK(!RE2::FullMatch("hello", "(.*)", (float*)NULL));
 }
 
+// Check that numeric parsing code does not read past the end of
+// the number being parsed.
+TEST(RE2, NULTerminated) {
+  char *v;
+  int x;
+
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+  v = static_cast<char*>(mmap(NULL, 16*1024, PROT_READ|PROT_WRITE,
+                              MAP_ANONYMOUS|MAP_PRIVATE, -1, 0));
+  CHECK(v != reinterpret_cast<char*>(-1));
+  LOG(INFO) << "Memory at " << (void*)v;
+  CHECK_EQ(munmap(v + 8*1024, 8*1024), 0) << " error " << errno;
+  v[8*1024 - 1] = '1';
+
+  x = 0;
+  CHECK(RE2::FullMatch(StringPiece(v + 8*1024 - 1, 1), "(.*)", &x));
+  CHECK_EQ(x, 1);
+}
+
 TEST(RE2, FullMatchTypeTests) {
   // Type tests
+  string zeros(100, '0');
   {
     char c;
     CHECK(RE2::FullMatch("Hello", "(H)ello", &c));
@@ -687,74 +712,120 @@ TEST(RE2, FullMatchTypeTests) {
   }
   {
     int32 v;
-    static const int32 max_value = 0x7fffffff;
-    static const int32 min_value = -max_value - 1;
-    CHECK(RE2::FullMatch("100",         "(-?\\d+)",&v)); CHECK_EQ(v, 100);
-    CHECK(RE2::FullMatch("-100",        "(-?\\d+)",&v)); CHECK_EQ(v, -100);
-    CHECK(RE2::FullMatch("2147483647",  "(-?\\d+)",&v)); CHECK_EQ(v, max_value);
-    CHECK(RE2::FullMatch("-2147483648", "(-?\\d+)",&v)); CHECK_EQ(v, min_value);
-    CHECK(!RE2::FullMatch("-2147483649", "(-?\\d+)",&v));
-    CHECK(!RE2::FullMatch("2147483648",  "(-?\\d+)",&v));
+    static const int32 max = 0x7fffffff;
+    static const int32 min = -max - 1;
+    CHECK(RE2::FullMatch("100",          "(-?\\d+)", &v)); CHECK_EQ(v, 100);
+    CHECK(RE2::FullMatch("-100",         "(-?\\d+)", &v)); CHECK_EQ(v, -100);
+    CHECK(RE2::FullMatch("2147483647",   "(-?\\d+)", &v)); CHECK_EQ(v, max);
+    CHECK(RE2::FullMatch("-2147483648",  "(-?\\d+)", &v)); CHECK_EQ(v, min);
+    CHECK(!RE2::FullMatch("-2147483649", "(-?\\d+)", &v));
+    CHECK(!RE2::FullMatch("2147483648",  "(-?\\d+)", &v));
+
+    CHECK(RE2::FullMatch(zeros + "2147483647", "(-?\\d+)", &v));
+    CHECK_EQ(v, max);
+    CHECK(RE2::FullMatch("-" + zeros + "2147483648", "(-?\\d+)", &v));
+    CHECK_EQ(v, min);
+
+    CHECK(!RE2::FullMatch("-" + zeros + "2147483649", "(-?\\d+)", &v));
+    CHECK(RE2::FullMatch("0x7fffffff", "(.*)", RE2::CRadix(&v)));
+    CHECK_EQ(v, max);
+    CHECK(!RE2::FullMatch("000x7fffffff", "(.*)", RE2::CRadix(&v)));
   }
   {
     uint32 v;
-    static const uint32 max_value = 0xfffffffful;
+    static const uint32 max = 0xfffffffful;
     CHECK(RE2::FullMatch("100",         "(\\d+)", &v)); CHECK_EQ(v, 100);
-    CHECK(RE2::FullMatch("4294967295",  "(\\d+)", &v)); CHECK_EQ(v, max_value);
+    CHECK(RE2::FullMatch("4294967295",  "(\\d+)", &v)); CHECK_EQ(v, max);
     CHECK(!RE2::FullMatch("4294967296", "(\\d+)", &v));
+    CHECK(!RE2::FullMatch("-1",         "(\\d+)", &v));
+
+    CHECK(RE2::FullMatch(zeros + "4294967295", "(\\d+)", &v)); CHECK_EQ(v, max);
   }
   {
     int64 v;
-    static const int64 max_value = 0x7fffffffffffffffull;
-    static const int64 min_value = -max_value - 1;
+    static const int64 max = 0x7fffffffffffffffull;
+    static const int64 min = -max - 1;
     char buf[32];
 
-    CHECK(RE2::FullMatch("100",         "(-?\\d+)",&v)); CHECK_EQ(v, 100);
-    CHECK(RE2::FullMatch("-100",        "(-?\\d+)",&v)); CHECK_EQ(v, -100);
+    CHECK(RE2::FullMatch("100",  "(-?\\d+)", &v)); CHECK_EQ(v, 100);
+    CHECK(RE2::FullMatch("-100", "(-?\\d+)", &v)); CHECK_EQ(v, -100);
 
-    snprintf(buf, sizeof(buf), "%lld", (long long)max_value);
-    CHECK(RE2::FullMatch(buf,  "(-?\\d+)",&v)); CHECK_EQ(v, max_value);
+    snprintf(buf, sizeof(buf), "%lld", max);
+    CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, max);
 
-    snprintf(buf, sizeof(buf), "%lld", (long long)min_value);
-    CHECK(RE2::FullMatch(buf,  "(-?\\d+)",&v)); CHECK_EQ(v, min_value);
+    snprintf(buf, sizeof(buf), "%lld", min);
+    CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, min);
 
-    snprintf(buf, sizeof(buf), "%lld", (long long)max_value);
+    snprintf(buf, sizeof(buf), "%lld", max);
     assert(buf[strlen(buf)-1] != '9');
     buf[strlen(buf)-1]++;
-    CHECK(!RE2::FullMatch(buf, "(-?\\d+)", &v));
+    CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
 
-    snprintf(buf, sizeof(buf), "%lld", (long long)min_value);
+    snprintf(buf, sizeof(buf), "%lld", min);
     assert(buf[strlen(buf)-1] != '9');
     buf[strlen(buf)-1]++;
-    CHECK(!RE2::FullMatch(buf, "(-?\\d+)", &v));
+    CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
   }
   {
     uint64 v;
     int64 v2;
-    static const uint64 max_value = 0xffffffffffffffffull;
+    static const uint64 max = 0xffffffffffffffffull;
     char buf[32];
 
-    CHECK(RE2::FullMatch("100",         "(-?\\d+)",&v)); CHECK_EQ(v, 100);
-    CHECK(RE2::FullMatch("-100",        "(-?\\d+)",&v2)); CHECK_EQ(v2, -100);
+    CHECK(RE2::FullMatch("100",  "(-?\\d+)", &v));  CHECK_EQ(v, 100);
+    CHECK(RE2::FullMatch("-100", "(-?\\d+)", &v2)); CHECK_EQ(v2, -100);
 
-    snprintf(buf, sizeof(buf), "%llu", (unsigned long long)max_value);
-    CHECK(RE2::FullMatch(buf,  "(-?\\d+)",&v)); CHECK_EQ(v, max_value);
+    snprintf(buf, sizeof(buf), "%llu", max);
+    CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, max);
 
     assert(buf[strlen(buf)-1] != '9');
     buf[strlen(buf)-1]++;
-    CHECK(!RE2::FullMatch(buf, "(-?\\d+)", &v));
+    CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
   }
+}
+
+TEST(RE2, FloatingPointFullMatchTypes) {
+  string zeros(100, '0');
   {
     float v;
-    CHECK(RE2::FullMatch("100",   "(.*)", &v));
-    CHECK(RE2::FullMatch("-100.", "(.*)", &v));
-    CHECK(RE2::FullMatch("1e23",  "(.*)", &v));
+    CHECK(RE2::FullMatch("100",   "(.*)", &v));  CHECK_EQ(v, 100);
+    CHECK(RE2::FullMatch("-100.", "(.*)", &v));  CHECK_EQ(v, -100);
+    CHECK(RE2::FullMatch("1e23",  "(.*)", &v));  CHECK_EQ(v, float(1e23));
+
+    CHECK(RE2::FullMatch(zeros + "1e23",  "(.*)", &v));
+    CHECK_EQ(v, float(1e23));
+
+    // 6700000000081920.1 is an edge case.
+    // 6700000000081920 is exactly halfway between
+    // two float32s, so the .1 should make it round up.
+    // However, the .1 is outside the precision possible with
+    // a float64: the nearest float64 is 6700000000081920.
+    // So if the code uses strtod and then converts to float32,
+    // round-to-even will make it round down instead of up.
+    // To pass the test, the parser must call strtof directly.
+    // This test case is carefully chosen to use only a 17-digit
+    // number, since C does not guarantee to get the correctly
+    // rounded answer for strtod and strtof unless the input is
+    // short.
+    CHECK(RE2::FullMatch("0.1", "(.*)", &v));
+    CHECK_EQ(v, 0.1f) << StringPrintf("%.8g != %.8g", v, 0.1f);
+    CHECK(RE2::FullMatch("6700000000081920.1", "(.*)", &v));
+    CHECK_EQ(v, 6700000000081920.1f)
+      << StringPrintf("%.8g != %.8g", v, 6700000000081920.1f);
   }
   {
     double v;
-    CHECK(RE2::FullMatch("100",   "(.*)", &v));
-    CHECK(RE2::FullMatch("-100.", "(.*)", &v));
-    CHECK(RE2::FullMatch("1e23",  "(.*)", &v));
+    CHECK(RE2::FullMatch("100",   "(.*)", &v));  CHECK_EQ(v, 100);
+    CHECK(RE2::FullMatch("-100.", "(.*)", &v));  CHECK_EQ(v, -100);
+    CHECK(RE2::FullMatch("1e23",  "(.*)", &v));  CHECK_EQ(v, 1e23);
+    CHECK(RE2::FullMatch(zeros + "1e23", "(.*)", &v));
+    CHECK_EQ(v, double(1e23));
+
+    CHECK(RE2::FullMatch("0.1", "(.*)", &v));
+    CHECK_EQ(v, 0.1) << StringPrintf("%.17g != %.17g", v, 0.1);
+    CHECK(RE2::FullMatch("1.00000005960464485", "(.*)", &v));
+    CHECK_EQ(v, 1.0000000596046448)
+      << StringPrintf("%.17g != %.17g", v, 1.0000000596046448);
   }
 }
 
@@ -1184,8 +1255,7 @@ TEST(RE2, BitstateCaptureBug) {
   opt.set_max_mem(20000);
   RE2 re("(_________$)", opt);
   StringPiece s = "xxxxxxxxxxxxxxxxxxxxxxxxxx_________x";
-  EXPECT_FALSE(re.Match(
-    s, 0, s.size(), RE2::UNANCHORED, NULL, 0));
+  EXPECT_FALSE(re.Match(s, 0, s.size(), RE2::UNANCHORED, NULL, 0));
 }
 
 // C++ version of bug 609710.

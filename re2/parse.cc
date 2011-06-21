@@ -240,12 +240,8 @@ bool Regexp::ParseState::PushRegexp(Regexp* re) {
 // Searches the case folding tables and returns the CaseFold* that contains r.
 // If there isn't one, returns the CaseFold* with smallest f->lo bigger than r.
 // If there isn't one, returns NULL.
-CaseFold* LookupCaseFold(Rune r) {
-  CaseFold *f;
-  int n, m;
-
-  f = unicode_casefold;
-  n = num_unicode_casefold;
+CaseFold* LookupCaseFold(CaseFold *f, int n, Rune r) {
+  int m;
 
   // Binary search for entry containing r.
   while (n > 0) {
@@ -272,16 +268,24 @@ CaseFold* LookupCaseFold(Rune r) {
 }
 
 // Returns the result of applying the fold f to the rune r.
-static Rune ApplyFold(CaseFold *f, Rune r) {
+Rune ApplyFold(CaseFold *f, Rune r) {
   switch (f->delta) {
     default:
       return r + f->delta;
 
+    case EvenOddSkip:  // even <-> odd but only applies to every other
+      if ((r - f->lo) % 2)
+        return r;
+      // fall through
     case EvenOdd:  // even <-> odd
       if (r%2 == 0)
         return r + 1;
       return r - 1;
 
+    case OddEvenSkip:  // odd <-> even but only applies to every other
+      if ((r - f->lo) % 2)
+        return r;
+      // fall through
     case OddEven:  // odd <-> even
       if (r%2 == 1)
         return r + 1;
@@ -300,7 +304,7 @@ static Rune ApplyFold(CaseFold *f, Rune r) {
 //
 //   CycleFoldRune('?') = '?'
 Rune CycleFoldRune(Rune r) {
-  CaseFold* f = LookupCaseFold(r);
+  CaseFold* f = LookupCaseFold(unicode_casefold, num_unicode_casefold, r);
   if (f == NULL || r < f->lo)
     return r;
   return ApplyFold(f, r);
@@ -323,7 +327,7 @@ static void AddFoldedRange(CharClassBuilder* cc, Rune lo, Rune hi, int depth) {
     return;
 
   while (lo <= hi) {
-    CaseFold* f = LookupCaseFold(lo);
+    CaseFold* f = LookupCaseFold(unicode_casefold, num_unicode_casefold, lo);
     if (f == NULL)  // lo has no fold, nor does anything above lo
       break;
     if (lo < f->lo) {  // lo has no fold; next rune with a fold is f->lo
@@ -1275,8 +1279,7 @@ static bool ParseEscape(StringPiece* s, Rune* rp,
     case '0':
       // consume up to three octal digits; already have one.
       code = c - '0';
-      c = (*s)[0];
-      if (s->size() > 0 && '0' <= c && c <= '7') {
+      if (s->size() > 0 && '0' <= (c = (*s)[0]) && c <= '7') {
         code = code * 8 + c - '0';
         s->remove_prefix(1);  // digit
         if (s->size() > 0) {
@@ -1360,7 +1363,7 @@ static bool ParseEscape(StringPiece* s, Rune* rp,
     // in Perl, \b means word-boundary but [\b]
     // means backspace.  We don't support that:
     // if you want a backspace embed a literal
-    // backspace character or use \008.
+    // backspace character or use \x08.
     //
     // case 'b':
     //   *rp = '\b';

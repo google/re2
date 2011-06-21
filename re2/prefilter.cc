@@ -5,6 +5,7 @@
 #include "util/util.h"
 #include "re2/prefilter.h"
 #include "re2/re2.h"
+#include "re2/unicode_casefold.h"
 #include "re2/walker-inl.h"
 
 namespace re2 {
@@ -167,17 +168,22 @@ Prefilter* Prefilter::OrStrings(set<string>* ss) {
   return or_prefilter;
 }
 
+static Rune ToLowerRune(Rune r) {
+  if (r < Runeself) {
+    if ('A' <= r && r <= 'Z')
+      r += 'a' - 'A';
+    return r;
+  }
+
+  CaseFold *f = LookupCaseFold(unicode_tolower, num_unicode_tolower, r);
+  if (f == NULL)
+    return r;
+  return ApplyFold(f, r);
+}
+
 Prefilter* Prefilter::FromString(const string& str) {
   Prefilter* m = new Prefilter(Prefilter::ATOM);
-  string s = str;
-  for (int i = 0; i < s.size(); i++) {
-    int c = s[i];
-    if ('A' <= c && c <= 'Z') {
-      c += 'a' - 'A';
-      s[i] = c;
-    }
-  }
-  m->atom_ = s;
+  m->atom_ = str;
   return m;
 }
 
@@ -270,7 +276,7 @@ string Prefilter::Info::ToString() {
     }
     return s;
   }
-  
+
   if (match_)
     return match_->DebugString();
 
@@ -387,7 +393,7 @@ static string RuneToString(Rune r) {
 // Constructs Info for literal rune.
 Prefilter::Info* Prefilter::Info::Literal(Rune r) {
   Info* info = new Info();
-  info->exact_.insert(RuneToString(r));
+  info->exact_.insert(RuneToString(ToLowerRune(r)));
   info->is_exact_ = true;
   return info;
 }
@@ -440,7 +446,7 @@ Prefilter::Info* Prefilter::Info::CClass(CharClass *cc) {
   Prefilter::Info *a = new Prefilter::Info();
   for (CCIter i = cc->begin(); i != cc->end(); ++i)
     for (Rune r = i->lo; r <= i->hi; r++)
-      a->exact_.insert(RuneToString(r));
+      a->exact_.insert(RuneToString(ToLowerRune(r)));
 
   a->is_exact_ = true;
 

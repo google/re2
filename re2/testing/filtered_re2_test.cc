@@ -99,13 +99,23 @@ AtomTest atom_tests[] = {
       "xbcdea", "xbcdeb",
       "ybcdea", "ybcdeb"
     }
-  }
+  }, {
+    // Test upper/lower of non-ASCII.
+    "UnicodeLower", {
+      "(?i)ΔδΠϖπΣςσ",
+      "ΛΜΝΟΠ",
+      "ψρστυ",
+    }, {
+      "δδπππσσσ",
+      "λμνοπ",
+      "ψρστυ",
+    },
+  },
 };
 
 void AddRegexpsAndCompile(const char* regexps[],
                           int n,
                           struct FilterTestVars* v) {
-  v->opts.set_utf8(false);
   for (int i = 0; i < n; i++) {
     int id;
     v->f.Add(regexps[i], v->opts, &id);

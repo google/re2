@@ -247,7 +247,7 @@ def CaseGroups(unicode_dir=_UNICODE_DIR):
   for g in groups:
     g.sort()
   groups.sort()
-  return groups
+  return togroup, groups
 
 
 def Scripts(unicode_dir=_UNICODE_DIR):
