@@ -505,7 +505,6 @@ TEST(Capture, NamedGroups) {
 }
 
 TEST(RE2, FullMatchWithNoArgs) {
-  /***** FullMatch with no args *****/
   CHECK(RE2::FullMatch("h", "h"));
   CHECK(RE2::FullMatch("hello", "hello"));
   CHECK(RE2::FullMatch("hello", "h.*o"));
@@ -514,8 +513,6 @@ TEST(RE2, FullMatchWithNoArgs) {
 }
 
 TEST(RE2, PartialMatch) {
-  /***** PartialMatch *****/
-
   CHECK(RE2::PartialMatch("x", "x"));
   CHECK(RE2::PartialMatch("hello", "h.*o"));
   CHECK(RE2::PartialMatch("othello", "h.*o"));
@@ -1135,11 +1132,11 @@ TEST(RE2, DeepRecursion) {
   // segmentation violation due to stack overflow before pcre was
   // patched.
   // Again, a PCRE legacy test.  RE2 doesn't recurse.
-  string comment("/*");
+  string comment("x*");
   string a(131072, 'a');
   comment += a;
-  comment += "*/";
-  RE2 re("((?:\\s|//.*\n|/[*](?:\n|.)*?[*]/)*)");
+  comment += "*x";
+  RE2 re("((?:\\s|xx.*\n|x[*](?:\n|.)*?[*]x)*)");
   CHECK(RE2::FullMatch(comment, re));
 }
 
@@ -1353,6 +1350,13 @@ TEST(RE2, CapturingGroupNames) {
   want[6] = "G2";
   want[7] = "G1";
   EXPECT_EQ(want, have);
+}
+
+TEST(RE2, RegexpToStringLossOfAnchor) {
+  EXPECT_EQ(RE2("^[a-c]at", RE2::POSIX).Regexp()->ToString(), "^[a-c]at");
+  EXPECT_EQ(RE2("^[a-c]at").Regexp()->ToString(), "(?-m:^)[a-c]at");
+  EXPECT_EQ(RE2("ca[t-z]$", RE2::POSIX).Regexp()->ToString(), "ca[t-z]$");
+  EXPECT_EQ(RE2("ca[t-z]$").Regexp()->ToString(), "ca[t-z](?-m:$)");
 }
 
 }  // namespace re2
