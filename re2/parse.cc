@@ -241,11 +241,11 @@ bool Regexp::ParseState::PushRegexp(Regexp* re) {
 // If there isn't one, returns the CaseFold* with smallest f->lo bigger than r.
 // If there isn't one, returns NULL.
 CaseFold* LookupCaseFold(CaseFold *f, int n, Rune r) {
-  int m;
+  CaseFold* ef = f + n;
 
   // Binary search for entry containing r.
   while (n > 0) {
-    m = n/2;
+    int m = n/2;
     if (f[m].lo <= r && r <= f[m].hi)
       return &f[m];
     if (r < f[m].lo) {
@@ -257,10 +257,10 @@ CaseFold* LookupCaseFold(CaseFold *f, int n, Rune r) {
   }
 
   // There is no entry that contains r, but f points
-  // where it would have been.  Unless f points off
+  // where it would have been.  Unless f points at
   // the end of the array, it points at the next entry
   // after r.
-  if (f < unicode_casefold+num_unicode_casefold)
+  if (f < ef)
     return f;
 
   // No entry contains r; no entry contains runes > r.

@@ -176,7 +176,7 @@ static Rune ToLowerRune(Rune r) {
   }
 
   CaseFold *f = LookupCaseFold(unicode_tolower, num_unicode_tolower, r);
-  if (f == NULL)
+  if (f == NULL || r < f->lo)
     return r;
   return ApplyFold(f, r);
 }
