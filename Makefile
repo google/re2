@@ -40,7 +40,7 @@ SONAME=0
 ifeq ($(shell uname),Darwin)
 MAKE_SHARED_LIBRARY=g++ -dynamiclib $(LDFLAGS) -exported_symbols_list libre2.symbols.darwin
 else
-MAKE_SHARED_LIBRARY=g++ -shared -Wl,-soname,libre2.so.0,--version-script=libre2.symbols $(LDFLAGS)
+MAKE_SHARED_LIBRARY=g++ -shared -Wl,-soname,libre2.so.$(SONAME),--version-script=libre2.symbols $(LDFLAGS)
 endif
 
 INSTALL_HFILES=\
@@ -189,8 +189,8 @@ obj/dbg/libre2.a: $(DOFILES)
 
 obj/so/libre2.so: $(SOFILES)
 	@mkdir -p obj/so
-	$(MAKE_SHARED_LIBRARY) -o $@.0 $(SOFILES)
-	ln -sf libre2.so.0 $@
+	$(MAKE_SHARED_LIBRARY) -o $@.$(SONAME) $(SOFILES)
+	ln -sf libre2.so.$(SONAME) $@
 
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
@@ -256,7 +256,7 @@ shared-bigtest: $(STESTS) $(SBIGTESTS)
 
 benchmark: obj/test/regexp_benchmark
 
-install: obj/libre2.a obj/so/libre2.so.0
+install: obj/libre2.a obj/so/libre2.so
 	mkdir -p $(DESTDIR)$(includedir)/re2 $(DESTDIR)$(libdir)
 	$(INSTALL_DATA) $(INSTALL_HFILES) $(DESTDIR)$(includedir)/re2
 	$(INSTALL) obj/libre2.a $(DESTDIR)$(libdir)/libre2.a
