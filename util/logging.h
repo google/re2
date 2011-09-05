@@ -7,6 +7,8 @@
 #ifndef RE2_UTIL_LOGGING_H__
 #define RE2_UTIL_LOGGING_H__
 
+#include <sstream>
+
 // Debug-only checking.
 #define DCHECK(condition) assert(condition)
 #define DCHECK_EQ(val1, val2) assert((val1) == (val2))
@@ -46,12 +48,17 @@
 class LogMessage {
  public:
   LogMessage(const char* file, int line) {
-    std::cerr << file << ":" << line << ": ";
+    stream() << file << ":" << line << ": ";
   }
-  ~LogMessage() { std::cerr << "\n"; }
-  ostream& stream() { return std::cerr; }
+  ~LogMessage() {
+    stream() << "\n";
+    string s = str_.str();
+    if(write(2, s.data(), s.size()) < 0) {}  // shut up gcc
+  }
+  ostream& stream() { return str_; }
  
  private:
+  std::ostringstream str_;
   DISALLOW_EVIL_CONSTRUCTORS(LogMessage);
 };
 
