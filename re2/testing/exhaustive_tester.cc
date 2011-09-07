@@ -86,6 +86,8 @@ void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
   }
 
   if (LOGGING) {
+    // Write out test cases and answers for use in testing
+    // other implementations, such as Go's regexp package.
     if (randomstrings_)
       LOG(ERROR) << "Cannot log with random strings.";
     if (regexps_ == 1) {  // first
@@ -98,6 +100,9 @@ void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
     printf("%s\n", escape(regexp));
 
     RE2 re(regexp);
+    RE2::Options longest;
+    longest.set_longest_match(true);
+    RE2 relongest(regexp, longest);
     int ngroup = re.NumberOfCapturingGroups()+1;
     StringPiece* group = new StringPiece[ngroup];
 
@@ -107,6 +112,10 @@ void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
       PrintResult(re, input, RE2::ANCHOR_BOTH, group, ngroup);
       printf(";");
       PrintResult(re, input, RE2::UNANCHORED, group, ngroup);
+      printf(";");
+      PrintResult(relongest, input, RE2::ANCHOR_BOTH, group, ngroup);
+      printf(";");
+      PrintResult(relongest, input, RE2::UNANCHORED, group, ngroup);
       printf("\n");
     }
     delete[] group;
