@@ -14,6 +14,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifndef LOGGING
+#define LOGGING 0
+#endif
+
 #include "util/test.h"
 #include "re2/testing/exhaustive_tester.h"
 #include "re2/testing/tester.h"
@@ -30,12 +34,48 @@ DEFINE_bool(quick_debug_mode, true, "Run fewer tests in debug mode.");
 
 namespace re2 {
 
+static char* escape(const StringPiece& sp) {
+  static char buf[512];
+  char* p = buf;
+  *p++ = '\"';
+  for (int i = 0; i < sp.size(); i++) {
+    if(p+5 >= buf+sizeof buf)
+      LOG(FATAL) << "ExhaustiveTester escape: too long";
+    if(sp[i] == '\\' || sp[i] == '\"') {
+      *p++ = '\\';
+      *p++ = sp[i];
+    } else if(sp[i] == '\n') {
+      *p++ = '\\';
+      *p++ = 'n';
+    } else {
+      *p++ = sp[i];
+    }
+  }
+  *p++ = '\"';
+  *p = '\0';
+  return buf;
+}
+
+static void PrintResult(const RE2& re, const StringPiece& input, RE2::Anchor anchor, StringPiece *m, int n) {
+  if (!re.Match(input, 0, input.size(), anchor, m, n)) {
+    printf("-");
+    return;
+  }
+  for (int i = 0; i < n; i++) {
+    if (i > 0)
+      printf(" ");
+    if (m[i].begin() == NULL)
+      printf("-");
+    else
+      printf("%d-%d", static_cast<int>(m[i].begin() - input.begin()), static_cast<int>(m[i].end() - input.begin()));
+  }
+}
+	
 // Processes a single generated regexp.
 // Compiles it using Regexp interface and PCRE, and then
 // checks that NFA, DFA, and PCRE all return the same results.
 void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
   regexps_++;
-  
   string regexp = const_regexp;
   if (!topwrapper_.empty())
     regexp = StringPrintf(topwrapper_.c_str(), regexp.c_str());
@@ -43,6 +83,34 @@ void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
   if (FLAGS_show_regexps) {
     printf("\r%s", regexp.c_str());
     fflush(stdout);
+  }
+
+  if (LOGGING) {
+    if (randomstrings_)
+      LOG(ERROR) << "Cannot log with random strings.";
+    if (regexps_ == 1) {  // first
+      printf("strings\n");
+      strgen_.Reset();
+      while (strgen_.HasNext())
+        printf("%s\n", escape(strgen_.Next()));
+      printf("regexps\n");
+    }
+    printf("%s\n", escape(regexp));
+
+    RE2 re(regexp);
+    int ngroup = re.NumberOfCapturingGroups()+1;
+    StringPiece* group = new StringPiece[ngroup];
+
+    strgen_.Reset();
+    while (strgen_.HasNext()) {
+      StringPiece input = strgen_.Next();
+      PrintResult(re, input, RE2::ANCHOR_BOTH, group, ngroup);
+      printf(";");
+      PrintResult(re, input, RE2::UNANCHORED, group, ngroup);
+      printf("\n");
+    }
+    delete[] group;
+    return;
   }
 
   Tester tester(regexp);
@@ -83,8 +151,10 @@ void ExhaustiveTest(int maxatoms, int maxops,
                      maxstrlen, stralphabet, wrapper,
                      topwrapper);
   t.Generate();
-  printf("%d regexps, %d tests, %d failures [%d/%d str]\n",
-         t.regexps(), t.tests(), t.failures(), maxstrlen, (int)stralphabet.size());
+  if (!LOGGING) {
+    printf("%d regexps, %d tests, %d failures [%d/%d str]\n",
+           t.regexps(), t.tests(), t.failures(), maxstrlen, (int)stralphabet.size());
+  }
   EXPECT_EQ(0, t.failures());
 }
 
