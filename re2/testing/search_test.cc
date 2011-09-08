@@ -8,6 +8,7 @@
 #include "re2/prog.h"
 #include "re2/regexp.h"
 #include "re2/testing/tester.h"
+#include "re2/testing/exhaustive_tester.h"
 
 namespace re2 {
 
@@ -307,6 +308,16 @@ TEST(Regexp, SearchTests) {
     const RegexpTest& t = simple_tests[i];
     if (!TestRegexpOnText(t.regexp, t.text))
       failures++;
+
+#ifdef LOGGING
+    // Build a dummy ExhaustiveTest call that will trigger just
+    // this one test, so that we log the test case.
+    vector<string> atom, alpha, ops;
+    atom.push_back(StringPiece(t.regexp).as_string());
+    alpha.push_back(StringPiece(t.text).as_string());
+    ExhaustiveTest(1, 0, atom, ops, 1, alpha, "", "");
+#endif
+
   }
   EXPECT_EQ(failures, 0);
 }
