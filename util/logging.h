@@ -7,6 +7,7 @@
 #ifndef RE2_UTIL_LOGGING_H__
 #define RE2_UTIL_LOGGING_H__
 
+#include <unistd.h>  /* for write */
 #include <sstream>
 
 // Debug-only checking.
