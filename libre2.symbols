@@ -8,6 +8,8 @@
 		_ZNK3re211StringPiece*;
 		# operator<<(std::ostream&, re2::StringPiece const&)
 		_ZlsRSoRKN3re211StringPieceE;
+		# re2::FilteredRE2*
+		__ZN3re211FilteredRE2*
 	local:
 		*;
 };

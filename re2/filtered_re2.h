@@ -21,10 +21,11 @@
 #ifndef RE2_FILTERED_RE2_H_
 #define RE2_FILTERED_RE2_H_
 
-#include "util/util.h"
+#include <vector>
 #include "re2/re2.h"
 
 namespace re2 {
+using std::vector;
 
 class PrefilterTree;
 

@@ -44,6 +44,7 @@ MAKE_SHARED_LIBRARY=g++ -shared -Wl,-soname,libre2.so.$(SONAME),--version-script
 endif
 
 INSTALL_HFILES=\
+	re2/filtered_re2.h\
 	re2/re2.h\
 	re2/set.h\
 	re2/stringpiece.h\
