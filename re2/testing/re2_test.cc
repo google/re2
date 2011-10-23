@@ -662,19 +662,20 @@ TEST(RE2, FullMatchTypedNullArg) {
 TEST(RE2, NULTerminated) {
   char *v;
   int x;
+  long pagesize = sysconf(_SC_PAGE_SIZE);
 
 #ifndef MAP_ANONYMOUS
 #define MAP_ANONYMOUS MAP_ANON
 #endif
-  v = static_cast<char*>(mmap(NULL, 16*1024, PROT_READ|PROT_WRITE,
+  v = static_cast<char*>(mmap(NULL, 2*pagesize, PROT_READ|PROT_WRITE,
                               MAP_ANONYMOUS|MAP_PRIVATE, -1, 0));
   CHECK(v != reinterpret_cast<char*>(-1));
   LOG(INFO) << "Memory at " << (void*)v;
-  CHECK_EQ(munmap(v + 8*1024, 8*1024), 0) << " error " << errno;
-  v[8*1024 - 1] = '1';
+  CHECK_EQ(munmap(v + pagesize, pagesize), 0) << " error " << errno;
+  v[pagesize - 1] = '1';
 
   x = 0;
-  CHECK(RE2::FullMatch(StringPiece(v + 8*1024 - 1, 1), "(.*)", &x));
+  CHECK(RE2::FullMatch(StringPiece(v + pagesize - 1, 1), "(.*)", &x));
   CHECK_EQ(x, 1);
 }
 
