@@ -9,7 +9,7 @@ all: obj/libre2.a obj/so/libre2.so
 # CCPCRE=-I/usr/local/include -DUSEPCRE
 # LDPCRE=-L/usr/local/lib -lpcre
 
-CC=g++
+CXX=g++
 CXXFLAGS=-Wall -O3 -g -pthread  # can override
 RE2_CXXFLAGS=-Wno-sign-compare -c -I. $(CCPCRE)  # required
 LDFLAGS=-pthread
@@ -38,9 +38,9 @@ SONAME=0
 # REBUILD_TABLES=1
 
 ifeq ($(shell uname),Darwin)
-MAKE_SHARED_LIBRARY=g++ -dynamiclib $(LDFLAGS) -exported_symbols_list libre2.symbols.darwin
+MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib $(LDFLAGS) -exported_symbols_list libre2.symbols.darwin
 else
-MAKE_SHARED_LIBRARY=g++ -shared -Wl,-soname,libre2.so.$(SONAME),--version-script=libre2.symbols $(LDFLAGS)
+MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.so.$(SONAME),--version-script=libre2.symbols $(LDFLAGS)
 endif
 
 INSTALL_HFILES=\
@@ -158,27 +158,15 @@ DBIGTESTS=$(patsubst obj/%,obj/dbg/%,$(BIGTESTS))
 
 obj/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.cc
+	$(CXX) -o $@ $(CPPFLAGS) $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.cc
 
 obj/dbg/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ -fPIC $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc
+	$(CXX) -o $@ -fPIC $(CPPFLAGS) $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc
 
 obj/so/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ -fPIC $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.cc
-
-obj/%.o: %.c $(HFILES)
-	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.c
-
-obj/dbg/%.o: %.c $(HFILES)
-	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ $(CXXFLAGS) $(RE2_CXXFLAGS) $*.c
-
-obj/so/%.o: %.c $(HFILES)
-	@mkdir -p $$(dirname $@)
-	$(CC) -o $@ -fPIC $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.c
+	$(CXX) -o $@ -fPIC $(CPPFLAGS) $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.cc
 
 obj/libre2.a: $(OFILES)
 	@mkdir -p obj
@@ -195,19 +183,19 @@ obj/so/libre2.so: $(SOFILES)
 
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
-	$(CC) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
 
 obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/util/test.o
 	@mkdir -p obj/dbg/test
-	$(CC) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a $(LDFLAGS) $(LDPCRE)
 
 obj/so/test/%: obj/so/libre2.so obj/libre2.a obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
 	@mkdir -p obj/so/test
-	$(CC) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -Lobj/so -lre2 obj/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -Lobj/so -lre2 obj/libre2.a $(LDFLAGS) $(LDPCRE)
 
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o
 	@mkdir -p obj/test
-	$(CC) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
 
 ifdef REBUILD_TABLES
 re2/perl_groups.cc: re2/make_perl_groups.pl
@@ -268,12 +256,12 @@ install: obj/libre2.a obj/so/libre2.so
 testinstall:
 	@mkdir -p obj
 	cp testinstall.cc obj
-	(cd obj && g++ -I$(DESTDIR)$(includedir) -L$(DESTDIR)$(libdir) testinstall.cc -lre2 -pthread -o testinstall)
+	(cd obj && $(CXX) -I$(DESTDIR)$(includedir) -L$(DESTDIR)$(libdir) testinstall.cc -lre2 -pthread -o testinstall)
 	LD_LIBRARY_PATH=$(DESTDIR)$(libdir) obj/testinstall
 
 benchlog: obj/test/regexp_benchmark
 	(echo '==BENCHMARK==' `hostname` `date`; \
-	  (uname -a; g++ --version; hg identify; file obj/test/regexp_benchmark) | sed 's/^/# /'; \
+	  (uname -a; $(CXX) --version; hg identify; file obj/test/regexp_benchmark) | sed 's/^/# /'; \
 	  echo; \
 	  ./obj/test/regexp_benchmark 'PCRE|RE2') | tee -a benchlog.$$(hostname | sed 's/\..*//')
 
