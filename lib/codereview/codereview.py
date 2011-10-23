@@ -38,17 +38,30 @@ For example, if change 123456 contains the files x.go and y.go,
 "hg diff @123456" is equivalent to"hg diff x.go y.go".
 '''
 
-from mercurial import cmdutil, commands, hg, util, error, match
+from mercurial import cmdutil, commands, hg, util, error, match, discovery
 from mercurial.node import nullrev, hex, nullid, short
 import os, re, time
 import stat
 import subprocess
 import threading
 from HTMLParser import HTMLParser
+
+# The standard 'json' package is new in Python 2.6.
+# Before that it was an external package named simplejson.
 try:
-	from xml.etree import ElementTree as ET
-except:
-	from elementtree import ElementTree as ET
+	# Standard location in 2.6 and beyond.
+	import json
+except Exception, e:
+	try:
+		# Conventional name for earlier package.
+		import simplejson as json
+	except:
+		try:
+			# Was also bundled with django, which is commonly installed.
+			from django.utils import simplejson as json
+		except:
+			# We give up.
+			raise e
 
 try:
 	hgversion = util.version()
@@ -56,11 +69,11 @@ except:
 	from mercurial.version import version as v
 	hgversion = v.get_version()
 
-try:
-	from mercurial.discovery import findcommonincoming
-except:
-	def findcommonincoming(repo, remote):
-		return repo.findcommonincoming(remote)
+# in Mercurial 1.9 the cmdutil.match and cmdutil.revpair moved to scmutil
+if hgversion >= '1.9':
+    from mercurial import scmutil
+else:
+    scmutil = cmdutil
 
 oldMessage = """
 The code review extension requires Mercurial 1.3 or newer.
@@ -94,6 +107,22 @@ def promptyesno(ui, msg):
 	except AttributeError:
 		return ui.prompt(msg, ["&yes", "&no"], "y") != "n"
 
+def incoming(repo, other):
+	fui = FakeMercurialUI()
+	ret = commands.incoming(fui, repo, *[other.path], **{'bundle': '', 'force': False})
+	if ret and ret != 1:
+		raise util.Abort(ret)
+	out = fui.output
+	return out
+
+def outgoing(repo):
+	fui = FakeMercurialUI()
+	ret = commands.outgoing(fui, repo, *[], **{})
+	if ret and ret != 1:
+		raise util.Abort(ret)
+	out = fui.output
+	return out
+
 # To experiment with Mercurial in the python interpreter:
 #    >>> repo = hg.repository(ui.ui(), path = ".")
 
@@ -111,6 +140,8 @@ server_url_base = None
 defaultcc = None
 contributors = {}
 missing_codereview = None
+real_rollback = None
+releaseBranch = None
 
 #######################################################################
 # RE: UNICODE STRING HANDLING
@@ -139,6 +170,34 @@ def typecheck(s, t):
 	if type(s) != t:
 		raise util.Abort("type check failed: %s has type %s != %s" % (repr(s), type(s), t))
 
+# If we have to pass unicode instead of str, ustr does that conversion clearly.
+def ustr(s):
+	typecheck(s, str)
+	return s.decode("utf-8")
+
+# Even with those, Mercurial still sometimes turns unicode into str
+# and then tries to use it as ascii.  Change Mercurial's default.
+def set_mercurial_encoding_to_utf8():
+	from mercurial import encoding
+	encoding.encoding = 'utf-8'
+
+set_mercurial_encoding_to_utf8()
+
+# Even with those we still run into problems.
+# I tried to do things by the book but could not convince
+# Mercurial to let me check in a change with UTF-8 in the
+# CL description or author field, no matter how many conversions
+# between str and unicode I inserted and despite changing the
+# default encoding.  I'm tired of this game, so set the default
+# encoding for all of Python to 'utf-8', not 'ascii'.
+def default_to_utf8():
+	import sys
+	stdout, __stdout__ = sys.stdout, sys.__stdout__
+	reload(sys)  # site.py deleted setdefaultencoding; get it back
+	sys.stdout, sys.__stdout__ = stdout, __stdout__
+	sys.setdefaultencoding('utf-8')
+
+default_to_utf8()
 
 #######################################################################
 # Change list parsing.
@@ -170,12 +229,16 @@ class CL(object):
 		self.web = False
 		self.copied_from = None	# None means current user
 		self.mailed = False
+		self.private = False
+		self.lgtm = []
 
 	def DiskText(self):
 		cl = self
 		s = ""
 		if cl.copied_from:
 			s += "Author: " + cl.copied_from + "\n\n"
+		if cl.private:
+			s += "Private: " + str(self.private) + "\n"
 		s += "Mailed: " + str(self.mailed) + "\n"
 		s += "Description:\n"
 		s += Indent(cl.desc, "\t")
@@ -193,6 +256,8 @@ class CL(object):
 			s += "Author: " + cl.copied_from + "\n"
 		if cl.url != '':
 			s += 'URL: ' + cl.url + '	# cannot edit\n\n'
+		if cl.private:
+			s += "Private: True\n"
 		s += "Reviewer: " + JoinComma(cl.reviewer) + "\n"
 		s += "CC: " + JoinComma(cl.cc) + "\n"
 		s += "\n"
@@ -218,6 +283,8 @@ class CL(object):
 		if cl.copied_from:
 			s += "\tAuthor: " + cl.copied_from + "\n"
 		s += "\tReviewer: " + JoinComma(cl.reviewer) + "\n"
+		for (who, line) in cl.lgtm:
+			s += "\t\t" + who + ": " + line + "\n"
 		s += "\tCC: " + JoinComma(cl.cc) + "\n"
 		s += "\tFiles:\n"
 		for f in cl.files:
@@ -227,7 +294,7 @@ class CL(object):
 
 	def Flush(self, ui, repo):
 		if self.name == "new":
-			self.Upload(ui, repo, gofmt_just_warn=True)
+			self.Upload(ui, repo, gofmt_just_warn=True, creating=True)
 		dir = CodeReviewDir(ui, repo)
 		path = dir + '/cl.' + self.name
 		f = open(path+'!', "w")
@@ -238,7 +305,8 @@ class CL(object):
 		os.rename(path+'!', path)
 		if self.web and not self.copied_from:
 			EditDesc(self.name, desc=self.desc,
-				reviewers=JoinComma(self.reviewer), cc=JoinComma(self.cc))
+				reviewers=JoinComma(self.reviewer), cc=JoinComma(self.cc),
+				private=self.private)
 
 	def Delete(self, ui, repo):
 		dir = CodeReviewDir(ui, repo)
@@ -253,8 +321,8 @@ class CL(object):
 		typecheck(s, str)
 		return s
 
-	def Upload(self, ui, repo, send_mail=False, gofmt=True, gofmt_just_warn=False):
-		if not self.files:
+	def Upload(self, ui, repo, send_mail=False, gofmt=True, gofmt_just_warn=False, creating=False, quiet=False):
+		if not self.files and not creating:
 			ui.warn("no files in change list\n")
 		if ui.configbool("codereview", "force_gofmt", True) and gofmt:
 			CheckFormat(ui, repo, self.files, just_warn=gofmt_just_warn)
@@ -266,15 +334,20 @@ class CL(object):
 			("cc", JoinComma(self.cc)),
 			("description", self.desc),
 			("base_hashes", ""),
-			# Would prefer not to change the subject
-			# on reupload, but /upload requires it.
-			("subject", self.Subject()),
 		]
 
 		if self.name != "new":
 			form_fields.append(("issue", self.name))
 		vcs = None
-		if self.files:
+		# We do not include files when creating the issue,
+		# because we want the patch sets to record the repository
+		# and base revision they are diffs against.  We use the patch
+		# set message for that purpose, but there is no message with
+		# the first patch set.  Instead the message gets used as the
+		# new CL's overall subject.  So omit the diffs when creating
+		# and then we'll run an immediate upload.
+		# This has the effect that every CL begins with an empty "Patch set 1".
+		if self.files and not creating:
 			vcs = MercurialVCS(upload_options, ui, repo)
 			data = vcs.GenerateDiff(self.files)
 			files = vcs.GetBaseFiles(data)
@@ -285,6 +358,12 @@ class CL(object):
 				uploaded_diff_file = [("data", "data.diff", data)]
 		else:
 			uploaded_diff_file = [("data", "data.diff", emptydiff)]
+		
+		if vcs and self.name != "new":
+			form_fields.append(("subject", "diff -r " + vcs.base_rev + " " + getremote(ui, repo, {}).path))
+		else:
+			# First upload sets the subject for the CL itself.
+			form_fields.append(("subject", self.Subject()))
 		ctype, body = EncodeMultipartFormData(form_fields, uploaded_diff_file)
 		response_body = MySend("/upload", body, content_type=ctype)
 		patchset = None
@@ -294,7 +373,10 @@ class CL(object):
 			msg = lines[0]
 			patchset = lines[1].strip()
 			patches = [x.split(" ", 1) for x in lines[2:]]
-		ui.status(msg + "\n")
+		if response_body.startswith("Issue updated.") and quiet:
+			pass
+		else:
+			ui.status(msg + "\n")
 		set_status("uploaded CL metadata + diffs")
 		if not response_body.startswith("Issue created.") and not response_body.startswith("Issue updated."):
 			raise util.Abort("failed to update issue: " + response_body)
@@ -316,14 +398,15 @@ class CL(object):
 		self.Flush(ui, repo)
 		return
 
-	def Mail(self, ui,repo):
+	def Mail(self, ui, repo):
 		pmsg = "Hello " + JoinComma(self.reviewer)
 		if self.cc:
 			pmsg += " (cc: %s)" % (', '.join(self.cc),)
 		pmsg += ",\n"
 		pmsg += "\n"
+		repourl = getremote(ui, repo, {}).path
 		if not self.mailed:
-			pmsg += "I'd like you to review this change.\n"
+			pmsg += "I'd like you to review this change to\n" + repourl + "\n"
 		else:
 			pmsg += "Please take another look.\n"
 		typecheck(pmsg, str)
@@ -348,6 +431,7 @@ def ParseCL(text, name):
 		'Reviewer': '',
 		'CC': '',
 		'Mailed': '',
+		'Private': '',
 	}
 	for line in text.split('\n'):
 		lineno += 1
@@ -394,6 +478,8 @@ def ParseCL(text, name):
 		# CLs created with this update will always have 
 		# Mailed: False on disk.
 		cl.mailed = True
+	if sections['Private'] in ('True', 'true', 'Yes', 'yes'):
+		cl.private = True
 	if cl.desc == '<enter description here>':
 		cl.desc = ''
 	return cl, 0, ''
@@ -450,14 +536,16 @@ def LoadCL(ui, repo, name, web=True):
 	else:
 		cl = CL(name)
 	if web:
-		try:
-			f = GetSettings(name)
-		except:
-			return None, "cannot load CL %s from code review server: %s" % (name, ExceptionDetail())
-		if 'reviewers' not in f:
+		set_status("getting issue metadata from web")
+		d = JSONGet(ui, "/api/" + name + "?messages=true")
+		set_status(None)
+		if d is None:
+			return None, "cannot load CL %s from server" % (name,)
+		if 'owner_email' not in d or 'issue' not in d or str(d['issue']) != name:
 			return None, "malformed response loading CL data from code review server"
-		cl.reviewer = SplitCommaSpace(f['reviewers'])
-		cl.cc = SplitCommaSpace(f['cc'])
+		cl.dict = d
+		cl.reviewer = d.get('reviewers', [])
+		cl.cc = d.get('cc', [])
 		if cl.local and cl.copied_from and cl.desc:
 			# local copy of CL written by someone else
 			# and we saved a description.  use that one,
@@ -465,9 +553,17 @@ def LoadCL(ui, repo, name, web=True):
 			# before doing hg submit.
 			pass
 		else:
-			cl.desc = f['description']
+			cl.desc = d.get('description', "")
 		cl.url = server_url_base + name
 		cl.web = True
+		cl.private = d.get('private', False) != False
+		cl.lgtm = []
+		for m in d.get('messages', []):
+			if m.get('approval', False) == True:
+				who = re.sub('@.*', '', m.get('sender', ''))
+				text = re.sub("\n(.|\n)*", '', m.get('text', ''))
+				cl.lgtm.append((who, text))
+
 	set_status("loaded CL " + name)
 	return cl, ''
 
@@ -573,6 +669,16 @@ def CodeReviewDir(ui, repo):
 	typecheck(dir, str)
 	return dir
 
+# Turn leading tabs into spaces, so that the common white space
+# prefix doesn't get confused when people's editors write out 
+# some lines with spaces, some with tabs.  Only a heuristic
+# (some editors don't use 8 spaces either) but a useful one.
+def TabsToSpaces(line):
+	i = 0
+	while i < len(line) and line[i] == '\t':
+		i += 1
+	return ' '*(8*i) + line[i:]
+
 # Strip maximal common leading white space prefix from text
 def StripCommon(text):
 	typecheck(text, str)
@@ -581,6 +687,7 @@ def StripCommon(text):
 		line = line.rstrip()
 		if line == '':
 			continue
+		line = TabsToSpaces(line)
 		white = line[:len(line)-len(line.lstrip())]
 		if ws == None:
 			ws = white
@@ -597,6 +704,7 @@ def StripCommon(text):
 	t = ''
 	for line in text.split('\n'):
 		line = line.rstrip()
+		line = TabsToSpaces(line)
 		if line.startswith(ws):
 			line = line[len(ws):]
 		if line == '' and t == '':
@@ -633,33 +741,58 @@ _change_prolog = """# Change list.
 # Get effective change nodes taking into account applied MQ patches
 def effective_revpair(repo):
     try:
-	return cmdutil.revpair(repo, ['qparent'])
+	return scmutil.revpair(repo, ['qparent'])
     except:
-	return cmdutil.revpair(repo, None)
+	return scmutil.revpair(repo, None)
 
 # Return list of changed files in repository that match pats.
-def ChangedFiles(ui, repo, pats, opts):
-	# Find list of files being operated on.
-	matcher = cmdutil.match(repo, pats, opts)
+# Warn about patterns that did not match.
+def matchpats(ui, repo, pats, opts):
+	matcher = scmutil.match(repo, pats, opts)
 	node1, node2 = effective_revpair(repo)
-	modified, added, removed = repo.status(node1, node2, matcher)[:3]
+	modified, added, removed, deleted, unknown, ignored, clean = repo.status(node1, node2, matcher, ignored=True, clean=True, unknown=True)
+	return (modified, added, removed, deleted, unknown, ignored, clean)
+
+# Return list of changed files in repository that match pats.
+# The patterns came from the command line, so we warn
+# if they have no effect or cannot be understood.
+def ChangedFiles(ui, repo, pats, opts, taken=None):
+	taken = taken or {}
+	# Run each pattern separately so that we can warn about
+	# patterns that didn't do anything useful.
+	for p in pats:
+		modified, added, removed, deleted, unknown, ignored, clean = matchpats(ui, repo, [p], opts)
+		redo = False
+		for f in unknown:
+			promptadd(ui, repo, f)
+			redo = True
+		for f in deleted:
+			promptremove(ui, repo, f)
+			redo = True
+		if redo:
+			modified, added, removed, deleted, unknown, ignored, clean = matchpats(ui, repo, [p], opts)
+		for f in modified + added + removed:
+			if f in taken:
+				ui.warn("warning: %s already in CL %s\n" % (f, taken[f].name))
+		if not modified and not added and not removed:
+			ui.warn("warning: %s did not match any modified files\n" % (p,))
+
+	# Again, all at once (eliminates duplicates)
+	modified, added, removed = matchpats(ui, repo, pats, opts)[:3]
 	l = modified + added + removed
 	l.sort()
+	if taken:
+		l = Sub(l, taken.keys())
 	return l
 
 # Return list of changed files in repository that match pats and still exist.
 def ChangedExistingFiles(ui, repo, pats, opts):
-	matcher = cmdutil.match(repo, pats, opts)
-	node1, node2 = effective_revpair(repo)
-	modified, added, _ = repo.status(node1, node2, matcher)[:3]
+	modified, added = matchpats(ui, repo, pats, opts)[:2]
 	l = modified + added
 	l.sort()
 	return l
 
 # Return list of files claimed by existing CLs
-def TakenFiles(ui, repo):
-	return Taken(ui, repo).keys()
-
 def Taken(ui, repo):
 	all = LoadAllCL(ui, repo, web=False)
 	taken = {}
@@ -670,7 +803,7 @@ def Taken(ui, repo):
 
 # Return list of changed files that are not claimed by other CLs
 def DefaultFiles(ui, repo, pats, opts):
-	return Sub(ChangedFiles(ui, repo, pats, opts), TakenFiles(ui, repo))
+	return ChangedFiles(ui, repo, pats, opts, taken=Taken(ui, repo))
 
 def Sub(l1, l2):
 	return [l for l in l1 if l not in l2]
@@ -697,27 +830,112 @@ def getremote(ui, repo, opts):
 		os.environ['http_proxy'] = proxy
 	return other
 
-def Incoming(ui, repo, opts):
-	_, incoming, _ = findcommonincoming(repo, getremote(ui, repo, opts))
-	return incoming
+desc_re = '^(.+: |(tag )?(release|weekly)\.|fix build|undo CL)'
+
+desc_msg = '''Your CL description appears not to use the standard form.
+
+The first line of your change description is conventionally a
+one-line summary of the change, prefixed by the primary affected package,
+and is used as the subject for code review mail; the rest of the description
+elaborates.
+
+Examples:
+
+	encoding/rot13: new package
+
+	math: add IsInf, IsNaN
+	
+	net: fix cname in LookupHost
+
+	unicode: update to Unicode 5.0.2
+
+'''
+
+
+def promptremove(ui, repo, f):
+	if promptyesno(ui, "hg remove %s (y/n)?" % (f,)):
+		if commands.remove(ui, repo, 'path:'+f) != 0:
+			ui.warn("error removing %s" % (f,))
+
+def promptadd(ui, repo, f):
+	if promptyesno(ui, "hg add %s (y/n)?" % (f,)):
+		if commands.add(ui, repo, 'path:'+f) != 0:
+			ui.warn("error adding %s" % (f,))
 
 def EditCL(ui, repo, cl):
 	set_status(None)	# do not show status
 	s = cl.EditorText()
 	while True:
 		s = ui.edit(s, ui.username())
+		
+		# We can't trust Mercurial + Python not to die before making the change,
+		# so, by popular demand, just scribble the most recent CL edit into
+		# $(hg root)/last-change so that if Mercurial does die, people
+		# can look there for their work.
+		try:
+			f = open(repo.root+"/last-change", "w")
+			f.write(s)
+			f.close()
+		except:
+			pass
+
 		clx, line, err = ParseCL(s, cl.name)
 		if err != '':
 			if not promptyesno(ui, "error parsing change list: line %d: %s\nre-edit (y/n)?" % (line, err)):
 				return "change list not modified"
 			continue
-		cl.desc = clx.desc;
+		
+		# Check description.
+		if clx.desc == '':
+			if promptyesno(ui, "change list should have a description\nre-edit (y/n)?"):
+				continue
+		elif re.search('<enter reason for undo>', clx.desc):
+			if promptyesno(ui, "change list description omits reason for undo\nre-edit (y/n)?"):
+				continue
+		elif not re.match(desc_re, clx.desc.split('\n')[0]):
+			if promptyesno(ui, desc_msg + "re-edit (y/n)?"):
+				continue
+
+		# Check file list for files that need to be hg added or hg removed
+		# or simply aren't understood.
+		pats = ['path:'+f for f in clx.files]
+		modified, added, removed, deleted, unknown, ignored, clean = matchpats(ui, repo, pats, {})
+		files = []
+		for f in clx.files:
+			if f in modified or f in added or f in removed:
+				files.append(f)
+				continue
+			if f in deleted:
+				promptremove(ui, repo, f)
+				files.append(f)
+				continue
+			if f in unknown:
+				promptadd(ui, repo, f)
+				files.append(f)
+				continue
+			if f in ignored:
+				ui.warn("error: %s is excluded by .hgignore; omitting\n" % (f,))
+				continue
+			if f in clean:
+				ui.warn("warning: %s is listed in the CL but unchanged\n" % (f,))
+				files.append(f)
+				continue
+			p = repo.root + '/' + f
+			if os.path.isfile(p):
+				ui.warn("warning: %s is a file but not known to hg\n" % (f,))
+				files.append(f)
+				continue
+			if os.path.isdir(p):
+				ui.warn("error: %s is a directory, not a file; omitting\n" % (f,))
+				continue
+			ui.warn("error: %s does not exist; omitting\n" % (f,))
+		clx.files = files
+
+		cl.desc = clx.desc
 		cl.reviewer = clx.reviewer
 		cl.cc = clx.cc
 		cl.files = clx.files
-		if cl.desc == '':
-			if promptyesno(ui, "change list should have description\nre-edit (y/n)?"):
-				continue
+		cl.private = clx.private
 		break
 	return ""
 
@@ -736,7 +954,7 @@ def CommandLineCL(ui, repo, pats, opts, defaultcc=None):
 	else:
 		cl = CL("new")
 		cl.local = True
-		cl.files = Sub(ChangedFiles(ui, repo, pats, opts), TakenFiles(ui, repo))
+		cl.files = ChangedFiles(ui, repo, pats, opts, taken=Taken(ui, repo))
 		if not cl.files:
 			return None, "no files changed"
 	if opts.get('reviewer'):
@@ -758,24 +976,32 @@ def CommandLineCL(ui, repo, pats, opts, defaultcc=None):
 # which expands the syntax @clnumber to mean the files
 # in that CL.
 original_match = None
-def ReplacementForCmdutilMatch(repo, pats=[], opts={}, globbed=False, default='relpath'):
+global_repo = None
+global_ui = None
+def ReplacementForCmdutilMatch(ctx, pats=None, opts=None, globbed=False, default='relpath'):
 	taken = []
 	files = []
 	pats = pats or []
+	opts = opts or {}
+	
 	for p in pats:
 		if p.startswith('@'):
 			taken.append(p)
 			clname = p[1:]
 			if not GoodCLName(clname):
 				raise util.Abort("invalid CL name " + clname)
-			cl, err = LoadCL(repo.ui, repo, clname, web=False)
+			cl, err = LoadCL(global_repo.ui, global_repo, clname, web=False)
 			if err != '':
 				raise util.Abort("loading CL " + clname + ": " + err)
 			if not cl.files:
 				raise util.Abort("no files in CL " + clname)
 			files = Add(files, cl.files)
 	pats = Sub(pats, taken) + ['path:'+f for f in files]
-	return original_match(repo, pats=pats, opts=opts, globbed=globbed, default=default)
+
+	# work-around for http://selenic.com/hg/rev/785bbc8634f8
+	if hgversion >= '1.9' and not hasattr(ctx, 'match'):
+		ctx = ctx[None]
+	return original_match(ctx, pats=pats, opts=opts, globbed=globbed, default=default)
 
 def RelativePath(path, cwd):
 	n = len(cwd)
@@ -799,7 +1025,7 @@ def CheckGofmt(ui, repo, files, just_warn):
 	if not files:
 		return
 	try:
-		cmd = subprocess.Popen(["gofmt", "-l"] + files, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+		cmd = subprocess.Popen(["gofmt", "-l"] + files, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=sys.platform != "win32")
 		cmd.stdin.close()
 	except:
 		raise util.Abort("gofmt: " + ExceptionDetail())
@@ -830,7 +1056,10 @@ def CheckTabfmt(ui, repo, files, just_warn):
 	for f in files:
 		try:
 			for line in open(f, 'r'):
-				if line.startswith('    '):
+				# Four leading spaces is enough to complain about,
+				# except that some Plan 9 code uses four spaces as the label indent,
+				# so allow that.
+				if line.startswith('    ') and not re.match('    [A-Za-z0-9_]+:', line):
 					badfiles.append(f)
 					break
 		except:
@@ -879,7 +1108,7 @@ def change(ui, repo, *pats, **opts):
 
 	if missing_codereview:
 		return missing_codereview
-
+	
 	dirty = {}
 	if len(pats) > 0 and GoodCLName(pats[0]):
 		name = pats[0]
@@ -892,12 +1121,12 @@ def change(ui, repo, *pats, **opts):
 		if not cl.local and (opts["stdin"] or not opts["stdout"]):
 			return "cannot change non-local CL " + name
 	else:
+		if repo[None].branch() != "default":
+			return "cannot run hg change outside default branch"
 		name = "new"
 		cl = CL("new")
 		dirty[cl] = True
-		files = ChangedFiles(ui, repo, pats, opts)
-		taken = TakenFiles(ui, repo)
-		files = Sub(files, taken)
+		files = ChangedFiles(ui, repo, pats, opts, taken=Taken(ui, repo))
 
 	if opts["delete"] or opts["deletelocal"]:
 		if opts["delete"] and opts["deletelocal"]:
@@ -915,7 +1144,7 @@ def change(ui, repo, *pats, **opts):
 			if cl.copied_from:
 				return "original author must delete CL; hg change -D will remove locally"
 			PostMessage(ui, cl.name, "*** Abandoned ***", send_mail=cl.mailed)
-			EditDesc(cl.name, closed="checked")
+			EditDesc(cl.name, closed=True, private=cl.private)
 		cl.Delete(ui, repo)
 		return
 
@@ -936,6 +1165,9 @@ def change(ui, repo, *pats, **opts):
 		if clx.files is not None:
 			cl.files = clx.files
 			dirty[cl] = True
+		if clx.private != cl.private:
+			cl.private = clx.private
+			dirty[cl] = True
 
 	if not opts["stdin"] and not opts["stdout"]:
 		if name == "new":
@@ -946,10 +1178,15 @@ def change(ui, repo, *pats, **opts):
 		dirty[cl] = True
 
 	for d, _ in dirty.items():
+		name = d.name
 		d.Flush(ui, repo)
+		if name == "new":
+			d.Upload(ui, repo, quiet=True)
 
 	if opts["stdout"]:
 		ui.write(cl.EditorText())
+	elif opts["pending"]:
+		ui.write(cl.PendingText())
 	elif name == "new":
 		if ui.quiet:
 			ui.write(cl.name)
@@ -978,34 +1215,279 @@ def clpatch(ui, repo, clname, **opts):
 	Submitting an imported patch will keep the original author's
 	name as the Author: line but add your own name to a Committer: line.
 	"""
+	if repo[None].branch() != "default":
+		return "cannot run hg clpatch outside default branch"
+	return clpatch_or_undo(ui, repo, clname, opts, mode="clpatch")
+
+def undo(ui, repo, clname, **opts):
+	"""undo the effect of a CL
+	
+	Creates a new CL that undoes an earlier CL.
+	After creating the CL, opens the CL text for editing so that
+	you can add the reason for the undo to the description.
+	"""
+	if repo[None].branch() != "default":
+		return "cannot run hg undo outside default branch"
+	return clpatch_or_undo(ui, repo, clname, opts, mode="undo")
+
+def release_apply(ui, repo, clname, **opts):
+	"""apply a CL to the release branch
+
+	Creates a new CL copying a previously committed change
+	from the main branch to the release branch.
+	The current client must either be clean or already be in
+	the release branch.
+	
+	The release branch must be created by starting with a
+	clean client, disabling the code review plugin, and running:
+	
+		hg update weekly.YYYY-MM-DD
+		hg branch release-branch.rNN
+		hg commit -m 'create release-branch.rNN'
+		hg push --new-branch
+	
+	Then re-enable the code review plugin.
+	
+	People can test the release branch by running
+	
+		hg update release-branch.rNN
+	
+	in a clean client.  To return to the normal tree,
+	
+		hg update default
+	
+	Move changes since the weekly into the release branch 
+	using hg release-apply followed by the usual code review
+	process and hg submit.
+
+	When it comes time to tag the release, record the
+	final long-form tag of the release-branch.rNN
+	in the *default* branch's .hgtags file.  That is, run
+	
+		hg update default
+	
+	and then edit .hgtags as you would for a weekly.
+		
+	"""
+	c = repo[None]
+	if not releaseBranch:
+		return "no active release branches"
+	if c.branch() != releaseBranch:
+		if c.modified() or c.added() or c.removed():
+			raise util.Abort("uncommitted local changes - cannot switch branches")
+		err = hg.clean(repo, releaseBranch)
+		if err:
+			return err
+	try:
+		err = clpatch_or_undo(ui, repo, clname, opts, mode="backport")
+		if err:
+			raise util.Abort(err)
+	except Exception, e:
+		hg.clean(repo, "default")
+		raise e
+	return None
+
+def rev2clname(rev):
+	# Extract CL name from revision description.
+	# The last line in the description that is a codereview URL is the real one.
+	# Earlier lines might be part of the user-written description.
+	all = re.findall('(?m)^http://codereview.appspot.com/([0-9]+)$', rev.description())
+	if len(all) > 0:
+		return all[-1]
+	return ""
+
+undoHeader = """undo CL %s / %s
+
+<enter reason for undo>
+
+««« original CL description
+"""
+
+undoFooter = """
+»»»
+"""
+
+backportHeader = """[%s] %s
+
+««« CL %s / %s
+"""
+
+backportFooter = """
+»»»
+"""
+
+# Implementation of clpatch/undo.
+def clpatch_or_undo(ui, repo, clname, opts, mode):
 	if missing_codereview:
 		return missing_codereview
 
-	cl, patch, err = DownloadCL(ui, repo, clname)
+	if mode == "undo" or mode == "backport":
+		if hgversion < '1.4':
+			# Don't have cmdutil.match (see implementation of sync command).
+			return "hg is too old to run hg %s - update to 1.4 or newer" % mode
+
+		# Find revision in Mercurial repository.
+		# Assume CL number is 7+ decimal digits.
+		# Otherwise is either change log sequence number (fewer decimal digits),
+		# hexadecimal hash, or tag name.
+		# Mercurial will fall over long before the change log
+		# sequence numbers get to be 7 digits long.
+		if re.match('^[0-9]{7,}$', clname):
+			found = False
+			matchfn = scmutil.match(repo, [], {'rev': None})
+			def prep(ctx, fns):
+				pass
+			for ctx in cmdutil.walkchangerevs(repo, matchfn, {'rev': None}, prep):
+				rev = repo[ctx.rev()]
+				# Last line with a code review URL is the actual review URL.
+				# Earlier ones might be part of the CL description.
+				n = rev2clname(rev)
+				if n == clname:
+					found = True
+					break
+			if not found:
+				return "cannot find CL %s in local repository" % clname
+		else:
+			rev = repo[clname]
+			if not rev:
+				return "unknown revision %s" % clname
+			clname = rev2clname(rev)
+			if clname == "":
+				return "cannot find CL name in revision description"
+		
+		# Create fresh CL and start with patch that would reverse the change.
+		vers = short(rev.node())
+		cl = CL("new")
+		desc = str(rev.description())
+		if mode == "undo":
+			cl.desc = (undoHeader % (clname, vers)) + desc + undoFooter
+		else:
+			cl.desc = (backportHeader % (releaseBranch, line1(desc), clname, vers)) + desc + undoFooter
+		v1 = vers
+		v0 = short(rev.parents()[0].node())
+		if mode == "undo":
+			arg = v1 + ":" + v0
+		else:
+			vers = v0
+			arg = v0 + ":" + v1
+		patch = RunShell(["hg", "diff", "--git", "-r", arg])
+
+	else:  # clpatch
+		cl, vers, patch, err = DownloadCL(ui, repo, clname)
+		if err != "":
+			return err
+		if patch == emptydiff:
+			return "codereview issue %s has no diff" % clname
+
+	# find current hg version (hg identify)
+	ctx = repo[None]
+	parents = ctx.parents()
+	id = '+'.join([short(p.node()) for p in parents])
+
+	# if version does not match the patch version,
+	# try to update the patch line numbers.
+	if vers != "" and id != vers:
+		# "vers in repo" gives the wrong answer
+		# on some versions of Mercurial.  Instead, do the actual
+		# lookup and catch the exception.
+		try:
+			repo[vers].description()
+		except:
+			return "local repository is out of date; sync to get %s" % (vers)
+		patch1, err = portPatch(repo, patch, vers, id)
+		if err != "":
+			if not opts["ignore_hgpatch_failure"]:
+				return "codereview issue %s is out of date: %s (%s->%s)" % (clname, err, vers, id)
+		else:
+			patch = patch1
 	argv = ["hgpatch"]
-	if opts["no_incoming"]:
+	if opts["no_incoming"] or mode == "backport":
 		argv += ["--checksync=false"]
-	if err != "":
-		return err
 	try:
-		cmd = subprocess.Popen(argv, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=None, close_fds=True)
+		cmd = subprocess.Popen(argv, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=None, close_fds=sys.platform != "win32")
 	except:
 		return "hgpatch: " + ExceptionDetail()
-	if os.fork() == 0:
-		cmd.stdin.write(patch)
-		os._exit(0)
-	cmd.stdin.close()
-	out = cmd.stdout.read()
-	if cmd.wait() != 0 and not opts["ignore_hgpatch_failure"]:
+
+	out, err = cmd.communicate(patch)
+	if cmd.returncode != 0 and not opts["ignore_hgpatch_failure"]:
 		return "hgpatch failed"
 	cl.local = True
 	cl.files = out.strip().split()
+	if not cl.files and not opts["ignore_hgpatch_failure"]:
+		return "codereview issue %s has no changed files" % clname
 	files = ChangedFiles(ui, repo, [], opts)
 	extra = Sub(cl.files, files)
 	if extra:
 		ui.warn("warning: these files were listed in the patch but not changed:\n\t" + "\n\t".join(extra) + "\n")
 	cl.Flush(ui, repo)
-	ui.write(cl.PendingText() + "\n")
+	if mode == "undo":
+		err = EditCL(ui, repo, cl)
+		if err != "":
+			return "CL created, but error editing: " + err
+		cl.Flush(ui, repo)
+	else:
+		ui.write(cl.PendingText() + "\n")
+
+# portPatch rewrites patch from being a patch against
+# oldver to being a patch against newver.
+def portPatch(repo, patch, oldver, newver):
+	lines = patch.splitlines(True) # True = keep \n
+	delta = None
+	for i in range(len(lines)):
+		line = lines[i]
+		if line.startswith('--- a/'):
+			file = line[6:-1]
+			delta = fileDeltas(repo, file, oldver, newver)
+		if not delta or not line.startswith('@@ '):
+			continue
+		# @@ -x,y +z,w @@ means the patch chunk replaces
+		# the original file's line numbers x up to x+y with the
+		# line numbers z up to z+w in the new file.
+		# Find the delta from x in the original to the same
+		# line in the current version and add that delta to both
+		# x and z.
+		m = re.match('@@ -([0-9]+),([0-9]+) \+([0-9]+),([0-9]+) @@', line)
+		if not m:
+			return None, "error parsing patch line numbers"
+		n1, len1, n2, len2 = int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4))
+		d, err = lineDelta(delta, n1, len1)
+		if err != "":
+			return "", err
+		n1 += d
+		n2 += d
+		lines[i] = "@@ -%d,%d +%d,%d @@\n" % (n1, len1, n2, len2)
+		
+	newpatch = ''.join(lines)
+	return newpatch, ""
+
+# fileDelta returns the line number deltas for the given file's
+# changes from oldver to newver.
+# The deltas are a list of (n, len, newdelta) triples that say
+# lines [n, n+len) were modified, and after that range the
+# line numbers are +newdelta from what they were before.
+def fileDeltas(repo, file, oldver, newver):
+	cmd = ["hg", "diff", "--git", "-r", oldver + ":" + newver, "path:" + file]
+	data = RunShell(cmd, silent_ok=True)
+	deltas = []
+	for line in data.splitlines():
+		m = re.match('@@ -([0-9]+),([0-9]+) \+([0-9]+),([0-9]+) @@', line)
+		if not m:
+			continue
+		n1, len1, n2, len2 = int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4))
+		deltas.append((n1, len1, n2+len2-(n1+len1)))
+	return deltas
+
+# lineDelta finds the appropriate line number delta to apply to the lines [n, n+len).
+# It returns an error if those lines were rewritten by the patch.
+def lineDelta(deltas, n, len):
+	d = 0
+	for (old, oldlen, newdelta) in deltas:
+		if old >= n+len:
+			break
+		if old+len > n:
+			return 0, "patch and recent changes conflict"
+		d = newdelta
+	return d, ""
 
 def download(ui, repo, clname, **opts):
 	"""download a change from the code review server
@@ -1016,7 +1498,7 @@ def download(ui, repo, clname, **opts):
 	if missing_codereview:
 		return missing_codereview
 
-	cl, patch, err = DownloadCL(ui, repo, clname)
+	cl, vers, patch, err = DownloadCL(ui, repo, clname)
 	if err != "":
 		return err
 	ui.write(cl.EditorText() + "\n")
@@ -1141,10 +1623,6 @@ def mail(ui, repo, *pats, **opts):
 
 	cl.Mail(ui, repo)		
 
-def nocommit(ui, repo, *pats, **opts):
-	"""(disabled when using this extension)"""
-	return "The codereview extension is enabled; do not use commit."
-
 def pending(ui, repo, *pats, **opts):
 	"""show pending changes
 
@@ -1170,23 +1648,26 @@ def pending(ui, repo, *pats, **opts):
 def reposetup(ui, repo):
 	global original_match
 	if original_match is None:
+		global global_repo, global_ui
+		global_repo = repo
+		global_ui = ui
 		start_status_thread()
-		original_match = cmdutil.match
-		cmdutil.match = ReplacementForCmdutilMatch
+		original_match = scmutil.match
+		scmutil.match = ReplacementForCmdutilMatch
 		RietveldSetup(ui, repo)
 
 def CheckContributor(ui, repo, user=None):
 	set_status("checking CONTRIBUTORS file")
-	if not user:
-		user = ui.config("ui", "username")
-		if not user:
-			raise util.Abort("[ui] username is not configured in .hgrc")
-	_, userline = FindContributor(ui, repo, user, warn=False)
+	user, userline = FindContributor(ui, repo, user, warn=False)
 	if not userline:
 		raise util.Abort("cannot find %s in CONTRIBUTORS" % (user,))
 	return userline
 
-def FindContributor(ui, repo, user, warn=True):
+def FindContributor(ui, repo, user=None, warn=True):
+	if not user:
+		user = ui.config("ui", "username")
+		if not user:
+			raise util.Abort("[ui] username is not configured in .hgrc")
 	user = user.lower()
 	m = re.match(r".*<(.*)>", user)
 	if m:
@@ -1195,7 +1676,7 @@ def FindContributor(ui, repo, user, warn=True):
 	if user not in contributors:
 		if warn:
 			ui.warn("warning: cannot find %s in CONTRIBUTORS\n" % (user,))
-		return None, None
+		return user, None
 	
 	user, email = contributors[user]
 	return email, "%s <%s>" % (user, email)
@@ -1209,8 +1690,12 @@ def submit(ui, repo, *pats, **opts):
 	if missing_codereview:
 		return missing_codereview
 
+	# We already called this on startup but sometimes Mercurial forgets.
+	set_mercurial_encoding_to_utf8()
+
+	other = getremote(ui, repo, opts)
 	repo.ui.quiet = True
-	if not opts["no_incoming"] and Incoming(ui, repo, opts):
+	if not opts["no_incoming"] and incoming(repo, other):
 		return "local repository out of date; must sync before submit"
 
 	cl, err = CommandLineCL(ui, repo, pats, opts, defaultcc=defaultcc)
@@ -1221,6 +1706,7 @@ def submit(ui, repo, *pats, **opts):
 	if cl.copied_from:
 		user = cl.copied_from
 	userline = CheckContributor(ui, repo, user)
+	typecheck(userline, str)
 
 	about = ""
 	if cl.reviewer:
@@ -1250,6 +1736,7 @@ def submit(ui, repo, *pats, **opts):
 
 	if cl.copied_from:
 		about += "\nCommitter: " + CheckContributor(ui, repo, None) + "\n"
+	typecheck(about, str)
 
 	if not cl.mailed and not cl.copied_from:		# in case this is TBR
 		cl.Mail(ui, repo)
@@ -1258,7 +1745,9 @@ def submit(ui, repo, *pats, **opts):
 	date = opts.get('date')
 	if date:
 		opts['date'] = util.parsedate(date)
+		typecheck(opts['date'], str)
 	opts['message'] = cl.desc.rstrip() + "\n\n" + about
+	typecheck(opts['message'], str)
 
 	if opts['dryrun']:
 		print "NOT SUBMITTING:"
@@ -1269,8 +1758,14 @@ def submit(ui, repo, *pats, **opts):
 		print Indent('\n'.join(cl.files), "\t")
 		return "dry run; not submitted"
 
+	set_status("pushing " + cl.name + " to remote server")
+
+	other = getremote(ui, repo, opts)
+	if outgoing(repo):
+		raise util.Abort("local repository corrupt or out-of-phase with remote: found outgoing changes")
+
 	m = match.exact(repo.root, repo.getcwd(), cl.files)
-	node = repo.commit(opts['message'], userline, opts.get('date'), m)
+	node = repo.commit(ustr(opts['message']), ustr(userline), opts.get('date'), m)
 	if not node:
 		return "nothing changed"
 
@@ -1289,18 +1784,17 @@ def submit(ui, repo, *pats, **opts):
 		# push changes to remote.
 		# if it works, we're committed.
 		# if not, roll back
-		other = getremote(ui, repo, opts)
 		r = repo.push(other, False, None)
 		if r == 0:
 			raise util.Abort("local repository out of date; must sync before submit")
 	except:
-		repo.rollback()
+		real_rollback()
 		raise
 
 	# we're committed. upload final patch, close review, add commit message
 	changeURL = short(node)
 	url = other.url()
-	m = re.match("^https?://([^@/]+@)?([^.]+)\.googlecode\.com/hg/", url)
+	m = re.match("^https?://([^@/]+@)?([^.]+)\.googlecode\.com/hg/?", url)
 	if m:
 		changeURL = "http://code.google.com/p/%s/source/detail?r=%s" % (m.group(2), changeURL)
 	else:
@@ -1312,8 +1806,16 @@ def submit(ui, repo, *pats, **opts):
 	PostMessage(ui, cl.name, pmsg, reviewers="", cc=JoinComma(cl.reviewer+cl.cc))
 
 	if not cl.copied_from:
-		EditDesc(cl.name, closed="checked")
+		EditDesc(cl.name, closed=True, private=cl.private)
 	cl.Delete(ui, repo)
+	
+	c = repo[None]
+	if c.branch() == releaseBranch and not c.modified() and not c.added() and not c.removed():
+		ui.write("switching from %s to default branch.\n" % releaseBranch)
+		err = hg.clean(repo, "default")
+		if err:
+			return err
+	return None
 
 def sync(ui, repo, **opts):
 	"""synchronize with remote repository
@@ -1332,7 +1834,7 @@ def sync(ui, repo, **opts):
 		err = commands.postincoming(ui, repo, modheads, True, "tip")
 		if err:
 			return err
-	commands.update(ui, repo)
+	commands.update(ui, repo, rev="default")
 	sync_changes(ui, repo)
 
 def sync_note(msg):
@@ -1362,7 +1864,7 @@ def sync_changes(ui, repo):
 					ui.warn("loading CL %s: %s\n" % (clname, err))
 					continue
 				if not cl.copied_from:
-					EditDesc(cl.name, closed="checked")
+					EditDesc(cl.name, closed=True, private=cl.private)
 				cl.Delete(ui, repo)
 
 	if hgversion < '1.4':
@@ -1377,7 +1879,7 @@ def sync_changes(ui, repo):
 				break
 			Rev(rev)
 	else:
-		matchfn = cmdutil.match(repo, [], {'rev': None})
+		matchfn = scmutil.match(repo, [], {'rev': None})
 		def prep(ctx, fns):
 			pass
 		for ctx in cmdutil.walkchangerevs(repo, matchfn, {'rev': None}, prep):
@@ -1395,7 +1897,10 @@ def sync_changes(ui, repo):
 			cl.files = Sub(cl.files, extra)
 			cl.Flush(ui, repo)
 		if not cl.files:
-			ui.warn("CL %s has no files; suggest hg change -d %s\n" % (cl.name, cl.name))
+			if not cl.copied_from:
+				ui.warn("CL %s has no files; delete (abandon) with hg change -d %s\n" % (cl.name, cl.name))
+			else:
+				ui.warn("CL %s has no files; delete locally with hg change -D %s\n" % (cl.name, cl.name))
 	return
 
 def upload(ui, repo, name, **opts):
@@ -1433,6 +1938,7 @@ cmdtable = {
 			('D', 'deletelocal', None, 'delete locally, but do not change CL on server'),
 			('i', 'stdin', None, 'read change list from standard input'),
 			('o', 'stdout', None, 'print change list to standard output'),
+			('p', 'pending', None, 'print pending summary to standard output'),
 		],
 		"[-d | -D] [-i] [-o] change# or FILE ..."
 	),
@@ -1482,6 +1988,15 @@ cmdtable = {
 		] + commands.walkopts,
 		"[-r reviewer] [--cc cc] [change# | file ...]"
 	),
+	"^release-apply": (
+		release_apply,
+		[
+			('', 'ignore_hgpatch_failure', None, 'create CL metadata even if hgpatch fails'),
+			('', 'no_incoming', None, 'disable check for incoming changes'),
+		],
+		"change#"
+	),
+	# TODO: release-start, release-tag, weekly-tag
 	"^submit": (
 		submit,
 		review_opts + [
@@ -1496,6 +2011,14 @@ cmdtable = {
 			('', 'local', None, 'do not pull changes from remote repository')
 		],
 		"[--local]",
+	),
+	"^undo": (
+		undo,
+		[
+			('', 'ignore_hgpatch_failure', None, 'create CL metadata even if hgpatch fails'),
+			('', 'no_incoming', None, 'disable check for incoming changes'),
+		],
+		"change#"
 	),
 	"^upload": (
 		upload,
@@ -1551,80 +2074,98 @@ class FormParser(HTMLParser):
 		if self.curdata is not None:
 			self.curdata += data
 
-# XML parser
-def XMLGet(ui, path):
+def JSONGet(ui, path):
 	try:
-		data = MySend(path, force_auth=False);
+		data = MySend(path, force_auth=False)
+		typecheck(data, str)
+		d = fix_json(json.loads(data))
 	except:
-		ui.warn("XMLGet %s: %s\n" % (path, ExceptionDetail()))
+		ui.warn("JSONGet %s: %s\n" % (path, ExceptionDetail()))
 		return None
-	return ET.XML(data)
+	return d
+
+# Clean up json parser output to match our expectations:
+#   * all strings are UTF-8-encoded str, not unicode.
+#   * missing fields are missing, not None,
+#     so that d.get("foo", defaultvalue) works.
+def fix_json(x):
+	if type(x) in [str, int, float, bool, type(None)]:
+		pass
+	elif type(x) is unicode:
+		x = x.encode("utf-8")
+	elif type(x) is list:
+		for i in range(len(x)):
+			x[i] = fix_json(x[i])
+	elif type(x) is dict:
+		todel = []
+		for k in x:
+			if x[k] is None:
+				todel.append(k)
+			else:
+				x[k] = fix_json(x[k])
+		for k in todel:
+			del x[k]
+	else:
+		raise util.Abort("unknown type " + str(type(x)) + " in fix_json")
+	if type(x) is str:
+		x = x.replace('\r\n', '\n')
+	return x
 
 def IsRietveldSubmitted(ui, clname, hex):
-	feed = XMLGet(ui, "/rss/issue/" + clname)
-	if feed is None:
+	dict = JSONGet(ui, "/api/" + clname + "?messages=true")
+	if dict is None:
 		return False
-	for sum in feed.findall("{http://www.w3.org/2005/Atom}entry/{http://www.w3.org/2005/Atom}summary"):
-		text = sum.text.strip()
+	for msg in dict.get("messages", []):
+		text = msg.get("text", "")
 		m = re.match('\*\*\* Submitted as [^*]*?([0-9a-f]+) \*\*\*', text)
 		if m is not None and len(m.group(1)) >= 8 and hex.startswith(m.group(1)):
 			return True
 	return False
 
+def IsRietveldMailed(cl):
+	for msg in cl.dict.get("messages", []):
+		if msg.get("text", "").find("I'd like you to review this change") >= 0:
+			return True
+	return False
+
 def DownloadCL(ui, repo, clname):
 	set_status("downloading CL " + clname)
-	cl, err = LoadCL(ui, repo, clname)
+	cl, err = LoadCL(ui, repo, clname, web=True)
 	if err != "":
-		return None, None, "error loading CL %s: %s" % (clname, ExceptionDetail())
-
-	# Grab RSS feed to learn about CL
-	feed = XMLGet(ui, "/rss/issue/" + clname)
-	if feed is None:
-		return None, None, "cannot download CL"
+		return None, None, None, "error loading CL %s: %s" % (clname, err)
 
 	# Find most recent diff
-	diff = None
-	prefix = 'http://' + server + '/'
-	for link in feed.findall("{http://www.w3.org/2005/Atom}entry/{http://www.w3.org/2005/Atom}link"):
-		if link.get('rel') != 'alternate':
-			continue
-		text = link.get('href')
-		if not text.startswith(prefix) or not text.endswith('.diff'):
-			continue
-		diff = text[len(prefix)-1:]
-	if diff is None:
-		return None, None, "CL has no diff"
+	diffs = cl.dict.get("patchsets", [])
+	if not diffs:
+		return None, None, None, "CL has no patch sets"
+	patchid = diffs[-1]
+
+	patchset = JSONGet(ui, "/api/" + clname + "/" + str(patchid))
+	if patchset is None:
+		return None, None, None, "error loading CL patchset %s/%d" % (clname, patchid)
+	if patchset.get("patchset", 0) != patchid:
+		return None, None, None, "malformed patchset information"
+	
+	vers = ""
+	msg = patchset.get("message", "").split()
+	if len(msg) >= 3 and msg[0] == "diff" and msg[1] == "-r":
+		vers = msg[2]
+	diff = "/download/issue" + clname + "_" + str(patchid) + ".diff"
+
 	diffdata = MySend(diff, force_auth=False)
-
-	# Find author - first entry will be author who created CL.
-	nick = None
-	for author in feed.findall("{http://www.w3.org/2005/Atom}entry/{http://www.w3.org/2005/Atom}author/{http://www.w3.org/2005/Atom}name"):
-		nick = author.text.strip()
-		break
-	if not nick:
-		return None, None, "CL has no author"
-
-	# The author is just a nickname: get the real email address.
-	try:
-		# want URL-encoded nick, but without a=, and rietveld rejects + for %20.
-		url = "/user_popup/" + urllib.urlencode({"a": nick})[2:].replace("+", "%20")
-		data = MySend(url, force_auth=False)
-	except:
-		ui.warn("error looking up %s: %s\n" % (nick, ExceptionDetail()))
-		cl.copied_from = nick+"@needtofix"
-		return cl, diffdata, ""
-	match = re.match(r"<b>(.*) \((.*)\)</b>", data)
-	if not match:
-		return None, None, "error looking up %s: cannot parse result %s" % (nick, repr(data))
-	if match.group(1) != nick and match.group(2) != nick:
-		return None, None, "error looking up %s: got info for %s, %s" % (nick, match.group(1), match.group(2))
-	email = match.group(1)
-
+	
 	# Print warning if email is not in CONTRIBUTORS file.
-	FindContributor(ui, repo, email)
-	cl.copied_from = email
+	email = cl.dict.get("owner_email", "")
+	if not email:
+		return None, None, None, "cannot find owner for %s" % (clname)
+	him = FindContributor(ui, repo, email)
+	me = FindContributor(ui, repo, None)
+	if him == me:
+		cl.mailed = IsRietveldMailed(cl)
+	else:
+		cl.copied_from = email
 
-	return cl, diffdata, ""
+	return cl, vers, diffdata, ""
 
 def MySend(request_path, payload=None,
 		content_type="application/octet-stream",
@@ -1634,7 +2175,7 @@ def MySend(request_path, payload=None,
 	try:
 		return MySend1(request_path, payload, content_type, timeout, force_auth, **kwargs)
 	except Exception, e:
-		if type(e) == urllib2.HTTPError and e.code == 403:	# forbidden, it happens
+		if type(e) != urllib2.HTTPError or e.code != 500:	# only retry on HTTP 500 error
 			raise
 		print >>sys.stderr, "Loading "+request_path+": "+ExceptionDetail()+"; trying again in 2 seconds."
 		time.sleep(2)
@@ -1711,7 +2252,7 @@ def MySend1(request_path, payload=None,
 
 def GetForm(url):
 	f = FormParser()
-	f.feed(MySend(url).decode("utf-8"))	# f.feed wants unicode
+	f.feed(ustr(MySend(url)))	# f.feed wants unicode
 	f.close()
 	# convert back to utf-8 to restore sanity
 	m = {}
@@ -1719,26 +2260,7 @@ def GetForm(url):
 		m[k.encode("utf-8")] = v.replace("\r\n", "\n").encode("utf-8")
 	return m
 
-# Fetch the settings for the CL, like reviewer and CC list, by
-# scraping the Rietveld editing forms.
-def GetSettings(issue):
-	set_status("getting issue metadata from web")
-	# The /issue/edit page has everything but only the
-	# CL owner is allowed to fetch it (and submit it).
-	f = None
-	try:
-		f = GetForm("/" + issue + "/edit")
-	except:
-		pass
-	if not f or 'reviewers' not in f:
-		# Maybe we're not the CL owner.  Fall back to the
-		# /publish page, which has the reviewer and CC lists,
-		# and then fetch the description separately.
-		f = GetForm("/" + issue + "/publish")
-		f['description'] = MySend("/"+issue+"/description", force_auth=False)
-	return f
-
-def EditDesc(issue, subject=None, desc=None, reviewers=None, cc=None, closed=None):
+def EditDesc(issue, subject=None, desc=None, reviewers=None, cc=None, closed=False, private=False):
 	set_status("uploading change to description")
 	form_fields = GetForm("/" + issue + "/edit")
 	if subject is not None:
@@ -1749,8 +2271,10 @@ def EditDesc(issue, subject=None, desc=None, reviewers=None, cc=None, closed=Non
 		form_fields['reviewers'] = reviewers
 	if cc is not None:
 		form_fields['cc'] = cc
-	if closed is not None:
-		form_fields['closed'] = closed
+	if closed:
+		form_fields['closed'] = "checked"
+	if private:
+		form_fields['private'] = "checked"
 	ctype, body = EncodeMultipartFormData(form_fields.items(), [])
 	response = MySend("/" + issue + "/edit", body, content_type=ctype)
 	if response != "":
@@ -1785,8 +2309,17 @@ def PostMessage(ui, issue, message, reviewers=None, cc=None, send_mail=True, sub
 class opt(object):
 	pass
 
-def disabled(*opts, **kwopts):
-	raise util.Abort("commit is disabled when codereview is in use")
+def nocommit(*pats, **opts):
+	"""(disabled when using this extension)"""
+	raise util.Abort("codereview extension enabled; use mail, upload, or submit instead of commit")
+
+def nobackout(*pats, **opts):
+	"""(disabled when using this extension)"""
+	raise util.Abort("codereview extension enabled; use undo instead of backout")
+
+def norollback(*pats, **opts):
+	"""(disabled when using this extension)"""
+	raise util.Abort("codereview extension enabled; use undo instead of rollback")
 
 def RietveldSetup(ui, repo):
 	global defaultcc, upload_options, rpc, server, server_url_base, force_google_account, verbosity, contributors
@@ -1814,7 +2347,11 @@ def RietveldSetup(ui, repo):
 	# Should only modify repository with hg submit.
 	# Disable the built-in Mercurial commands that might
 	# trip things up.
-	cmdutil.commit = disabled
+	cmdutil.commit = nocommit
+	global real_rollback
+	real_rollback = repo.rollback
+	repo.rollback = norollback
+	# would install nobackout if we could; oh well
 
 	try:
 		f = open(repo.root + '/CONTRIBUTORS', 'r')
@@ -1876,6 +2413,19 @@ def RietveldSetup(ui, repo):
 		upload_options.email = "test@example.com"
 
 	rpc = None
+	
+	global releaseBranch
+	tags = repo.branchtags().keys()
+	if 'release-branch.r100' in tags:
+		# NOTE(rsc): This tags.sort is going to get the wrong
+		# answer when comparing release-branch.r99 with
+		# release-branch.r100.  If we do ten releases a year
+		# that gives us 4 years before we have to worry about this.
+		raise util.Abort('tags.sort needs to be fixed for release-branch.r100')
+	tags.sort()
+	for t in tags:
+		if t.startswith('release-branch.'):
+			releaseBranch = t			
 
 #######################################################################
 # http://codereview.appspot.com/static/upload.py, heavily edited.
@@ -2284,10 +2834,18 @@ def GetRpcServer(options):
 
 	def GetUserCredentials():
 		"""Prompts the user for a username and password."""
+		# Disable status prints so they don't obscure the password prompt.
+		global global_status
+		st = global_status
+		global_status = None
+
 		email = options.email
 		if email is None:
 			email = GetEmail("Email (login for uploading to %s)" % options.server)
 		password = getpass.getpass("Password for %s: " % email)
+
+		# Put status back.
+		global_status = st
 		return (email, password)
 
 	# If this is the dev_appserver, use fake authentication.
@@ -2580,6 +3138,7 @@ class VersionControlSystem(object):
 			return False
 		return not mimetype.startswith("text/")
 
+
 class FakeMercurialUI(object):
 	def __init__(self):
 		self.quiet = True
@@ -2587,6 +3146,19 @@ class FakeMercurialUI(object):
 	
 	def write(self, *args, **opts):
 		self.output += ' '.join(args)
+	def copy(self):
+		return self
+	def status(self, *args, **opts):
+		pass
+	
+	def readconfig(self, *args, **opts):
+		pass
+	def expandpath(self, *args, **opts):
+		return global_ui.expandpath(*args, **opts)
+	def configitems(self, *args, **opts):
+		return global_ui.configitems(*args, **opts)
+	def config(self, *args, **opts):
+		return global_ui.config(*args, **opts)
 
 use_hg_shell = False	# set to True to shell out to hg always; slower
 
@@ -2597,6 +3169,7 @@ class MercurialVCS(VersionControlSystem):
 		super(MercurialVCS, self).__init__(options)
 		self.ui = ui
 		self.repo = repo
+		self.status = None
 		# Absolute path to repository (we can be in a subdir)
 		self.repo_dir = os.path.normpath(repo.root)
 		# Compute the subdir
@@ -2655,6 +3228,33 @@ class MercurialVCS(VersionControlSystem):
 				unknown_files.append(fn)
 		return unknown_files
 
+	def get_hg_status(self, rev, path):
+		# We'd like to use 'hg status -C path', but that is buggy
+		# (see http://mercurial.selenic.com/bts/issue3023).
+		# Instead, run 'hg status -C' without a path
+		# and skim the output for the path we want.
+		if self.status is None:
+			if use_hg_shell:
+				out = RunShell(["hg", "status", "-C", "--rev", rev])
+			else:
+				fui = FakeMercurialUI()
+				ret = commands.status(fui, self.repo, *[], **{'rev': [rev], 'copies': True})
+				if ret:
+					raise util.Abort(ret)
+				out = fui.output
+			self.status = out.splitlines()
+		for i in range(len(self.status)):
+			# line is
+			#	A path
+			#	M path
+			# etc
+			line = self.status[i].replace('\\', '/')
+			if line[2:] == path:
+				if i+1 < len(self.status) and self.status[i+1][:2] == '  ':
+					return self.status[i:i+2]
+				return self.status[i:i+1]
+		raise util.Abort("no status for " + path)
+	
 	def GetBaseFile(self, filename):
 		set_status("inspecting " + filename)
 		# "hg status" and "hg cat" both take a path relative to the current subdir
@@ -2664,20 +3264,7 @@ class MercurialVCS(VersionControlSystem):
 		new_content = None
 		is_binary = False
 		oldrelpath = relpath = self._GetRelPath(filename)
-		# "hg status -C" returns two lines for moved/copied files, one otherwise
-		if use_hg_shell:
-			out = RunShell(["hg", "status", "-C", "--rev", self.base_rev, relpath])
-		else:
-			fui = FakeMercurialUI()
-			ret = commands.status(fui, self.repo, *[relpath], **{'rev': [self.base_rev], 'copies': True})
-			if ret:
-				raise util.Abort(ret)
-			out = fui.output
-		out = out.splitlines()
-		# HACK: strip error message about missing file/directory if it isn't in
-		# the working copy
-		if out[0].startswith('%s: ' % relpath):
-			out = out[1:]
+		out = self.get_hg_status(self.base_rev, relpath)
 		status, what = out[0].split(' ', 1)
 		if len(out) > 1 and status == "A" and what == relpath:
 			oldrelpath = out[1].strip()
