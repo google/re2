@@ -58,7 +58,7 @@ Grouping:
 re@>	possessive match of «re» NOT SUPPORTED vim
 %(re)	non-capturing group NOT SUPPORTED vim
 
-Flags (set with (?m); clear with (?-m))
+Flags:
 i	case-insensitive (default false)
 m	multi-line mode: ^ and $ match begin/end line in addition to begin/end text (default false)
 s	let «.» match «\n» (default false)
