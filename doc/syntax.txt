@@ -50,7 +50,7 @@ Grouping:
 (?<name>re)	named & numbered capturing group NOT SUPPORTED
 (?'name're)	named & numbered capturing group NOT SUPPORTED
 (?:re)	non-capturing group
-(?flags)	set flags until outer paren closes; non-capturing
+(?flags)	set flags within current group; non-capturing
 (?flags:re)	set flags during re; non-capturing
 (?#text)	comment NOT SUPPORTED
 (?|x|y|z)	branch numbering reset NOT SUPPORTED
@@ -58,7 +58,7 @@ Grouping:
 re@>	possessive match of «re» NOT SUPPORTED vim
 %(re)	non-capturing group NOT SUPPORTED vim
 
-Flags:
+Flags (set with (?m); clear with (?-m))
 i	case-insensitive (default false)
 m	multi-line mode: ^ and $ match begin/end line in addition to begin/end text (default false)
 s	let «.» match «\n» (default false)
