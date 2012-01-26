@@ -67,7 +67,7 @@ inline void WriteMemoryBarrier() {
 #if defined(__alpha__)
 
 static inline void MaybeReadMemoryBarrier() {
-  __asm__ __volatile__("rmb" : : : "memory");
+  __asm__ __volatile__("mb" : : : "memory");
 }
 
 #else
