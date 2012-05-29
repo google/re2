@@ -98,13 +98,14 @@ TEST(SingleThreaded, BuildEntireDFA) {
   int max = 24;
   for (int i = 17; i < max; i++) {
     int limit = 1<<i;
-    int usage, progusage, dfamem;
+    int usage;
+    //int progusage, dfamem;
     {
       testing::MallocCounter m(testing::MallocCounter::THIS_THREAD_ONLY);
       Prog* prog = re->CompileToProg(limit);
       CHECK(prog);
-      progusage = m.HeapGrowth();
-      dfamem = prog->dfa_mem();
+      //progusage = m.HeapGrowth();
+      //dfamem = prog->dfa_mem();
       prog->BuildEntireDFA(Prog::kFirstMatch);
       prog->BuildEntireDFA(Prog::kLongestMatch);
       usage = m.HeapGrowth();
