@@ -458,7 +458,7 @@ Frag Compiler::Capture(Frag a, int n) {
 // A Rune is a name for a Unicode code point.
 // Returns maximum rune encoded by UTF-8 sequence of length len.
 static int MaxRune(int len) {
-  int b;  // number of Rune blents lenn len-byte UTF-8 sequence (len < UTFmax)
+  int b;  // number of Rune bits in len-byte UTF-8 sequence (len < UTFmax)
   if (len == 1)
     b = 7;
   else
