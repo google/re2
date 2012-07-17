@@ -57,7 +57,8 @@ const SuccessTable kSuccessTable[] = {
 // -2^15-1 to -2^31
 { "-32769",     -32769,         { false, false, true,  false, true,  false }},
 { "-2147483648",
-  0xFFFFFFFF80000000LL,         { false, false, true,  false, true,  false }},
+  static_cast<int64>(0xFFFFFFFF80000000LL),
+{ false, false, true,  false, true,  false }},
 
 // 2^31 to 2^32-1
 { "2147483648", 2147483648U,    { false, false, false, true,  true,  true  }},
@@ -70,14 +71,14 @@ const SuccessTable kSuccessTable[] = {
 
 // -2^31-1 to -2^63
 { "-2147483649", -2147483649LL, { false, false, false, false, true,  false }},
-{ "-9223372036854775808",
-  0x8000000000000000LL,         { false, false, false, false, true,  false }},
+{ "-9223372036854775808", static_cast<int64>(0x8000000000000000LL),
+  { false, false, false, false, true,  false }},
 
 // 2^63 to 2^64-1
-{ "9223372036854775808",
-  9223372036854775808ULL,       { false, false, false, false, false, true  }},
-{ "18446744073709551615",
-  18446744073709551615ULL,      { false, false, false, false, false, true  }},
+{ "9223372036854775808", static_cast<int64>(9223372036854775808ULL),
+  { false, false, false, false, false, true  }},
+{ "18446744073709551615", static_cast<int64>(18446744073709551615ULL),
+  { false, false, false, false, false, true  }},
 
 // >= 2^64
 { "18446744073709551616", 0,    { false, false, false, false, false, false }},
