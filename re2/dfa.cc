@@ -1006,7 +1006,17 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   }
   bool ismatch = false;
   RunWorkqOnByte(q0_, q1_, c, afterflag, &ismatch, kind_, start_unanchored_);
-  swap(q0_, q1_);
+  
+  // Most of the time, we build the state from the output of
+  // RunWorkqOnByte, so swap q0_ and q1_ here.  However, so that
+  // RE2::Set can tell exactly which match instructions
+  // contributed to the match, don't swap if c is kByteEndText.
+  // The resulting state wouldn't be correct for further processing
+  // of the string, but we're at the end of the text so that's okay.
+  // Leaving q0_ alone preseves the match instructions that led to
+  // the current setting of ismatch.
+  if (c != kByteEndText || kind_ != Prog::kManyMatch)
+    swap(q0_, q1_);
 
   // Save afterflag along with ismatch and isword in new state.
   uint flag = afterflag;
@@ -1422,20 +1432,6 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     }
   }
 
-  // Peek in state to see if a match is coming up.
-  if (params->matches && kind_ == Prog::kManyMatch) {
-    vector<int>* v = params->matches;
-    v->clear();
-    if (s > SpecialStateMax) {
-      for (int i = 0; i < s->ninst_; i++) {
-        Prog::Inst* ip = prog_->inst(s->inst_[i]);
-        if (ip->opcode() == kInstMatch)
-          v->push_back(ip->match_id());
-      }
-    }
-  }
-
-
   // Process one more byte to see if it triggers a match.
   // (Remember, matches are delayed one byte.)
   int lastbyte;
@@ -1480,6 +1476,15 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
   if (s > SpecialStateMax && s->IsMatch()) {
     matched = true;
     lastmatch = p;
+    if (params->matches && kind_ == Prog::kManyMatch) {
+      vector<int>* v = params->matches;
+      v->clear();
+      for (int i = 0; i < s->ninst_; i++) {
+        Prog::Inst* ip = prog_->inst(s->inst_[i]);
+        if (ip->opcode() == kInstMatch)
+          v->push_back(ip->match_id());
+      }
+    }
     if (DebugDFA)
       fprintf(stderr, "match @%d! [%s]\n", static_cast<int>(lastmatch - bp),
               DumpState(s).c_str());

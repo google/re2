@@ -732,7 +732,7 @@ Frag Compiler::PostVisit(Regexp* re, Frag, Frag, Frag* child_frags,
       Frag f = Match(re->match_id());
       // Remember unanchored match to end of string.
       if (anchor_ != RE2::ANCHOR_BOTH)
-        f = Cat(DotStar(), f);
+        f = Cat(DotStar(), Cat(EmptyWidth(kEmptyEndText), f));
       return f;
     }
 
