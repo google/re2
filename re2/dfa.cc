@@ -989,8 +989,10 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
 
   // If someone else already computed this, return it.
   MaybeReadMemoryBarrier(); // On alpha we need to ensure read ordering
-  if (state->next_[ByteMap(c)])
-    return state->next_[ByteMap(c)];
+  State* ns = state->next_[ByteMap(c)];
+  ANNOTATE_HAPPENS_AFTER(ns);
+  if (ns != NULL)
+    return ns;
 
   // Convert state into Workq.
   StateToWorkq(state, q0_);
@@ -1052,7 +1054,7 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   if (isword)
     flag |= kFlagLastWord;
 
-  State* ns = WorkqToCachedState(q0_, flag);
+  ns = WorkqToCachedState(q0_, flag);
 
   // Write barrier before updating state->next_ so that the
   // main search loop can proceed without any locking, for speed.
@@ -1061,9 +1063,9 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   //   a) the access to next_ should be ignored,
   //   b) 'ns' is properly published.
   WriteMemoryBarrier();  // Flush ns before linking to it.
-  ANNOTATE_PUBLISH_MEMORY_RANGE(ns, sizeof(*ns));
 
   ANNOTATE_IGNORE_WRITES_BEGIN();
+  ANNOTATE_HAPPENS_BEFORE(ns);
   state->next_[ByteMap(c)] = ns;
   ANNOTATE_IGNORE_WRITES_END();
   return ns;
@@ -1388,6 +1390,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
 
     MaybeReadMemoryBarrier(); // On alpha we need to ensure read ordering
     State* ns = s->next_[bytemap[c]];
+    ANNOTATE_HAPPENS_AFTER(ns);
     if (ns == NULL) {
       ns = RunStateOnByteUnlocked(s, c);
       if (ns == NULL) {
@@ -1476,6 +1479,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
 
   MaybeReadMemoryBarrier(); // On alpha we need to ensure read ordering
   State* ns = s->next_[ByteMap(lastbyte)];
+  ANNOTATE_HAPPENS_AFTER(ns);
   if (ns == NULL) {
     ns = RunStateOnByteUnlocked(s, lastbyte);
     if (ns == NULL) {
@@ -1669,7 +1673,7 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
             DumpState(info->start).c_str(), info->firstbyte);
 
   params->start = info->start;
-  params->firstbyte = info->firstbyte;
+  params->firstbyte = ANNOTATE_UNPROTECTED_READ(info->firstbyte);
 
   return true;
 }
@@ -1678,12 +1682,16 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
 bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
                               uint flags) {
   // Quick check; okay because of memory barriers below.
-  if (info->firstbyte != kFbUnknown)
+  if (ANNOTATE_UNPROTECTED_READ(info->firstbyte) != kFbUnknown) {
+    ANNOTATE_HAPPENS_AFTER(&info->firstbyte);
     return true;
+  }
 
   MutexLock l(&mutex_);
-  if (info->firstbyte != kFbUnknown)
+  if (info->firstbyte != kFbUnknown) {
+    ANNOTATE_HAPPENS_AFTER(&info->firstbyte);
     return true;
+  }
 
   q0_->clear();
   AddToQueue(q0_,
@@ -1694,12 +1702,14 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
     return false;
 
   if (info->start == DeadState) {
+    ANNOTATE_HAPPENS_BEFORE(&info->firstbyte);
     WriteMemoryBarrier();  // Synchronize with "quick check" above.
     info->firstbyte = kFbNone;
     return true;
   }
 
   if (info->start == FullMatchState) {
+    ANNOTATE_HAPPENS_BEFORE(&info->firstbyte);
     WriteMemoryBarrier();  // Synchronize with "quick check" above.
     info->firstbyte = kFbNone;	// will be ignored
     return true;
@@ -1712,6 +1722,7 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
   for (int i = 0; i < 256; i++) {
     State* s = RunStateOnByte(info->start, i);
     if (s == NULL) {
+      ANNOTATE_HAPPENS_BEFORE(&info->firstbyte);
       WriteMemoryBarrier();  // Synchronize with "quick check" above.
       info->firstbyte = firstbyte;
       return false;
@@ -1726,6 +1737,7 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
       break;
     }
   }
+  ANNOTATE_HAPPENS_BEFORE(&info->firstbyte);
   WriteMemoryBarrier();  // Synchronize with "quick check" above.
   info->firstbyte = firstbyte;
   return true;
@@ -1808,7 +1820,7 @@ DFA* Prog::GetDFA(MatchKind kind) {
   }
 
   // Quick check; okay because of memory barrier below.
-  DFA *dfa = *pdfa;
+  DFA *dfa = ANNOTATE_UNPROTECTED_READ(*pdfa);
   if (dfa != NULL) {
     ANNOTATE_HAPPENS_AFTER(dfa);
     return dfa;
@@ -1816,8 +1828,10 @@ DFA* Prog::GetDFA(MatchKind kind) {
 
   MutexLock l(&dfa_mutex_);
   dfa = *pdfa;
-  if (dfa != NULL)
+  if (dfa != NULL) {
+    ANNOTATE_HAPPENS_AFTER(dfa);
     return dfa;
+  }
 
   // For a forward DFA, half the memory goes to each DFA.
   // For a reverse DFA, all the memory goes to the

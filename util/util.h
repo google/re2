@@ -89,6 +89,7 @@ template<bool> struct CompileAssert {};
 #define NO_THREAD_SAFETY_ANALYSIS
 #define ANNOTATE_HAPPENS_BEFORE(x)
 #define ANNOTATE_HAPPENS_AFTER(x)
+#define ANNOTATE_UNPROTECTED_READ(x) (x)
 
 class StringPiece;
 
