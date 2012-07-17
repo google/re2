@@ -311,7 +311,7 @@ bool RE2::FindAndConsumeN(StringPiece* input, const RE2& re,
 
 // Returns the maximum submatch needed for the rewrite to be done by Replace().
 // E.g. if rewrite == "foo \\2,\\1", returns 2.
-static int MaxSubmatch(const StringPiece& rewrite) {
+int RE2::MaxSubmatch(const StringPiece& rewrite) {
   int max = 0;
   for (const char *s = rewrite.data(), *end = s + rewrite.size();
        s < end; s++) {

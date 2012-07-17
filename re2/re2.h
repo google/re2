@@ -467,6 +467,20 @@ class RE2 {
   // fail because of a bad rewrite string.
   bool CheckRewriteString(const StringPiece& rewrite, string* error) const;
 
+  // Returns the maximum submatch needed for the rewrite to be done by
+  // Replace(). E.g. if rewrite == "foo \\2,\\1", returns 2.
+  static int MaxSubmatch(const StringPiece& rewrite);
+
+  // Append the "rewrite" string, with backslash subsitutions from "vec",
+  // to string "out".
+  // Returns true on success.  This method can fail because of a malformed
+  // rewrite string.  CheckRewriteString guarantees that the rewrite will
+  // be sucessful.
+  bool Rewrite(string *out,
+               const StringPiece &rewrite,
+               const StringPiece* vec,
+               int veclen) const;
+
   // Constructor options
   class Options {
    public:
@@ -677,11 +691,6 @@ class RE2 {
 
  private:
   void Init(const StringPiece& pattern, const Options& options);
-
-  bool Rewrite(string *out,
-               const StringPiece &rewrite,
-               const StringPiece* vec,
-               int veclen) const;
 
   bool DoMatch(const StringPiece& text,
                    Anchor anchor,
