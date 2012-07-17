@@ -131,6 +131,9 @@ int RE2::Options::ParseFlags() const {
   if (never_nl())
     flags |= Regexp::NeverNL;
 
+  if (never_capture())
+    flags |= Regexp::NeverCapture;
+
   if (!case_sensitive())
     flags |= Regexp::FoldCase;
 

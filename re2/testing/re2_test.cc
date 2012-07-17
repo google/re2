@@ -1244,6 +1244,14 @@ TEST(RE2, NeverNewline) {
   }
 }
 
+// Check that there are no capturing groups in "never capture" mode.
+TEST(RE2, NeverCapture) {
+  RE2::Options opt;
+  opt.set_never_capture(true);
+  RE2 re("(r)(e)", opt);
+  EXPECT_EQ(0, re.NumberOfCapturingGroups());
+}
+
 // Bitstate bug was looking at submatch[0] even if nsubmatch == 0.
 // Triggered by a failed DFA search falling back to Bitstate when
 // using Match with a NULL submatch set.  Bitstate tried to read

@@ -1995,8 +1995,13 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
             return NULL;
           break;
         }
-        if (!ps.DoLeftParen(NULL))
-          return NULL;
+        if (ps.flags() & NeverCapture) {
+          if (!ps.DoLeftParenNoCapture())
+            return NULL;
+        } else {
+          if (!ps.DoLeftParen(NULL))
+            return NULL;
+        }
         t.remove_prefix(1);  // '('
         break;
 

@@ -299,6 +299,7 @@ class Regexp {
                            //   and \P{Han} for its negation.
     NeverNL      = 1<<11,  // Never match NL, even if the regexp mentions
                            //   it explicitly.
+    NeverCapture = 1<<12,  // Parse all parens as non-capturing.
 
     // As close to Perl as we can get.
     LikePerl     = ClassNL | OneLine | PerlClasses | PerlB | PerlX |

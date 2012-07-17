@@ -479,6 +479,7 @@ class RE2 {
     //   max_mem          (see below)  approx. max memory footprint of RE2
     //   literal          (false) interpret string as literal, not regexp
     //   never_nl         (false) never match \n, even if it is in regexp
+    //   never_capture    (false) parse all parens as non-capturing
     //   case_sensitive   (true)  match is case-sensitive (regexp can override
     //                              with (?i) unless in posix_syntax mode)
     //
@@ -533,6 +534,7 @@ class RE2 {
       max_mem_(kDefaultMaxMem),
       literal_(false),
       never_nl_(false),
+      never_capture_(false),
       case_sensitive_(true),
       perl_classes_(false),
       word_boundary_(false),
@@ -571,6 +573,9 @@ class RE2 {
     bool never_nl() const { return never_nl_; }
     void set_never_nl(bool b) { never_nl_ = b; }
 
+    bool never_capture() const { return never_capture_; }
+    void set_never_capture(bool b) { never_capture_ = b; }
+
     bool case_sensitive() const { return case_sensitive_; }
     void set_case_sensitive(bool b) { case_sensitive_ = b; }
 
@@ -591,6 +596,7 @@ class RE2 {
       max_mem_ = src.max_mem_;
       literal_ = src.literal_;
       never_nl_ = src.never_nl_;
+      never_capture_ = src.never_capture_;
       case_sensitive_ = src.case_sensitive_;
       perl_classes_ = src.perl_classes_;
       word_boundary_ = src.word_boundary_;
@@ -613,6 +619,7 @@ class RE2 {
       max_mem_(kDefaultMaxMem),
       literal_(false),
       never_nl_(false),
+      never_capture_(false),
       case_sensitive_(true),
       perl_classes_(false),
       word_boundary_(false),
@@ -626,6 +633,7 @@ class RE2 {
     int64_t max_mem_;
     bool literal_;
     bool never_nl_;
+    bool never_capture_;
     bool case_sensitive_;
     bool perl_classes_;
     bool word_boundary_;
