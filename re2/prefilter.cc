@@ -181,6 +181,12 @@ static Rune ToLowerRune(Rune r) {
   return ApplyFold(f, r);
 }
 
+static Rune ToLowerRuneLatin1(Rune r) {
+  if ('A' <= r && r <= 'Z')
+    r += 'a' - 'A';
+  return r;
+}
+
 Prefilter* Prefilter::FromString(const string& str) {
   Prefilter* m = new Prefilter(Prefilter::ATOM);
   m->atom_ = str;
@@ -205,8 +211,9 @@ class Prefilter::Info {
   static Info* EmptyString();
   static Info* NoMatch();
   static Info* AnyChar();
-  static Info* CClass(CharClass* cc);
+  static Info* CClass(CharClass* cc, bool latin1);
   static Info* Literal(Rune r);
+  static Info* LiteralLatin1(Rune r);
   static Info* AnyMatch();
 
   // Format Info as a string.
@@ -390,10 +397,23 @@ static string RuneToString(Rune r) {
   return string(buf, n);
 }
 
+static string RuneToStringLatin1(Rune r) {
+  char c = r & 0xff;
+  return string(&c, 1);
+}
+
 // Constructs Info for literal rune.
 Prefilter::Info* Prefilter::Info::Literal(Rune r) {
   Info* info = new Info();
   info->exact_.insert(RuneToString(ToLowerRune(r)));
+  info->is_exact_ = true;
+  return info;
+}
+
+// Constructs Info for literal rune for Latin1 encoded string.
+Prefilter::Info* Prefilter::Info::LiteralLatin1(Rune r) {
+  Info* info = new Info();
+  info->exact_.insert(RuneToStringLatin1(ToLowerRuneLatin1(r)));
   info->is_exact_ = true;
   return info;
 }
@@ -432,7 +452,8 @@ Prefilter::Info* Prefilter::Info::EmptyString() {
 
 // Constructs Prefilter::Info for a character class.
 typedef CharClass::iterator CCIter;
-Prefilter::Info* Prefilter::Info::CClass(CharClass *cc) {
+Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
+                                         bool latin1) {
   if (Trace) {
     VLOG(0) << "CharClassInfo:";
     for (CCIter i = cc->begin(); i != cc->end(); ++i)
@@ -445,8 +466,14 @@ Prefilter::Info* Prefilter::Info::CClass(CharClass *cc) {
 
   Prefilter::Info *a = new Prefilter::Info();
   for (CCIter i = cc->begin(); i != cc->end(); ++i)
-    for (Rune r = i->lo; r <= i->hi; r++)
-      a->exact_.insert(RuneToString(ToLowerRune(r)));
+    for (Rune r = i->lo; r <= i->hi; r++) {
+      if (latin1) {
+        a->exact_.insert(RuneToStringLatin1(ToLowerRuneLatin1(r)));
+      } else {
+        a->exact_.insert(RuneToString(ToLowerRune(r)));
+      }
+    }
+
 
   a->is_exact_ = true;
 
@@ -459,7 +486,7 @@ Prefilter::Info* Prefilter::Info::CClass(CharClass *cc) {
 
 class Prefilter::Info::Walker : public Regexp::Walker<Prefilter::Info*> {
  public:
-  Walker() {}
+  Walker(bool latin1) : latin1_(latin1) {}
 
   virtual Info* PostVisit(
       Regexp* re, Info* parent_arg,
@@ -470,7 +497,9 @@ class Prefilter::Info::Walker : public Regexp::Walker<Prefilter::Info*> {
       Regexp* re,
       Info* parent_arg);
 
+  bool latin1() { return latin1_; }
  private:
+  bool latin1_;
   DISALLOW_EVIL_CONSTRUCTORS(Walker);
 };
 
@@ -478,7 +507,9 @@ Prefilter::Info* Prefilter::BuildInfo(Regexp* re) {
   if (Trace) {
     LOG(INFO) << "BuildPrefilter::Info: " << re->ToString();
   }
-  Prefilter::Info::Walker w;
+
+  bool latin1 = re->parse_flags() & Regexp::Latin1;
+  Prefilter::Info::Walker w(latin1);
   Prefilter::Info* info = w.WalkExponential(re, NULL, 100000);
 
   if (w.stopped_early()) {
@@ -524,7 +555,12 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
       break;
 
     case kRegexpLiteral:
-      info = Literal(re->rune());
+      if (latin1()) {
+        info = LiteralLatin1(re->rune());
+      }
+      else {
+        info = Literal(re->rune());
+      }
       break;
 
     case kRegexpLiteralString:
@@ -532,9 +568,17 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
         info = NoMatch();
         break;
       }
-      info = Literal(re->runes()[0]);
-      for (int i = 1; i < re->nrunes(); i++)
-        info = Concat(info, Literal(re->runes()[i]));
+      if (latin1()) {
+        info = LiteralLatin1(re->runes()[0]);
+        for (int i = 1; i < re->nrunes(); i++) {
+          info = Concat(info, LiteralLatin1(re->runes()[i]));
+        }
+      } else {
+        info = Literal(re->runes()[0]);
+        for (int i = 1; i < re->nrunes(); i++) {
+          info = Concat(info, Literal(re->runes()[i]));
+        }
+      }
       break;
 
     case kRegexpConcat: {
@@ -585,7 +629,7 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
       break;
 
     case kRegexpCharClass:
-      info = CClass(re->cc());
+      info = CClass(re->cc(), latin1());
       break;
 
     case kRegexpCapture:
