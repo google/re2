@@ -48,17 +48,24 @@
 
 class LogMessage {
  public:
-  LogMessage(const char* file, int line) {
+  LogMessage(const char* file, int line) : flushed_(false) {
     stream() << file << ":" << line << ": ";
   }
-  ~LogMessage() {
+  void Flush() {
     stream() << "\n";
     string s = str_.str();
     if(write(2, s.data(), s.size()) < 0) {}  // shut up gcc
+    flushed_ = true;
+  }
+  ~LogMessage() {
+    if (!flushed_) {
+      Flush();
+    }
   }
   ostream& stream() { return str_; }
  
  private:
+  bool flushed_;
   std::ostringstream str_;
   DISALLOW_EVIL_CONSTRUCTORS(LogMessage);
 };
@@ -68,7 +75,7 @@ class LogMessageFatal : public LogMessage {
   LogMessageFatal(const char* file, int line)
     : LogMessage(file, line) { }
   ~LogMessageFatal() {
-    std::cerr << "\n";
+    Flush();
     abort();
   }
  private:
