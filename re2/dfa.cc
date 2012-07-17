@@ -115,6 +115,7 @@ class DFA {
     kFlagNeedShift = 16,        // needed kEmpty bits are or'ed in shifted left
   };
 
+#ifndef STL_MSVC
   // STL function structures for use with unordered_set.
   struct StateEqual {
     bool operator()(const State* a, const State* b) const {
@@ -132,6 +133,7 @@ class DFA {
       return true;  // they're equal
     }
   };
+#endif  // STL_MSVC
   struct StateHash {
     size_t operator()(const State* a) const {
       if (a == NULL)
@@ -143,9 +145,34 @@ class DFA {
       else
         return Hash64StringWithSeed(s, len, a->flag_);
     }
+#ifdef STL_MSVC
+    // Less than operator.
+    bool operator()(const State* a, const State* b) const {
+      if (a == b)
+        return false;
+      if (a == NULL || b == NULL)
+        return a == NULL;
+      if (a->ninst_ != b->ninst_)
+        return a->ninst_ < b->ninst_;
+      if (a->flag_ != b->flag_)
+        return a->flag_ < b->flag_;
+      for (int i = 0; i < a->ninst_; ++i)
+        if (a->inst_[i] != b->inst_[i])
+          return a->inst_[i] < b->inst_[i];
+      return false;  // they're equal
+    }
+    // The two public members are required by msvc. 4 and 8 are default values.
+    // Reference: http://msdn.microsoft.com/en-us/library/1s1byw77.aspx
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
+#endif  // STL_MSVC
   };
 
+#ifdef STL_MSVC
+  typedef unordered_set<State*, StateHash> StateSet;
+#else  // !STL_MSVC
   typedef unordered_set<State*, StateHash, StateEqual> StateSet;
+#endif  // STL_MSVC
 
 
  private:

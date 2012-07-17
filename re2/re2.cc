@@ -31,7 +31,10 @@ const VariadicFunction2<bool, const StringPiece&, const RE2&, RE2::Arg, RE2::Par
 const VariadicFunction2<bool, StringPiece*, const RE2&, RE2::Arg, RE2::ConsumeN> RE2::Consume;
 const VariadicFunction2<bool, StringPiece*, const RE2&, RE2::Arg, RE2::FindAndConsumeN> RE2::FindAndConsume;
 
+// This will trigger LNK2005 error in MSVC.
+#ifndef COMPILER_MSVC
 const int RE2::Options::kDefaultMaxMem;  // initialized in re2.h
+#endif  // COMPILER_MSVC
 
 // Commonly-used option sets; arguments to constructor are:
 //   utf8 input
