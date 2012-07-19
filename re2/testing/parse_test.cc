@@ -11,10 +11,18 @@
 
 namespace re2 {
 
+static const Regexp::ParseFlags TestZeroFlags = Regexp::ParseFlags(1<<30);
+
 struct Test {
   const char* regexp;
   const char* parse;
+  Regexp::ParseFlags flags;
 };
+
+static Regexp::ParseFlags kTestFlags = Regexp::MatchNL |
+                                       Regexp::PerlX |
+                                       Regexp::PerlClasses |
+                                       Regexp::UnicodeGroups;
 
 static Test tests[] = {
   // Base cases
@@ -138,12 +146,53 @@ static Test tests[] = {
   // Strings
   { "abcde", "str{abcde}" },
   { "[Aa][Bb]cd", "cat{strfold{ab}str{cd}}" },
-};
 
-static Regexp::ParseFlags kTestFlags = Regexp::MatchNL |
-                                       Regexp::PerlX |
-                                       Regexp::PerlClasses |
-                                       Regexp::UnicodeGroups;
+  // Reported bug involving \n leaking in despite use of NeverNL.
+  { "[^ ]", "cc{0-0x9 0xb-0x1f 0x21-0x10ffff}", TestZeroFlags },
+  { "[^ ]", "cc{0-0x9 0xb-0x1f 0x21-0x10ffff}", Regexp::FoldCase },
+  { "[^ ]", "cc{0-0x9 0xb-0x1f 0x21-0x10ffff}", Regexp::NeverNL },
+  { "[^ ]", "cc{0-0x9 0xb-0x1f 0x21-0x10ffff}", Regexp::NeverNL | Regexp::FoldCase },
+  { "[^ \f]", "cc{0-0x9 0xb 0xd-0x1f 0x21-0x10ffff}", TestZeroFlags },
+  { "[^ \f]", "cc{0-0x9 0xb 0xd-0x1f 0x21-0x10ffff}", Regexp::FoldCase },
+  { "[^ \f]", "cc{0-0x9 0xb 0xd-0x1f 0x21-0x10ffff}", Regexp::NeverNL },
+  { "[^ \f]", "cc{0-0x9 0xb 0xd-0x1f 0x21-0x10ffff}", Regexp::NeverNL | Regexp::FoldCase },
+  { "[^ \r]", "cc{0-0x9 0xb-0xc 0xe-0x1f 0x21-0x10ffff}", TestZeroFlags },
+  { "[^ \r]", "cc{0-0x9 0xb-0xc 0xe-0x1f 0x21-0x10ffff}", Regexp::FoldCase },
+  { "[^ \r]", "cc{0-0x9 0xb-0xc 0xe-0x1f 0x21-0x10ffff}", Regexp::NeverNL },
+  { "[^ \r]", "cc{0-0x9 0xb-0xc 0xe-0x1f 0x21-0x10ffff}", Regexp::NeverNL | Regexp::FoldCase },
+  { "[^ \v]", "cc{0-0x9 0xc-0x1f 0x21-0x10ffff}", TestZeroFlags },
+  { "[^ \v]", "cc{0-0x9 0xc-0x1f 0x21-0x10ffff}", Regexp::FoldCase },
+  { "[^ \v]", "cc{0-0x9 0xc-0x1f 0x21-0x10ffff}", Regexp::NeverNL },
+  { "[^ \v]", "cc{0-0x9 0xc-0x1f 0x21-0x10ffff}", Regexp::NeverNL | Regexp::FoldCase },
+  { "[^ \t]", "cc{0-0x8 0xb-0x1f 0x21-0x10ffff}", TestZeroFlags },
+  { "[^ \t]", "cc{0-0x8 0xb-0x1f 0x21-0x10ffff}", Regexp::FoldCase },
+  { "[^ \t]", "cc{0-0x8 0xb-0x1f 0x21-0x10ffff}", Regexp::NeverNL },
+  { "[^ \t]", "cc{0-0x8 0xb-0x1f 0x21-0x10ffff}", Regexp::NeverNL | Regexp::FoldCase },
+  { "[^ \r\f\v]", "cc{0-0x9 0xe-0x1f 0x21-0x10ffff}", Regexp::NeverNL },
+  { "[^ \r\f\v]", "cc{0-0x9 0xe-0x1f 0x21-0x10ffff}", Regexp::NeverNL | Regexp::FoldCase },
+  { "[^ \r\f\t\v]", "cc{0-0x8 0xe-0x1f 0x21-0x10ffff}", Regexp::NeverNL },
+  { "[^ \r\f\t\v]", "cc{0-0x8 0xe-0x1f 0x21-0x10ffff}", Regexp::NeverNL | Regexp::FoldCase },
+  { "[^ \r\n\f\t\v]", "cc{0-0x8 0xe-0x1f 0x21-0x10ffff}", Regexp::NeverNL },
+  { "[^ \r\n\f\t\v]", "cc{0-0x8 0xe-0x1f 0x21-0x10ffff}", Regexp::NeverNL | Regexp::FoldCase },
+  { "[^ \r\n\f\t]", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}", Regexp::NeverNL },
+  { "[^ \r\n\f\t]", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}", Regexp::NeverNL | Regexp::FoldCase },
+  { "[^\t-\n\f-\r ]", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}",
+    Regexp::PerlClasses },
+  { "[^\t-\n\f-\r ]", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}",
+    Regexp::PerlClasses | Regexp::FoldCase },
+  { "[^\t-\n\f-\r ]", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}",
+    Regexp::PerlClasses | Regexp::NeverNL },
+  { "[^\t-\n\f-\r ]", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}",
+    Regexp::PerlClasses | Regexp::NeverNL | Regexp::FoldCase },
+  { "\\S", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}",
+    Regexp::PerlClasses },
+  { "\\S", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}",
+    Regexp::PerlClasses | Regexp::FoldCase },
+  { "\\S", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}",
+    Regexp::PerlClasses | Regexp::NeverNL },
+  { "\\S", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}",
+    Regexp::PerlClasses | Regexp::NeverNL | Regexp::FoldCase },
+};
 
 bool RegexpEqualTestingOnly(Regexp* a, Regexp* b) {
   return Regexp::Equal(a, b);
@@ -154,12 +203,16 @@ void TestParse(const Test* tests, int ntests, Regexp::ParseFlags flags,
   Regexp** re = new Regexp*[ntests];
   for (int i = 0; i < ntests; i++) {
     RegexpStatus status;
-    re[i] = Regexp::Parse(tests[i].regexp, flags, &status);
+    Regexp::ParseFlags f = flags;
+    if (tests[i].flags != 0) {
+      f = tests[i].flags & ~TestZeroFlags;
+    }
+    re[i] = Regexp::Parse(tests[i].regexp, f, &status);
     CHECK(re[i] != NULL) << " " << tests[i].regexp << " "
                          << status.Text();
     string s = re[i]->Dump();
     EXPECT_EQ(string(tests[i].parse), s) << "Regexp: " << tests[i].regexp
-      << "\nparse: " << tests[i].parse << " s: " << s;
+      << "\nparse: " << tests[i].parse << " s: " << s << " flag=" << f;
   }
 
   for (int i = 0; i < ntests; i++) {
@@ -328,10 +381,14 @@ TEST(TestParse, InvalidRegexps) {
 TEST(TestToString, EquivalentParse) {
   for (int i = 0; i < arraysize(tests); i++) {
     RegexpStatus status;
-    Regexp* re = Regexp::Parse(tests[i].regexp, kTestFlags, &status);
+    Regexp::ParseFlags f = kTestFlags;
+    if (tests[i].flags != 0) {
+      f = tests[i].flags & ~TestZeroFlags;
+    }
+    Regexp* re = Regexp::Parse(tests[i].regexp, f, &status);
     CHECK(re != NULL) << " " << tests[i].regexp << " " << status.Text();
     string s = re->Dump();
-    EXPECT_EQ(string(tests[i].parse), s);
+    EXPECT_EQ(string(tests[i].parse), s) << " " << tests[i].regexp << " " << string(tests[i].parse) << " " << s;
     string t = re->ToString();
     if (t != tests[i].regexp) {
       // If ToString didn't return the original regexp,
