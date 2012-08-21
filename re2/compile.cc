@@ -44,7 +44,7 @@ struct PatchList {
   static PatchList Append(Prog::Inst *inst0, PatchList l1, PatchList l2);
 };
 
-static PatchList nullPatchList = { 0 };
+static PatchList nullPatchList;
 
 // Returns patch list containing just p.
 PatchList PatchList::Mk(uint32 p) {
@@ -106,11 +106,12 @@ struct Frag {
   uint32 begin;
   PatchList end;
 
+  explicit Frag(LinkerInitialized) {}
   Frag() : begin(0) { end.p = 0; }  // needed so Frag can go in vector
   Frag(uint32 begin, PatchList end) : begin(begin), end(end) {}
 };
 
-static Frag kNullFrag;
+static Frag kNullFrag(LINKER_INITIALIZED);
 
 // Input encodings.
 enum Encoding {
@@ -588,7 +589,7 @@ static struct ByteRangeProg {
 };
 
 void Compiler::Add_80_10ffff() {
-  int inst[arraysize(prog_80_10ffff)];
+  int inst[arraysize(prog_80_10ffff)] = { 0 }; // does not need to be initialized; silences gcc warning
   for (int i = 0; i < arraysize(prog_80_10ffff); i++) {
     const ByteRangeProg& p = prog_80_10ffff[i];
     int next = 0;

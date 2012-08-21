@@ -59,29 +59,39 @@ bool Regexp::QuickDestroy() {
   return false;
 }
 
-static map<Regexp*, int> ref_map;
-static Mutex ref_mutex;
+static map<Regexp*, int> *ref_map;
+GLOBAL_MUTEX(ref_mutex);
 
 int Regexp::Ref() {
   if (ref_ < kMaxRef)
     return ref_;
 
-  MutexLock l(&ref_mutex);
-  return ref_map[this];
+  GLOBAL_MUTEX_LOCK(ref_mutex);
+  int r = 0;
+  if (ref_map != NULL) {
+    r = (*ref_map)[this];
+  }
+  GLOBAL_MUTEX_UNLOCK(ref_mutex);
+  return r;
 }
 
 // Increments reference count, returns object as convenience.
 Regexp* Regexp::Incref() {
   if (ref_ >= kMaxRef-1) {
     // Store ref count in overflow map.
-    MutexLock l(&ref_mutex);
-    if (ref_ == kMaxRef) {  // already overflowed
-      ref_map[this]++;
-      return this;
+    GLOBAL_MUTEX_LOCK(ref_mutex);
+    if (ref_map == NULL) {
+      ref_map = new map<Regexp*, int>;
     }
-    // overflowing now
-    ref_map[this] = kMaxRef;
-    ref_ = kMaxRef;
+    if (ref_ == kMaxRef) {
+      // already overflowed
+      (*ref_map)[this]++;
+    } else {
+      // overflowing now
+      (*ref_map)[this] = kMaxRef;
+      ref_ = kMaxRef;
+    }
+    GLOBAL_MUTEX_UNLOCK(ref_mutex);
     return this;
   }
 
@@ -93,14 +103,15 @@ Regexp* Regexp::Incref() {
 void Regexp::Decref() {
   if (ref_ == kMaxRef) {
     // Ref count is stored in overflow map.
-    MutexLock l(&ref_mutex);
-    int r = ref_map[this] - 1;
+    GLOBAL_MUTEX_LOCK(ref_mutex);
+    int r = (*ref_map)[this] - 1;
     if (r < kMaxRef) {
       ref_ = r;
-      ref_map.erase(this);
+      ref_map->erase(this);
     } else {
-      ref_map[this] = r;
+      (*ref_map)[this] = r;
     }
+    GLOBAL_MUTEX_UNLOCK(ref_mutex);
     return;
   }
   ref_--;
@@ -447,7 +458,7 @@ bool Regexp::Equal(Regexp* a, Regexp* b) {
 }
 
 // Keep in sync with enum RegexpStatusCode in regexp.h
-static const string kErrorStrings[] = {
+static const char *kErrorStrings[] = {
   "no error",
   "unexpected error",
   "invalid escape sequence",
@@ -464,7 +475,7 @@ static const string kErrorStrings[] = {
   "invalid named capture group",
 };
 
-const string& RegexpStatus::CodeText(enum RegexpStatusCode code) {
+string RegexpStatus::CodeText(enum RegexpStatusCode code) {
   if (code < 0 || code >= arraysize(kErrorStrings))
     code = kRegexpInternalError;
   return kErrorStrings[code];

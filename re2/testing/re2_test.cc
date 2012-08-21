@@ -748,18 +748,18 @@ TEST(RE2, FullMatchTypeTests) {
     CHECK(RE2::FullMatch("100",  "(-?\\d+)", &v)); CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("-100", "(-?\\d+)", &v)); CHECK_EQ(v, -100);
 
-    snprintf(buf, sizeof(buf), "%lld", max);
+    snprintf(buf, sizeof(buf), "%lld", (long long int)max);
     CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, max);
 
-    snprintf(buf, sizeof(buf), "%lld", min);
+    snprintf(buf, sizeof(buf), "%lld", (long long int)min);
     CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, min);
 
-    snprintf(buf, sizeof(buf), "%lld", max);
+    snprintf(buf, sizeof(buf), "%lld", (long long int)max);
     assert(buf[strlen(buf)-1] != '9');
     buf[strlen(buf)-1]++;
     CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
 
-    snprintf(buf, sizeof(buf), "%lld", min);
+    snprintf(buf, sizeof(buf), "%lld", (long long int)min);
     assert(buf[strlen(buf)-1] != '9');
     buf[strlen(buf)-1]++;
     CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
@@ -773,7 +773,7 @@ TEST(RE2, FullMatchTypeTests) {
     CHECK(RE2::FullMatch("100",  "(-?\\d+)", &v));  CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("-100", "(-?\\d+)", &v2)); CHECK_EQ(v2, -100);
 
-    snprintf(buf, sizeof(buf), "%llu", max);
+    snprintf(buf, sizeof(buf), "%llu", (long long unsigned)max);
     CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, max);
 
     assert(buf[strlen(buf)-1] != '9');

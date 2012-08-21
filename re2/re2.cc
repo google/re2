@@ -36,18 +36,37 @@ const VariadicFunction2<bool, StringPiece*, const RE2&, RE2::Arg, RE2::FindAndCo
 const int RE2::Options::kDefaultMaxMem;  // initialized in re2.h
 #endif  // COMPILER_MSVC
 
-// Commonly-used option sets; arguments to constructor are:
-//   utf8 input
-//   posix syntax
-//   longest match
-//   log errors
-const RE2::Options RE2::DefaultOptions;  // EncodingUTF8, false, false, true
-const RE2::Options RE2::Latin1(RE2::Options::EncodingLatin1, false, false, true);
-const RE2::Options RE2::POSIX(RE2::Options::EncodingUTF8, true, true, true);
-const RE2::Options RE2::Quiet(RE2::Options::EncodingUTF8, false, false, false);
+RE2::Options::Options(RE2::CannedOptions opt)
+  : encoding_(opt == RE2::Latin1 ? EncodingLatin1 : EncodingUTF8),
+    posix_syntax_(opt == RE2::POSIX),
+    longest_match_(opt == RE2::POSIX),
+    log_errors_(opt != RE2::Quiet),
+    max_mem_(kDefaultMaxMem),
+    literal_(false),
+    never_nl_(false),
+    never_capture_(false),
+    case_sensitive_(true),
+    perl_classes_(false),
+    word_boundary_(false),
+    one_line_(false) {
+}
 
-// If a regular expression has no error, its error_ field points here
-static const string empty_string;
+// static empty things for use as const references.
+// To avoid global constructors, initialized on demand.
+GLOBAL_MUTEX(empty_mutex);
+static const string *empty_string;
+static const map<string, int> *empty_named_groups;
+static const map<int, string> *empty_group_names;
+
+static void InitEmpty() {
+  GLOBAL_MUTEX_LOCK(empty_mutex);
+  if (empty_string == NULL) {
+    empty_string = new string;
+    empty_named_groups = new map<string, int>;
+    empty_group_names = new map<int, string>;
+  }
+  GLOBAL_MUTEX_UNLOCK(empty_mutex);
+}
 
 // Converts from Regexp error code to RE2 error code.
 // Maybe some day they will diverge.  In any event, this
@@ -153,7 +172,8 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
   mutex_ = new Mutex;
   pattern_ = pattern.as_string();
   options_.Copy(options);
-  error_ = &empty_string;
+  InitEmpty();
+  error_ = empty_string;
   error_code_ = NoError;
   suffix_regexp_ = NULL;
   entire_regexp_ = NULL;
@@ -169,7 +189,7 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
     static_cast<Regexp::ParseFlags>(options_.ParseFlags()),
     &status);
   if (entire_regexp_ == NULL) {
-    if (error_ == &empty_string)
+    if (error_ == empty_string)
       error_ = new string(status.Text());
     if (options_.log_errors()) {
       LOG(ERROR) << "Error parsing '" << trunc(pattern_) << "': "
@@ -211,7 +231,7 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
 // Returns rprog_, computing it if needed.
 re2::Prog* RE2::ReverseProg() const {
   MutexLock l(mutex_);
-  if (rprog_ == NULL && error_ == &empty_string) {
+  if (rprog_ == NULL && error_ == empty_string) {
     rprog_ = suffix_regexp_->CompileToReverseProg(options_.max_mem()/3);
     if (rprog_ == NULL) {
       if (options_.log_errors())
@@ -224,9 +244,6 @@ re2::Prog* RE2::ReverseProg() const {
   return rprog_;
 }
 
-static const map<string, int> empty_named_groups;
-static const map<int, string> empty_group_names;
-
 RE2::~RE2() {
   if (suffix_regexp_)
     suffix_regexp_->Decref();
@@ -235,11 +252,11 @@ RE2::~RE2() {
   delete mutex_;
   delete prog_;
   delete rprog_;
-  if (error_ != &empty_string)
+  if (error_ != empty_string)
     delete error_;
-  if (named_groups_ != NULL && named_groups_ != &empty_named_groups)
+  if (named_groups_ != NULL && named_groups_ != empty_named_groups)
     delete named_groups_;
-  if (group_names_ != NULL &&  group_names_ != &empty_group_names)
+  if (group_names_ != NULL &&  group_names_ != empty_group_names)
     delete group_names_;
 }
 
@@ -253,11 +270,11 @@ int RE2::ProgramSize() const {
 const map<string, int>&  RE2::NamedCapturingGroups() const {
   MutexLock l(mutex_);
   if (!ok())
-    return empty_named_groups;
+    return *empty_named_groups;
   if (named_groups_ == NULL) {
     named_groups_ = suffix_regexp_->NamedCaptures();
     if (named_groups_ == NULL)
-      named_groups_ = &empty_named_groups;
+      named_groups_ = empty_named_groups;
   }
   return *named_groups_;
 }
@@ -266,11 +283,11 @@ const map<string, int>&  RE2::NamedCapturingGroups() const {
 const map<int, string>&  RE2::CapturingGroupNames() const {
   MutexLock l(mutex_);
   if (!ok())
-    return empty_group_names;
+    return *empty_group_names;
   if (group_names_ == NULL) {
     group_names_ = suffix_regexp_->CaptureNames();
     if (group_names_ == NULL)
-      group_names_ = &empty_group_names;
+      group_names_ = empty_group_names;
   }
   return *group_names_;
 }

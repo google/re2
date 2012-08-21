@@ -187,11 +187,27 @@
 #include "re2/variadic_function.h"
 
 namespace re2 {
+
 using std::string;
 using std::map;
 class Mutex;
 class Prog;
 class Regexp;
+
+// The following enum should be used only as a constructor argument to indicate
+// that the variable has static storage class, and that the constructor should
+// do nothing to its state.  It indicates to the reader that it is legal to
+// declare a static instance of the class, provided the constructor is given
+// the LINKER_INITIALIZED argument.  Normally, it is unsafe to declare a
+// static variable that has a constructor or a destructor because invocation
+// order is undefined.  However, IF the type can be initialized by filling with
+// zeroes (which the loader does for static variables), AND the type's
+// destructor does nothing to the storage, then a constructor for static
+// initialization can be declared as
+//       explicit MyClass(LinkerInitialized x) {}
+// and invoked as
+//       static MyClass my_variable_name(LINKER_INITIALIZED);
+enum LinkerInitialized { LINKER_INITIALIZED };
 
 // Interface for regular expression matching.  Also corresponds to a
 // pre-compiled regular expression.  An "RE2" object is safe for
@@ -229,12 +245,15 @@ class RE2 {
 
   // Predefined common options.
   // If you need more complicated things, instantiate
-  // an Option class, change the settings, and pass it to the
-  // RE2 constructor.
-  static const Options DefaultOptions;
-  static const Options Latin1; // treat input as Latin-1 (default UTF-8)
-  static const Options POSIX;  // POSIX syntax, leftmost-longest match
-  static const Options Quiet;  // do not log about regexp parse errors
+  // an Option class, possibly passing one of these to
+  // the Option constructor, change the settings, and pass that
+  // Option class to the RE2 constructor.
+  enum CannedOptions {
+    DefaultOptions = 0,
+    Latin1, // treat input as Latin-1 (default UTF-8)
+    POSIX, // POSIX syntax, leftmost-longest match
+    Quiet // do not log about regexp parse errors
+  };
 
   // Need to have the const char* and const string& forms for implicit
   // conversions when passing string literals to FullMatch and PartialMatch.
@@ -554,6 +573,8 @@ class RE2 {
       word_boundary_(false),
       one_line_(false) {
     }
+    
+    /*implicit*/ Options(CannedOptions);
 
     Encoding encoding() const { return encoding_; }
     void set_encoding(Encoding encoding) { encoding_ = encoding; }
@@ -620,26 +641,6 @@ class RE2 {
     int ParseFlags() const;
 
    private:
-    // Private constructor for defining constants like RE2::Latin1.
-    friend class RE2;
-    Options(Encoding encoding,
-            bool posix_syntax,
-            bool longest_match,
-            bool log_errors) :
-      encoding_(encoding),
-      posix_syntax_(posix_syntax),
-      longest_match_(longest_match),
-      log_errors_(log_errors),
-      max_mem_(kDefaultMaxMem),
-      literal_(false),
-      never_nl_(false),
-      never_capture_(false),
-      case_sensitive_(true),
-      perl_classes_(false),
-      word_boundary_(false),
-      one_line_(false) {
-    }
-
     Encoding encoding_;
     bool posix_syntax_;
     bool longest_match_;

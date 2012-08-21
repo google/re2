@@ -54,15 +54,16 @@ namespace re2 {
 class SparseSet {
  public:
   SparseSet()
-    : size_(0), max_size_(0), sparse_to_dense_(NULL), dense_(NULL) {}
+    : size_(0), max_size_(0), sparse_to_dense_(NULL), dense_(NULL), valgrind_(RunningOnValgrind()) {}
 
   SparseSet(int max_size) {
     max_size_ = max_size;
     sparse_to_dense_ = new int[max_size];
     dense_ = new int[max_size];
+    valgrind_ = RunningOnValgrind();
     // Don't need to zero the memory, but do so anyway
     // to appease Valgrind.
-    if (RunningOnValgrind()) {
+    if (valgrind_) {
       for (int i = 0; i < max_size; i++) {
         dense_[i] = 0xababababU;
         sparse_to_dense_[i] = 0xababababU;
@@ -94,7 +95,7 @@ class SparseSet {
       int* a = new int[new_max_size];
       if (sparse_to_dense_) {
         memmove(a, sparse_to_dense_, max_size_*sizeof a[0]);
-        if (RunningOnValgrind()) {
+        if (valgrind_) {
           for (int i = max_size_; i < new_max_size; i++)
             a[i] = 0xababababU;
         }
@@ -105,7 +106,7 @@ class SparseSet {
       a = new int[new_max_size];
       if (dense_) {
         memmove(a, dense_, size_*sizeof a[0]);
-        if (RunningOnValgrind()) {
+        if (valgrind_) {
           for (int i = size_; i < new_max_size; i++)
             a[i] = 0xababababU;
         }
@@ -168,6 +169,7 @@ class SparseSet {
   int max_size_;
   int* sparse_to_dense_;
   int* dense_;
+  bool valgrind_;
 
   DISALLOW_EVIL_CONSTRUCTORS(SparseSet);
 };

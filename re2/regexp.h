@@ -197,7 +197,7 @@ class RegexpStatus {
 
   // Returns text equivalent of code, e.g.:
   //   "Bad character class"
-  static const string& CodeText(enum RegexpStatusCode code);
+  static string CodeText(enum RegexpStatusCode code);
 
   // Returns text describing error, e.g.:
   //   "Bad character class: [z-a]"
