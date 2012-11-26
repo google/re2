@@ -27,8 +27,10 @@ RE2::ErrorCode FilteredRE2::Add(const StringPiece& pattern,
   RE2::ErrorCode code = re->error_code();
 
   if (!re->ok()) {
-    LOG(ERROR) << "Couldn't compile regular expression, skipping: "
-               << re << " due to error " << re->error();
+    if (options.log_errors()) {
+      LOG(ERROR) << "Couldn't compile regular expression, skipping: "
+                 << re << " due to error " << re->error();
+    }
     delete re;
   } else {
     *id = re2_vec_.size();
