@@ -82,6 +82,7 @@ template<bool> struct CompileAssert {};
 
 // Fake lock annotations.  For real ones, see
 // http://code.google.com/p/data-race-test/
+#ifndef ANNOTATE_PUBLISH_MEMORY_RANGE
 #define ANNOTATE_PUBLISH_MEMORY_RANGE(a, b)
 #define ANNOTATE_IGNORE_WRITES_BEGIN()
 #define ANNOTATE_IGNORE_WRITES_END()
@@ -90,6 +91,7 @@ template<bool> struct CompileAssert {};
 #define ANNOTATE_HAPPENS_BEFORE(x)
 #define ANNOTATE_HAPPENS_AFTER(x)
 #define ANNOTATE_UNPROTECTED_READ(x) (x)
+#endif
 
 class StringPiece;
 
