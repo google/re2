@@ -54,7 +54,8 @@ class LogMessage {
   void Flush() {
     stream() << "\n";
     string s = str_.str();
-    if(write(2, s.data(), s.size()) < 0) {}  // shut up gcc
+    int n = (int)s.size(); // shut up msvc
+    if(write(2, s.data(), n) < 0) {}  // shut up gcc
     flushed_ = true;
   }
   ~LogMessage() {
