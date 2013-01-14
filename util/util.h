@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include <sys/time.h>
 #include <time.h>
+#include <ctype.h>	// For isdigit, isalpha.
 
 // C++
 #include <vector>
