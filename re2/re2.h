@@ -179,12 +179,15 @@
 //         RE2::Octal(&a), RE2::Hex(&b), RE2::CRadix(&c), RE2::CRadix(&d));
 // will leave 64 in a, b, c, and d.
 
-
 #include <stdint.h>
 #include <map>
 #include <string>
 #include "re2/stringpiece.h"
 #include "re2/variadic_function.h"
+
+#ifndef RE2_HAVE_LONGLONG
+#define RE2_HAVE_LONGLONG 1
+#endif
 
 namespace re2 {
 
@@ -240,7 +243,7 @@ class RE2 {
     ErrorBadPerlOp,          // bad perl operator
     ErrorBadUTF8,            // invalid UTF-8 in regexp
     ErrorBadNamedCapture,    // bad named capture group
-    ErrorPatternTooLarge,    // pattern too large (compile failed)
+    ErrorPatternTooLarge     // pattern too large (compile failed)
   };
 
   // Predefined common options.
@@ -429,7 +432,7 @@ class RE2 {
   enum Anchor {
     UNANCHORED,         // No anchoring
     ANCHOR_START,       // Anchor at start only
-    ANCHOR_BOTH,        // Anchor at start and end
+    ANCHOR_BOTH         // Anchor at start and end
   };
 
   // Return the number of capturing subpatterns, or -1 if the
@@ -669,8 +672,10 @@ class RE2 {
   static inline Arg CRadix(unsigned int* x);
   static inline Arg CRadix(long* x);
   static inline Arg CRadix(unsigned long* x);
+  #ifdef RE2_HAVE_LONGLONG
   static inline Arg CRadix(long long* x);
   static inline Arg CRadix(unsigned long long* x);
+  #endif
 
   static inline Arg Hex(short* x);
   static inline Arg Hex(unsigned short* x);
@@ -678,8 +683,10 @@ class RE2 {
   static inline Arg Hex(unsigned int* x);
   static inline Arg Hex(long* x);
   static inline Arg Hex(unsigned long* x);
+  #ifdef RE2_HAVE_LONGLONG
   static inline Arg Hex(long long* x);
   static inline Arg Hex(unsigned long long* x);
+  #endif
 
   static inline Arg Octal(short* x);
   static inline Arg Octal(unsigned short* x);
@@ -687,8 +694,10 @@ class RE2 {
   static inline Arg Octal(unsigned int* x);
   static inline Arg Octal(long* x);
   static inline Arg Octal(unsigned long* x);
+  #ifdef RE2_HAVE_LONGLONG
   static inline Arg Octal(long long* x);
   static inline Arg Octal(unsigned long long* x);
+  #endif
 
  private:
   void Init(const StringPiece& pattern, const Options& options);
@@ -768,8 +777,10 @@ class RE2::Arg {
   MAKE_PARSER(unsigned int,       parse_uint);
   MAKE_PARSER(long,               parse_long);
   MAKE_PARSER(unsigned long,      parse_ulong);
+  #ifdef RE2_HAVE_LONGLONG
   MAKE_PARSER(long long,          parse_longlong);
   MAKE_PARSER(unsigned long long, parse_ulonglong);
+  #endif
   MAKE_PARSER(float,              parse_float);
   MAKE_PARSER(double,             parse_double);
   MAKE_PARSER(string,             parse_string);
@@ -815,8 +826,10 @@ class RE2::Arg {
   DECLARE_INTEGER_PARSER(uint);
   DECLARE_INTEGER_PARSER(long);
   DECLARE_INTEGER_PARSER(ulong);
+  #ifdef RE2_HAVE_LONGLONG
   DECLARE_INTEGER_PARSER(longlong);
   DECLARE_INTEGER_PARSER(ulonglong);
+  #endif
 
 #undef DECLARE_INTEGER_PARSER
 };
@@ -837,14 +850,16 @@ inline bool RE2::Arg::Parse(const char* str, int n) const {
   inline RE2::Arg RE2::CRadix(type* ptr) { \
     return RE2::Arg(ptr, RE2::Arg::parse_ ## name ## _cradix); }
 
-MAKE_INTEGER_PARSER(short,              short);
-MAKE_INTEGER_PARSER(unsigned short,     ushort);
-MAKE_INTEGER_PARSER(int,                int);
-MAKE_INTEGER_PARSER(unsigned int,       uint);
-MAKE_INTEGER_PARSER(long,               long);
-MAKE_INTEGER_PARSER(unsigned long,      ulong);
-MAKE_INTEGER_PARSER(long long,          longlong);
-MAKE_INTEGER_PARSER(unsigned long long, ulonglong);
+MAKE_INTEGER_PARSER(short,              short)
+MAKE_INTEGER_PARSER(unsigned short,     ushort)
+MAKE_INTEGER_PARSER(int,                int)
+MAKE_INTEGER_PARSER(unsigned int,       uint)
+MAKE_INTEGER_PARSER(long,               long)
+MAKE_INTEGER_PARSER(unsigned long,      ulong)
+#ifdef RE2_HAVE_LONGLONG
+MAKE_INTEGER_PARSER(long long,          longlong)
+MAKE_INTEGER_PARSER(unsigned long long, ulonglong)
+#endif
 
 #undef MAKE_INTEGER_PARSER
 

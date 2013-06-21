@@ -1107,6 +1107,7 @@ bool RE2::Arg::parse_uint_radix(const char* str,
   return true;
 }
 
+#ifdef RE2_HAVE_LONGLONG
 bool RE2::Arg::parse_longlong_radix(const char* str,
                                    int n,
                                    void* dest,
@@ -1145,6 +1146,7 @@ bool RE2::Arg::parse_ulonglong_radix(const char* str,
   *(reinterpret_cast<uint64*>(dest)) = r;
   return true;
 }
+#endif
 
 static bool parse_double_float(const char* str, int n, bool isfloat, void *dest) {
   if (n == 0) return false;
