@@ -13,6 +13,7 @@
 #include <string>
 #include <pthread.h>
 #include <errno.h>
+#include "util/atomicops.h"
 #include "util/util.h"
 #include "util/flags.h"
 #include "re2/prog.h"
@@ -888,11 +889,13 @@ bool RE2::Rewrite(string *out, const StringPiece &rewrite,
 int RE2::NumberOfCapturingGroups() const {
   if (suffix_regexp_ == NULL)
     return -1;
-  ANNOTATE_BENIGN_RACE(&num_captures_, "benign race: in the worst case"
-    " multiple threads end up doing the same work in parallel.");
-  if (num_captures_ == -1)
-    num_captures_ = suffix_regexp_->NumCaptures();
-  return num_captures_;
+  int n;
+  ATOMIC_LOAD_RELAXED(n, &num_captures_);
+  if (n == -1) {
+    n = suffix_regexp_->NumCaptures();
+    ATOMIC_STORE_RELAXED(&num_captures_, n);
+  }
+  return n;
 }
 
 // Checks that the rewrite string is well-formed with respect to this

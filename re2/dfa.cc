@@ -988,9 +988,8 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   }
 
   // If someone else already computed this, return it.
-  MaybeReadMemoryBarrier(); // On alpha we need to ensure read ordering
-  State* ns = state->next_[ByteMap(c)];
-  ANNOTATE_HAPPENS_AFTER(ns);
+  State* ns;
+  ATOMIC_LOAD_CONSUME(ns, &state->next_[ByteMap(c)]);
   if (ns != NULL)
     return ns;
 
@@ -1056,18 +1055,11 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
 
   ns = WorkqToCachedState(q0_, flag);
 
+  // Flush ns before linking to it.
   // Write barrier before updating state->next_ so that the
   // main search loop can proceed without any locking, for speed.
   // (Otherwise it would need one mutex operation per input byte.)
-  // The annotations below tell race detectors that:
-  //   a) the access to next_ should be ignored,
-  //   b) 'ns' is properly published.
-  WriteMemoryBarrier();  // Flush ns before linking to it.
-
-  ANNOTATE_IGNORE_WRITES_BEGIN();
-  ANNOTATE_HAPPENS_BEFORE(ns);
-  state->next_[ByteMap(c)] = ns;
-  ANNOTATE_IGNORE_WRITES_END();
+  ATOMIC_STORE_RELEASE(&state->next_[ByteMap(c)], ns);
   return ns;
 }
 
@@ -1388,9 +1380,8 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     // Okay to use bytemap[] not ByteMap() here, because
     // c is known to be an actual byte and not kByteEndText.
 
-    MaybeReadMemoryBarrier(); // On alpha we need to ensure read ordering
-    State* ns = s->next_[bytemap[c]];
-    ANNOTATE_HAPPENS_AFTER(ns);
+    State* ns;
+    ATOMIC_LOAD_CONSUME(ns, &s->next_[bytemap[c]]);
     if (ns == NULL) {
       ns = RunStateOnByteUnlocked(s, c);
       if (ns == NULL) {
@@ -1477,9 +1468,8 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       lastbyte = params->text.begin()[-1] & 0xFF;
   }
 
-  MaybeReadMemoryBarrier(); // On alpha we need to ensure read ordering
-  State* ns = s->next_[ByteMap(lastbyte)];
-  ANNOTATE_HAPPENS_AFTER(ns);
+  State* ns;
+  ATOMIC_LOAD_CONSUME(ns, &s->next_[ByteMap(lastbyte)]);
   if (ns == NULL) {
     ns = RunStateOnByteUnlocked(s, lastbyte);
     if (ns == NULL) {
@@ -1667,13 +1657,16 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
     }
   }
 
-  if (DebugDFA)
+  if (DebugDFA) {
+    int fb;
+    ATOMIC_LOAD_RELAXED(fb, &info->firstbyte);
     fprintf(stderr, "anchored=%d fwd=%d flags=%#x state=%s firstbyte=%d\n",
             params->anchored, params->run_forward, flags,
-            DumpState(info->start).c_str(), info->firstbyte);
+            DumpState(info->start).c_str(), fb);
+  }
 
   params->start = info->start;
-  params->firstbyte = ANNOTATE_UNPROTECTED_READ(info->firstbyte);
+  ATOMIC_LOAD_ACQUIRE(params->firstbyte, &info->firstbyte);
 
   return true;
 }
@@ -1681,17 +1674,15 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
 // Fills in info if needed.  Returns true on success, false on failure.
 bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
                               uint flags) {
-  // Quick check; okay because of memory barriers below.
-  if (ANNOTATE_UNPROTECTED_READ(info->firstbyte) != kFbUnknown) {
-    ANNOTATE_HAPPENS_AFTER(&info->firstbyte);
+  // Quick check.
+  int fb;
+  ATOMIC_LOAD_ACQUIRE(fb, &info->firstbyte);
+  if (fb != kFbUnknown)
     return true;
-  }
 
   MutexLock l(&mutex_);
-  if (info->firstbyte != kFbUnknown) {
-    ANNOTATE_HAPPENS_AFTER(&info->firstbyte);
+  if (info->firstbyte != kFbUnknown)
     return true;
-  }
 
   q0_->clear();
   AddToQueue(q0_,
@@ -1702,16 +1693,14 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
     return false;
 
   if (info->start == DeadState) {
-    ANNOTATE_HAPPENS_BEFORE(&info->firstbyte);
-    WriteMemoryBarrier();  // Synchronize with "quick check" above.
-    info->firstbyte = kFbNone;
+    // Synchronize with "quick check" above.
+    ATOMIC_STORE_RELEASE(&info->firstbyte, kFbNone);
     return true;
   }
 
   if (info->start == FullMatchState) {
-    ANNOTATE_HAPPENS_BEFORE(&info->firstbyte);
-    WriteMemoryBarrier();  // Synchronize with "quick check" above.
-    info->firstbyte = kFbNone;	// will be ignored
+    // Synchronize with "quick check" above.
+    ATOMIC_STORE_RELEASE(&info->firstbyte, kFbNone);	// will be ignored
     return true;
   }
 
@@ -1722,9 +1711,8 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
   for (int i = 0; i < 256; i++) {
     State* s = RunStateOnByte(info->start, i);
     if (s == NULL) {
-      ANNOTATE_HAPPENS_BEFORE(&info->firstbyte);
-      WriteMemoryBarrier();  // Synchronize with "quick check" above.
-      info->firstbyte = firstbyte;
+      // Synchronize with "quick check" above.
+      ATOMIC_STORE_RELEASE(&info->firstbyte, firstbyte);
       return false;
     }
     if (s == info->start)
@@ -1737,9 +1725,8 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
       break;
     }
   }
-  ANNOTATE_HAPPENS_BEFORE(&info->firstbyte);
-  WriteMemoryBarrier();  // Synchronize with "quick check" above.
-  info->firstbyte = firstbyte;
+  // Synchronize with "quick check" above.
+  ATOMIC_STORE_RELEASE(&info->firstbyte, firstbyte);
   return true;
 }
 
@@ -1819,19 +1806,16 @@ DFA* Prog::GetDFA(MatchKind kind) {
     pdfa = &dfa_longest_;
   }
 
-  // Quick check; okay because of memory barrier below.
-  DFA *dfa = ANNOTATE_UNPROTECTED_READ(*pdfa);
-  if (dfa != NULL) {
-    ANNOTATE_HAPPENS_AFTER(dfa);
+  // Quick check.
+  DFA *dfa;
+  ATOMIC_LOAD_ACQUIRE(dfa, pdfa);
+  if (dfa != NULL)
     return dfa;
-  }
 
   MutexLock l(&dfa_mutex_);
   dfa = *pdfa;
-  if (dfa != NULL) {
-    ANNOTATE_HAPPENS_AFTER(dfa);
+  if (dfa != NULL)
     return dfa;
-  }
 
   // For a forward DFA, half the memory goes to each DFA.
   // For a reverse DFA, all the memory goes to the
@@ -1848,9 +1832,7 @@ DFA* Prog::GetDFA(MatchKind kind) {
   delete_dfa_ = DeleteDFA;
 
   // Synchronize with "quick check" above.
-  ANNOTATE_HAPPENS_BEFORE(dfa);
-  WriteMemoryBarrier();
-  *pdfa = dfa;
+  ATOMIC_STORE_RELEASE(pdfa, dfa);
 
   return dfa;
 }
@@ -2120,11 +2102,12 @@ bool Prog::PossibleMatchRange(string* min, string* max, int maxlen) {
     MutexLock l(&dfa_mutex_);
     // Have to use dfa_longest_ to get all strings for full matches.
     // For example, (a|aa) never matches aa in first-match mode.
-    if (dfa_longest_ == NULL) {
-      dfa_longest_ = new DFA(this, Prog::kLongestMatch, dfa_mem_/2);
+    dfa = dfa_longest_;
+    if (dfa == NULL) {
+      dfa = new DFA(this, Prog::kLongestMatch, dfa_mem_/2);
+      ATOMIC_STORE_RELEASE(&dfa_longest_, dfa);
       delete_dfa_ = DeleteDFA;
     }
-    dfa = dfa_longest_;
   }
   return dfa->PossibleMatchRange(min, max, maxlen);
 }

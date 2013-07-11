@@ -81,19 +81,6 @@ template<bool> struct CompileAssert {};
 
 #define arraysize(array) (sizeof(array)/sizeof((array)[0]))
 
-// Fake lock annotations.  For real ones, see
-// http://code.google.com/p/data-race-test/
-#ifndef ANNOTATE_PUBLISH_MEMORY_RANGE
-#define ANNOTATE_PUBLISH_MEMORY_RANGE(a, b)
-#define ANNOTATE_IGNORE_WRITES_BEGIN()
-#define ANNOTATE_IGNORE_WRITES_END()
-#define ANNOTATE_BENIGN_RACE(a, b)
-#define NO_THREAD_SAFETY_ANALYSIS
-#define ANNOTATE_HAPPENS_BEFORE(x)
-#define ANNOTATE_HAPPENS_AFTER(x)
-#define ANNOTATE_UNPROTECTED_READ(x) (x)
-#endif
-
 class StringPiece;
 
 string CEscape(const StringPiece& src);
