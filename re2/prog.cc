@@ -295,13 +295,15 @@ uint32 Prog::EmptyFlags(const StringPiece& text, const char* p) {
 }
 
 void Prog::MarkByteRange(int lo, int hi) {
-  CHECK_GE(lo, 0);
-  CHECK_GE(hi, 0);
-  CHECK_LE(lo, 255);
-  CHECK_LE(hi, 255);
-  if (lo > 0)
+  DCHECK_GE(lo, 0);
+  DCHECK_GE(hi, 0);
+  DCHECK_LE(lo, 255);
+  DCHECK_LE(hi, 255);
+  DCHECK_LE(lo, hi);
+  if (0 < lo && lo <= 255)
     byterange_.Set(lo - 1);
-  byterange_.Set(hi);
+  if (0 <= hi && hi <= 255)
+    byterange_.Set(hi);
 }
 
 void Prog::ComputeByteMap() {

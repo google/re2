@@ -1290,6 +1290,8 @@ static bool ParseEscape(StringPiece* s, Rune* rp,
           }
         }
       }
+      if (code > rune_max)
+        goto BadEscape;
       *rp = code;
       return true;
 

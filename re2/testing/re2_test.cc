@@ -1368,4 +1368,12 @@ TEST(RE2, RegexpToStringLossOfAnchor) {
   EXPECT_EQ(RE2("ca[t-z]$").Regexp()->ToString(), "ca[t-z](?-m:$)");
 }
 
+// Issue 10131674
+TEST(RE2, Bug10131674) {
+  // Some of these escapes describe values that do not fit in a byte.
+  RE2 re("\\140\\440\\174\\271\\150\\656\\106\\201\\004\\332", RE2::Latin1);
+  EXPECT_FALSE(re.ok());
+  EXPECT_FALSE(RE2::FullMatch("hello world", re));
+}
+
 }  // namespace re2
