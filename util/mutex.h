@@ -10,6 +10,8 @@
 #ifndef RE2_UTIL_MUTEX_H_
 #define RE2_UTIL_MUTEX_H_
 
+#include <stdlib.h>
+
 namespace re2 {
 
 #define HAVE_PTHREAD 1
@@ -102,7 +104,6 @@ void Mutex::ReaderUnlock() { assert(mutex_-- > 0); }
 
 #elif defined(HAVE_PTHREAD) && defined(HAVE_RWLOCK)
 
-#include <stdlib.h>      // for abort()
 #define SAFE_PTHREAD(fncall)  do { if ((fncall) != 0) abort(); } while (0)
 
 Mutex::Mutex()             { SAFE_PTHREAD(pthread_rwlock_init(&mutex_, NULL)); }
@@ -117,7 +118,6 @@ void Mutex::ReaderUnlock() { SAFE_PTHREAD(pthread_rwlock_unlock(&mutex_)); }
 
 #elif defined(HAVE_PTHREAD)
 
-#include <stdlib.h>      // for abort()
 #define SAFE_PTHREAD(fncall)  do { if ((fncall) != 0) abort(); } while (0)
 
 Mutex::Mutex()             { SAFE_PTHREAD(pthread_mutex_init(&mutex_, NULL)); }
