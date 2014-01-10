@@ -102,21 +102,21 @@ void PrefilterTree::Compile(vector<string>* atom_vec) {
   // not miss out on any regexps triggering by getting rid of a
   // prefilter node.
   for (int i = 0; i < entries_.size(); i++) {
-    IntMap* parents = entries_[i].parents;
+    StdIntMap* parents = entries_[i].parents;
     if (parents->size() > 8) {
       // This one triggers too many things. If all the parents are AND
       // nodes and have other things guarding them, then get rid of
       // this trigger. TODO(vsri): Adjust the threshold appropriately,
       // make it a function of total number of nodes?
       bool have_other_guard = true;
-      for (IntMap::iterator it = parents->begin(); it != parents->end(); ++it)
+      for (StdIntMap::iterator it = parents->begin(); it != parents->end(); ++it)
         have_other_guard = have_other_guard &&
-            (entries_[it->index()].propagate_up_at_count > 1);
+            (entries_[it->first].propagate_up_at_count > 1);
 
       if (have_other_guard) {
-        for (IntMap::iterator it = parents->begin();
+        for (StdIntMap::iterator it = parents->begin();
              it != parents->end(); ++it)
-          entries_[it->index()].propagate_up_at_count -= 1;
+          entries_[it->first].propagate_up_at_count -= 1;
 
         parents->clear();  // Forget the parents
       }
@@ -218,7 +218,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
       continue;
 
     Entry* entry = &entries_[prefilter->unique_id()];
-    entry->parents = new IntMap(node_map_.size());
+    entry->parents = new StdIntMap();
   }
 
   // Fill the entries.
@@ -244,7 +244,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
 
       case Prefilter::OR:
       case Prefilter::AND: {
-        IntMap uniq_child(node_map_.size());
+        set<int> uniq_child;
         for (int j = 0; j < prefilter->subs()->size() ; j++) {
           Prefilter* child = (*prefilter->subs())[j];
           Prefilter* canonical = CanonicalNode(child);
@@ -253,12 +253,11 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
             return;
           }
           int child_id = canonical->unique_id();
-          if (!uniq_child.has_index(child_id))
-            uniq_child.set_new(child_id, 1);
+          uniq_child.insert(child_id);
           // To the child, we want to add to parent indices.
           Entry* child_entry = &entries_[child_id];
-          if (!child_entry->parents->has_index(prefilter->unique_id()))
-            child_entry->parents->set_new(prefilter->unique_id(), 1);
+          if (child_entry->parents->find(prefilter->unique_id()) == child_entry->parents->end())
+            (*child_entry->parents)[prefilter->unique_id()] = 1;
         }
         entry->propagate_up_at_count =
             prefilter->op() == Prefilter::AND ? uniq_child.size() : 1;
@@ -324,10 +323,10 @@ void PrefilterTree::PropagateMatch(const vector<int>& atom_ids,
     }
     int c;
     // Pass trigger up to parents.
-    for (IntMap::iterator it = entry.parents->begin();
+    for (StdIntMap::iterator it = entry.parents->begin();
          it != entry.parents->end();
          ++it) {
-      int j = it->index();
+      int j = it->first;
       const Entry& parent = entries_[j];
       VLOG(10) << " parent= " << j << " trig= " << parent.propagate_up_at_count;
       // Delay until all the children have succeeded.
@@ -359,12 +358,12 @@ void PrefilterTree::PrintDebugInfo() {
   VLOG(10) << "#Unique Nodes: " << entries_.size();
 
   for (int i = 0; i < entries_.size(); ++i) {
-    IntMap* parents = entries_[i].parents;
+    StdIntMap* parents = entries_[i].parents;
     const vector<int>& regexps = entries_[i].regexps;
     VLOG(10) << "EntryId: " << i
             << " N: " << parents->size() << " R: " << regexps.size();
-    for (IntMap::iterator it = parents->begin(); it != parents->end(); ++it)
-      VLOG(10) << it->index();
+    for (StdIntMap::iterator it = parents->begin(); it != parents->end(); ++it)
+      VLOG(10) << it->first;
   }
   VLOG(10) << "Map:";
   for (map<string, Prefilter*>::const_iterator iter = node_map_.begin();

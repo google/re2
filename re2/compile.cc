@@ -44,7 +44,7 @@ struct PatchList {
   static PatchList Append(Prog::Inst *inst0, PatchList l1, PatchList l2);
 };
 
-static PatchList nullPatchList;
+static PatchList nullPatchList = { 0 };
 
 // Returns patch list containing just p.
 PatchList PatchList::Mk(uint32 p) {
@@ -106,12 +106,9 @@ struct Frag {
   uint32 begin;
   PatchList end;
 
-  explicit Frag(LinkerInitialized) {}
   Frag() : begin(0) { end.p = 0; }  // needed so Frag can go in vector
   Frag(uint32 begin, PatchList end) : begin(begin), end(end) {}
 };
-
-static Frag kNullFrag(LINKER_INITIALIZED);
 
 // Input encodings.
 enum Encoding {
@@ -688,13 +685,13 @@ Frag Compiler::PreVisit(Regexp* re, Frag, bool* stop) {
   if (failed_)
     *stop = true;
 
-  return kNullFrag;  // not used by caller
+  return Frag();  // not used by caller
 }
 
 Frag Compiler::Literal(Rune r, bool foldcase) {
   switch (encoding_) {
     default:
-      return kNullFrag;
+      return Frag();
 
     case kEncodingLatin1:
       return ByteRange(r, r, foldcase);
@@ -1010,7 +1007,7 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
   bool is_anchor_end = IsAnchorEnd(&sre, 0);
 
   // Generate fragment for entire regexp.
-  Frag f = c.WalkExponential(sre, kNullFrag, 2*c.max_inst_);
+  Frag f = c.WalkExponential(sre, Frag(), 2*c.max_inst_);
   sre->Decref();
   if (c.failed_)
     return NULL;
@@ -1101,7 +1098,7 @@ Prog* Compiler::CompileSet(const RE2::Options& options, RE2::Anchor anchor,
   c.Setup(pf, options.max_mem(), anchor);
 
   // Compile alternation of fragments.
-  Frag all = c.WalkExponential(re, kNullFrag, 2*c.max_inst_);
+  Frag all = c.WalkExponential(re, Frag(), 2*c.max_inst_);
   re->Decref();
   if (c.failed_)
     return NULL;

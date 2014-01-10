@@ -11,8 +11,6 @@ template <typename Result, typename Param0, typename Param1, typename Arg,
           Result (*Func)(Param0, Param1, const Arg* const [], int count)>
 class VariadicFunction2 {
  public:
-  VariadicFunction2() {}
-
   Result operator()(Param0 p0, Param1 p1) const {
     return Func(p0, p1, 0, 0);
   }

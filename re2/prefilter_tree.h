@@ -22,6 +22,7 @@
 namespace re2 {
 
 typedef SparseArray<int> IntMap;
+typedef map<int,int> StdIntMap;
 
 class Prefilter;
 
@@ -71,7 +72,7 @@ class PrefilterTree {
     // are two different nodes, but they share the atom 'def'. So when
     // 'def' matches, it triggers two parents, corresponding to the two
     // different OR nodes.
-    IntMap* parents;
+    StdIntMap* parents;
 
     // When this node is ready to trigger the parent, what are the
     // regexps that are triggered.
