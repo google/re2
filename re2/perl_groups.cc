@@ -5,21 +5,21 @@
 
 namespace re2 {
 
-static URange16 code1[] = {  /* \d */
+static const URange16 code1[] = {  /* \d */
 	{ 0x30, 0x39 },
 };
-static URange16 code2[] = {  /* \s */
+static const URange16 code2[] = {  /* \s */
 	{ 0x9, 0xa },
 	{ 0xc, 0xd },
 	{ 0x20, 0x20 },
 };
-static URange16 code3[] = {  /* \w */
+static const URange16 code3[] = {  /* \w */
 	{ 0x30, 0x39 },
 	{ 0x41, 0x5a },
 	{ 0x5f, 0x5f },
 	{ 0x61, 0x7a },
 };
-UGroup perl_groups[] = {
+const UGroup perl_groups[] = {
 	{ "\\d", +1, code1, 1 },
 	{ "\\D", -1, code1, 1 },
 	{ "\\s", +1, code2, 3 },
@@ -27,64 +27,64 @@ UGroup perl_groups[] = {
 	{ "\\w", +1, code3, 4 },
 	{ "\\W", -1, code3, 4 },
 };
-int num_perl_groups = 6;
-static URange16 code4[] = {  /* [:alnum:] */
+const int num_perl_groups = 6;
+static const URange16 code4[] = {  /* [:alnum:] */
 	{ 0x30, 0x39 },
 	{ 0x41, 0x5a },
 	{ 0x61, 0x7a },
 };
-static URange16 code5[] = {  /* [:alpha:] */
+static const URange16 code5[] = {  /* [:alpha:] */
 	{ 0x41, 0x5a },
 	{ 0x61, 0x7a },
 };
-static URange16 code6[] = {  /* [:ascii:] */
+static const URange16 code6[] = {  /* [:ascii:] */
 	{ 0x0, 0x7f },
 };
-static URange16 code7[] = {  /* [:blank:] */
+static const URange16 code7[] = {  /* [:blank:] */
 	{ 0x9, 0x9 },
 	{ 0x20, 0x20 },
 };
-static URange16 code8[] = {  /* [:cntrl:] */
+static const URange16 code8[] = {  /* [:cntrl:] */
 	{ 0x0, 0x1f },
 	{ 0x7f, 0x7f },
 };
-static URange16 code9[] = {  /* [:digit:] */
+static const URange16 code9[] = {  /* [:digit:] */
 	{ 0x30, 0x39 },
 };
-static URange16 code10[] = {  /* [:graph:] */
+static const URange16 code10[] = {  /* [:graph:] */
 	{ 0x21, 0x7e },
 };
-static URange16 code11[] = {  /* [:lower:] */
+static const URange16 code11[] = {  /* [:lower:] */
 	{ 0x61, 0x7a },
 };
-static URange16 code12[] = {  /* [:print:] */
+static const URange16 code12[] = {  /* [:print:] */
 	{ 0x20, 0x7e },
 };
-static URange16 code13[] = {  /* [:punct:] */
+static const URange16 code13[] = {  /* [:punct:] */
 	{ 0x21, 0x2f },
 	{ 0x3a, 0x40 },
 	{ 0x5b, 0x60 },
 	{ 0x7b, 0x7e },
 };
-static URange16 code14[] = {  /* [:space:] */
+static const URange16 code14[] = {  /* [:space:] */
 	{ 0x9, 0xd },
 	{ 0x20, 0x20 },
 };
-static URange16 code15[] = {  /* [:upper:] */
+static const URange16 code15[] = {  /* [:upper:] */
 	{ 0x41, 0x5a },
 };
-static URange16 code16[] = {  /* [:word:] */
+static const URange16 code16[] = {  /* [:word:] */
 	{ 0x30, 0x39 },
 	{ 0x41, 0x5a },
 	{ 0x5f, 0x5f },
 	{ 0x61, 0x7a },
 };
-static URange16 code17[] = {  /* [:xdigit:] */
+static const URange16 code17[] = {  /* [:xdigit:] */
 	{ 0x30, 0x39 },
 	{ 0x41, 0x46 },
 	{ 0x61, 0x66 },
 };
-UGroup posix_groups[] = {
+const UGroup posix_groups[] = {
 	{ "[:alnum:]", +1, code4, 3 },
 	{ "[:^alnum:]", -1, code4, 3 },
 	{ "[:alpha:]", +1, code5, 2 },
@@ -114,6 +114,6 @@ UGroup posix_groups[] = {
 	{ "[:xdigit:]", +1, code17, 3 },
 	{ "[:^xdigit:]", -1, code17, 3 },
 };
-int num_posix_groups = 28;
+const int num_posix_groups = 28;
 
 }  // namespace re2

@@ -130,7 +130,7 @@ def main():
     foldpairs.sort()
     foldranges = _MakeRanges(foldpairs)
     print "// %d groups, %d pairs, %d ranges" % (len(casegroups), len(foldpairs), len(foldranges))
-    print "CaseFold unicode_%s[] = {" % (name,)
+    print "const CaseFold unicode_%s[] = {" % (name,)
     for lo, hi, delta in foldranges:
       print "\t{ %d, %d, %s }," % (lo, hi, delta)
     print "};"

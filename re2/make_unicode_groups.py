@@ -41,7 +41,7 @@ def MakeRanges(codes):
 
 def PrintRanges(type, name, ranges):
   """Print the ranges as an array of type named name."""
-  print "static %s %s[] = {" % (type, name,)
+  print "static const %s %s[] = {" % (type, name,)
   for lo, hi in ranges:
     print "\t{ %d, %d }," % (lo, hi)
   print "};"
@@ -99,12 +99,12 @@ def main():
   for name, codes in unicode.Scripts().iteritems():
     ugroups.append(PrintGroup(name, codes))
   print "// %d 16-bit ranges, %d 32-bit ranges" % (n16, n32)
-  print "UGroup unicode_groups[] = {";
+  print "const UGroup unicode_groups[] = {";
   ugroups.sort()
   for ug in ugroups:
     print "\t%s," % (ug,)
   print "};"
-  print "int num_unicode_groups = %d;" % (len(ugroups),)
+  print "const int num_unicode_groups = %d;" % (len(ugroups),)
   print _trailer
 
 if __name__ == '__main__':

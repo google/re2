@@ -1405,8 +1405,8 @@ void CharClassBuilder::AddRangeFlags(
 }
 
 // Look for a group with the given name.
-static UGroup* LookupGroup(const StringPiece& name,
-                           UGroup *groups, int ngroups) {
+static const UGroup* LookupGroup(const StringPiece& name,
+                                 const UGroup *groups, int ngroups) {
   // Simple name lookup.
   for (int i = 0; i < ngroups; i++)
     if (StringPiece(groups[i].name) == name)
@@ -1420,16 +1420,16 @@ static URange32 any32[] = { { 65536, Runemax } };
 static UGroup anygroup = { "Any", +1, any16, 1, any32, 1 };
 
 // Look for a POSIX group with the given name (e.g., "[:^alpha:]")
-static UGroup* LookupPosixGroup(const StringPiece& name) {
+static const UGroup* LookupPosixGroup(const StringPiece& name) {
   return LookupGroup(name, posix_groups, num_posix_groups);
 }
 
-static UGroup* LookupPerlGroup(const StringPiece& name) {
+static const UGroup* LookupPerlGroup(const StringPiece& name) {
   return LookupGroup(name, perl_groups, num_perl_groups);
 }
 
 // Look for a Unicode group with the given name (e.g., "Han")
-static UGroup* LookupUnicodeGroup(const StringPiece& name) {
+static const UGroup* LookupUnicodeGroup(const StringPiece& name) {
   // Special case: "Any" means any.
   if (name == StringPiece("Any"))
     return &anygroup;
@@ -1437,7 +1437,7 @@ static UGroup* LookupUnicodeGroup(const StringPiece& name) {
 }
 
 // Add a UGroup or its negation to the character class.
-static void AddUGroup(CharClassBuilder *cc, UGroup *g, int sign,
+static void AddUGroup(CharClassBuilder *cc, const UGroup *g, int sign,
                       Regexp::ParseFlags parse_flags) {
   if (sign == +1) {
     for (int i = 0; i < g->nr16; i++) {
@@ -1488,7 +1488,7 @@ static void AddUGroup(CharClassBuilder *cc, UGroup *g, int sign,
 // On success, sets *s to span the remainder of the string
 // and returns the corresponding UGroup.
 // The StringPiece must *NOT* be edited unless the call succeeds.
-UGroup* MaybeParsePerlCCEscape(StringPiece* s, Regexp::ParseFlags parse_flags) {
+const UGroup* MaybeParsePerlCCEscape(StringPiece* s, Regexp::ParseFlags parse_flags) {
   if (!(parse_flags & Regexp::PerlClasses))
     return NULL;
   if (s->size() < 2 || (*s)[0] != '\\')
@@ -1496,7 +1496,7 @@ UGroup* MaybeParsePerlCCEscape(StringPiece* s, Regexp::ParseFlags parse_flags) {
   // Could use StringPieceToRune, but there aren't
   // any non-ASCII Perl group names.
   StringPiece name(s->begin(), 2);
-  UGroup *g = LookupPerlGroup(name);
+  const UGroup *g = LookupPerlGroup(name);
   if (g == NULL)
     return NULL;
   s->remove_prefix(name.size());
@@ -1561,7 +1561,7 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
     sign = -sign;
     name.remove_prefix(1);  // '^'
   }
-  UGroup *g = LookupUnicodeGroup(name);
+  const UGroup *g = LookupUnicodeGroup(name);
   if (g == NULL) {
     status->set_code(kRegexpBadCharRange);
     status->set_error_arg(seq);
@@ -1597,7 +1597,7 @@ static ParseStatus ParseCCName(StringPiece* s, Regexp::ParseFlags parse_flags,
   q += 2;
   StringPiece name(p, q-p);
 
-  UGroup *g = LookupPosixGroup(name);
+  const UGroup *g = LookupPosixGroup(name);
   if (g == NULL) {
     status->set_code(kRegexpBadCharRange);
     status->set_error_arg(name);
@@ -1734,7 +1734,7 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
     }
 
     // Look for Perl character class symbols (extension).
-    UGroup *g = MaybeParsePerlCCEscape(s, flags_);
+    const UGroup *g = MaybeParsePerlCCEscape(s, flags_);
     if (g != NULL) {
       AddUGroup(re->ccb_, g, g->sign, flags_);
       continue;
@@ -2189,7 +2189,7 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
           }
         }
 
-        UGroup *g = MaybeParsePerlCCEscape(&t, ps.flags());
+        const UGroup *g = MaybeParsePerlCCEscape(&t, ps.flags());
         if (g != NULL) {
           Regexp* re = new Regexp(kRegexpCharClass, ps.flags() & ~FoldCase);
           re->ccb_ = new CharClassBuilder;

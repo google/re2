@@ -7,7 +7,7 @@
 namespace re2 {
 
 
-static URange16 Ps_range16[] = {
+static const URange16 Ps_range16[] = {
 	{ 40, 40 },
 	{ 91, 91 },
 	{ 123, 123 },
@@ -81,7 +81,7 @@ static URange16 Ps_range16[] = {
 	{ 65375, 65375 },
 	{ 65378, 65378 },
 };
-static URange16 Nl_range16[] = {
+static const URange16 Nl_range16[] = {
 	{ 5870, 5872 },
 	{ 8544, 8578 },
 	{ 8581, 8584 },
@@ -90,14 +90,14 @@ static URange16 Nl_range16[] = {
 	{ 12344, 12346 },
 	{ 42726, 42735 },
 };
-static URange32 Nl_range32[] = {
+static const URange32 Nl_range32[] = {
 	{ 65856, 65908 },
 	{ 66369, 66369 },
 	{ 66378, 66378 },
 	{ 66513, 66517 },
 	{ 74752, 74850 },
 };
-static URange16 No_range16[] = {
+static const URange16 No_range16[] = {
 	{ 178, 179 },
 	{ 185, 185 },
 	{ 188, 190 },
@@ -126,7 +126,7 @@ static URange16 No_range16[] = {
 	{ 12977, 12991 },
 	{ 43056, 43061 },
 };
-static URange32 No_range32[] = {
+static const URange32 No_range32[] = {
 	{ 65799, 65843 },
 	{ 65909, 65912 },
 	{ 65930, 65930 },
@@ -142,7 +142,7 @@ static URange32 No_range32[] = {
 	{ 119648, 119665 },
 	{ 127232, 127242 },
 };
-static URange16 Lo_range16[] = {
+static const URange16 Lo_range16[] = {
 	{ 443, 443 },
 	{ 448, 451 },
 	{ 660, 660 },
@@ -424,7 +424,7 @@ static URange16 Lo_range16[] = {
 	{ 65490, 65495 },
 	{ 65498, 65500 },
 };
-static URange32 Lo_range32[] = {
+static const URange32 Lo_range32[] = {
 	{ 65536, 65547 },
 	{ 65549, 65574 },
 	{ 65576, 65594 },
@@ -469,7 +469,7 @@ static URange32 Lo_range32[] = {
 	{ 177984, 178205 },
 	{ 194560, 195101 },
 };
-static URange16 Ll_range16[] = {
+static const URange16 Ll_range16[] = {
 	{ 97, 122 },
 	{ 170, 170 },
 	{ 181, 181 },
@@ -1051,7 +1051,7 @@ static URange16 Ll_range16[] = {
 	{ 64275, 64279 },
 	{ 65345, 65370 },
 };
-static URange32 Ll_range32[] = {
+static const URange32 Ll_range32[] = {
 	{ 66600, 66639 },
 	{ 119834, 119859 },
 	{ 119886, 119892 },
@@ -1082,7 +1082,7 @@ static URange32 Ll_range32[] = {
 	{ 120772, 120777 },
 	{ 120779, 120779 },
 };
-static URange16 Lm_range16[] = {
+static const URange16 Lm_range16[] = {
 	{ 688, 705 },
 	{ 710, 721 },
 	{ 736, 740 },
@@ -1133,7 +1133,7 @@ static URange16 Lm_range16[] = {
 	{ 65392, 65392 },
 	{ 65438, 65439 },
 };
-static URange16 Nd_range16[] = {
+static const URange16 Nd_range16[] = {
 	{ 48, 57 },
 	{ 1632, 1641 },
 	{ 1776, 1785 },
@@ -1170,12 +1170,12 @@ static URange16 Nd_range16[] = {
 	{ 44016, 44025 },
 	{ 65296, 65305 },
 };
-static URange32 Nd_range32[] = {
+static const URange32 Nd_range32[] = {
 	{ 66720, 66729 },
 	{ 69734, 69743 },
 	{ 120782, 120831 },
 };
-static URange16 Pc_range16[] = {
+static const URange16 Pc_range16[] = {
 	{ 95, 95 },
 	{ 8255, 8256 },
 	{ 8276, 8276 },
@@ -1183,7 +1183,7 @@ static URange16 Pc_range16[] = {
 	{ 65101, 65103 },
 	{ 65343, 65343 },
 };
-static URange16 Lt_range16[] = {
+static const URange16 Lt_range16[] = {
 	{ 453, 453 },
 	{ 456, 456 },
 	{ 459, 459 },
@@ -1195,7 +1195,7 @@ static URange16 Lt_range16[] = {
 	{ 8140, 8140 },
 	{ 8188, 8188 },
 };
-static URange16 Lu_range16[] = {
+static const URange16 Lu_range16[] = {
 	{ 65, 90 },
 	{ 192, 214 },
 	{ 216, 222 },
@@ -1768,7 +1768,7 @@ static URange16 Lu_range16[] = {
 	{ 42920, 42920 },
 	{ 65313, 65338 },
 };
-static URange32 Lu_range32[] = {
+static const URange32 Lu_range32[] = {
 	{ 66560, 66599 },
 	{ 119808, 119833 },
 	{ 119860, 119885 },
@@ -1802,7 +1802,7 @@ static URange32 Lu_range32[] = {
 	{ 120720, 120744 },
 	{ 120778, 120778 },
 };
-static URange16 Pf_range16[] = {
+static const URange16 Pf_range16[] = {
 	{ 187, 187 },
 	{ 8217, 8217 },
 	{ 8221, 8221 },
@@ -1814,7 +1814,7 @@ static URange16 Pf_range16[] = {
 	{ 11805, 11805 },
 	{ 11809, 11809 },
 };
-static URange16 Pd_range16[] = {
+static const URange16 Pd_range16[] = {
 	{ 45, 45 },
 	{ 1418, 1418 },
 	{ 1470, 1470 },
@@ -1831,7 +1831,7 @@ static URange16 Pd_range16[] = {
 	{ 65123, 65123 },
 	{ 65293, 65293 },
 };
-static URange16 Pe_range16[] = {
+static const URange16 Pe_range16[] = {
 	{ 41, 41 },
 	{ 93, 93 },
 	{ 125, 125 },
@@ -1903,7 +1903,7 @@ static URange16 Pe_range16[] = {
 	{ 65376, 65376 },
 	{ 65379, 65379 },
 };
-static URange16 Pi_range16[] = {
+static const URange16 Pi_range16[] = {
 	{ 171, 171 },
 	{ 8216, 8216 },
 	{ 8219, 8220 },
@@ -1916,7 +1916,7 @@ static URange16 Pi_range16[] = {
 	{ 11804, 11804 },
 	{ 11808, 11808 },
 };
-static URange16 Po_range16[] = {
+static const URange16 Po_range16[] = {
 	{ 33, 35 },
 	{ 37, 39 },
 	{ 42, 42 },
@@ -2033,7 +2033,7 @@ static URange16 Po_range16[] = {
 	{ 65377, 65377 },
 	{ 65380, 65381 },
 };
-static URange32 Po_range32[] = {
+static const URange32 Po_range32[] = {
 	{ 65792, 65793 },
 	{ 66463, 66463 },
 	{ 66512, 66512 },
@@ -2048,13 +2048,13 @@ static URange32 Po_range32[] = {
 	{ 69822, 69825 },
 	{ 74864, 74867 },
 };
-static URange16 Me_range16[] = {
+static const URange16 Me_range16[] = {
 	{ 1160, 1161 },
 	{ 8413, 8416 },
 	{ 8418, 8420 },
 	{ 42608, 42610 },
 };
-static URange16 C_range16[] = {
+static const URange16 C_range16[] = {
 	{ 0, 31 },
 	{ 127, 159 },
 	{ 173, 173 },
@@ -2070,7 +2070,7 @@ static URange16 C_range16[] = {
 	{ 65279, 65279 },
 	{ 65529, 65531 },
 };
-static URange32 C_range32[] = {
+static const URange32 C_range32[] = {
 	{ 69821, 69821 },
 	{ 119155, 119162 },
 	{ 917505, 917505 },
@@ -2078,7 +2078,7 @@ static URange32 C_range32[] = {
 	{ 983040, 1048573 },
 	{ 1048576, 1114109 },
 };
-static URange16 Mc_range16[] = {
+static const URange16 Mc_range16[] = {
 	{ 2307, 2307 },
 	{ 2363, 2363 },
 	{ 2366, 2368 },
@@ -2186,7 +2186,7 @@ static URange16 Mc_range16[] = {
 	{ 44009, 44010 },
 	{ 44012, 44012 },
 };
-static URange32 Mc_range32[] = {
+static const URange32 Mc_range32[] = {
 	{ 69632, 69632 },
 	{ 69634, 69634 },
 	{ 69762, 69762 },
@@ -2195,7 +2195,7 @@ static URange32 Mc_range32[] = {
 	{ 119141, 119142 },
 	{ 119149, 119154 },
 };
-static URange16 Mn_range16[] = {
+static const URange16 Mn_range16[] = {
 	{ 768, 879 },
 	{ 1155, 1159 },
 	{ 1425, 1469 },
@@ -2383,7 +2383,7 @@ static URange16 Mn_range16[] = {
 	{ 65024, 65039 },
 	{ 65056, 65062 },
 };
-static URange32 Mn_range32[] = {
+static const URange32 Mn_range32[] = {
 	{ 66045, 66045 },
 	{ 68097, 68099 },
 	{ 68101, 68102 },
@@ -2402,7 +2402,7 @@ static URange32 Mn_range32[] = {
 	{ 119362, 119364 },
 	{ 917760, 917999 },
 };
-static URange16 M_range16[] = {
+static const URange16 M_range16[] = {
 	{ 768, 879 },
 	{ 1155, 1161 },
 	{ 1425, 1469 },
@@ -2580,7 +2580,7 @@ static URange16 M_range16[] = {
 	{ 65024, 65039 },
 	{ 65056, 65062 },
 };
-static URange32 M_range32[] = {
+static const URange32 M_range32[] = {
 	{ 66045, 66045 },
 	{ 68097, 68099 },
 	{ 68101, 68102 },
@@ -2599,7 +2599,7 @@ static URange32 M_range32[] = {
 	{ 119362, 119364 },
 	{ 917760, 917999 },
 };
-static URange16 L_range16[] = {
+static const URange16 L_range16[] = {
 	{ 65, 90 },
 	{ 97, 122 },
 	{ 170, 170 },
@@ -2963,7 +2963,7 @@ static URange16 L_range16[] = {
 	{ 65490, 65495 },
 	{ 65498, 65500 },
 };
-static URange32 L_range32[] = {
+static const URange32 L_range32[] = {
 	{ 65536, 65547 },
 	{ 65549, 65574 },
 	{ 65576, 65594 },
@@ -3038,7 +3038,7 @@ static URange32 L_range32[] = {
 	{ 177984, 178205 },
 	{ 194560, 195101 },
 };
-static URange16 N_range16[] = {
+static const URange16 N_range16[] = {
 	{ 48, 57 },
 	{ 178, 179 },
 	{ 185, 185 },
@@ -3103,7 +3103,7 @@ static URange16 N_range16[] = {
 	{ 44016, 44025 },
 	{ 65296, 65305 },
 };
-static URange32 N_range32[] = {
+static const URange32 N_range32[] = {
 	{ 65799, 65843 },
 	{ 65856, 65912 },
 	{ 65930, 65930 },
@@ -3125,7 +3125,7 @@ static URange32 N_range32[] = {
 	{ 120782, 120831 },
 	{ 127232, 127242 },
 };
-static URange16 Sk_range16[] = {
+static const URange16 Sk_range16[] = {
 	{ 94, 94 },
 	{ 96, 96 },
 	{ 168, 168 },
@@ -3154,7 +3154,7 @@ static URange16 Sk_range16[] = {
 	{ 65344, 65344 },
 	{ 65507, 65507 },
 };
-static URange16 P_range16[] = {
+static const URange16 P_range16[] = {
 	{ 33, 35 },
 	{ 37, 42 },
 	{ 44, 47 },
@@ -3276,7 +3276,7 @@ static URange16 P_range16[] = {
 	{ 65373, 65373 },
 	{ 65375, 65381 },
 };
-static URange32 P_range32[] = {
+static const URange32 P_range32[] = {
 	{ 65792, 65793 },
 	{ 66463, 66463 },
 	{ 66512, 66512 },
@@ -3291,7 +3291,7 @@ static URange32 P_range32[] = {
 	{ 69822, 69825 },
 	{ 74864, 74867 },
 };
-static URange16 S_range16[] = {
+static const URange16 S_range16[] = {
 	{ 36, 36 },
 	{ 43, 43 },
 	{ 60, 62 },
@@ -3435,7 +3435,7 @@ static URange16 S_range16[] = {
 	{ 65512, 65518 },
 	{ 65532, 65533 },
 };
-static URange32 S_range32[] = {
+static const URange32 S_range32[] = {
 	{ 65794, 65794 },
 	{ 65847, 65855 },
 	{ 65913, 65929 },
@@ -3503,7 +3503,7 @@ static URange32 S_range32[] = {
 	{ 128640, 128709 },
 	{ 128768, 128883 },
 };
-static URange16 So_range16[] = {
+static const URange16 So_range16[] = {
 	{ 166, 167 },
 	{ 169, 169 },
 	{ 174, 174 },
@@ -3613,7 +3613,7 @@ static URange16 So_range16[] = {
 	{ 65517, 65518 },
 	{ 65532, 65533 },
 };
-static URange32 So_range32[] = {
+static const URange32 So_range32[] = {
 	{ 65794, 65794 },
 	{ 65847, 65855 },
 	{ 65913, 65929 },
@@ -3671,7 +3671,7 @@ static URange32 So_range32[] = {
 	{ 128640, 128709 },
 	{ 128768, 128883 },
 };
-static URange16 Sm_range16[] = {
+static const URange16 Sm_range16[] = {
 	{ 43, 43 },
 	{ 60, 62 },
 	{ 124, 124 },
@@ -3729,7 +3729,7 @@ static URange16 Sm_range16[] = {
 	{ 65506, 65506 },
 	{ 65513, 65516 },
 };
-static URange32 Sm_range32[] = {
+static const URange32 Sm_range32[] = {
 	{ 120513, 120513 },
 	{ 120539, 120539 },
 	{ 120571, 120571 },
@@ -3741,7 +3741,7 @@ static URange32 Sm_range32[] = {
 	{ 120745, 120745 },
 	{ 120771, 120771 },
 };
-static URange16 Sc_range16[] = {
+static const URange16 Sc_range16[] = {
 	{ 36, 36 },
 	{ 162, 165 },
 	{ 1547, 1547 },
@@ -3759,7 +3759,7 @@ static URange16 Sc_range16[] = {
 	{ 65504, 65505 },
 	{ 65509, 65510 },
 };
-static URange16 Z_range16[] = {
+static const URange16 Z_range16[] = {
 	{ 32, 32 },
 	{ 160, 160 },
 	{ 5760, 5760 },
@@ -3770,21 +3770,21 @@ static URange16 Z_range16[] = {
 	{ 8287, 8287 },
 	{ 12288, 12288 },
 };
-static URange16 Zl_range16[] = {
+static const URange16 Zl_range16[] = {
 	{ 8232, 8232 },
 };
-static URange16 Co_range16[] = {
+static const URange16 Co_range16[] = {
 	{ 57344, 63743 },
 };
-static URange32 Co_range32[] = {
+static const URange32 Co_range32[] = {
 	{ 983040, 1048573 },
 	{ 1048576, 1114109 },
 };
-static URange16 Cc_range16[] = {
+static const URange16 Cc_range16[] = {
 	{ 0, 31 },
 	{ 127, 159 },
 };
-static URange16 Cf_range16[] = {
+static const URange16 Cf_range16[] = {
 	{ 173, 173 },
 	{ 1536, 1539 },
 	{ 1757, 1757 },
@@ -3797,19 +3797,19 @@ static URange16 Cf_range16[] = {
 	{ 65279, 65279 },
 	{ 65529, 65531 },
 };
-static URange32 Cf_range32[] = {
+static const URange32 Cf_range32[] = {
 	{ 69821, 69821 },
 	{ 119155, 119162 },
 	{ 917505, 917505 },
 	{ 917536, 917631 },
 };
-static URange16 Cs_range16[] = {
+static const URange16 Cs_range16[] = {
 	{ 55296, 57343 },
 };
-static URange16 Zp_range16[] = {
+static const URange16 Zp_range16[] = {
 	{ 8233, 8233 },
 };
-static URange16 Zs_range16[] = {
+static const URange16 Zs_range16[] = {
 	{ 32, 32 },
 	{ 160, 160 },
 	{ 5760, 5760 },
@@ -3819,10 +3819,10 @@ static URange16 Zs_range16[] = {
 	{ 8287, 8287 },
 	{ 12288, 12288 },
 };
-static URange16 Thaana_range16[] = {
+static const URange16 Thaana_range16[] = {
 	{ 1920, 1969 },
 };
-static URange16 Telugu_range16[] = {
+static const URange16 Telugu_range16[] = {
 	{ 3073, 3075 },
 	{ 3077, 3084 },
 	{ 3086, 3088 },
@@ -3838,7 +3838,7 @@ static URange16 Telugu_range16[] = {
 	{ 3174, 3183 },
 	{ 3192, 3199 },
 };
-static URange16 Cyrillic_range16[] = {
+static const URange16 Cyrillic_range16[] = {
 	{ 1024, 1156 },
 	{ 1159, 1319 },
 	{ 7467, 7467 },
@@ -3847,7 +3847,7 @@ static URange16 Cyrillic_range16[] = {
 	{ 42560, 42611 },
 	{ 42620, 42647 },
 };
-static URange16 Hangul_range16[] = {
+static const URange16 Hangul_range16[] = {
 	{ 4352, 4607 },
 	{ 12334, 12335 },
 	{ 12593, 12686 },
@@ -3863,10 +3863,10 @@ static URange16 Hangul_range16[] = {
 	{ 65490, 65495 },
 	{ 65498, 65500 },
 };
-static URange32 Old_South_Arabian_range32[] = {
+static const URange32 Old_South_Arabian_range32[] = {
 	{ 68192, 68223 },
 };
-static URange16 Ethiopic_range16[] = {
+static const URange16 Ethiopic_range16[] = {
 	{ 4608, 4680 },
 	{ 4682, 4685 },
 	{ 4688, 4694 },
@@ -3900,7 +3900,7 @@ static URange16 Ethiopic_range16[] = {
 	{ 43808, 43814 },
 	{ 43816, 43822 },
 };
-static URange16 Inherited_range16[] = {
+static const URange16 Inherited_range16[] = {
 	{ 768, 879 },
 	{ 1157, 1158 },
 	{ 1611, 1621 },
@@ -3920,7 +3920,7 @@ static URange16 Inherited_range16[] = {
 	{ 65024, 65039 },
 	{ 65056, 65062 },
 };
-static URange32 Inherited_range32[] = {
+static const URange32 Inherited_range32[] = {
 	{ 66045, 66045 },
 	{ 119143, 119145 },
 	{ 119163, 119170 },
@@ -3928,7 +3928,7 @@ static URange32 Inherited_range32[] = {
 	{ 119210, 119213 },
 	{ 917760, 917999 },
 };
-static URange16 Han_range16[] = {
+static const URange16 Han_range16[] = {
 	{ 11904, 11929 },
 	{ 11931, 12019 },
 	{ 12032, 12245 },
@@ -3942,20 +3942,20 @@ static URange16 Han_range16[] = {
 	{ 64048, 64109 },
 	{ 64112, 64217 },
 };
-static URange32 Han_range32[] = {
+static const URange32 Han_range32[] = {
 	{ 131072, 173782 },
 	{ 173824, 177972 },
 	{ 177984, 178205 },
 	{ 194560, 195101 },
 };
-static URange16 Armenian_range16[] = {
+static const URange16 Armenian_range16[] = {
 	{ 1329, 1366 },
 	{ 1369, 1375 },
 	{ 1377, 1415 },
 	{ 1418, 1418 },
 	{ 64275, 64279 },
 };
-static URange16 Tamil_range16[] = {
+static const URange16 Tamil_range16[] = {
 	{ 2946, 2947 },
 	{ 2949, 2954 },
 	{ 2958, 2960 },
@@ -3973,20 +3973,20 @@ static URange16 Tamil_range16[] = {
 	{ 3031, 3031 },
 	{ 3046, 3066 },
 };
-static URange16 Bopomofo_range16[] = {
+static const URange16 Bopomofo_range16[] = {
 	{ 746, 747 },
 	{ 12549, 12589 },
 	{ 12704, 12730 },
 };
-static URange16 Sundanese_range16[] = {
+static const URange16 Sundanese_range16[] = {
 	{ 7040, 7082 },
 	{ 7086, 7097 },
 };
-static URange16 Tagalog_range16[] = {
+static const URange16 Tagalog_range16[] = {
 	{ 5888, 5900 },
 	{ 5902, 5908 },
 };
-static URange16 Malayalam_range16[] = {
+static const URange16 Malayalam_range16[] = {
 	{ 3330, 3331 },
 	{ 3333, 3340 },
 	{ 3342, 3344 },
@@ -3999,38 +3999,38 @@ static URange16 Malayalam_range16[] = {
 	{ 3430, 3445 },
 	{ 3449, 3455 },
 };
-static URange32 Carian_range32[] = {
+static const URange32 Carian_range32[] = {
 	{ 66208, 66256 },
 };
-static URange16 Hiragana_range16[] = {
+static const URange16 Hiragana_range16[] = {
 	{ 12353, 12438 },
 	{ 12445, 12447 },
 };
-static URange32 Hiragana_range32[] = {
+static const URange32 Hiragana_range32[] = {
 	{ 110593, 110593 },
 	{ 127488, 127488 },
 };
-static URange16 Tagbanwa_range16[] = {
+static const URange16 Tagbanwa_range16[] = {
 	{ 5984, 5996 },
 	{ 5998, 6000 },
 	{ 6002, 6003 },
 };
-static URange16 Meetei_Mayek_range16[] = {
+static const URange16 Meetei_Mayek_range16[] = {
 	{ 43968, 44013 },
 	{ 44016, 44025 },
 };
-static URange16 Tai_Le_range16[] = {
+static const URange16 Tai_Le_range16[] = {
 	{ 6480, 6509 },
 	{ 6512, 6516 },
 };
-static URange16 Kayah_Li_range16[] = {
+static const URange16 Kayah_Li_range16[] = {
 	{ 43264, 43311 },
 };
-static URange16 Buginese_range16[] = {
+static const URange16 Buginese_range16[] = {
 	{ 6656, 6683 },
 	{ 6686, 6687 },
 };
-static URange32 Kharoshthi_range32[] = {
+static const URange32 Kharoshthi_range32[] = {
 	{ 68096, 68099 },
 	{ 68101, 68102 },
 	{ 68108, 68115 },
@@ -4040,22 +4040,22 @@ static URange32 Kharoshthi_range32[] = {
 	{ 68159, 68167 },
 	{ 68176, 68184 },
 };
-static URange16 Tai_Tham_range16[] = {
+static const URange16 Tai_Tham_range16[] = {
 	{ 6688, 6750 },
 	{ 6752, 6780 },
 	{ 6783, 6793 },
 	{ 6800, 6809 },
 	{ 6816, 6829 },
 };
-static URange32 Old_Italic_range32[] = {
+static const URange32 Old_Italic_range32[] = {
 	{ 66304, 66334 },
 	{ 66336, 66339 },
 };
-static URange32 Old_Persian_range32[] = {
+static const URange32 Old_Persian_range32[] = {
 	{ 66464, 66499 },
 	{ 66504, 66517 },
 };
-static URange16 Latin_range16[] = {
+static const URange16 Latin_range16[] = {
 	{ 65, 90 },
 	{ 97, 122 },
 	{ 170, 170 },
@@ -4087,24 +4087,24 @@ static URange16 Latin_range16[] = {
 	{ 65313, 65338 },
 	{ 65345, 65370 },
 };
-static URange16 Saurashtra_range16[] = {
+static const URange16 Saurashtra_range16[] = {
 	{ 43136, 43204 },
 	{ 43214, 43225 },
 };
-static URange32 Shavian_range32[] = {
+static const URange32 Shavian_range32[] = {
 	{ 66640, 66687 },
 };
-static URange16 Georgian_range16[] = {
+static const URange16 Georgian_range16[] = {
 	{ 4256, 4293 },
 	{ 4304, 4346 },
 	{ 4348, 4348 },
 	{ 11520, 11557 },
 };
-static URange16 Batak_range16[] = {
+static const URange16 Batak_range16[] = {
 	{ 7104, 7155 },
 	{ 7164, 7167 },
 };
-static URange16 Devanagari_range16[] = {
+static const URange16 Devanagari_range16[] = {
 	{ 2304, 2384 },
 	{ 2387, 2403 },
 	{ 2406, 2415 },
@@ -4112,11 +4112,11 @@ static URange16 Devanagari_range16[] = {
 	{ 2425, 2431 },
 	{ 43232, 43259 },
 };
-static URange16 Thai_range16[] = {
+static const URange16 Thai_range16[] = {
 	{ 3585, 3642 },
 	{ 3648, 3675 },
 };
-static URange16 Tibetan_range16[] = {
+static const URange16 Tibetan_range16[] = {
 	{ 3840, 3911 },
 	{ 3913, 3948 },
 	{ 3953, 3991 },
@@ -4125,19 +4125,19 @@ static URange16 Tibetan_range16[] = {
 	{ 4046, 4052 },
 	{ 4057, 4058 },
 };
-static URange16 Tifinagh_range16[] = {
+static const URange16 Tifinagh_range16[] = {
 	{ 11568, 11621 },
 	{ 11631, 11632 },
 	{ 11647, 11647 },
 };
-static URange32 Ugaritic_range32[] = {
+static const URange32 Ugaritic_range32[] = {
 	{ 66432, 66461 },
 	{ 66463, 66463 },
 };
-static URange16 Braille_range16[] = {
+static const URange16 Braille_range16[] = {
 	{ 10240, 10495 },
 };
-static URange16 Greek_range16[] = {
+static const URange16 Greek_range16[] = {
 	{ 880, 883 },
 	{ 885, 887 },
 	{ 890, 893 },
@@ -4170,46 +4170,46 @@ static URange16 Greek_range16[] = {
 	{ 8182, 8190 },
 	{ 8486, 8486 },
 };
-static URange32 Greek_range32[] = {
+static const URange32 Greek_range32[] = {
 	{ 65856, 65930 },
 	{ 119296, 119365 },
 };
-static URange32 Lycian_range32[] = {
+static const URange32 Lycian_range32[] = {
 	{ 66176, 66204 },
 };
-static URange16 Tai_Viet_range16[] = {
+static const URange16 Tai_Viet_range16[] = {
 	{ 43648, 43714 },
 	{ 43739, 43743 },
 };
-static URange16 Vai_range16[] = {
+static const URange16 Vai_range16[] = {
 	{ 42240, 42539 },
 };
-static URange16 Ogham_range16[] = {
+static const URange16 Ogham_range16[] = {
 	{ 5760, 5788 },
 };
-static URange32 Inscriptional_Parthian_range32[] = {
+static const URange32 Inscriptional_Parthian_range32[] = {
 	{ 68416, 68437 },
 	{ 68440, 68447 },
 };
-static URange16 Cham_range16[] = {
+static const URange16 Cham_range16[] = {
 	{ 43520, 43574 },
 	{ 43584, 43597 },
 	{ 43600, 43609 },
 	{ 43612, 43615 },
 };
-static URange16 Syriac_range16[] = {
+static const URange16 Syriac_range16[] = {
 	{ 1792, 1805 },
 	{ 1807, 1866 },
 	{ 1869, 1871 },
 };
-static URange16 Runic_range16[] = {
+static const URange16 Runic_range16[] = {
 	{ 5792, 5866 },
 	{ 5870, 5872 },
 };
-static URange32 Gothic_range32[] = {
+static const URange32 Gothic_range32[] = {
 	{ 66352, 66378 },
 };
-static URange16 Katakana_range16[] = {
+static const URange16 Katakana_range16[] = {
 	{ 12449, 12538 },
 	{ 12541, 12543 },
 	{ 12784, 12799 },
@@ -4218,33 +4218,33 @@ static URange16 Katakana_range16[] = {
 	{ 65382, 65391 },
 	{ 65393, 65437 },
 };
-static URange32 Katakana_range32[] = {
+static const URange32 Katakana_range32[] = {
 	{ 110592, 110592 },
 };
-static URange32 Osmanya_range32[] = {
+static const URange32 Osmanya_range32[] = {
 	{ 66688, 66717 },
 	{ 66720, 66729 },
 };
-static URange16 New_Tai_Lue_range16[] = {
+static const URange16 New_Tai_Lue_range16[] = {
 	{ 6528, 6571 },
 	{ 6576, 6601 },
 	{ 6608, 6618 },
 	{ 6622, 6623 },
 };
-static URange16 Ol_Chiki_range16[] = {
+static const URange16 Ol_Chiki_range16[] = {
 	{ 7248, 7295 },
 };
-static URange16 Limbu_range16[] = {
+static const URange16 Limbu_range16[] = {
 	{ 6400, 6428 },
 	{ 6432, 6443 },
 	{ 6448, 6459 },
 	{ 6464, 6464 },
 	{ 6468, 6479 },
 };
-static URange16 Cherokee_range16[] = {
+static const URange16 Cherokee_range16[] = {
 	{ 5024, 5108 },
 };
-static URange16 Oriya_range16[] = {
+static const URange16 Oriya_range16[] = {
 	{ 2817, 2819 },
 	{ 2821, 2828 },
 	{ 2831, 2832 },
@@ -4260,7 +4260,7 @@ static URange16 Oriya_range16[] = {
 	{ 2911, 2915 },
 	{ 2918, 2935 },
 };
-static URange16 Gujarati_range16[] = {
+static const URange16 Gujarati_range16[] = {
 	{ 2689, 2691 },
 	{ 2693, 2701 },
 	{ 2703, 2705 },
@@ -4276,40 +4276,40 @@ static URange16 Gujarati_range16[] = {
 	{ 2790, 2799 },
 	{ 2801, 2801 },
 };
-static URange32 Inscriptional_Pahlavi_range32[] = {
+static const URange32 Inscriptional_Pahlavi_range32[] = {
 	{ 68448, 68466 },
 	{ 68472, 68479 },
 };
-static URange16 Khmer_range16[] = {
+static const URange16 Khmer_range16[] = {
 	{ 6016, 6109 },
 	{ 6112, 6121 },
 	{ 6128, 6137 },
 	{ 6624, 6655 },
 };
-static URange32 Cuneiform_range32[] = {
+static const URange32 Cuneiform_range32[] = {
 	{ 73728, 74606 },
 	{ 74752, 74850 },
 	{ 74864, 74867 },
 };
-static URange16 Mandaic_range16[] = {
+static const URange16 Mandaic_range16[] = {
 	{ 2112, 2139 },
 	{ 2142, 2142 },
 };
-static URange16 Syloti_Nagri_range16[] = {
+static const URange16 Syloti_Nagri_range16[] = {
 	{ 43008, 43051 },
 };
-static URange16 Nko_range16[] = {
+static const URange16 Nko_range16[] = {
 	{ 1984, 2042 },
 };
-static URange16 Canadian_Aboriginal_range16[] = {
+static const URange16 Canadian_Aboriginal_range16[] = {
 	{ 5120, 5759 },
 	{ 6320, 6389 },
 };
-static URange32 Phoenician_range32[] = {
+static const URange32 Phoenician_range32[] = {
 	{ 67840, 67867 },
 	{ 67871, 67871 },
 };
-static URange16 Bengali_range16[] = {
+static const URange16 Bengali_range16[] = {
 	{ 2433, 2435 },
 	{ 2437, 2444 },
 	{ 2447, 2448 },
@@ -4325,18 +4325,18 @@ static URange16 Bengali_range16[] = {
 	{ 2527, 2531 },
 	{ 2534, 2555 },
 };
-static URange32 Kaithi_range32[] = {
+static const URange32 Kaithi_range32[] = {
 	{ 69760, 69825 },
 };
-static URange16 Glagolitic_range16[] = {
+static const URange16 Glagolitic_range16[] = {
 	{ 11264, 11310 },
 	{ 11312, 11358 },
 };
-static URange32 Imperial_Aramaic_range32[] = {
+static const URange32 Imperial_Aramaic_range32[] = {
 	{ 67648, 67669 },
 	{ 67671, 67679 },
 };
-static URange16 Gurmukhi_range16[] = {
+static const URange16 Gurmukhi_range16[] = {
 	{ 2561, 2563 },
 	{ 2565, 2570 },
 	{ 2575, 2576 },
@@ -4354,15 +4354,15 @@ static URange16 Gurmukhi_range16[] = {
 	{ 2654, 2654 },
 	{ 2662, 2677 },
 };
-static URange16 Javanese_range16[] = {
+static const URange16 Javanese_range16[] = {
 	{ 43392, 43469 },
 	{ 43471, 43481 },
 	{ 43486, 43487 },
 };
-static URange16 Phags_Pa_range16[] = {
+static const URange16 Phags_Pa_range16[] = {
 	{ 43072, 43127 },
 };
-static URange32 Cypriot_range32[] = {
+static const URange32 Cypriot_range32[] = {
 	{ 67584, 67589 },
 	{ 67592, 67592 },
 	{ 67594, 67637 },
@@ -4370,7 +4370,7 @@ static URange32 Cypriot_range32[] = {
 	{ 67644, 67644 },
 	{ 67647, 67647 },
 };
-static URange16 Kannada_range16[] = {
+static const URange16 Kannada_range16[] = {
 	{ 3202, 3203 },
 	{ 3205, 3212 },
 	{ 3214, 3216 },
@@ -4386,7 +4386,7 @@ static URange16 Kannada_range16[] = {
 	{ 3302, 3311 },
 	{ 3313, 3314 },
 };
-static URange16 Mongolian_range16[] = {
+static const URange16 Mongolian_range16[] = {
 	{ 6144, 6145 },
 	{ 6148, 6148 },
 	{ 6150, 6158 },
@@ -4394,7 +4394,7 @@ static URange16 Mongolian_range16[] = {
 	{ 6176, 6263 },
 	{ 6272, 6314 },
 };
-static URange16 Sinhala_range16[] = {
+static const URange16 Sinhala_range16[] = {
 	{ 3458, 3459 },
 	{ 3461, 3478 },
 	{ 3482, 3505 },
@@ -4407,26 +4407,26 @@ static URange16 Sinhala_range16[] = {
 	{ 3544, 3551 },
 	{ 3570, 3572 },
 };
-static URange32 Brahmi_range32[] = {
+static const URange32 Brahmi_range32[] = {
 	{ 69632, 69709 },
 	{ 69714, 69743 },
 };
-static URange32 Deseret_range32[] = {
+static const URange32 Deseret_range32[] = {
 	{ 66560, 66639 },
 };
-static URange16 Rejang_range16[] = {
+static const URange16 Rejang_range16[] = {
 	{ 43312, 43347 },
 	{ 43359, 43359 },
 };
-static URange16 Yi_range16[] = {
+static const URange16 Yi_range16[] = {
 	{ 40960, 42124 },
 	{ 42128, 42182 },
 };
-static URange16 Balinese_range16[] = {
+static const URange16 Balinese_range16[] = {
 	{ 6912, 6987 },
 	{ 6992, 7036 },
 };
-static URange16 Lao_range16[] = {
+static const URange16 Lao_range16[] = {
 	{ 3713, 3714 },
 	{ 3716, 3716 },
 	{ 3719, 3720 },
@@ -4446,10 +4446,10 @@ static URange16 Lao_range16[] = {
 	{ 3792, 3801 },
 	{ 3804, 3805 },
 };
-static URange16 Hanunoo_range16[] = {
+static const URange16 Hanunoo_range16[] = {
 	{ 5920, 5940 },
 };
-static URange32 Linear_B_range32[] = {
+static const URange32 Linear_B_range32[] = {
 	{ 65536, 65547 },
 	{ 65549, 65574 },
 	{ 65576, 65594 },
@@ -4458,32 +4458,32 @@ static URange32 Linear_B_range32[] = {
 	{ 65616, 65629 },
 	{ 65664, 65786 },
 };
-static URange32 Old_Turkic_range32[] = {
+static const URange32 Old_Turkic_range32[] = {
 	{ 68608, 68680 },
 };
-static URange16 Lepcha_range16[] = {
+static const URange16 Lepcha_range16[] = {
 	{ 7168, 7223 },
 	{ 7227, 7241 },
 	{ 7245, 7247 },
 };
-static URange32 Lydian_range32[] = {
+static const URange32 Lydian_range32[] = {
 	{ 67872, 67897 },
 	{ 67903, 67903 },
 };
-static URange32 Egyptian_Hieroglyphs_range32[] = {
+static const URange32 Egyptian_Hieroglyphs_range32[] = {
 	{ 77824, 78894 },
 };
-static URange16 Samaritan_range16[] = {
+static const URange16 Samaritan_range16[] = {
 	{ 2048, 2093 },
 	{ 2096, 2110 },
 };
-static URange16 Lisu_range16[] = {
+static const URange16 Lisu_range16[] = {
 	{ 42192, 42239 },
 };
-static URange16 Buhid_range16[] = {
+static const URange16 Buhid_range16[] = {
 	{ 5952, 5971 },
 };
-static URange16 Common_range16[] = {
+static const URange16 Common_range16[] = {
 	{ 0, 64 },
 	{ 91, 96 },
 	{ 123, 169 },
@@ -4574,7 +4574,7 @@ static URange16 Common_range16[] = {
 	{ 65512, 65518 },
 	{ 65529, 65533 },
 };
-static URange32 Common_range32[] = {
+static const URange32 Common_range32[] = {
 	{ 65792, 65794 },
 	{ 65799, 65843 },
 	{ 65847, 65855 },
@@ -4656,12 +4656,12 @@ static URange32 Common_range32[] = {
 	{ 917505, 917505 },
 	{ 917536, 917631 },
 };
-static URange16 Coptic_range16[] = {
+static const URange16 Coptic_range16[] = {
 	{ 994, 1007 },
 	{ 11392, 11505 },
 	{ 11513, 11519 },
 };
-static URange16 Arabic_range16[] = {
+static const URange16 Arabic_range16[] = {
 	{ 1536, 1539 },
 	{ 1542, 1547 },
 	{ 1549, 1562 },
@@ -4681,24 +4681,24 @@ static URange16 Arabic_range16[] = {
 	{ 65136, 65140 },
 	{ 65142, 65276 },
 };
-static URange32 Arabic_range32[] = {
+static const URange32 Arabic_range32[] = {
 	{ 69216, 69246 },
 };
-static URange16 Bamum_range16[] = {
+static const URange16 Bamum_range16[] = {
 	{ 42656, 42743 },
 };
-static URange32 Bamum_range32[] = {
+static const URange32 Bamum_range32[] = {
 	{ 92160, 92728 },
 };
-static URange16 Myanmar_range16[] = {
+static const URange16 Myanmar_range16[] = {
 	{ 4096, 4255 },
 	{ 43616, 43643 },
 };
-static URange32 Avestan_range32[] = {
+static const URange32 Avestan_range32[] = {
 	{ 68352, 68405 },
 	{ 68409, 68415 },
 };
-static URange16 Hebrew_range16[] = {
+static const URange16 Hebrew_range16[] = {
 	{ 1425, 1479 },
 	{ 1488, 1514 },
 	{ 1520, 1524 },
@@ -4710,7 +4710,7 @@ static URange16 Hebrew_range16[] = {
 	{ 64326, 64335 },
 };
 // 3804 16-bit ranges, 582 32-bit ranges
-UGroup unicode_groups[] = {
+const UGroup unicode_groups[] = {
 	{ "Arabic", +1, Arabic_range16, 18, Arabic_range32, 1 },
 	{ "Armenian", +1, Armenian_range16, 5, 0, 0 },
 	{ "Avestan", +1, 0, 0, Avestan_range32, 2 },
@@ -4843,7 +4843,7 @@ UGroup unicode_groups[] = {
 	{ "Zp", +1, Zp_range16, 1, 0, 0 },
 	{ "Zs", +1, Zs_range16, 8, 0, 0 },
 };
-int num_unicode_groups = 131;
+const int num_unicode_groups = 131;
 
 
 }  // namespace re2

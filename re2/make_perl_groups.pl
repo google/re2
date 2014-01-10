@@ -55,7 +55,7 @@ sub ComputeClass($) {
 
 sub PrintClass($$@) {
   my ($cname, $name, @ranges) = @_;
-  print "static URange16 code${cname}[] = {  /* $name */\n";
+  print "static const URange16 code${cname}[] = {  /* $name */\n";
   for (my $i=0; $i<@ranges; $i++) {
     my @a = @{$ranges[$i]};
     printf "\t{ 0x%x, 0x%x },\n", $a[0], $a[1];
@@ -82,13 +82,13 @@ sub PrintClasses($@) {
     my @ranges = ComputeClass($cl);
     push @entries, PrintClass(++$gen, $cl, @ranges);
   }
-  print "UGroup ${cname}_groups[] = {\n";
+  print "const UGroup ${cname}_groups[] = {\n";
   foreach my $e (@entries) {
     print "\t$e,\n";
   }
   print "};\n";
   my $count = @entries;
-  print "int num_${cname}_groups = $count;\n";
+  print "const int num_${cname}_groups = $count;\n";
 }
 
 print <<EOF;
