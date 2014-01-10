@@ -10,7 +10,7 @@
 		_ZlsRSoRKN3re211StringPieceE;
 		# re2::FilteredRE2*
 		_ZN3re211FilteredRE2*;
-		_ZNK3re211FilteredRE2*;
+		_ZNK3re211FilteredRE210AllMatches*;
 	local:
 		*;
 };

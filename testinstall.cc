@@ -14,6 +14,8 @@ int main(void) {
 	f.Add("a.*b.*c", RE2::DefaultOptions, &id);
 	vector<string> v;
 	f.Compile(&v);
+	vector<int> ids;
+	f.FirstMatch("abbccc", ids);
 
 	if(RE2::FullMatch("axbyc", "a.*b.*c")) {
 		printf("PASS\n");

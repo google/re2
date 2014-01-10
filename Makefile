@@ -9,14 +9,14 @@ all: obj/libre2.a obj/so/libre2.so
 # CCPCRE=-I/usr/local/include -DUSEPCRE
 # LDPCRE=-L/usr/local/lib -lpcre
 
-CXX=g++
-CXXFLAGS=-Wall -O3 -g -pthread  # can override
-RE2_CXXFLAGS=-Wno-sign-compare -c -I. $(CCPCRE)  # required
-LDFLAGS=-pthread
-AR=ar
-ARFLAGS=rsc
-NM=nm
-NMFLAGS=-p
+CXX?=g++
+CXXFLAGS?=-Wall -O3 -g -pthread # can override
+RE2_CXXFLAGS?=-Wno-sign-compare -c -I. $(CCPCRE)  # required
+LDFLAGS?=
+AR?=ar
+ARFLAGS?=rsc
+NM?=nm
+NMFLAGS?=-p
 
 # Variables mandated by GNU, the arbiter of all good taste on the internet.
 # http://www.gnu.org/prep/standards/standards.html
@@ -286,3 +286,6 @@ log:
 	echo '#' RE2 basic search tests built by make $@ >re2-search.txt
 	echo '#' $$(date) >>re2-search.txt
 	obj/test/search_test |grep -v '^PASS$$' >>re2-search.txt
+
+x: x.cc obj/libre2.a
+	g++ -I. -o x x.cc obj/libre2.a
