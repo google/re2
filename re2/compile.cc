@@ -374,6 +374,8 @@ Frag Compiler::Plus(Frag a, bool nongreedy) {
 
 // Given a fragment for a, returns a fragment for a? or a?? (if nongreedy)
 Frag Compiler::Quest(Frag a, bool nongreedy) {
+  if (IsNoMatch(a))
+    return Nop();
   int id = AllocInst(1);
   if (id < 0)
     return NoMatch();
@@ -446,6 +448,8 @@ Frag Compiler::EmptyWidth(EmptyOp empty) {
 
 // Given a fragment a, returns a fragment with capturing parens around a.
 Frag Compiler::Capture(Frag a, int n) {
+  if (IsNoMatch(a))
+    return NoMatch();
   int id = AllocInst(2);
   if (id < 0)
     return NoMatch();

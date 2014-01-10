@@ -483,6 +483,21 @@ TEST(EmptyCharset, Fuzz) {
     CHECK(!RE2(empties[i]).Match("abc", 0, 3, RE2::UNANCHORED, NULL, 0));
 }
 
+// Bitstate assumes that kInstFail instructions in
+// alternations or capture groups have been "compiled away".
+TEST(EmptyCharset, BitstateAssumptions) {
+  // Captures trigger use of Bitstate.
+  static const char *nop_empties[] = {
+    "((((()))))" "[^\\S\\s]?",
+    "((((()))))" "([^\\S\\s])?",
+    "((((()))))" "([^\\S\\s]|[^\\S\\s])?",
+    "((((()))))" "(([^\\S\\s]|[^\\S\\s])|)"
+  };
+  StringPiece group[6];
+  for (int i = 0; i < arraysize(nop_empties); i++)
+    CHECK(RE2(nop_empties[i]).Match("", 0, 0, RE2::UNANCHORED, group, 6));
+}
+
 // Test that named groups work correctly.
 TEST(Capture, NamedGroups) {
   {
