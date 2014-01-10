@@ -45,6 +45,7 @@ RE2::Options::Options(RE2::CannedOptions opt)
     max_mem_(kDefaultMaxMem),
     literal_(false),
     never_nl_(false),
+    dot_nl_(false),
     never_capture_(false),
     case_sensitive_(true),
     perl_classes_(false),
@@ -151,6 +152,9 @@ int RE2::Options::ParseFlags() const {
 
   if (never_nl())
     flags |= Regexp::NeverNL;
+
+  if (dot_nl())
+    flags |= Regexp::DotNL;
 
   if (never_capture())
     flags |= Regexp::NeverCapture;

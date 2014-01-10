@@ -1244,6 +1244,16 @@ TEST(RE2, NeverNewline) {
   }
 }
 
+// Check that dot_nl option works.
+TEST(RE2, DotNL) {
+  RE2::Options opt;
+  opt.set_dot_nl(true);
+  EXPECT_TRUE(RE2::PartialMatch("\n", RE2(".", opt)));
+  EXPECT_FALSE(RE2::PartialMatch("\n", RE2("(?-s).", opt)));
+  opt.set_never_nl(true);
+  EXPECT_FALSE(RE2::PartialMatch("\n", RE2(".", opt)));
+}
+
 // Check that there are no capturing groups in "never capture" mode.
 TEST(RE2, NeverCapture) {
   RE2::Options opt;
