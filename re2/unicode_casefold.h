@@ -56,19 +56,19 @@ struct CaseFold {
   int32 delta;
 };
 
-extern CaseFold unicode_casefold[];
-extern int num_unicode_casefold;
+extern const CaseFold unicode_casefold[];
+extern const int num_unicode_casefold;
 
-extern CaseFold unicode_tolower[];
-extern int num_unicode_tolower;
+extern const CaseFold unicode_tolower[];
+extern const int num_unicode_tolower;
 
 // Returns the CaseFold* in the tables that contains rune.
 // If rune is not in the tables, returns the first CaseFold* after rune.
 // If rune is larger than any value in the tables, returns NULL.
-extern CaseFold* LookupCaseFold(CaseFold*, int, Rune rune);
+extern const CaseFold* LookupCaseFold(const CaseFold*, int, Rune rune);
 
 // Returns the result of applying the fold f to the rune r.
-extern Rune ApplyFold(CaseFold *f, Rune r);
+extern Rune ApplyFold(const CaseFold *f, Rune r);
 
 }  // namespace re2
 

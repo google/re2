@@ -134,7 +134,7 @@ def main():
     for lo, hi, delta in foldranges:
       print "\t{ %d, %d, %s }," % (lo, hi, delta)
     print "};"
-    print "int num_unicode_%s = %d;" % (name, len(foldranges),)
+    print "const int num_unicode_%s = %d;" % (name, len(foldranges),)
     print ""
 
   print _header

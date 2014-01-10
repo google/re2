@@ -7,8 +7,8 @@
 namespace re2 {
 
 
-// 1029 groups, 2079 pairs, 282 ranges
-CaseFold unicode_casefold[] = {
+// 1034 groups, 2089 pairs, 289 ranges
+const CaseFold unicode_casefold[] = {
 	{ 65, 90, 32 },
 	{ 97, 106, -32 },
 	{ 107, 107, 8383 },
@@ -108,6 +108,7 @@ CaseFold unicode_casefold[] = {
 	{ 608, 608, -205 },
 	{ 611, 611, -207 },
 	{ 613, 613, 42280 },
+	{ 614, 614, 42308 },
 	{ 616, 616, -209 },
 	{ 617, 617, -211 },
 	{ 619, 619, 10743 },
@@ -186,6 +187,8 @@ CaseFold unicode_casefold[] = {
 	{ 1329, 1366, 48 },
 	{ 1377, 1414, -48 },
 	{ 4256, 4293, 7264 },
+	{ 4295, 4295, 7264 },
+	{ 4301, 4301, 7264 },
 	{ 7545, 7545, 35332 },
 	{ 7549, 7549, 3814 },
 	{ 7680, 7776, EvenOdd },
@@ -275,7 +278,10 @@ CaseFold unicode_casefold[] = {
 	{ 11390, 11391, -10815 },
 	{ 11392, 11491, EvenOdd },
 	{ 11499, 11502, OddEven },
+	{ 11506, 11507, EvenOdd },
 	{ 11520, 11557, -7264 },
+	{ 11559, 11559, -7264 },
+	{ 11565, 11565, -7264 },
 	{ 42560, 42605, EvenOdd },
 	{ 42624, 42647, EvenOdd },
 	{ 42786, 42799, EvenOdd },
@@ -285,17 +291,18 @@ CaseFold unicode_casefold[] = {
 	{ 42878, 42887, EvenOdd },
 	{ 42891, 42892, OddEven },
 	{ 42893, 42893, -42280 },
-	{ 42896, 42897, EvenOdd },
+	{ 42896, 42899, EvenOdd },
 	{ 42912, 42921, EvenOdd },
+	{ 42922, 42922, -42308 },
 	{ 65313, 65338, 32 },
 	{ 65345, 65370, -32 },
 	{ 66560, 66599, 40 },
 	{ 66600, 66639, -40 },
 };
-int num_unicode_casefold = 282;
+const int num_unicode_casefold = 289;
 
-// 1029 groups, 1050 pairs, 163 ranges
-CaseFold unicode_tolower[] = {
+// 1034 groups, 1055 pairs, 167 ranges
+const CaseFold unicode_tolower[] = {
 	{ 65, 90, 32 },
 	{ 181, 181, 775 },
 	{ 192, 214, 32 },
@@ -393,6 +400,8 @@ CaseFold unicode_tolower[] = {
 	{ 1232, 1318, EvenOddSkip },
 	{ 1329, 1366, 48 },
 	{ 4256, 4293, 7264 },
+	{ 4295, 4295, 7264 },
+	{ 4301, 4301, 7264 },
 	{ 7680, 7828, EvenOddSkip },
 	{ 7835, 7835, -58 },
 	{ 7838, 7838, -7615 },
@@ -446,6 +455,7 @@ CaseFold unicode_tolower[] = {
 	{ 11390, 11391, -10815 },
 	{ 11392, 11490, EvenOddSkip },
 	{ 11499, 11501, OddEvenSkip },
+	{ 11506, 11506, EvenOdd },
 	{ 42560, 42604, EvenOddSkip },
 	{ 42624, 42646, EvenOddSkip },
 	{ 42786, 42798, EvenOddSkip },
@@ -455,12 +465,13 @@ CaseFold unicode_tolower[] = {
 	{ 42878, 42886, EvenOddSkip },
 	{ 42891, 42891, OddEven },
 	{ 42893, 42893, -42280 },
-	{ 42896, 42896, EvenOdd },
+	{ 42896, 42898, EvenOddSkip },
 	{ 42912, 42920, EvenOddSkip },
+	{ 42922, 42922, -42308 },
 	{ 65313, 65338, 32 },
 	{ 66560, 66599, 40 },
 };
-int num_unicode_tolower = 163;
+const int num_unicode_tolower = 167;
 
 
 

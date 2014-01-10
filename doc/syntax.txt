@@ -229,13 +229,17 @@ Unicode character class names--scripts:
 Arabic	Arabic
 Armenian	Armenian
 Balinese	Balinese
+Bamum	Bamum
+Batak	Batak
 Bengali	Bengali
 Bopomofo	Bopomofo
+Brahmi	Brahmi
 Braille	Braille
 Buginese	Buginese
 Buhid	Buhid
 Canadian_Aboriginal	Canadian Aboriginal
 Carian	Carian
+Chakma	Chakma
 Cham	Cham
 Cherokee	Cherokee
 Common	characters not specific to one script
@@ -245,6 +249,7 @@ Cypriot	Cypriot
 Cyrillic	Cyrillic
 Deseret	Deseret
 Devanagari	Devanagari
+Egyptian_Hieroglyphs	Egyptian Hieroglyphs
 Ethiopic	Ethiopic
 Georgian	Georgian
 Glagolitic	Glagolitic
@@ -257,7 +262,12 @@ Hangul	Hangul
 Hanunoo	Hanunoo
 Hebrew	Hebrew
 Hiragana	Hiragana
+Imperial_Aramaic	Imperial Aramaic
 Inherited	inherit script from previous character
+Inscriptional_Pahlavi	Inscriptional Pahlavi
+Inscriptional_Parthian	Inscriptional Parthian
+Javanese	Javanese
+Kaithi	Kaithi
 Kannada	Kannada
 Katakana	Katakana
 Kayah_Li	Kayah Li
@@ -271,6 +281,11 @@ Linear_B	Linear B
 Lycian	Lycian
 Lydian	Lydian
 Malayalam	Malayalam
+Mandaic	Mandaic
+Meetei_Mayek	Meetei Mayek
+Meroitic_Cursive	Meroitic Cursive
+Meroitic_Hieroglyphs	Meroitic Hieroglyphs
+Miao	Miao
 Mongolian	Mongolian
 Myanmar	Myanmar
 New_Tai_Lue	New Tai Lue (aka Simplified Tai Lue)
@@ -279,6 +294,8 @@ Ogham	Ogham
 Ol_Chiki	Ol Chiki
 Old_Italic	Old Italic
 Old_Persian	Old Persian
+Old_South_Arabian	Old South Arabian
+Old_Turkic	Old Turkic
 Oriya	Oriya
 Osmanya	Osmanya
 Phags_Pa	'Phags Pa
@@ -286,14 +303,19 @@ Phoenician	Phoenician
 Rejang	Rejang
 Runic	Runic
 Saurashtra	Saurashtra
+Sharada	Sharada
 Shavian	Shavian
 Sinhala	Sinhala
+Sora_Sompeng	Sora Sompeng
 Sundanese	Sundanese
 Syloti_Nagri	Syloti Nagri
 Syriac	Syriac
 Tagalog	Tagalog
 Tagbanwa	Tagbanwa
 Tai_Le	Tai Le
+Tai_Tham	Tai Tham
+Tai_Viet	Tai Viet
+Takri	Takri
 Tamil	Tamil
 Telugu	Telugu
 Thaana	Thaana

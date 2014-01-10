@@ -240,8 +240,8 @@ bool Regexp::ParseState::PushRegexp(Regexp* re) {
 // Searches the case folding tables and returns the CaseFold* that contains r.
 // If there isn't one, returns the CaseFold* with smallest f->lo bigger than r.
 // If there isn't one, returns NULL.
-CaseFold* LookupCaseFold(CaseFold *f, int n, Rune r) {
-  CaseFold* ef = f + n;
+const CaseFold* LookupCaseFold(const CaseFold *f, int n, Rune r) {
+  const CaseFold* ef = f + n;
 
   // Binary search for entry containing r.
   while (n > 0) {
@@ -268,7 +268,7 @@ CaseFold* LookupCaseFold(CaseFold *f, int n, Rune r) {
 }
 
 // Returns the result of applying the fold f to the rune r.
-Rune ApplyFold(CaseFold *f, Rune r) {
+Rune ApplyFold(const CaseFold *f, Rune r) {
   switch (f->delta) {
     default:
       return r + f->delta;
@@ -304,7 +304,7 @@ Rune ApplyFold(CaseFold *f, Rune r) {
 //
 //   CycleFoldRune('?') = '?'
 Rune CycleFoldRune(Rune r) {
-  CaseFold* f = LookupCaseFold(unicode_casefold, num_unicode_casefold, r);
+  const CaseFold* f = LookupCaseFold(unicode_casefold, num_unicode_casefold, r);
   if (f == NULL || r < f->lo)
     return r;
   return ApplyFold(f, r);
@@ -327,7 +327,7 @@ static void AddFoldedRange(CharClassBuilder* cc, Rune lo, Rune hi, int depth) {
     return;
 
   while (lo <= hi) {
-    CaseFold* f = LookupCaseFold(unicode_casefold, num_unicode_casefold, lo);
+    const CaseFold* f = LookupCaseFold(unicode_casefold, num_unicode_casefold, lo);
     if (f == NULL)  // lo has no fold, nor does anything above lo
       break;
     if (lo < f->lo) {  // lo has no fold; next rune with a fold is f->lo
