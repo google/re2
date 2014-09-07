@@ -712,7 +712,10 @@ Examples:
 '''
 
 def promptyesno(ui, msg):
-	return ui.promptchoice(msg, ["&yes", "&no"], 0) == 0
+	if hgversion >= "2.7":
+		return ui.promptchoice(msg + " $$ &yes $$ &no", 0) == 0
+	else:
+		return ui.promptchoice(msg, ["&yes", "&no"], 0) == 0
 
 def promptremove(ui, repo, f):
 	if promptyesno(ui, "hg remove %s (y/n)?" % (f,)):
@@ -2636,7 +2639,7 @@ def RietveldSetup(ui, repo):
 	rpc = None
 	
 	global releaseBranch
-	tags = repo.branchtags().keys()
+	tags = repo.branchmap().keys()
 	if 'release-branch.go10' in tags:
 		# NOTE(rsc): This tags.sort is going to get the wrong
 		# answer when comparing release-branch.go9 with
