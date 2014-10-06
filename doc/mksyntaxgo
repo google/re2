@@ -1,7 +1,7 @@
 #!/bin/sh
 
 set -e
-out=$GOROOT/src/pkg/regexp/syntax/doc.go
+out=$GOROOT/src/regexp/syntax/doc.go
 cp syntax.txt $out
 sam -d $out <<'!'
 ,x g/NOT SUPPORTED/d

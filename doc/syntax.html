@@ -11,16 +11,15 @@
 <tr><td colspan=2>This page lists the regular expression syntax accepted by RE2.</td></tr>
 <tr><td colspan=2>It also lists syntax accepted by PCRE, PERL, and VIM.</td></tr>
 <tr><td colspan=2>Grayed out expressions are not supported by RE2.</td></tr>
-<tr><td colspan=2>See <a href="http://go/re2">http://go/re2</a> and <a href="http://go/re2quick">http://go/re2quick</a>.</td></tr>
 <tr><td></td></tr>
 <tr><td colspan=2><b>Single characters:</b></td></tr>
-<tr><td><code>.</code></td><td>any character, including newline (s=true)</td></tr>
+<tr><td><code>.</code></td><td>any character, possibly including newline (s=true)</td></tr>
 <tr><td><code>[xyz]</code></td><td>character class</td></tr>
 <tr><td><code>[^xyz]</code></td><td>negated character class</td></tr>
 <tr><td><code>\d</code></td><td>Perl character class</td></tr>
 <tr><td><code>\D</code></td><td>negated Perl character class</td></tr>
-<tr><td><code>[:alpha:]</code></td><td>ASCII character class</td></tr>
-<tr><td><code>[:^alpha:]</code></td><td>negated ASCII character class</td></tr>
+<tr><td><code>[[:alpha:]]</code></td><td>ASCII character class</td></tr>
+<tr><td><code>[[:^alpha:]]</code></td><td>negated ASCII character class</td></tr>
 <tr><td><code>\pN</code></td><td>Unicode character class (one-letter name)</td></tr>
 <tr><td><code>\p{Greek}</code></td><td>Unicode character class</td></tr>
 <tr><td><code>\PN</code></td><td>negated Unicode character class (one-letter name)</td></tr>
@@ -62,7 +61,7 @@
 <tr><td><code><font color=#808080>(?&lt;name&gt;re)</font></code></td><td>named &amp; numbered capturing group </td></tr>
 <tr><td><code><font color=#808080>(?'name're)</font></code></td><td>named &amp; numbered capturing group </td></tr>
 <tr><td><code>(?:re)</code></td><td>non-capturing group</td></tr>
-<tr><td><code>(?flags)</code></td><td>set flags until outer paren closes; non-capturing</td></tr>
+<tr><td><code>(?flags)</code></td><td>set flags within current group; non-capturing</td></tr>
 <tr><td><code>(?flags:re)</code></td><td>set flags during re; non-capturing</td></tr>
 <tr><td><code><font color=#808080>(?#text)</font></code></td><td>comment </td></tr>
 <tr><td><code><font color=#808080>(?|x|y|z)</font></code></td><td>branch numbering reset </td></tr>
@@ -72,16 +71,16 @@
 <tr><td></td></tr>
 <tr><td colspan=2><b>Flags:</b></td></tr>
 <tr><td><code>i</code></td><td>case-insensitive (default false)</td></tr>
-<tr><td><code>m</code></td><td>multi-line mode (default false)</td></tr>
+<tr><td><code>m</code></td><td>multi-line mode: <code>^</code> and <code>$</code> match begin/end line in addition to begin/end text (default false)</td></tr>
 <tr><td><code>s</code></td><td>let <code>.</code> match <code>\n</code> (default false)</td></tr>
 <tr><td><code>U</code></td><td>ungreedy: swap meaning of <code>x*</code> and <code>x*?</code>, <code>x+</code> and <code>x+?</code>, etc (default false)</td></tr>
 <tr><td colspan=2>Flag syntax is <code>xyz</code> (set) or <code>-xyz</code> (clear) or <code>xy-z</code> (set <code>xy</code>, clear <code>z</code>).</td></tr>
 <tr><td></td></tr>
 <tr><td colspan=2><b>Empty strings:</b></td></tr>
 <tr><td><code>^</code></td><td>at beginning of text or line (<code>m</code>=true)</td></tr>
-<tr><td><code>$</code></td><td>at end of text or line (<code>m</code>=true)</td></tr>
+<tr><td><code>$</code></td><td>at end of text (like <code>\z</code> not <code>\Z</code>) or line (<code>m</code>=true)</td></tr>
 <tr><td><code>\A</code></td><td>at beginning of text</td></tr>
-<tr><td><code>\b</code></td><td>at word boundary (<code>\w</code> to left and <code>\W</code> to right or vice versa)</td></tr>
+<tr><td><code>\b</code></td><td>at word boundary (<code>\w</code> on one side and <code>\W</code>, <code>\A</code>, or <code>\z</code> on the other)</td></tr>
 <tr><td><code>\B</code></td><td>not a word boundary</td></tr>
 <tr><td><code><font color=#808080>\G</font></code></td><td>at beginning of subtext being searched  <font size=-2>PCRE</font></td></tr>
 <tr><td><code><font color=#808080>\G</font></code></td><td>at end of last match  <font size=-2>PERL</font></td></tr>
@@ -181,20 +180,20 @@
 <tr><td><code><font color=#808080>\V</font></code></td><td>not vertical space </td></tr>
 <tr><td></td></tr>
 <tr><td colspan=2><b>ASCII character classes:</b></td></tr>
-<tr><td><code>[:alnum:]</code></td><td>alphanumeric (≡ <code>[0-9A-Za-z]</code>)</td></tr>
-<tr><td><code>[:alpha:]</code></td><td>alphabetic (≡ <code>[A-Za-z]</code>)</td></tr>
-<tr><td><code>[:ascii:]</code></td><td>ASCII (≡ <code>[\x00-\x7F]</code>)</td></tr>
-<tr><td><code>[:blank:]</code></td><td>blank (≡ <code>[\t ]</code>)</td></tr>
-<tr><td><code>[:cntrl:]</code></td><td>control (≡ <code>[\x00-\x1F\x7F]</code>)</td></tr>
-<tr><td><code>[:digit:]</code></td><td>digits (≡ <code>[0-9]</code>)</td></tr>
-<tr><td><code>[:graph:]</code></td><td>graphical (≡ <code>[!-~] == [A-Za-z0-9!"#$%&amp;'()*+,\-./:;&lt;=&gt;?@[\\\]^_`{|}~]</code>)</td></tr>
-<tr><td><code>[:lower:]</code></td><td>lower case (≡ <code>[a-z]</code>)</td></tr>
-<tr><td><code>[:print:]</code></td><td>printable (≡ <code>[ -~] == [ [:graph:]]</code>)</td></tr>
-<tr><td><code>[:punct:]</code></td><td>punctuation (≡ <code>[!-/:-@[-`{-~]</code>)</td></tr>
-<tr><td><code>[:space:]</code></td><td>whitespace (≡ <code>[\t\n\v\f\r ]</code>)</td></tr>
-<tr><td><code>[:upper:]</code></td><td>upper case (≡ <code>[A-Z]</code>)</td></tr>
-<tr><td><code>[:word:]</code></td><td>word characters (≡ <code>[0-9A-Za-z_]</code>)</td></tr>
-<tr><td><code>[:xdigit:]</code></td><td>hex digit (≡ <code>[0-9A-Fa-f]</code>)</td></tr>
+<tr><td><code>[[:alnum:]]</code></td><td>alphanumeric (≡ <code>[0-9A-Za-z]</code>)</td></tr>
+<tr><td><code>[[:alpha:]]</code></td><td>alphabetic (≡ <code>[A-Za-z]</code>)</td></tr>
+<tr><td><code>[[:ascii:]]</code></td><td>ASCII (≡ <code>[\x00-\x7F]</code>)</td></tr>
+<tr><td><code>[[:blank:]]</code></td><td>blank (≡ <code>[\t ]</code>)</td></tr>
+<tr><td><code>[[:cntrl:]]</code></td><td>control (≡ <code>[\x00-\x1F\x7F]</code>)</td></tr>
+<tr><td><code>[[:digit:]]</code></td><td>digits (≡ <code>[0-9]</code>)</td></tr>
+<tr><td><code>[[:graph:]]</code></td><td>graphical (≡ <code>[!-~] == [A-Za-z0-9!"#$%&amp;'()*+,\-./:;&lt;=&gt;?@[\\\]^_`{|}~]</code>)</td></tr>
+<tr><td><code>[[:lower:]]</code></td><td>lower case (≡ <code>[a-z]</code>)</td></tr>
+<tr><td><code>[[:print:]]</code></td><td>printable (≡ <code>[ -~] == [ [:graph:]]</code>)</td></tr>
+<tr><td><code>[[:punct:]]</code></td><td>punctuation (≡ <code>[!-/:-@[-`{-~]</code>)</td></tr>
+<tr><td><code>[[:space:]]</code></td><td>whitespace (≡ <code>[\t\n\v\f\r ]</code>)</td></tr>
+<tr><td><code>[[:upper:]]</code></td><td>upper case (≡ <code>[A-Z]</code>)</td></tr>
+<tr><td><code>[[:word:]]</code></td><td>word characters (≡ <code>[0-9A-Za-z_]</code>)</td></tr>
+<tr><td><code>[[:xdigit:]]</code></td><td>hex digit (≡ <code>[0-9A-Fa-f]</code>)</td></tr>
 <tr><td></td></tr>
 <tr><td colspan=2><b>Unicode character class names--general category:</b></td></tr>
 <tr><td><code>C</code></td><td>other</td></tr>
@@ -241,13 +240,17 @@
 <tr><td><code>Arabic</code></td><td>Arabic</td></tr>
 <tr><td><code>Armenian</code></td><td>Armenian</td></tr>
 <tr><td><code>Balinese</code></td><td>Balinese</td></tr>
+<tr><td><code>Bamum</code></td><td>Bamum</td></tr>
+<tr><td><code>Batak</code></td><td>Batak</td></tr>
 <tr><td><code>Bengali</code></td><td>Bengali</td></tr>
 <tr><td><code>Bopomofo</code></td><td>Bopomofo</td></tr>
+<tr><td><code>Brahmi</code></td><td>Brahmi</td></tr>
 <tr><td><code>Braille</code></td><td>Braille</td></tr>
 <tr><td><code>Buginese</code></td><td>Buginese</td></tr>
 <tr><td><code>Buhid</code></td><td>Buhid</td></tr>
 <tr><td><code>Canadian_Aboriginal</code></td><td>Canadian Aboriginal</td></tr>
 <tr><td><code>Carian</code></td><td>Carian</td></tr>
+<tr><td><code>Chakma</code></td><td>Chakma</td></tr>
 <tr><td><code>Cham</code></td><td>Cham</td></tr>
 <tr><td><code>Cherokee</code></td><td>Cherokee</td></tr>
 <tr><td><code>Common</code></td><td>characters not specific to one script</td></tr>
@@ -257,6 +260,7 @@
 <tr><td><code>Cyrillic</code></td><td>Cyrillic</td></tr>
 <tr><td><code>Deseret</code></td><td>Deseret</td></tr>
 <tr><td><code>Devanagari</code></td><td>Devanagari</td></tr>
+<tr><td><code>Egyptian_Hieroglyphs</code></td><td>Egyptian Hieroglyphs</td></tr>
 <tr><td><code>Ethiopic</code></td><td>Ethiopic</td></tr>
 <tr><td><code>Georgian</code></td><td>Georgian</td></tr>
 <tr><td><code>Glagolitic</code></td><td>Glagolitic</td></tr>
@@ -269,7 +273,12 @@
 <tr><td><code>Hanunoo</code></td><td>Hanunoo</td></tr>
 <tr><td><code>Hebrew</code></td><td>Hebrew</td></tr>
 <tr><td><code>Hiragana</code></td><td>Hiragana</td></tr>
+<tr><td><code>Imperial_Aramaic</code></td><td>Imperial Aramaic</td></tr>
 <tr><td><code>Inherited</code></td><td>inherit script from previous character</td></tr>
+<tr><td><code>Inscriptional_Pahlavi</code></td><td>Inscriptional Pahlavi</td></tr>
+<tr><td><code>Inscriptional_Parthian</code></td><td>Inscriptional Parthian</td></tr>
+<tr><td><code>Javanese</code></td><td>Javanese</td></tr>
+<tr><td><code>Kaithi</code></td><td>Kaithi</td></tr>
 <tr><td><code>Kannada</code></td><td>Kannada</td></tr>
 <tr><td><code>Katakana</code></td><td>Katakana</td></tr>
 <tr><td><code>Kayah_Li</code></td><td>Kayah Li</td></tr>
@@ -283,6 +292,11 @@
 <tr><td><code>Lycian</code></td><td>Lycian</td></tr>
 <tr><td><code>Lydian</code></td><td>Lydian</td></tr>
 <tr><td><code>Malayalam</code></td><td>Malayalam</td></tr>
+<tr><td><code>Mandaic</code></td><td>Mandaic</td></tr>
+<tr><td><code>Meetei_Mayek</code></td><td>Meetei Mayek</td></tr>
+<tr><td><code>Meroitic_Cursive</code></td><td>Meroitic Cursive</td></tr>
+<tr><td><code>Meroitic_Hieroglyphs</code></td><td>Meroitic Hieroglyphs</td></tr>
+<tr><td><code>Miao</code></td><td>Miao</td></tr>
 <tr><td><code>Mongolian</code></td><td>Mongolian</td></tr>
 <tr><td><code>Myanmar</code></td><td>Myanmar</td></tr>
 <tr><td><code>New_Tai_Lue</code></td><td>New Tai Lue (aka Simplified Tai Lue)</td></tr>
@@ -291,6 +305,8 @@
 <tr><td><code>Ol_Chiki</code></td><td>Ol Chiki</td></tr>
 <tr><td><code>Old_Italic</code></td><td>Old Italic</td></tr>
 <tr><td><code>Old_Persian</code></td><td>Old Persian</td></tr>
+<tr><td><code>Old_South_Arabian</code></td><td>Old South Arabian</td></tr>
+<tr><td><code>Old_Turkic</code></td><td>Old Turkic</td></tr>
 <tr><td><code>Oriya</code></td><td>Oriya</td></tr>
 <tr><td><code>Osmanya</code></td><td>Osmanya</td></tr>
 <tr><td><code>Phags_Pa</code></td><td>'Phags Pa</td></tr>
@@ -298,14 +314,19 @@
 <tr><td><code>Rejang</code></td><td>Rejang</td></tr>
 <tr><td><code>Runic</code></td><td>Runic</td></tr>
 <tr><td><code>Saurashtra</code></td><td>Saurashtra</td></tr>
+<tr><td><code>Sharada</code></td><td>Sharada</td></tr>
 <tr><td><code>Shavian</code></td><td>Shavian</td></tr>
 <tr><td><code>Sinhala</code></td><td>Sinhala</td></tr>
+<tr><td><code>Sora_Sompeng</code></td><td>Sora Sompeng</td></tr>
 <tr><td><code>Sundanese</code></td><td>Sundanese</td></tr>
 <tr><td><code>Syloti_Nagri</code></td><td>Syloti Nagri</td></tr>
 <tr><td><code>Syriac</code></td><td>Syriac</td></tr>
 <tr><td><code>Tagalog</code></td><td>Tagalog</td></tr>
 <tr><td><code>Tagbanwa</code></td><td>Tagbanwa</td></tr>
 <tr><td><code>Tai_Le</code></td><td>Tai Le</td></tr>
+<tr><td><code>Tai_Tham</code></td><td>Tai Tham</td></tr>
+<tr><td><code>Tai_Viet</code></td><td>Tai Viet</td></tr>
+<tr><td><code>Takri</code></td><td>Takri</td></tr>
 <tr><td><code>Tamil</code></td><td>Tamil</td></tr>
 <tr><td><code>Telugu</code></td><td>Telugu</td></tr>
 <tr><td><code>Thaana</code></td><td>Thaana</td></tr>

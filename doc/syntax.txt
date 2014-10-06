@@ -7,8 +7,8 @@ Single characters:
 [^xyz]	negated character class
 \d	Perl character class
 \D	negated Perl character class
-[:alpha:]	ASCII character class
-[:^alpha:]	negated ASCII character class
+[[:alpha:]]	ASCII character class
+[[:^alpha:]]	negated ASCII character class
 \pN	Unicode character class (one-letter name)
 \p{Greek}	Unicode character class
 \PN	negated Unicode character class (one-letter name)
@@ -169,20 +169,20 @@ Perl character classes:
 \V	not vertical space NOT SUPPORTED
 
 ASCII character classes:
-[:alnum:]	alphanumeric (== [0-9A-Za-z])
-[:alpha:]	alphabetic (== [A-Za-z])
-[:ascii:]	ASCII (== [\x00-\x7F])
-[:blank:]	blank (== [\t ])
-[:cntrl:]	control (== [\x00-\x1F\x7F])
-[:digit:]	digits (== [0-9])
-[:graph:]	graphical (== [!-~] == [A-Za-z0-9!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~])
-[:lower:]	lower case (== [a-z])
-[:print:]	printable (== [ -~] == [ [:graph:]])
-[:punct:]	punctuation (== [!-/:-@[-`{-~])
-[:space:]	whitespace (== [\t\n\v\f\r ])
-[:upper:]	upper case (== [A-Z])
-[:word:]	word characters (== [0-9A-Za-z_])
-[:xdigit:]	hex digit (== [0-9A-Fa-f])
+[[:alnum:]]	alphanumeric (== [0-9A-Za-z])
+[[:alpha:]]	alphabetic (== [A-Za-z])
+[[:ascii:]]	ASCII (== [\x00-\x7F])
+[[:blank:]]	blank (== [\t ])
+[[:cntrl:]]	control (== [\x00-\x1F\x7F])
+[[:digit:]]	digits (== [0-9])
+[[:graph:]]	graphical (== [!-~] == [A-Za-z0-9!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~])
+[[:lower:]]	lower case (== [a-z])
+[[:print:]]	printable (== [ -~] == [ [:graph:]])
+[[:punct:]]	punctuation (== [!-/:-@[-`{-~])
+[[:space:]]	whitespace (== [\t\n\v\f\r ])
+[[:upper:]]	upper case (== [A-Z])
+[[:word:]]	word characters (== [0-9A-Za-z_])
+[[:xdigit:]]	hex digit (== [0-9A-Fa-f])
 
 Unicode character class names--general category:
 C	other
