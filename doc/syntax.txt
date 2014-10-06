@@ -36,6 +36,10 @@ x{-}	(== x*?) NOT SUPPORTED vim
 x{-n}	(== x{n}?) NOT SUPPORTED vim
 x=	(== x?) NOT SUPPORTED vim
 
+Implementation restriction: The counting forms «x{n,m}», «x{n,}», and «x{n}»
+reject forms that create a minimum or maximum repetition count above 1000.
+Unlimited repetitions are not subject to this restriction.
+
 Possessive repetitions:
 x*+	zero or more «x», possessive NOT SUPPORTED
 x++	one or more «x», possessive NOT SUPPORTED
@@ -45,10 +49,10 @@ x{n,}+	«n» or more «x», possessive NOT SUPPORTED
 x{n}+	exactly «n» «x», possessive NOT SUPPORTED
 
 Grouping:
-(re)	numbered capturing group
-(?P<name>re)	named & numbered capturing group
-(?<name>re)	named & numbered capturing group NOT SUPPORTED
-(?'name're)	named & numbered capturing group NOT SUPPORTED
+(re)	numbered capturing group (submatch)
+(?P<name>re)	named & numbered capturing group (submatch)
+(?<name>re)	named & numbered capturing group (submatch) NOT SUPPORTED
+(?'name're)	named & numbered capturing group (submatch) NOT SUPPORTED
 (?:re)	non-capturing group
 (?flags)	set flags within current group; non-capturing
 (?flags:re)	set flags during re; non-capturing
@@ -69,8 +73,8 @@ Empty strings:
 ^	at beginning of text or line («m»=true)
 $	at end of text (like «\z» not «\Z») or line («m»=true)
 \A	at beginning of text
-\b	at word boundary («\w» on one side and «\W», «\A», or «\z» on the other)
-\B	not a word boundary
+\b	at ASCII word boundary («\w» on one side and «\W», «\A», or «\z» on the other)
+\B	not at ASCII word boundary
 \G	at beginning of subtext being searched NOT SUPPORTED pcre
 \G	at end of last match NOT SUPPORTED perl
 \Z	at end of text, or before newline at end of text NOT SUPPORTED
@@ -155,7 +159,7 @@ Named character classes as character class elements:
 [\p{Name}]	named Unicode property inside character class (== \p{Name})
 [^\p{Name}]	named Unicode property inside negated character class (== \P{Name})
 
-Perl character classes:
+Perl character classes (all ASCII-only):
 \d	digits (== [0-9])
 \D	not digits (== [^0-9])
 \s	whitespace (== [\t\n\f\r ])
