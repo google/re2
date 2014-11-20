@@ -31,8 +31,6 @@ class TestRegisterer {
 #define EXPECT_GE CHECK_GE
 #define EXPECT_FALSE(x) CHECK(!(x))
 
-#define ARRAYSIZE arraysize
-
 #define EXPECT_TRUE_M(x, y) CHECK(x) << (y)
 #define EXPECT_FALSE_M(x, y) CHECK(!(x)) << (y)
 #define ASSERT_TRUE_M(x, y) CHECK(x) << (y)
