@@ -51,8 +51,8 @@ enum {
 };
 
 struct CaseFold {
-  uint32 lo;
-  uint32 hi;
+  Rune lo;
+  Rune hi;
   int32 delta;
 };
 

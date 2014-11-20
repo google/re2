@@ -1539,7 +1539,7 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
     name = StringPiece(p, s->begin() - p);
   } else {
     // Name is in braces. Look for closing }
-    int end = s->find('}', 0);
+    size_t end = s->find('}', 0);
     if (end == s->npos) {
       if (!IsValidUTF8(seq, status))
         return kParseError;
@@ -1822,7 +1822,7 @@ bool Regexp::ParseState::ParsePerlFlags(StringPiece* s) {
   // so that's the one we implement.  One is enough.
   if (t.size() > 2 && t[0] == 'P' && t[1] == '<') {
     // Pull out name.
-    int end = t.find('>', 2);
+    size_t end = t.find('>', 2);
     if (end == t.npos) {
       if (!IsValidUTF8(*s, status_))
         return false;
