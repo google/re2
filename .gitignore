@@ -1,0 +1,4 @@
+*.pyc
+*.orig
+core
+obj/
