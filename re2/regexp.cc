@@ -849,7 +849,7 @@ void CharClassBuilder::Negate() {
   }
 
   ranges_.clear();
-  for (int i = 0; i < v.size(); i++)
+  for (size_t i = 0; i < v.size(); i++)
     ranges_.insert(v[i]);
 
   upper_ = AlphaMask & ~upper_;

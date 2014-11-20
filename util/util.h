@@ -87,7 +87,7 @@ template<bool> struct CompileAssert {};
   TypeName(const TypeName&);                 \
   void operator=(const TypeName&)
 
-#define arraysize(array) (sizeof(array)/sizeof((array)[0]))
+#define arraysize(array) (int)(sizeof(array)/sizeof((array)[0]))
 
 class StringPiece;
 

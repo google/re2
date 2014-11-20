@@ -30,8 +30,8 @@ struct URange16
 
 struct URange32
 {
-  uint32 lo;
-  uint32 hi;
+  Rune lo;
+  Rune hi;
 };
 
 struct UGroup

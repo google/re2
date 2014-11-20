@@ -114,10 +114,10 @@ void* UnsafeArena::GetMemoryFallback(const size_t size, const int align) {
     return AllocNewBlock(size)->mem;
   }
 
-  const int overage =
+  const size_t overage =
     (reinterpret_cast<uintptr_t>(freestart_) & (align-1));
   if (overage) {
-    const int waste = align - overage;
+    const size_t waste = align - overage;
     freestart_ += waste;
     if (waste < remaining_) {
       remaining_ -= waste;
