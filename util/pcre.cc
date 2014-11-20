@@ -347,7 +347,7 @@ int PCRE::GlobalReplace(string *str,
   int count = 0;
   int vec[kVecSize];
   string out;
-  int start = 0;
+  size_t start = 0;
   bool last_match_was_empty_string = false;
 
   for (; start <= str->length();) {
@@ -377,7 +377,7 @@ int PCRE::GlobalReplace(string *str,
       if (matches <= 0)
         break;
     }
-    int matchstart = vec[0], matchend = vec[1];
+    size_t matchstart = vec[0], matchend = vec[1];
     assert(matchstart >= start);
     assert(matchend >= matchstart);
 

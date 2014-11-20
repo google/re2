@@ -592,14 +592,14 @@ Tester::Tester(const StringPiece& regexp) {
 }
 
 Tester::~Tester() {
-  for (int i = 0; i < v_.size(); i++)
+  for (size_t i = 0; i < v_.size(); i++)
     delete v_[i];
 }
 
 bool Tester::TestCase(const StringPiece& text, const StringPiece& context,
                          Prog::Anchor anchor) {
   bool okay = true;
-  for (int i = 0; i < v_.size(); i++)
+  for (size_t i = 0; i < v_.size(); i++)
     okay &= (!v_[i]->error() && v_[i]->RunCase(text, context, anchor));
   return okay;
 }
