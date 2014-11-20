@@ -57,6 +57,11 @@ using std::unordered_set;
 
 #endif
 
+#ifdef WIN32
+// Disable C4800 warning about conversion from int to bool.
+#pragma warning(disable: 4800)
+#endif
+
 namespace re2 {
 
 typedef int8_t int8;
