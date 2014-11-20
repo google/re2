@@ -111,7 +111,7 @@ void RegexpGenerator::GeneratePostfix(vector<string>* post, int nstk,
 
   // Add atoms if there is room.
   if (atoms < maxatoms_) {
-    for (int i = 0; i < atoms_.size(); i++) {
+    for (size_t i = 0; i < atoms_.size(); i++) {
       post->push_back(atoms_[i]);
       GeneratePostfix(post, nstk + 1, ops, atoms + 1);
       post->pop_back();
@@ -120,7 +120,7 @@ void RegexpGenerator::GeneratePostfix(vector<string>* post, int nstk,
 
   // Add operators if there are enough arguments.
   if (ops < maxops_) {
-    for (int i = 0; i < ops_.size(); i++) {
+    for (size_t i = 0; i < ops_.size(); i++) {
       const string& fmt = ops_[i];
       int nargs = CountArgs(fmt);
       if (nargs <= nstk) {
@@ -179,7 +179,7 @@ bool RegexpGenerator::GenerateRandomPostfix(vector<string> *post, int nstk,
 // in (?: ) to avoid needing to maintain a precedence table.
 void RegexpGenerator::RunPostfix(const vector<string>& post) {
   stack<string> regexps;
-  for (int i = 0; i < post.size(); i++) {
+  for (size_t i = 0; i < post.size(); i++) {
     switch (CountArgs(post[i])) {
       default:
         LOG(FATAL) << "Bad operator: " << post[i];
@@ -208,7 +208,7 @@ void RegexpGenerator::RunPostfix(const vector<string>& post) {
   if (regexps.size() != 1) {
     // Internal error - should never happen.
     printf("Bad regexp program:\n");
-    for (int i = 0; i < post.size(); i++) {
+    for (size_t i = 0; i < post.size(); i++) {
       printf("  %s\n", CEscape(post[i]).c_str());
     }
     printf("Stack after running program:\n");

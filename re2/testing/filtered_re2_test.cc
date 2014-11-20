@@ -158,10 +158,10 @@ bool CheckExpectedAtoms(const char* atoms[],
   if (!pass) {
     LOG(WARNING) << "Failed " << testname;
     LOG(WARNING) << "Expected #atoms = " << expected.size();
-    for (int i = 0; i < expected.size(); i++)
+    for (size_t i = 0; i < expected.size(); i++)
       LOG(WARNING) << expected[i];
     LOG(WARNING) << "Found #atoms = " << v->atoms.size();
-    for (int i = 0; i < v->atoms.size(); i++)
+    for (size_t i = 0; i < v->atoms.size(); i++)
       LOG(WARNING) << v->atoms[i];
   }
 
@@ -193,8 +193,8 @@ void FindAtomIndices(const vector<string> atoms,
                      const vector<string> matched_atoms,
                      vector<int>* atom_indices) {
   atom_indices->clear();
-  for (int i = 0; i < matched_atoms.size(); i++) {
-    int j = 0;
+  for (size_t i = 0; i < matched_atoms.size(); i++) {
+    size_t j = 0;
     for (; j < atoms.size(); j++) {
       if (matched_atoms[i] == atoms[j]) {
         atom_indices->push_back(j);
@@ -266,7 +266,7 @@ TEST(FilteredRE2Test, MatchTests) {
   atoms.push_back("yyyzzz");
   FindAtomIndices(v.atoms, atoms, &atom_ids);
   LOG(INFO) << "S: " << atom_ids.size();
-  for (int i = 0; i < atom_ids.size(); i++)
+  for (size_t i = 0; i < atom_ids.size(); i++)
     LOG(INFO) << "i: " << i << " : " << atom_ids[i];
   v.f.AllMatches(text, atom_ids, &matching_regexps);
   EXPECT_EQ(2, matching_regexps.size());

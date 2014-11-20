@@ -101,7 +101,7 @@ const int kNumStrings = arraysize(kSuccessTable);
       StringPrintf("Parsing '%s' for type " #type " should return %d",   \
                    p, success).c_str());                                 \
     if ( success ) {                                                     \
-      ASSERT_EQUALS(r, kSuccessTable[i].value);                          \
+      ASSERT_EQUALS(r, (type)kSuccessTable[i].value);                          \
     }                                                                    \
   }                                                                      \
 }
