@@ -84,7 +84,7 @@ const SuccessTable kSuccessTable[] = {
 { "18446744073709551616", 0,    { false, false, false, false, false, false }},
 };
 
-const int kNumStrings = ARRAYSIZE(kSuccessTable);
+const int kNumStrings = arraysize(kSuccessTable);
 
 // It's ugly to use a macro, but we apparently can't use the ASSERT_TRUE_M
 // macro outside of a TEST block and this seems to be the only way to
