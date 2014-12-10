@@ -882,7 +882,7 @@ bool RE2::Rewrite(string *out, const StringPiece &rewrite,
         return false;
       }
     } else {
-      out->push_back(c);
+      out->push_back(*s);
     }
   }
   return true;
@@ -1074,7 +1074,7 @@ bool RE2::Arg::parse_short_radix(const char* str,
   if (!parse_long_radix(str, n, &r, radix)) return false; // Could not parse
   if ((short)r != r) return false;       // Out of range
   if (dest == NULL) return true;
-  *(reinterpret_cast<short*>(dest)) = r;
+  *(reinterpret_cast<short*>(dest)) = (short)r;
   return true;
 }
 
@@ -1086,7 +1086,7 @@ bool RE2::Arg::parse_ushort_radix(const char* str,
   if (!parse_ulong_radix(str, n, &r, radix)) return false; // Could not parse
   if ((ushort)r != r) return false;                      // Out of range
   if (dest == NULL) return true;
-  *(reinterpret_cast<unsigned short*>(dest)) = r;
+  *(reinterpret_cast<unsigned short*>(dest)) = (ushort)r;
   return true;
 }
 
@@ -1174,7 +1174,7 @@ static bool parse_double_float(const char* str, int n, bool isfloat, void *dest)
   if (errno) return false;
   if (dest == NULL) return true;
   if (isfloat) {
-    *(reinterpret_cast<float*>(dest)) = r;
+    *(reinterpret_cast<float*>(dest)) = (float)r;
   } else {
     *(reinterpret_cast<double*>(dest)) = r;
   }
