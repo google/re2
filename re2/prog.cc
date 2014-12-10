@@ -25,7 +25,7 @@ void Prog::Inst::InitByteRange(int lo, int hi, int foldcase, uint32 out) {
   set_out_opcode(out, kInstByteRange);
   lo_ = lo & 0xFF;
   hi_ = hi & 0xFF;
-  foldcase_ = foldcase;
+  foldcase_ = foldcase & 0xFF;
 }
 
 void Prog::Inst::InitCapture(int cap, uint32 out) {
@@ -327,12 +327,12 @@ void Prog::ComputeByteMap() {
   bytemap_range_ = bytemap_[255] + 1;
   unbytemap_ = new uint8[bytemap_range_];
   for (int i = 0; i < 256; i++)
-    unbytemap_[bytemap_[i]] = i;
+    unbytemap_[bytemap_[i]] = static_cast<uint8>(i);
 
   if (0) {  // For debugging: use trivial byte map.
     for (int i = 0; i < 256; i++) {
-      bytemap_[i] = i;
-      unbytemap_[i] = i;
+      bytemap_[i] = static_cast<uint8>(i);
+      unbytemap_[i] = static_cast<uint8>(i);
     }
     bytemap_range_ = 256;
     LOG(INFO) << "Using trivial bytemap.";

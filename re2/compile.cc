@@ -435,7 +435,9 @@ Frag Compiler::EmptyWidth(EmptyOp empty) {
   if (empty & (kEmptyWordBoundary|kEmptyNonWordBoundary)) {
     int j;
     for (int i = 0; i < 256; i = j) {
-      for (j = i+1; j < 256 && Prog::IsWordChar(i) == Prog::IsWordChar(j); j++)
+      for (j = i+1; j < 256 &&
+               Prog::IsWordChar(static_cast<uint8>(i)) ==
+                   Prog::IsWordChar(static_cast<uint8>(j)); j++)
         ;
       prog_->MarkByteRange(i, j-1);
     }
@@ -558,7 +560,8 @@ void Compiler::AddRuneRangeLatin1(Rune lo, Rune hi, bool foldcase) {
     return;
   if (hi > 0xFF)
     hi = 0xFF;
-  AddSuffix(RuneByteSuffix(lo, hi, foldcase, 0));
+  AddSuffix(RuneByteSuffix(static_cast<uint8>(lo), static_cast<uint8>(hi),
+                           foldcase, 0));
 }
 
 // Table describing how to make a UTF-8 matching machine
@@ -599,7 +602,8 @@ void Compiler::Add_80_10ffff() {
     int next = 0;
     if (p.next >= 0)
       next = inst[p.next];
-    inst[i] = UncachedRuneByteSuffix(p.lo, p.hi, false, next);
+    inst[i] = UncachedRuneByteSuffix(static_cast<uint8>(p.lo),
+                                     static_cast<uint8>(p.hi), false, next);
     if ((p.lo & 0xC0) != 0x80)
       AddSuffix(inst[i]);
   }
@@ -628,7 +632,8 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
 
   // ASCII range is always a special case.
   if (hi < Runeself) {
-    AddSuffix(RuneByteSuffix(lo, hi, foldcase, 0));
+    AddSuffix(RuneByteSuffix(static_cast<uint8>(lo), static_cast<uint8>(hi),
+                             foldcase, 0));
     return;
   }
 
@@ -982,7 +987,7 @@ void Compiler::Setup(Regexp::ParseFlags flags, int64 max_mem,
     if (m > Prog::Inst::kMaxInst)
       m = Prog::Inst::kMaxInst;
 
-    max_inst_ = m;
+    max_inst_ = static_cast<int>(m);
   }
 
   anchor_ = anchor;

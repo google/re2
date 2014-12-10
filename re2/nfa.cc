@@ -468,7 +468,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
 
   if (text.begin() > context.begin()) {
     c = text.begin()[-1] & 0xFF;
-    wasword = Prog::IsWordChar(c);
+    wasword = Prog::IsWordChar(static_cast<uint8>(c));
   }
 
   // Loop over the text, stepping the machine.

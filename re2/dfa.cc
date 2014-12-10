@@ -143,7 +143,7 @@ class DFA {
       if (sizeof(size_t) == sizeof(uint32))
         return Hash32StringWithSeed(s, len, a->flag_);
       else
-        return Hash64StringWithSeed(s, len, a->flag_);
+        return static_cast<size_t>(Hash64StringWithSeed(s, len, a->flag_));
     }
 #ifdef STL_MSVC
     // Less than operator.
@@ -1016,7 +1016,7 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   // byte processed was a word character.  Use that info to
   // insert empty-width (non-)word boundaries.
   bool islastword = state->flag_ & kFlagLastWord;
-  bool isword = (c != kByteEndText && Prog::IsWordChar(c));
+  bool isword = (c != kByteEndText && Prog::IsWordChar(static_cast<uint8>(c)));
   if (isword == islastword)
     beforeflag |= kEmptyNonWordBoundary;
   else
@@ -2036,7 +2036,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
       if (ns == FullMatchState ||
           (ns > SpecialStateMax && ns->ninst_ > 0)) {
         extended = true;
-        min->append(1, j);
+        min->append(1, static_cast<char>(j));
         s = ns;
         break;
       }
@@ -2066,7 +2066,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
       if (ns == FullMatchState ||
           (ns > SpecialStateMax && ns->ninst_ > 0)) {
         extended = true;
-        max->append(1, j);
+        max->append(1, static_cast<char>(j));
         s = ns;
         break;
       }
