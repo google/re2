@@ -14,7 +14,7 @@ namespace re2 {
 
 // Constructor.  Allocates vectors as appropriate for operator.
 Regexp::Regexp(RegexpOp op, ParseFlags parse_flags)
-  : op_(op),
+  : op_(static_cast<uint8>(op)),
     simple_(false),
     parse_flags_(static_cast<uint16>(parse_flags)),
     ref_(1),
@@ -107,7 +107,7 @@ void Regexp::Decref() {
     GLOBAL_MUTEX_LOCK(ref_mutex);
     int r = (*ref_map)[this] - 1;
     if (r < kMaxRef) {
-      ref_ = r;
+      ref_ = static_cast<uint16>(r);
       ref_map->erase(this);
     } else {
       (*ref_map)[this] = r;
@@ -651,7 +651,7 @@ bool Regexp::RequiredPrefix(string *prefix, bool *foldcase, Regexp** suffix) {
       if (re->parse_flags() & Latin1) {
         prefix->resize(re->nrunes_);
         for (int j = 0; j < re->nrunes_; j++)
-          (*prefix)[j] = re->runes_[j];
+          (*prefix)[j] = static_cast<char>(re->runes_[j]);
       } else {
         // Convert to UTF-8 in place.
         // Assume worst-case space and then trim.
@@ -660,7 +660,7 @@ bool Regexp::RequiredPrefix(string *prefix, bool *foldcase, Regexp** suffix) {
         for (int j = 0; j < re->nrunes_; j++) {
           Rune r = re->runes_[j];
           if (r < Runeself)
-            *p++ = r;
+            *p++ = static_cast<char>(r);
           else
             p += runetochar(p, &r);
         }
@@ -670,7 +670,7 @@ bool Regexp::RequiredPrefix(string *prefix, bool *foldcase, Regexp** suffix) {
 
     case kRegexpLiteral:
       if ((re->parse_flags() & Latin1) || re->rune_ < Runeself) {
-        prefix->append(1, re->rune_);
+        prefix->append(1, static_cast<char>(re->rune_));
       } else {
         char buf[UTFmax];
         prefix->append(buf, runetochar(buf, &re->rune_));
