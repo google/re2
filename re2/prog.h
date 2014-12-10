@@ -200,7 +200,7 @@ class Prog {
   int start_unanchored() { return start_unanchored_; }
   void set_start(int start) { start_ = start; }
   void set_start_unanchored(int start) { start_unanchored_ = start; }
-  int64 size() { return size_; }
+  int size() { return size_; }
   bool reversed() { return reversed_; }
   void set_reversed(bool reversed) { reversed_ = reversed; }
   int64 byte_inst_count() { return byte_inst_count_; }

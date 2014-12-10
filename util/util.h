@@ -68,7 +68,6 @@ using std::unordered_set;
 #define vsnprintf vsnprintf_s
 
 #pragma warning(disable: 4018) // signed/unsigned mismatch
-#pragma warning(disable: 4244) // possible data loss in int conversion
 #pragma warning(disable: 4800) // conversion from int to bool
 
 #endif

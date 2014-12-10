@@ -120,13 +120,13 @@ int ToStringWalker::PreVisit(Regexp* re, int parent_arg, bool* stop) {
 static void AppendLiteral(string *t, Rune r, bool foldcase) {
   if (r != 0 && r < 0x80 && strchr("(){}[]*+?|.^$\\", r)) {
     t->append(1, '\\');
-    t->append(1, r);
+    t->append(1, static_cast<char>(r));
   } else if (foldcase && 'a' <= r && r <= 'z') {
     if ('a' <= r && r <= 'z')
       r += 'A' - 'a';
     t->append(1, '[');
-    t->append(1, r);
-    t->append(1, r + 'a' - 'A');
+    t->append(1, static_cast<char>(r));
+    t->append(1, static_cast<char>(r) + 'a' - 'A');
     t->append(1, ']');
   } else {
     AppendCCRange(t, r, r);
@@ -297,7 +297,7 @@ static void AppendCCChar(string* t, Rune r) {
   if (0x20 <= r && r <= 0x7E) {
     if (strchr("[]^-\\", r))
       t->append("\\");
-    t->append(1, r);
+    t->append(1, static_cast<char>(r));
     return;
   }
   switch (r) {
