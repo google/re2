@@ -19,6 +19,7 @@
 #ifndef STRINGS_STRINGPIECE_H__
 #define STRINGS_STRINGPIECE_H__
 
+#include <algorithm>
 #include <string.h>
 #include <cstddef>
 #include <iosfwd>

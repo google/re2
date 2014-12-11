@@ -503,7 +503,7 @@ int Compiler::RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next) {
     return UncachedRuneByteSuffix(lo, hi, foldcase, next);
   }
 
-  uint64 key = ((uint64)next << 17) | (lo<<9) | (hi<<1) | foldcase;
+  uint64 key = ((uint64)next << 17) | (lo<<9) | (hi<<1) | (uint8)foldcase;
   map<uint64, int>::iterator it = rune_cache_.find(key);
   if (it != rune_cache_.end())
     return it->second;
