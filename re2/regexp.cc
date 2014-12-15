@@ -920,7 +920,7 @@ CharClass* CharClassBuilder::GetCharClass() {
   for (iterator it = begin(); it != end(); ++it)
     cc->ranges_[n++] = *it;
   cc->nranges_ = n;
-  DCHECK_LE(n, ranges_.size());
+  DCHECK_LE(static_cast<size_t>(n), ranges_.size());
   cc->nrunes_ = nrunes_;
   cc->folds_ascii_ = FoldsASCII();
   return cc;
