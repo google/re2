@@ -7,7 +7,7 @@
 lookup3.c, by Bob Jenkins, May 2006, Public Domain.
 
 These are functions for producing 32-bit hashes for hash table lookup.
-hashword(), hashlittle(), hashlittle2(), hashbig(), mix(), and final() 
+hashword(), hashlittle(), hashlittle2(), hashbig(), mix(), and finish() 
 are externally useful functions.  Routines to test the hash are included 
 if SELF_TEST is defined.  You can use this free for any purpose.  It's in
 the public domain.  It has no warranty.
@@ -25,7 +25,7 @@ If you want to find a hash of, say, exactly 7 integers, do
   a += i4; b += i5; c += i6;
   mix(a,b,c);
   a += i7;
-  final(a,b,c);
+  finish(a,b,c);
 then use c as the hash value.  If you have a variable length array of
 4-byte integers to hash, use hashword().  If you have a byte array (like
 a character string), use hashlittle().  If you have several byte arrays, or
@@ -98,7 +98,7 @@ rotates.
 
 /*
 -------------------------------------------------------------------------------
-final -- final mixing of 3 32-bit values (a,b,c) into c
+finish -- finish mixing of 3 32-bit values (a,b,c) into c
 
 Pairs of (a,b,c) values differing in only a few bits will usually
 produce values of c that look totally different.  This was tested for
@@ -121,7 +121,7 @@ and these came close:
  11  8 15 26 3 22 24
 -------------------------------------------------------------------------------
 */
-#define final(a,b,c) \
+#define finish(a,b,c) \
 { \
   c ^= b; c -= rot(b,14); \
   a ^= c; a -= rot(c,11); \
@@ -174,7 +174,7 @@ uint32        initval)         /* the previous hash, or an arbitrary value */
   case 3 : c+=k[2];
   case 2 : b+=k[1];
   case 1 : a+=k[0];
-    final(a,b,c);
+    finish(a,b,c);
   case 0:     /* case 0: nothing left to add */
     break;
   }
@@ -220,7 +220,7 @@ uint32       *pb)               /* IN: more seed OUT: secondary hash value */
   case 3 : c+=k[2];
   case 2 : b+=k[1];
   case 1 : a+=k[0];
-    final(a,b,c);
+    finish(a,b,c);
   case 0:     /* case 0: nothing left to add */
     break;
   }
