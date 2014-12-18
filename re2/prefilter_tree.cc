@@ -109,9 +109,11 @@ void PrefilterTree::Compile(vector<string>* atom_vec) {
       // this trigger. TODO(vsri): Adjust the threshold appropriately,
       // make it a function of total number of nodes?
       bool have_other_guard = true;
-      for (StdIntMap::iterator it = parents->begin(); it != parents->end(); ++it)
+      for (StdIntMap::iterator it = parents->begin();
+           it != parents->end(); ++it) {
         have_other_guard = have_other_guard &&
             (entries_[it->first].propagate_up_at_count > 1);
+      }
 
       if (have_other_guard) {
         for (StdIntMap::iterator it = parents->begin();
@@ -208,7 +210,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
   }
   entries_.resize(node_map_.size());
 
-  // Create parent IntMap for the entries.
+  // Create parent StdIntMap for the entries.
   for (int i = v.size()  - 1; i >= 0; i--) {
     Prefilter* prefilter = v[i];
     if (prefilter == NULL)
@@ -256,8 +258,10 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
           uniq_child.insert(child_id);
           // To the child, we want to add to parent indices.
           Entry* child_entry = &entries_[child_id];
-          if (child_entry->parents->find(prefilter->unique_id()) == child_entry->parents->end())
+          if (child_entry->parents->find(prefilter->unique_id()) ==
+              child_entry->parents->end()) {
             (*child_entry->parents)[prefilter->unique_id()] = 1;
+          }
         }
         entry->propagate_up_at_count =
             prefilter->op() == Prefilter::AND ? uniq_child.size() : 1;

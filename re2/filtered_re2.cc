@@ -89,11 +89,16 @@ bool FilteredRE2::AllMatches(
   return !matching_regexps->empty();
 }
 
+void FilteredRE2::AllPotentials(
+    const vector<int>& atoms,
+    vector<int>* potential_regexps) const {
+  prefilter_tree_->RegexpsGivenStrings(atoms, potential_regexps);
+}
+
 void FilteredRE2::RegexpsGivenStrings(const vector<int>& matched_atoms,
                                       vector<int>* passed_regexps) {
   prefilter_tree_->RegexpsGivenStrings(matched_atoms, passed_regexps);
 }
-
 
 void FilteredRE2::PrintPrefilter(int regexpid) {
   prefilter_tree_->PrintPrefilter(regexpid);

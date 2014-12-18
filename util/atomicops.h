@@ -11,8 +11,11 @@
 // ACQUIRE - prevents memory accesses from hoisting above the operation.
 // RELEASE - prevents memory accesses from sinking below the operation.
 
-#if (__clang_major__ * 100 + __clang_minor__ >= 303) || \
-	(__GNUC__ * 1000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ >= 40801)
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
+#if !defined(OS_NACL) && (__has_builtin(__atomic_load_n) || (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__ >= 40801))
 
 #define ATOMIC_LOAD_RELAXED(x, p) do { (x) = __atomic_load_n((p), __ATOMIC_RELAXED); } while (0)
 #define ATOMIC_LOAD_CONSUME(x, p) do { (x) = __atomic_load_n((p), __ATOMIC_CONSUME); } while (0)
@@ -47,7 +50,7 @@ static inline void WriteMemoryBarrier() {
   __asm__ __volatile__("sfence" : : : "memory");
 }
 
-#elif defined(__ppc__)
+#elif defined(__ppc__) || defined(__powerpc64__)
 
 static inline void WriteMemoryBarrier() {
   __asm__ __volatile__("eieio" : : : "memory");
@@ -63,6 +66,34 @@ static inline void WriteMemoryBarrier() {
 
 static inline void WriteMemoryBarrier() {
   __asm__ __volatile__("dmb st" : : : "memory");
+}
+
+#elif defined(__arm__) && defined(__linux__)
+
+// Linux on ARM puts a suitable memory barrier at a magic address for us to call.
+static inline void WriteMemoryBarrier() {
+  ((void(*)(void))0xffff0fa0)();
+}
+
+#elif defined(__windows__)
+
+// Windows
+inline void WriteMemoryBarrier() {
+  LONG x;
+  ::InterlockedExchange(&x, 0);
+}
+
+#elif defined(OS_NACL)
+
+// Native Client
+inline void WriteMemoryBarrier() {
+  __sync_synchronize();
+}
+
+#elif defined(__mips__)
+
+inline void WriteMemoryBarrier() {
+  __asm__ __volatile__("sync" : : : "memory");
 }
 
 #else
@@ -120,6 +151,12 @@ static inline void ReadMemoryBarrier() {
 
 static inline void ReadMemoryBarrier() {
   __asm__ __volatile__("mb" : : : "memory");
+}
+
+#elif defined(__mips__)
+
+inline void ReadMemoryBarrier() {
+  __asm__ __volatile__("sync" : : : "memory");
 }
 
 #else

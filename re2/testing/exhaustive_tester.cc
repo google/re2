@@ -148,7 +148,7 @@ void ExhaustiveTest(int maxatoms, int maxops,
                     int maxstrlen, const vector<string>& stralphabet,
                     const string& wrapper,
                     const string& topwrapper) {
-  if (DEBUG_MODE && FLAGS_quick_debug_mode) {
+  if (RE2_DEBUG_MODE && FLAGS_quick_debug_mode) {
     if (maxatoms > 1)
       maxatoms--;
     if (maxops > 1)

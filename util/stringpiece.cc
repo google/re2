@@ -39,6 +39,10 @@ int StringPiece::copy(char* buf, size_type n, size_type pos) const {
   return ret;
 }
 
+bool StringPiece::contains(StringPiece s) const {
+  return (size_t)find(s, 0) != npos;
+}
+
 int StringPiece::find(const StringPiece& s, size_type pos) const {
   if (length_ < 0 || pos > static_cast<size_type>(length_))
     return npos;

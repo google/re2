@@ -42,7 +42,7 @@ TEST(Multithreaded, BuildEntireDFA) {
   // Check that single-threaded code works.
   {
     //LOG(INFO) << s;
-    Regexp* re = Regexp::Parse(s.c_str(), Regexp::LikePerl, NULL);
+    Regexp* re = Regexp::Parse(s, Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
@@ -57,7 +57,7 @@ TEST(Multithreaded, BuildEntireDFA) {
 
   // Build the DFA simultaneously in a bunch of threads.
   for (int i = 0; i < FLAGS_repeat; i++) {
-    Regexp* re = Regexp::Parse(s.c_str(), Regexp::LikePerl, NULL);
+    Regexp* re = Regexp::Parse(s, Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
@@ -93,7 +93,7 @@ TEST(SingleThreaded, BuildEntireDFA) {
   s += "b";
 
   //LOG(INFO) << s;
-  Regexp* re = Regexp::Parse(s.c_str(), Regexp::LikePerl, NULL);
+  Regexp* re = Regexp::Parse(s, Regexp::LikePerl, NULL);
   CHECK(re);
   int max = 24;
   for (int i = 17; i < max; i++) {
@@ -115,7 +115,7 @@ TEST(SingleThreaded, BuildEntireDFA) {
       continue;
     //LOG(INFO) << StringPrintf("Limit %d: prog used %d, DFA budget %d, total %d\n",
     //                          limit, progusage, dfamem, usage);
-    CHECK_GT(usage, limit*9/10);
+    CHECK_GT(usage, limit*8/10);
     CHECK_LT(usage, limit + (16<<10));  // 16kB of slop okay
   }
   re->Decref();

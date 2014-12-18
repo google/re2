@@ -325,7 +325,6 @@ Regexp* SimplifyWalker::SimplifyRepeat(Regexp* re, int min, int max,
     // General case: x{4,} is xxxx+
     Regexp* nre = new Regexp(kRegexpConcat, f);
     nre->AllocSub(min);
-    VLOG(1) << "Simplify " << min;
     Regexp** nre_subs = nre->sub();
     for (int i = 0; i < min-1; i++)
       nre_subs[i] = re->Incref();

@@ -28,7 +28,7 @@ static PrefixTest tests[] = {
 
   // Otherwise, it should work.
   { "^abc$", true, "abc", false, "(?-m:$)" },
-  { "^abc", "true", "abc", false, "" },
+  { "^abc", true, "abc", false, "" },
   { "^(?i)abc", true, "abc", true, "" },
   { "^abcd*", true, "abc", false, "d*" },
   { "^[Aa][Bb]cd*", true, "ab", true, "cd*" },

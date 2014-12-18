@@ -43,7 +43,8 @@ Regexp::~Regexp() {
       delete[] runes_;
       break;
     case kRegexpCharClass:
-      cc_->Delete();
+      if (cc_)
+        cc_->Delete();
       delete ccb_;
       break;
   }
@@ -210,6 +211,13 @@ Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub,
                                   ParseFlags flags, bool can_factor) {
   if (nsub == 1)
     return sub[0];
+
+  if (nsub == 0) {
+    if (op == kRegexpAlternate)
+      return new Regexp(kRegexpNoMatch, flags);
+    else
+      return new Regexp(kRegexpEmptyMatch, flags);
+  }
 
   Regexp** subcopy = NULL;
   if (op == kRegexpAlternate && can_factor) {
@@ -916,7 +924,7 @@ bool CharClass::Contains(Rune r) {
 
 CharClass* CharClassBuilder::GetCharClass() {
   CharClass* cc = CharClass::New(ranges_.size());
-  int n = 0;
+  size_t n = 0;
   for (iterator it = begin(); it != end(); ++it)
     cc->ranges_[n++] = *it;
   cc->nranges_ = n;

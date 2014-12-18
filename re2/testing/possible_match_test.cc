@@ -7,6 +7,7 @@
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
+#include "re2/testing/exhaustive_tester.h"
 #include "re2/testing/regexp_generator.h"
 #include "re2/testing/string_generator.h"
 
@@ -136,26 +137,26 @@ TEST(PossibleMatchRange, Failures) {
   // are no valid UTF-8 strings beginning with byte 0xFF.
   EXPECT_FALSE(RE2("[\\s\\S]+", RE2::Latin1).
                PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
   EXPECT_FALSE(RE2("[\\0-\xFF]+", RE2::Latin1).
                PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
   EXPECT_FALSE(RE2(".+hello", RE2::Latin1).
                PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
   EXPECT_FALSE(RE2(".*hello", RE2::Latin1).
                PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
   EXPECT_FALSE(RE2(".*", RE2::Latin1).
                PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
   EXPECT_FALSE(RE2("\\C*").
                PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
 
   // Fails because it's a malformed regexp.
   EXPECT_FALSE(RE2("*hello").PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
 }
 
 // Exhaustive test: generate all regexps within parameters,
@@ -224,7 +225,7 @@ TEST(PossibleMatchRange, Exhaustive) {
   int natom = 3;
   int noperator = 3;
   int stringlen = 5;
-  if (DEBUG_MODE) {
+  if (RE2_DEBUG_MODE) {
     natom = 2;
     noperator = 3;
     stringlen = 3;
