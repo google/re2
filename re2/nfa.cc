@@ -529,7 +529,8 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
             break;
 
           case kInstCapture:
-            match_[ip->cap()] = p;
+            if (ip->cap() < ncapture_)
+              match_[ip->cap()] = p;
             id = ip->out();
             continue;
 
