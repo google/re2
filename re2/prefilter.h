@@ -97,7 +97,7 @@ class Prefilter {
   // Used for debugging, helps in tracking memory leaks.
   int alloc_id_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(Prefilter);
+  DISALLOW_COPY_AND_ASSIGN(Prefilter);
 };
 
 }  // namespace re2

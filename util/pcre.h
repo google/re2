@@ -510,7 +510,7 @@ class PCRE {
   int               match_limit_;    // Limit on execution resources
   int               stack_limit_;    // Limit on stack resources (bytes)
   mutable int32_t  hit_limit_;  // Hit limit during execution (bool)?
-  DISALLOW_EVIL_CONSTRUCTORS(PCRE);
+  DISALLOW_COPY_AND_ASSIGN(PCRE);
 };
 
 // PCRE_Options allow you to set the PCRE::Options, plus any pcre

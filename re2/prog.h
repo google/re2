@@ -42,7 +42,7 @@ class Bitmap {
   static const int WordLog = 5;
   static const int Words = (Bits+31)/32;
   uint32 w_[Words];
-  DISALLOW_EVIL_CONSTRUCTORS(Bitmap);
+  DISALLOW_COPY_AND_ASSIGN(Bitmap);
 };
 
 
@@ -167,7 +167,7 @@ class Prog {
     friend struct PatchList;
     friend class Prog;
 
-    DISALLOW_EVIL_CONSTRUCTORS(Inst);
+    DISALLOW_COPY_AND_ASSIGN(Inst);
   };
 
   // Whether to anchor the search.
@@ -368,7 +368,7 @@ class Prog {
   uint8* onepass_nodes_;     // data for OnePass nodes
   OneState* onepass_start_;  // start node for OnePass program
 
-  DISALLOW_EVIL_CONSTRUCTORS(Prog);
+  DISALLOW_COPY_AND_ASSIGN(Prog);
 };
 
 }  // namespace re2

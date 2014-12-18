@@ -171,7 +171,7 @@ class SparseSet {
   int* dense_;
   bool valgrind_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(SparseSet);
+  DISALLOW_COPY_AND_ASSIGN(SparseSet);
 };
 
 }  // namespace re2

@@ -517,7 +517,7 @@ class NumCapturesWalker : public Regexp::Walker<Ignored> {
 
  private:
   int ncapture_;
-  DISALLOW_EVIL_CONSTRUCTORS(NumCapturesWalker);
+  DISALLOW_COPY_AND_ASSIGN(NumCapturesWalker);
 };
 
 int Regexp::NumCaptures() {
@@ -561,7 +561,7 @@ class NamedCapturesWalker : public Regexp::Walker<Ignored> {
 
  private:
   map<string, int>* map_;
-  DISALLOW_EVIL_CONSTRUCTORS(NamedCapturesWalker);
+  DISALLOW_COPY_AND_ASSIGN(NamedCapturesWalker);
 };
 
 map<string, int>* Regexp::NamedCaptures() {
@@ -601,7 +601,7 @@ class CaptureNamesWalker : public Regexp::Walker<Ignored> {
 
  private:
   map<int, string>* map_;
-  DISALLOW_EVIL_CONSTRUCTORS(CaptureNamesWalker);
+  DISALLOW_COPY_AND_ASSIGN(CaptureNamesWalker);
 };
 
 map<int, string>* Regexp::CaptureNames() {

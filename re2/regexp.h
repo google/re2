@@ -208,7 +208,7 @@ class RegexpStatus {
   StringPiece error_arg_;       // Piece of regexp containing syntax error.
   string* tmp_;                 // Temporary storage, possibly where error_arg_ is.
 
-  DISALLOW_EVIL_CONSTRUCTORS(RegexpStatus);
+  DISALLOW_COPY_AND_ASSIGN(RegexpStatus);
 };
 
 // Walker to implement Simplify.
@@ -261,7 +261,7 @@ class CharClass {
   int nrunes_;
   RuneRange *ranges_;
   int nranges_;
-  DISALLOW_EVIL_CONSTRUCTORS(CharClass);
+  DISALLOW_COPY_AND_ASSIGN(CharClass);
 };
 
 class Regexp {
@@ -568,7 +568,7 @@ class Regexp {
     void *the_union_[2];  // as big as any other element, for memset
   };
 
-  DISALLOW_EVIL_CONSTRUCTORS(Regexp);
+  DISALLOW_COPY_AND_ASSIGN(Regexp);
 };
 
 // Character class set: contains non-overlapping, non-abutting RuneRanges.
@@ -602,7 +602,7 @@ class CharClassBuilder {
   uint32 lower_;  // bitmap of a-z
   int nrunes_;
   RuneRangeSet ranges_;
-  DISALLOW_EVIL_CONSTRUCTORS(CharClassBuilder);
+  DISALLOW_COPY_AND_ASSIGN(CharClassBuilder);
 };
 
 // Tell g++ that bitwise ops on ParseFlags produce ParseFlags.

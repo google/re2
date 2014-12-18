@@ -664,7 +664,7 @@ class RE2 {
     bool word_boundary_;
     bool one_line_;
 
-    //DISALLOW_EVIL_CONSTRUCTORS(Options);
+    //DISALLOW_COPY_AND_ASSIGN(Options);
     Options(const Options&);
     void operator=(const Options&);
   };
@@ -739,7 +739,7 @@ class RE2 {
   // Map from capture indices to names
   mutable const map<int, string>* group_names_;
 
-  //DISALLOW_EVIL_CONSTRUCTORS(RE2);
+  //DISALLOW_COPY_AND_ASSIGN(RE2);
   RE2(const RE2&);
   void operator=(const RE2&);
 };

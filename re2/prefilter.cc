@@ -492,7 +492,7 @@ class Prefilter::Info::Walker : public Regexp::Walker<Prefilter::Info*> {
   bool latin1() { return latin1_; }
  private:
   bool latin1_;
-  DISALLOW_EVIL_CONSTRUCTORS(Walker);
+  DISALLOW_COPY_AND_ASSIGN(Walker);
 };
 
 Prefilter::Info* Prefilter::BuildInfo(Regexp* re) {

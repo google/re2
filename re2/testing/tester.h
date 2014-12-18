@@ -84,7 +84,7 @@ class TestInstance {
   PCRE* re_;                        // PCRE implementation
   RE2* re2_;                        // RE2 implementation
 
-  DISALLOW_EVIL_CONSTRUCTORS(TestInstance);
+  DISALLOW_COPY_AND_ASSIGN(TestInstance);
 };
 
 // A group of TestInstances for all possible configurations.
@@ -110,7 +110,7 @@ class Tester {
   bool error_;
   vector<TestInstance*> v_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(Tester);
+  DISALLOW_COPY_AND_ASSIGN(Tester);
 };
 
 // Run all possible tests using regexp and text.

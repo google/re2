@@ -186,7 +186,7 @@ class PossibleMatchTester : public RegexpGenerator {
   int regexps_;   // Number of HandleRegexp calls
   int tests_;     // Number of regexp tests.
 
-  DISALLOW_EVIL_CONSTRUCTORS(PossibleMatchTester);
+  DISALLOW_COPY_AND_ASSIGN(PossibleMatchTester);
 };
 
 // Processes a single generated regexp.

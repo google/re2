@@ -230,7 +230,7 @@ class Compiler : public Regexp::Walker<Frag> {
 
   RE2::Anchor anchor_;  // anchor mode for RE2::Set
 
-  DISALLOW_EVIL_CONSTRUCTORS(Compiler);
+  DISALLOW_COPY_AND_ASSIGN(Compiler);
 };
 
 Compiler::Compiler() {

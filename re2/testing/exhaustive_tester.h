@@ -63,7 +63,7 @@ class ExhaustiveTester : public RegexpGenerator {
   bool randomstrings_;  // Whether to use random strings
   int32 stringseed_;    // If so, the seed.
   int stringcount_;     // If so, how many to generate.
-  DISALLOW_EVIL_CONSTRUCTORS(ExhaustiveTester);
+  DISALLOW_COPY_AND_ASSIGN(ExhaustiveTester);
 };
 
 // Runs an exhaustive test on the given parameters.

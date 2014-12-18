@@ -68,7 +68,7 @@ class LogMessage {
  private:
   bool flushed_;
   std::ostringstream str_;
-  DISALLOW_EVIL_CONSTRUCTORS(LogMessage);
+  DISALLOW_COPY_AND_ASSIGN(LogMessage);
 };
 
 class LogMessageFatal : public LogMessage {
@@ -80,7 +80,7 @@ class LogMessageFatal : public LogMessage {
     abort();
   }
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(LogMessageFatal);
+  DISALLOW_COPY_AND_ASSIGN(LogMessageFatal);
 };
 
 #endif  // RE2_UTIL_LOGGING_H__

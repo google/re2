@@ -83,7 +83,7 @@ class UnsafeArena {
 
   void FreeBlocks();         // Frees all except first block
 
-  DISALLOW_EVIL_CONSTRUCTORS(UnsafeArena);
+  DISALLOW_COPY_AND_ASSIGN(UnsafeArena);
 };
 
 // Operators for allocation on the arena
