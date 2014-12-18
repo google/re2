@@ -397,6 +397,8 @@ class RE2 {
   //
   // Returns true iff a match occurred and the extraction happened
   // successfully;  if no match occurs, the string is left unaffected.
+  //
+  // REQUIRES: "text" must not alias any part of "*out".
   static bool Extract(const StringPiece &text,
                       const RE2& pattern,
                       const StringPiece &rewrite,

@@ -2015,6 +2015,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
   // Build minimum prefix.
   State* s = params.start;
   min->clear();
+  MutexLock lock(&mutex_);
   for (int i = 0; i < maxlen; i++) {
     if (previously_visited_states[s] > kMaxEltRepetitions) {
       VLOG(2) << "Hit kMaxEltRepetitions=" << kMaxEltRepetitions
@@ -2024,7 +2025,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
     previously_visited_states[s]++;
 
     // Stop if min is a match.
-    State* ns = RunStateOnByteUnlocked(s, kByteEndText);
+    State* ns = RunStateOnByte(s, kByteEndText);
     if (ns == NULL)  // DFA out of memory
       return false;
     if (ns != DeadState && (ns == FullMatchState || ns->IsMatch()))
@@ -2033,7 +2034,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
     // Try to extend the string with low bytes.
     bool extended = false;
     for (int j = 0; j < 256; j++) {
-      ns = RunStateOnByteUnlocked(s, j);
+      ns = RunStateOnByte(s, j);
       if (ns == NULL)  // DFA out of memory
         return false;
       if (ns == FullMatchState ||
@@ -2063,7 +2064,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
     // Try to extend the string with high bytes.
     bool extended = false;
     for (int j = 255; j >= 0; j--) {
-      State* ns = RunStateOnByteUnlocked(s, j);
+      State* ns = RunStateOnByte(s, j);
       if (ns == NULL)
         return false;
       if (ns == FullMatchState ||

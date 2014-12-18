@@ -138,6 +138,8 @@ class StringPiece {
 
   int copy(char* buf, size_type n, size_type pos = 0) const;
 
+  bool contains(StringPiece s) const;
+
   int find(const StringPiece& s, size_type pos = 0) const;
   int find(char c, size_type pos = 0) const;
   int rfind(const StringPiece& s, size_type pos = npos) const;
