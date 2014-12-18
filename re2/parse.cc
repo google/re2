@@ -1188,6 +1188,14 @@ static int StringPieceToRune(Rune *r, StringPiece *sp, RegexpStatus* status) {
   int n;
   if (fullrune(sp->data(), sp->size())) {
     n = chartorune(r, sp->data());
+    // Some copies of chartorune have a bug that accepts
+    // encodings of values in (10FFFF, 1FFFFF] as valid.
+    // Those values break the character class algorithm,
+    // which assumes Runemax is the largest rune.
+    if (*r > Runemax) {
+      n = 1;
+      *r = Runeerror;
+    }
     if (!(n == 1 && *r == Runeerror)) {  // no decoding error
       sp->remove_prefix(n);
       return n;

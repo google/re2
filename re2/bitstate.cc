@@ -170,6 +170,8 @@ bool BitState::TrySearch(int id0, const char* p0) {
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       case kInstFail:
+        return false;
+
       default:
         LOG(DFATAL) << "Unexpected opcode: " << ip->opcode() << " arg " << arg;
         return false;
