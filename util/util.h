@@ -97,9 +97,9 @@ template<bool> struct CompileAssert {};
   typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
 #endif
 
-// DISALLOW_EVIL_CONSTRUCTORS disallows the copy and operator= functions.
+// DISALLOW_COPY_AND_ASSIGN disallows the copy and operator= functions.
 // It goes in the private: declarations in a class.
-#define DISALLOW_EVIL_CONSTRUCTORS(TypeName) \
+#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
   TypeName(const TypeName&);                 \
   void operator=(const TypeName&)
 

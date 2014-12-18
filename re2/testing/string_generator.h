@@ -50,7 +50,7 @@ class StringGenerator {
   bool random_;              // Whether generated strings are random.
   int nrandom_;              // Number of random strings left to generate.
   ACMRandom* acm_;           // Random number generator
-  DISALLOW_EVIL_CONSTRUCTORS(StringGenerator);
+  DISALLOW_COPY_AND_ASSIGN(StringGenerator);
 };
 
 }  // namespace re2

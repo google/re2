@@ -156,7 +156,7 @@ private:
   int ncap_;  // number of capturing parens seen
   int rune_max_;  // maximum char value for this encoding
 
-  DISALLOW_EVIL_CONSTRUCTORS(ParseState);
+  DISALLOW_COPY_AND_ASSIGN(ParseState);
 };
 
 // Pseudo-operators - only on parse stack.

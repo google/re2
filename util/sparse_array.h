@@ -226,7 +226,7 @@ class SparseArray {
   vector<IndexValue> dense_;
   bool valgrind_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(SparseArray);
+  DISALLOW_COPY_AND_ASSIGN(SparseArray);
 };
 
 template<typename Value>

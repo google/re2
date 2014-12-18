@@ -91,7 +91,7 @@ class FilteredRE2 {
   // An AND-OR tree of string atoms used for filtering regexps.
   PrefilterTree* prefilter_tree_;
 
-  //DISALLOW_EVIL_CONSTRUCTORS(FilteredRE2);
+  //DISALLOW_COPY_AND_ASSIGN(FilteredRE2);
   FilteredRE2(const FilteredRE2&);
   void operator=(const FilteredRE2&);
 };

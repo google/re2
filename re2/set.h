@@ -45,7 +45,7 @@ class RE2::Set {
   vector<re2::Regexp*> re_;
   re2::Prog* prog_;
   bool compiled_;
-  //DISALLOW_EVIL_CONSTRUCTORS(Set);
+  //DISALLOW_COPY_AND_ASSIGN(Set);
   Set(const Set&);
   void operator=(const Set&);
 };

@@ -42,7 +42,7 @@ class ToStringWalker : public Regexp::Walker<int> {
  private:
   string* t_;  // The string the walker appends to.
 
-  DISALLOW_EVIL_CONSTRUCTORS(ToStringWalker);
+  DISALLOW_COPY_AND_ASSIGN(ToStringWalker);
 };
 
 string Regexp::ToString() {

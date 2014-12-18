@@ -130,7 +130,7 @@ class SimplifyWalker : public Regexp::Walker<Regexp*> {
   // Caller must Decref return value when done with it.
   static Regexp* SimplifyCharClass(Regexp* re);
 
-  DISALLOW_EVIL_CONSTRUCTORS(SimplifyWalker);
+  DISALLOW_COPY_AND_ASSIGN(SimplifyWalker);
 };
 
 // Simplifies a regular expression, returning a new regexp.

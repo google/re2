@@ -122,7 +122,7 @@ class NFA {
 
   Thread* free_threads_;  // free list
 
-  DISALLOW_EVIL_CONSTRUCTORS(NFA);
+  DISALLOW_COPY_AND_ASSIGN(NFA);
 };
 
 NFA::NFA(Prog* prog) {

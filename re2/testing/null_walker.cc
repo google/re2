@@ -23,7 +23,7 @@ class NullWalker : public Regexp::Walker<bool> {
   }
 
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(NullWalker);
+  DISALLOW_COPY_AND_ASSIGN(NullWalker);
 };
 
 // Called after visiting re's children.  child_args contains the return
