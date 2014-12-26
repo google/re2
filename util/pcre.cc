@@ -11,6 +11,18 @@
 #include "util/flags.h"
 #include "util/pcre.h"
 
+#ifdef WIN32
+# include <limits>
+# define strtoll _strtoi64
+# define strtoull _strtoui64
+# define strtof strtod
+# ifdef ERROR
+#  undef ERROR
+# endif
+using namespace std;
+#endif
+
+
 #define PCREPORT(level) LOG(level)
 
 // Default PCRE limits.
@@ -906,11 +918,11 @@ bool PCRE::Arg::parse_double(const char* str, int n, void* dest) {
       ++i;
     }
     if (0 == stricmp(i, "inf") || 0 == stricmp(i, "infinity")) {
-      r = numeric_limits<double>::infinity();
+      r = std::numeric_limits<double>::infinity();
       if (!pos)
         r = -r;
     } else if (0 == stricmp(i, "nan")) {
-      r = numeric_limits<double>::quiet_NaN();
+      r = std::numeric_limits<double>::quiet_NaN();
     } else {
       return false;
     }
