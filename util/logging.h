@@ -7,7 +7,12 @@
 #ifndef RE2_UTIL_LOGGING_H__
 #define RE2_UTIL_LOGGING_H__
 
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>  /* for write */
+#define _write write
+#endif
 #include <sstream>
 
 // Debug-only checking.
@@ -55,7 +60,7 @@ class LogMessage {
     stream() << "\n";
     string s = str_.str();
     int n = (int)s.size(); // shut up msvc
-    if(write(2, s.data(), n) < 0) {}  // shut up gcc
+    if(_write(2, s.data(), n) < 0) {}  // shut up gcc
     flushed_ = true;
   }
   ~LogMessage() {
@@ -64,7 +69,7 @@ class LogMessage {
     }
   }
   ostream& stream() { return str_; }
- 
+
  private:
   bool flushed_;
   std::ostringstream str_;

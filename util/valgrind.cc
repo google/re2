@@ -16,7 +16,7 @@ namespace re2 {
 int RunningOnValgrind() {
 #if __has_feature(memory_sanitizer)
 	return true;
-#elif defined(RUNNING_ON_VALGRIND)
+#elif defined(RUNNING_ON_VALGRIND) && !defined(WIN32)
 	return RUNNING_ON_VALGRIND;
 #else
 	return 0;
