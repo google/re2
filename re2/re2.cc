@@ -11,7 +11,13 @@
 
 #include <stdio.h>
 #include <string>
+#ifdef WIN32
+# define strtoll _strtoi64
+# define strtoull _strtoui64
+# define strtof strtod
+#else
 #include <pthread.h>
+#endif
 #include <errno.h>
 #include "util/atomicops.h"
 #include "util/util.h"

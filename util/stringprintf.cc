@@ -4,7 +4,11 @@
 
 #include "util/util.h"
 
-namespace re2 { 
+#ifdef WIN32
+#define va_copy(d,s) ((d) = (s))
+#endif
+
+namespace re2 {
 
 static void StringAppendV(string* dst, const char* format, va_list ap) {
   // First try with a small fixed size buffer
@@ -15,7 +19,11 @@ static void StringAppendV(string* dst, const char* format, va_list ap) {
   // of the structure before using it and use that copy instead.
   va_list backup_ap;
   va_copy(backup_ap, ap);
+#ifdef WIN32
+  int result = vsnprintf_s(space, sizeof(space), format, backup_ap);
+#else
   int result = vsnprintf(space, sizeof(space), format, backup_ap);
+#endif
   va_end(backup_ap);
 
   if ((result >= 0) && (static_cast<unsigned long>(result) < sizeof(space))) {
@@ -37,8 +45,13 @@ static void StringAppendV(string* dst, const char* format, va_list ap) {
     char* buf = new char[length];
 
     // Restore the va_list before we use it again
+#ifdef WIN32
+    memcpy_s(&backup_ap, sizeof(backup_ap), ap, sizeof(ap));
+    result = vsnprintf_s(buf, length, sizeof(backup_ap), format, backup_ap);
+#else
     va_copy(backup_ap, ap);
     result = vsnprintf(buf, length, format, backup_ap);
+#endif
     va_end(backup_ap);
 
     if ((result >= 0) && (result < length)) {
