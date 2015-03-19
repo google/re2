@@ -16,6 +16,24 @@
       "revId": "d69cd8eeebc80b110632d9241c123fe124f685d2",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66de785c_ff088760",
+        "filename": "util/mutex.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2015-03-19T04:46:42Z",
+      "side": 0,
+      "message": "I intended to have the makefile provide these defines, since it really is a platform-specific define.\n\nIt looks like I just missed submitting that change.",
+      "parentUuid": "86b52cfa_5f8f8ffa",
+      "revId": "d69cd8eeebc80b110632d9241c123fe124f685d2",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }

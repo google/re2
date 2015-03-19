@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "66de785c_54b8a227",
+        "filename": "re2/compile.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2015-03-19T04:46:42Z",
+      "side": 1,
+      "message": "At one point I had been seeing a warning out of this.  I believe the pragmas we added made it disappear, though.",
+      "parentUuid": "86b52cfa_7f924b26",
+      "revId": "cdaeea8d8af4f9ca3d0de08cb65d0dc1d5005a08",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86b52cfa_bf6e93ab",
         "filename": "re2/prefilter_tree.cc",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2015-03-18T19:54:36Z",
       "side": 1,
       "message": "Can you please move this into util/util.h so it doesn\u0027t have to go into individual source files?",
+      "revId": "cdaeea8d8af4f9ca3d0de08cb65d0dc1d5005a08",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66de785c_54666252",
+        "filename": "re2/prefilter_tree.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2015-03-19T04:46:42Z",
+      "side": 1,
+      "message": "Looks like this is already there.  Removed.",
+      "parentUuid": "86b52cfa_bf6e93ab",
       "revId": "cdaeea8d8af4f9ca3d0de08cb65d0dc1d5005a08",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "66de785c_74503e64",
+        "filename": "re2/re2.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2015-03-19T04:46:42Z",
+      "side": 1,
+      "message": "The defines are already present in util.h.  Moved the conditional for pthread.h to util.h.",
+      "parentUuid": "86b52cfa_9f73d795",
+      "revId": "cdaeea8d8af4f9ca3d0de08cb65d0dc1d5005a08",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86b52cfa_df503fe9",
         "filename": "util/benchmark.cc",
         "patchSetId": 2
@@ -64,6 +118,41 @@
       "writtenOn": "2015-03-18T19:54:36Z",
       "side": 1,
       "message": "Can this go into util.h?",
+      "revId": "cdaeea8d8af4f9ca3d0de08cb65d0dc1d5005a08",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66de785c_ffbac704",
+        "filename": "util/benchmark.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2015-03-19T04:46:42Z",
+      "side": 1,
+      "message": "Already present in util.h.  Removed.",
+      "parentUuid": "86b52cfa_df503fe9",
+      "revId": "cdaeea8d8af4f9ca3d0de08cb65d0dc1d5005a08",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66de785c_9f83c34f",
+        "filename": "util/stringprintf.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2015-03-19T04:46:42Z",
+      "side": 1,
+      "message": "Upon closer examination, everything I was doing in this file was wrong.\n\n1. va_copy doesn\u0027t exist on Windows.  To work around this, we use a MS-specific function to determine the necessary buffer size.  That avoids all the messy resetting on Windows.\n\n2. I turned the vsnprintf_s macro around, so that I use the 5-param version, and just ignore that param on Linux.\n\n3. The existing algorithm for determining buffer size entered an infinite loop if more than 1024 chars were required.  I\u0027ve provided an alternative.\n\n4. The unit tests pass on both platforms.",
       "revId": "cdaeea8d8af4f9ca3d0de08cb65d0dc1d5005a08",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
@@ -104,6 +193,23 @@
     },
     {
       "key": {
+        "uuid": "66de785c_df926ba7",
+        "filename": "util/stringprintf.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2015-03-19T04:46:42Z",
+      "side": 1,
+      "message": "I don\u0027t see a break from this loop.\nI\u0027ve fixed that in this latest patch.",
+      "revId": "cdaeea8d8af4f9ca3d0de08cb65d0dc1d5005a08",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86b52cfa_5f3d4f8e",
         "filename": "util/stringprintf.cc",
         "patchSetId": 2
@@ -132,6 +238,24 @@
       "writtenOn": "2015-03-18T19:54:36Z",
       "side": 1,
       "message": "Same here (should be a #define in util.h so this line doesn\u0027t need to change). This can become snprintf if it helps.",
+      "revId": "cdaeea8d8af4f9ca3d0de08cb65d0dc1d5005a08",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66de785c_5acc49b5",
+        "filename": "util/strutil.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2015-03-19T04:46:42Z",
+      "side": 1,
+      "message": "Created macro for Linux that ignores the additional param.\nThe line changes, but the ifdef is gone.",
+      "parentUuid": "86b52cfa_7fdfebdd",
       "revId": "cdaeea8d8af4f9ca3d0de08cb65d0dc1d5005a08",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
