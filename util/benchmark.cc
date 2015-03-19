@@ -7,10 +7,6 @@
 #include "util/benchmark.h"
 #include "re2/re2.h"
 
-#ifdef WIN32
-#define snprintf _snprintf_s
-#endif
-
 DEFINE_string(test_tmpdir, "/var/tmp", "temp directory");
 
 using testing::Benchmark;

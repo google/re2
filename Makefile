@@ -11,7 +11,7 @@ all: obj/libre2.a obj/so/libre2.so
 
 CXX?=g++
 CXXFLAGS?=-Wall -O3 -g -pthread # can override
-RE2_CXXFLAGS?=-Wsign-compare -c -I. $(CCPCRE)  # required
+RE2_CXXFLAGS?=-Wsign-compare -c -I. -DHAVE_PTHREAD=1 -DHAVE_RWLOCK=1 $(CCPCRE)  # required
 LDFLAGS?=
 AR?=ar
 ARFLAGS?=rsc
@@ -183,19 +183,19 @@ obj/so/libre2.so: $(SOFILES)
 
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a -lpthread $(LDFLAGS) $(LDPCRE)
 
 obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/util/test.o
 	@mkdir -p obj/dbg/test
-	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a -lpthread $(LDFLAGS) $(LDPCRE)
 
 obj/so/test/%: obj/so/libre2.so obj/libre2.a obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
 	@mkdir -p obj/so/test
-	$(CXX) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -Lobj/so -lre2 obj/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -Lobj/so -lre2 obj/libre2.a -lpthread $(LDFLAGS) $(LDPCRE)
 
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a -lpthread $(LDFLAGS) $(LDPCRE)
 
 ifdef REBUILD_TABLES
 re2/perl_groups.cc: re2/make_perl_groups.pl

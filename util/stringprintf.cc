@@ -4,64 +4,63 @@
 
 #include "util/util.h"
 
-#ifdef WIN32
-#define va_copy(d,s) ((d) = (s))
-#endif
-
 namespace re2 {
 
-static void StringAppendV(string* dst, const char* format, va_list ap) {
-  // First try with a small fixed size buffer
-  char space[1024];
-
+#ifdef WIN32
+static int CalculateBufferLen(const char* format, va_list args)
+{
+    return (_vscprintf(format, args) + 1);  // +1 for NULL char.
+}
+#else
+static int CheckLength(const char* format, va_list ap, int length)
+{
+  char* space = new char[length];
+  
   // It's possible for methods that use a va_list to invalidate
   // the data in it upon use.  The fix is to make a copy
   // of the structure before using it and use that copy instead.
   va_list backup_ap;
   va_copy(backup_ap, ap);
-#ifdef WIN32
-  int result = vsnprintf_s(space, sizeof(space), format, backup_ap);
-#else
   int result = vsnprintf(space, sizeof(space), format, backup_ap);
-#endif
   va_end(backup_ap);
 
-  if ((result >= 0) && (static_cast<unsigned long>(result) < sizeof(space))) {
+  delete [] space;
+
+  return result;
+}
+
+static int CalculateBufferLen(const char* format, va_list ap)
+{
+  // First try with a small fixed size buffer
+  int length = 1024;
+  int result = -1;
+
+  while ((result = CheckLength(format, ap, length)) < 0)
+  {
+    // While our buffer is not big enough, just double the size.
+    length *= 2;
+  }
+
+  // We need exactly "result+1" characters
+  return (result + 1);
+}
+#endif
+
+static void StringAppendV(string* dst, const char* format, va_list ap) {
+  int length = CalculateBufferLen(format, ap);
+
+  // This can be 1 char longer than needed, 
+  char* buf = new char[length + 1];
+
+  int result = vsnprintf_s(buf, length, length - 1, format, ap);
+
+  if ((result >= 0) && (result < length)) {
     // It fit
-    dst->append(space, result);
+    dst->append(buf, result);
+    delete[] buf;
     return;
   }
-
-  // Repeatedly increase buffer size until it fits
-  int length = sizeof(space);
-  while (true) {
-    if (result < 0) {
-      // Older behavior: just try doubling the buffer size
-      length *= 2;
-    } else {
-      // We need exactly "result+1" characters
-      length = result+1;
-    }
-    char* buf = new char[length];
-
-    // Restore the va_list before we use it again
-#ifdef WIN32
-    memcpy_s(&backup_ap, sizeof(backup_ap), ap, sizeof(ap));
-    result = vsnprintf_s(buf, length, sizeof(backup_ap), format, backup_ap);
-#else
-    va_copy(backup_ap, ap);
-    result = vsnprintf(buf, length, format, backup_ap);
-#endif
-    va_end(backup_ap);
-
-    if ((result >= 0) && (result < length)) {
-      // It fit
-      dst->append(buf, result);
-      delete[] buf;
-      return;
-    }
-    delete[] buf;
-  }
+  delete[] buf;
 }
 
 string StringPrintf(const char* format, ...) {
