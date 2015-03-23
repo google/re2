@@ -17,6 +17,3 @@ RE2's native language is C++.
 An Inferno wrapper is at http://code.google.com/p/inferno-re2/.
 A Python wrapper is at http://github.com/facebook/pyre2/.
 A Ruby wrapper is at http://github.com/axic/rre2/.
-
-
-
