@@ -12,7 +12,7 @@ all: obj/libre2.a obj/so/libre2.so
 CXX?=g++
 CXXFLAGS?=-Wall -O3 -g -pthread # can override
 RE2_CXXFLAGS?=-Wsign-compare -c -I. $(CCPCRE)  # required
-LDFLAGS?=
+LDFLAGS?=-pthread
 AR?=ar
 ARFLAGS?=rsc
 NM?=nm
