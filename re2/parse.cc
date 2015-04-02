@@ -463,6 +463,34 @@ bool Regexp::ParseState::PushRepeatOp(RegexpOp op, const StringPiece& s,
   return true;
 }
 
+// RepetitionIsValid() reports whether the repetition re is valid.
+// Valid means that the combination of the top-level repetition
+// and any inner repetitions does not exceed n copies of the
+// innermost thing.
+// This function rewalks the regexp tree and is called for every repetition,
+// so we have to worry about inducing quadratic behavior in the parser.
+// We avoid this by only calling RepetitionIsValid() when min or max >= 2.
+// In that case the depth of any >= 2 nesting can only get to 9 without
+// triggering a parse error, so each subtree can only be rewalked 9 times.
+static bool RepetitionIsValid(Regexp* re, int n) {
+  if (re->op() == kRegexpRepeat) {
+    int m = re->max();
+    if (m == -1) {
+      m = re->min();
+    }
+    if (m > n) {
+      return false;
+    }
+    n /= m;
+  }
+  for (int i = 0; i < re->nsub(); i++) {
+    if (!RepetitionIsValid(re->sub()[i], n)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Pushes a repetition regexp onto the stack.
 // A valid argument for the operator must already be on the stack.
 bool Regexp::ParseState::PushRepetition(int min, int max,
@@ -488,8 +516,12 @@ bool Regexp::ParseState::PushRepetition(int min, int max,
   re->down_ = stacktop_->down_;
   re->sub()[0] = FinishRegexp(stacktop_);
   re->simple_ = re->ComputeSimple();
-
   stacktop_ = re;
+  if ((min >= 2 || max >= 2) && !RepetitionIsValid(stacktop_, 1000)) {
+    status_->set_code(kRegexpRepeatSize);
+    status_->set_error_arg(s);
+    return false;
+  }
   return true;
 }
 
