@@ -15,6 +15,10 @@
 #include <time.h>
 #include <ctype.h>	// For isdigit, isalpha.
 
+#if !defined(WIN32)
+#include <sys/time.h>  // For gettimeofday
+#endif
+
 // C++
 #include <ctime>
 #include <vector>
