@@ -212,12 +212,12 @@ void TestParse(const Test* tests, int ntests, Regexp::ParseFlags flags,
                          << status.Text();
     string s = re[i]->Dump();
     EXPECT_EQ(string(tests[i].parse), s) << "Regexp: " << tests[i].regexp
-      << "\nparse: " << tests[i].parse << " s: " << s << " flag=" << f;
+      << "\nparse: " << string(tests[i].parse) << " s: " << s << " flag=" << f;
   }
 
   for (int i = 0; i < ntests; i++) {
     for (int j = 0; j < ntests; j++) {
-      EXPECT_EQ(string(tests[i].parse) == tests[j].parse,
+      EXPECT_EQ(string(tests[i].parse) == string(tests[j].parse),
                 RegexpEqualTestingOnly(re[i], re[j]))
         << "Regexp: " << tests[i].regexp << " " << tests[j].regexp;
     }
@@ -306,6 +306,22 @@ TEST(TestParse, Prefix) {
   TestParse(prefix_tests, arraysize(prefix_tests), Regexp::PerlX, "prefix");
 }
 
+Test nested_tests[] = {
+  { "((((((((((x{2}){2}){2}){2}){2}){2}){2}){2}){2}))",
+    "cap{cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 lit{x}}}}}}}}}}}}}}}}}}}}" },
+  { "((((((((((x{1}){2}){2}){2}){2}){2}){2}){2}){2}){2})",
+    "cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{1,1 lit{x}}}}}}}}}}}}}}}}}}}}}" },
+  { "((((((((((x{0}){2}){2}){2}){2}){2}){2}){2}){2}){2})",
+    "cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 cap{rep{0,0 lit{x}}}}}}}}}}}}}}}}}}}}}" },
+  { "((((((x{2}){2}){2}){5}){5}){5})",
+    "cap{rep{5,5 cap{rep{5,5 cap{rep{5,5 cap{rep{2,2 cap{rep{2,2 cap{rep{2,2 lit{x}}}}}}}}}}}}}" },
+};
+
+// Test that nested repetition works.
+TEST(TestParse, Nested) {
+  TestParse(nested_tests, arraysize(nested_tests), Regexp::PerlX, "nested");
+}
+
 // Invalid regular expressions
 const char* badtests[] = {
   "(",
@@ -329,6 +345,8 @@ const char* badtests[] = {
   "(?i)[a-Z]",
   "a{100000}",
   "a{100000,}",
+  "((((((((((x{2}){2}){2}){2}){2}){2}){2}){2}){2}){2})",
+  "(((x{7}){11}){13})",
 };
 
 // Valid in Perl, bad in POSIX
