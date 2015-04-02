@@ -21,6 +21,7 @@
 #include "re2/stringpiece.h"
 #include "re2/unicode_casefold.h"
 #include "re2/unicode_groups.h"
+#include "re2/walker-inl.h"
 
 namespace re2 {
 
@@ -463,6 +464,59 @@ bool Regexp::ParseState::PushRepeatOp(RegexpOp op, const StringPiece& s,
   return true;
 }
 
+// RepetitionWalker reports whether the repetition regexp is valid.
+// Valid means that the combination of the top-level repetition
+// and any inner repetitions does not exceed n copies of the
+// innermost thing.
+// This rewalks the regexp tree and is called for every repetition,
+// so we have to worry about inducing quadratic behavior in the parser.
+// We avoid this by only using RepetitionWalker when min or max >= 2.
+// In that case the depth of any >= 2 nesting can only get to 9 without
+// triggering a parse error, so each subtree can only be rewalked 9 times.
+class RepetitionWalker : public Regexp::Walker<int> {
+ public:
+  RepetitionWalker() {}
+  virtual int PreVisit(Regexp* re, int parent_arg, bool* stop);
+  virtual int PostVisit(Regexp* re, int parent_arg, int pre_arg,
+                        int* child_args, int nchild_args);
+  virtual int ShortVisit(Regexp* re, int parent_arg);
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(RepetitionWalker);
+};
+
+int RepetitionWalker::PreVisit(Regexp* re, int parent_arg, bool* stop) {
+  int arg = parent_arg;
+  if (re->op() == kRegexpRepeat) {
+    int m = re->max();
+    if (m < 0) {
+      m = re->min();
+    }
+    if (m > 0) {
+      arg /= m;
+    }
+  }
+  return arg;
+}
+
+int RepetitionWalker::PostVisit(Regexp* re, int parent_arg, int pre_arg,
+                                int* child_args, int nchild_args) {
+  int arg = pre_arg;
+  for (int i = 0; i < nchild_args; i++) {
+    if (child_args[i] < arg) {
+      arg = child_args[i];
+    }
+  }
+  return arg;
+}
+
+int RepetitionWalker::ShortVisit(Regexp* re, int parent_arg) {
+  // This should never be called, since we use Walk and not
+  // WalkExponential.
+  LOG(DFATAL) << "RepetitionWalker::ShortVisit called";
+  return 0;
+}
+
 // Pushes a repetition regexp onto the stack.
 // A valid argument for the operator must already be on the stack.
 bool Regexp::ParseState::PushRepetition(int min, int max,
@@ -488,8 +542,15 @@ bool Regexp::ParseState::PushRepetition(int min, int max,
   re->down_ = stacktop_->down_;
   re->sub()[0] = FinishRegexp(stacktop_);
   re->simple_ = re->ComputeSimple();
-
   stacktop_ = re;
+  if ((min >= 2 || max >= 2)) {
+    RepetitionWalker w;
+    if (w.Walk(stacktop_, 1000) == 0) {
+      status_->set_code(kRegexpRepeatSize);
+      status_->set_error_arg(s);
+      return false;
+    }
+  }
   return true;
 }
 
