@@ -80,14 +80,116 @@ cc_library(
     "util/strutil.cc",
     "util/valgrind.cc",
   ],
+  linkopts = [
+    "-pthread"
+  ]
 )
 
-cc_test(
+# Test-only libraries
+cc_library(
   name="test",
+  includes = [
+    ".",
+  ],
+  hdrs = [
+    "util/test.h",
+  ],
   srcs = [
     "util/test.cc",
   ],
+  testonly = 1,
+)
+
+cc_library(
+  name="backtrack",
+  hdrs = [
+  ],
+  srcs = [
+    "re2/testing/backtrack.cc",
+  ],
   deps = [
     ":re2"
-  ]
+  ],
+  testonly = 1,
 )
+
+cc_library(
+  name="dump",
+  srcs = [
+    "re2/testing/dump.cc",
+  ],
+  deps = [
+    ":re2"
+  ],
+  testonly = 1,
+)
+
+cc_library(
+  name="regexp_generator",
+  hdrs = [
+    "re2/testing/regexp_generator.h",
+  ],
+  srcs = [
+    "re2/testing/regexp_generator.cc",
+  ],
+  deps = [
+    ":re2"
+  ],
+  testonly = 1,
+)
+
+cc_library(
+  name="string_generator",
+  hdrs = [
+    "re2/testing/string_generator.h",
+  ],
+  srcs = [
+    "re2/testing/string_generator.cc",
+  ],
+  deps = [
+    ":re2"
+  ],
+  testonly = 1,
+)
+
+cc_library(
+  name="tester",
+  hdrs = [
+    "re2/testing/tester.h",
+  ],
+  srcs = [
+    "re2/testing/tester.cc",
+  ],
+  deps = [
+    ":re2",
+    ":backtrack",
+  ],
+  testonly = 1,
+)
+
+load("re2_test", "re2_test")
+
+re2_test("charclass_test")
+re2_test("compile_test")
+re2_test("filtered_re2_test")
+re2_test("mimics_pcre_test")
+re2_test("parse_test",
+         deps = [":dump"])
+re2_test("possible_match_test",
+         deps = [":string_generator",
+                 ":regexp_generator"])
+re2_test("re2_test")
+re2_test("re2_arg_test")
+re2_test("regexp_test")
+re2_test("required_prefix_test",
+         deps = [":dump"])
+re2_test("search_test",
+         deps = [ ":regexp_generator",
+                  ":tester"])
+re2_test("set_test")
+re2_test("simplify_test",
+         deps = [":dump"])
+re2_test("string_generator_test",
+         deps = [":string_generator",
+                 ":regexp_generator"])
+
