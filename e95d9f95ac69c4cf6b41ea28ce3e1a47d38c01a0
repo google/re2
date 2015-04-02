@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63de6a5c_9fa3c324",
+        "filename": "re2/parse.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2015-04-02T15:27:53Z",
+      "side": 1,
+      "message": "Sorry, but we can\u0027t just recurse over the regexp structure in C++. RE2 avoids the assumption that there is enough stack for unlimited recursion over arbitrary input. You\u0027ll need to write a Regexp::Walker instead. See walker-inl.h.",
+      "revId": "e95d9f95ac69c4cf6b41ea28ce3e1a47d38c01a0",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
