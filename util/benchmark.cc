@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <sys/time.h>
+
 #include "util/util.h"
 #include "util/flags.h"
 #include "util/benchmark.h"
@@ -82,7 +84,7 @@ static void runN(Benchmark *b, int n, int siz) {
 
 static int round(int n) {
 	int base = 1;
-	
+
 	while(base*10 < n)
 		base *= 10;
 	if(n < 2*base)
@@ -98,7 +100,7 @@ void RunBench(Benchmark* b, int nthread, int siz) {
 	// TODO(rsc): Threaded benchmarks.
 	if(nthread != 1)
 		return;
-	
+
 	// run once in case it's expensive
 	n = 1;
 	runN(b, n, siz);
@@ -108,12 +110,12 @@ void RunBench(Benchmark* b, int nthread, int siz) {
 			n = 1e9;
 		else
 			n = 1e9 / (ns/n);
-		
+
 		n = max(last+1, min(n+n/2, 100*last));
 		n = round(n);
 		runN(b, n, siz);
 	}
-	
+
 	char mb[100];
 	char suf[100];
 	mb[0] = '\0';
@@ -150,4 +152,3 @@ int main(int argc, const char** argv) {
 					RunBench(b, j, k);
 	}
 }
-
