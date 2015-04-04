@@ -2,8 +2,6 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-all: obj/libre2.a obj/so/libre2.so
-
 # to build against PCRE for testing or benchmarking,
 # uncomment the next two lines
 # CCPCRE=-I/usr/local/include -DUSEPCRE
@@ -38,10 +36,18 @@ SONAME=0
 # REBUILD_TABLES=1
 
 ifeq ($(shell uname),Darwin)
-MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib $(LDFLAGS) -exported_symbols_list libre2.symbols.darwin
+SOEXT=dylib
+SOEXTVER=$(SONAME).$(SOEXT)
+SOEXTVER00=$(SONAME).0.0.$(SOEXT)
+MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib $(LDFLAGS) -Wl,-install_name,@rpath/libre2.$(SOEXTVER) -exported_symbols_list libre2.symbols.darwin
 else
-MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.so.$(SONAME),--version-script=libre2.symbols $(LDFLAGS)
+SOEXT=so
+SOEXTVER=$(SOEXT).$(SONAME)
+SOEXTVER00=$(SOEXT).$(SONAME).0.0
+MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),--version-script=libre2.symbols $(LDFLAGS)
 endif
+
+all: obj/libre2.a obj/so/libre2.$(SOEXT)
 
 INSTALL_HFILES=\
 	re2/filtered_re2.h\
@@ -176,10 +182,10 @@ obj/dbg/libre2.a: $(DOFILES)
 	@mkdir -p obj/dbg
 	$(AR) $(ARFLAGS) obj/dbg/libre2.a $(DOFILES)
 
-obj/so/libre2.so: $(SOFILES)
+obj/so/libre2.$(SOEXT): $(SOFILES)
 	@mkdir -p obj/so
-	$(MAKE_SHARED_LIBRARY) -o $@.$(SONAME) $(SOFILES)
-	ln -sf libre2.so.$(SONAME) $@
+	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES)
+	ln -sf libre2.$(SOEXTVER) $@
 
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
@@ -189,7 +195,7 @@ obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/
 	@mkdir -p obj/dbg/test
 	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a $(LDFLAGS) $(LDPCRE)
 
-obj/so/test/%: obj/so/libre2.so obj/libre2.a obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
+obj/so/test/%: obj/so/libre2.$(SOEXT) obj/libre2.a obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
 	@mkdir -p obj/so/test
 	$(CXX) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -Lobj/so -lre2 obj/libre2.a $(LDFLAGS) $(LDPCRE)
 
@@ -245,13 +251,13 @@ shared-bigtest: $(STESTS) $(SBIGTESTS)
 
 benchmark: obj/test/regexp_benchmark
 
-install: obj/libre2.a obj/so/libre2.so
+install: obj/libre2.a obj/so/libre2.$(SOEXT)
 	mkdir -p $(DESTDIR)$(includedir)/re2 $(DESTDIR)$(libdir)
 	$(INSTALL_DATA) $(INSTALL_HFILES) $(DESTDIR)$(includedir)/re2
 	$(INSTALL) obj/libre2.a $(DESTDIR)$(libdir)/libre2.a
-	$(INSTALL) obj/so/libre2.so $(DESTDIR)$(libdir)/libre2.so.$(SONAME).0.0
-	ln -sf libre2.so.$(SONAME).0.0 $(DESTDIR)$(libdir)/libre2.so.$(SONAME)
-	ln -sf libre2.so.$(SONAME).0.0 $(DESTDIR)$(libdir)/libre2.so
+	$(INSTALL) obj/so/libre2.$(SOEXT) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER00)
+	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER)
+	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXT)
 
 testinstall:
 	@mkdir -p obj
