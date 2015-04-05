@@ -17,7 +17,7 @@
 // some of the more complicated things thrown away.  In particular,
 // backreferences and generalized assertions are not available, nor is \Z.
 //
-// See http://code.google.com/p/re2/wiki/Syntax for the syntax
+// See https://github.com/google/re2/wiki/Syntax for the syntax
 // supported by RE2, and a comparison with PCRE and PERL regexps.
 //
 // For those not familiar with Perl's regular expressions,
