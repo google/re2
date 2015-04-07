@@ -1,14 +1,14 @@
 This is the source code repository for RE2, a regular expression library.
 
-For documentation about how to install and use RE2,
-visit http://code.google.com/p/re2/.
+Installation:
 
-The short version is:
+    make
+    make test
+    make install
+    make testinstall
 
-make
-make test
-make install
-make testinstall
+For documentation about RE2's syntax and feature support,
+visit https://github.com/google/re2/blob/master/doc/syntax.txt
 
 Unless otherwise noted, the RE2 source files are distributed
 under the BSD-style license found in the LICENSE file.
