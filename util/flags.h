@@ -5,7 +5,7 @@
 // Simplified version of Google's command line flags.
 // Does not support parsing the command line.
 // If you want to do that, see
-// http://code.google.com/p/google-gflags
+// https://gflags.github.io/gflags/
 
 #ifndef RE2_UTIL_FLAGS_H__
 #define RE2_UTIL_FLAGS_H__
