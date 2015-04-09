@@ -797,12 +797,11 @@ class RE2::Arg {
 
 #undef MAKE_PARSER
 
-  // Generic constructor
-  template <class T> Arg(T*, Parser parser);
-  // Generic constructor template
+  // Generic constructor templates
   template <class T> Arg(T* p)
-    : arg_(p), parser_(_RE2_MatchObject<T>::Parse) {
-  }
+      : arg_(p), parser_(_RE2_MatchObject<T>::Parse) { }
+  template <class T> Arg(T* p, Parser parser)
+      : arg_(p), parser_(parser) { }
 
   // Parse the data
   bool Parse(const char* str, int n) const;
