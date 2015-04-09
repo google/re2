@@ -20,7 +20,7 @@ int CEscapeString(const char* src, int src_len, char* dest,
   int used = 0;
 
   for (; src < src_end; src++) {
-    if (dest_len - used < 2)   // Need space for two letter escape
+    if (dest_len - used < 2)   // space for two-character escape
       return -1;
 
     unsigned char c = *src;
@@ -36,7 +36,7 @@ int CEscapeString(const char* src, int src_len, char* dest,
         // digit then that digit must be escaped too to prevent it being
         // interpreted as part of the character code by C.
         if (c < ' ' || c > '~') {
-          if (dest_len - used < 4) // need space for 4 letter escape
+          if (dest_len - used < 5)   // space for four-character escape + \0
             return -1;
           sprintf(dest + used, "\\%03o", c);
           used += 4;
@@ -57,7 +57,7 @@ int CEscapeString(const char* src, int src_len, char* dest,
 // ----------------------------------------------------------------------
 // CEscape()
 //    Copies 'src' to result, escaping dangerous characters using
-//    C-style escape sequences.  'src' and 'dest' should not overlap. 
+//    C-style escape sequences.  'src' and 'dest' should not overlap.
 // ----------------------------------------------------------------------
 string CEscape(const StringPiece& src) {
   const int dest_length = src.size() * 4 + 1; // Maximum possible expansion
