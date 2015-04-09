@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3889aa6_02d9ccf8",
+        "filename": "util/flags.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-09T06:22:17Z",
+      "side": 1,
+      "message": "Please use https://gflags.github.io/gflags/ instead. GitHub appears to redirect /gflags to /gflags/, so we might as well spare both sides the effort. HTTPS for good measure. :)",
+      "revId": "9f59f9048a6bcd5593e3c3f01dcc52c616ecb6d5",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
