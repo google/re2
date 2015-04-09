@@ -7,7 +7,11 @@
 #ifndef RE2_UTIL_LOGGING_H__
 #define RE2_UTIL_LOGGING_H__
 
+#ifdef WIN32
+#include <io.h>
+#else
 #include <unistd.h>  /* for write */
+#endif
 #include <sstream>
 
 // Debug-only checking.
@@ -75,10 +79,18 @@ class LogMessageFatal : public LogMessage {
  public:
   LogMessageFatal(const char* file, int line)
     : LogMessage(file, line) { }
+#ifdef _MSC_VER
+// Disable warning message C4722: destructor never returns, potential memory leak.
+#pragma warning(push)
+#pragma warning(disable : 4722)
+#endif
   ~LogMessageFatal() {
     Flush();
     abort();
   }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
  private:
   DISALLOW_COPY_AND_ASSIGN(LogMessageFatal);
 };

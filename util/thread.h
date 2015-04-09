@@ -5,7 +5,12 @@
 #ifndef RE2_UTIL_THREAD_H__
 #define RE2_UTIL_THREAD_H__
 
+#ifdef WIN32
+#include <windows.h>
+typedef void* pthread_t;
+#else
 #include <pthread.h>
+#endif
 
 class Thread {
  public:

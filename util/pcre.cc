@@ -10,8 +10,11 @@
 #include "util/util.h"
 #include "util/flags.h"
 #include "util/pcre.h"
+#ifdef _MSC_VER
+#include "limits"
+#endif
 
-#define PCREPORT(level) LOG(level)
+#define PCREPORT(level) LOG_ ## level.stream()
 
 // Default PCRE limits.
 // Defaults chosen to allow a plausible amount of CPU and
@@ -893,7 +896,7 @@ bool PCRE::Arg::parse_double(const char* str, int n, void* dest) {
   char* end;
   double r = strtod(buf, &end);
   if (end != buf + n) {
-#ifdef COMPILER_MSVC
+#ifdef _MSC_VER
     // Microsoft's strtod() doesn't handle inf and nan, so we have to
     // handle it explicitly.  Speed is not important here because this
     // code is only called in unit tests.
@@ -906,11 +909,11 @@ bool PCRE::Arg::parse_double(const char* str, int n, void* dest) {
       ++i;
     }
     if (0 == stricmp(i, "inf") || 0 == stricmp(i, "infinity")) {
-      r = numeric_limits<double>::infinity();
+      r = std::numeric_limits<double>::infinity();
       if (!pos)
         r = -r;
     } else if (0 == stricmp(i, "nan")) {
-      r = numeric_limits<double>::quiet_NaN();
+      r = std::numeric_limits<double>::quiet_NaN();
     } else {
       return false;
     }
