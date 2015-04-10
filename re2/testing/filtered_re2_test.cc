@@ -44,7 +44,7 @@ TEST(FilteredRE2Test, SmallLatinTest) {
   FilterTestVars v;
   int id;
 
-  v.opts.set_utf8(false);
+  v.opts.set_encoding(RE2::Options::EncodingLatin1);
   v.f.Add("\xde\xadQ\xbe\xef", v.opts, &id);
   v.f.Compile(&v.atoms);
   EXPECT_EQ(1, v.atoms.size());
