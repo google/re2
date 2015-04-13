@@ -113,16 +113,6 @@ static inline void WriteMemoryBarrier() {
   re2::MutexLock l(&mu);
 }
 
-/*
-#error Need WriteMemoryBarrier for architecture.
-
-// Windows
-inline void WriteMemoryBarrier() {
-  LONG x;
-  ::InterlockedExchange(&x, 0);
-}
-*/
-
 #endif
 
 // Alpha has very weak memory ordering. If relying on WriteBarriers, one must

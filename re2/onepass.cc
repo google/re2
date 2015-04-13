@@ -126,9 +126,6 @@ static const int Debug = 0;
 // whether a set of conditions required to finish a match at that
 // point in the input rather than process the next byte.
 
-// A state in the one-pass NFA (aka DFA) - just an array of actions.
-struct OneState;
-
 // A state in the one-pass NFA - just an array of actions indexed
 // by the bytemap_[] of the next input byte.  (The bytemap
 // maps next input bytes into equivalence classes, to reduce
