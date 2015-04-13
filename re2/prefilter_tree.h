@@ -22,7 +22,7 @@
 namespace re2 {
 
 typedef SparseArray<int> IntMap;
-typedef map<int,int> StdIntMap;
+typedef map<int, int> StdIntMap;
 
 class Prefilter;
 

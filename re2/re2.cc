@@ -541,7 +541,10 @@ bool RE2::Match(const StringPiece& text,
 
   if (startpos < 0 || startpos > endpos || endpos > text.size()) {
     if (options_.log_errors())
-      LOG(ERROR) << "RE2: invalid startpos, endpos pair.";
+      LOG(ERROR) << "RE2: invalid startpos, endpos pair. ["
+                 << "startpos: " << startpos << ", "
+                 << "endpos: " << endpos << ", "
+                 << "text size: " << text.size() << "]";
     return false;
   }
 
@@ -842,7 +845,7 @@ bool RE2::DoMatch(const StringPiece& text,
     if (!args[i]->Parse(s.data(), s.size())) {
       // TODO: Should we indicate what the error was?
       VLOG(1) << "Parse error on #" << i << " " << s << " "
-	      << (void*)s.data() << "/" << s.size();
+              << (void*)s.data() << "/" << s.size();
       delete[] heapvec;
       return false;
     }
