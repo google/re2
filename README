@@ -14,6 +14,7 @@ Unless otherwise noted, the RE2 source files are distributed
 under the BSD-style license found in the LICENSE file.
 
 RE2's native language is C++.
-An Inferno wrapper is at http://code.google.com/p/inferno-re2/.
-A Python wrapper is at http://github.com/facebook/pyre2/.
-A Ruby wrapper is at http://github.com/axic/rre2/.
+An Erlang wrapper is at https://github.com/tuncer/re2/.
+An Inferno wrapper is at https://github.com/powerman/inferno-re2/.
+A Python wrapper is at https://github.com/facebook/pyre2/.
+A Ruby wrapper is at https://github.com/axic/rre2/.
