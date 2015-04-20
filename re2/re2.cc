@@ -16,6 +16,7 @@
 #include "util/atomicops.h"
 #include "util/util.h"
 #include "util/flags.h"
+#include "util/sparse_array.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"
 
@@ -270,6 +271,23 @@ int RE2::ProgramSize() const {
   if (prog_ == NULL)
     return -1;
   return prog_->size();
+}
+
+int RE2::ProgramFanout(map<int, int>* histogram) const {
+  if (prog_ == NULL)
+    return -1;
+  SparseArray<int> fanout(prog_->size());
+  prog_->Fanout(&fanout);
+  histogram->clear();
+  for (SparseArray<int>::iterator i = fanout.begin(); i != fanout.end(); ++i) {
+    // TODO(junyer): Optimise this?
+    int bucket = 0;
+    while (1 << bucket < i->second) {
+      bucket++;
+    }
+    (*histogram)[bucket]++;
+  }
+  return histogram->rbegin()->first;
 }
 
 // Returns named_groups_, computing it if needed.

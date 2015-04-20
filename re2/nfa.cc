@@ -706,5 +706,52 @@ Prog::SearchNFA(const StringPiece& text, const StringPiece& context,
   return true;
 }
 
-}  // namespace re2
+// For each instruction i in the program reachable from the start, compute the
+// number of instructions reachable from i by following only empty transitions
+// and record that count as fanout[i].
+//
+// fanout holds the results and is also the work queue for the outer iteration.
+// reachable holds the reached nodes for the inner iteration.
+void Prog::Fanout(SparseArray<int>* fanout) {
+  DCHECK_EQ(fanout->max_size(), size());
+  SparseSet reachable(size());
+  fanout->clear();
+  fanout->set_new(start(), 0);
+  for (SparseArray<int>::iterator i = fanout->begin(); i != fanout->end(); ++i) {
+    int* count = &i->second;
+    reachable.clear();
+    reachable.insert(i->index());
+    for (SparseSet::iterator j = reachable.begin(); j != reachable.end(); ++j) {
+      Prog::Inst* ip = inst(*j);
+      switch (ip->opcode()) {
+        default:
+          LOG(DFATAL) << "unhandled " << ip->opcode() << " in Prog::Fanout()";
+          break;
 
+        case kInstByteRange:
+          (*count)++;
+          if (!fanout->has_index(ip->out())) {
+            fanout->set_new(ip->out(), 0);
+          }
+          break;
+
+        case kInstAlt:
+        case kInstAltMatch:
+          reachable.insert(ip->out1());
+          // fall through
+
+        case kInstCapture:
+        case kInstEmptyWidth:
+        case kInstNop:
+          reachable.insert(ip->out());
+          break;
+
+        case kInstMatch:
+        case kInstFail:
+          break;
+      }
+    }
+  }
+}
+
+}  // namespace re2

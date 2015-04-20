@@ -293,6 +293,11 @@ class RE2 {
   // Larger numbers are more expensive than smaller numbers.
   int ProgramSize() const;
 
+  // EXPERIMENTAL! SUBJECT TO CHANGE!
+  // Outputs the program fanout as a histogram bucketed by powers of 2.
+  // Returns the number of the largest non-empty bucket.
+  int ProgramFanout(map<int, int>* histogram) const;
+
   // Returns the underlying Regexp; not for general use.
   // Returns entire_regexp_ so that callers don't need
   // to know about prefix_ and prefix_foldcase_.
