@@ -10,6 +10,7 @@
 #define RE2_PROG_H__
 
 #include "util/util.h"
+#include "util/sparse_array.h"
 #include "re2/re2.h"
 
 namespace re2 {
@@ -328,6 +329,10 @@ class Prog {
   //
   // Returns true on success, false on error.
   bool PossibleMatchRange(string* min, string* max, int maxlen);
+
+  // EXPERIMENTAL! SUBJECT TO CHANGE!
+  // Outputs the program fanout into the given sparse array.
+  void Fanout(SparseArray<int>* fanout);
 
   // Compiles a collection of regexps to Prog.  Each regexp will have
   // its own Match instruction recording the index in the vector.
