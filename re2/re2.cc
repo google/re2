@@ -272,6 +272,12 @@ int RE2::ProgramSize() const {
   return prog_->size();
 }
 
+int RE2::ProgramFanout(map<int, int>* histogram) const {
+  if (prog_ == NULL)
+    return -1;
+  return prog_->Fanout(histogram);
+}
+
 // Returns named_groups_, computing it if needed.
 const map<string, int>&  RE2::NamedCapturingGroups() const {
   MutexLock l(mutex_);

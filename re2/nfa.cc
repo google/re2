@@ -706,5 +706,68 @@ Prog::SearchNFA(const StringPiece& text, const StringPiece& context,
   return true;
 }
 
-}  // namespace re2
+int Prog::Fanout(map<int, int>* histogram) {
+  histogram->clear();
 
+  stack<int> rstack;  // root instructions
+  rstack.push(start());
+  set<int> rset;
+  while (!rstack.empty()) {
+    int id = rstack.top();
+    rstack.pop();
+    if (rset.count(id) != 0)
+      continue;
+    rset.insert(id);
+
+    int fanout = 0;
+
+    stack<int> nstack;  // next instructions
+    nstack.push(id);
+    set<int> nset;
+    while (!nstack.empty()) {
+      int id = nstack.top();
+      nstack.pop();
+      if (nset.count(id) != 0)
+        continue;
+      nset.insert(id);
+
+      Prog::Inst* ip = inst(id);
+      switch (ip->opcode()) {
+        default:
+          LOG(DFATAL) << "unhandled " << ip->opcode() << " in Prog::Fanout()";
+          break;
+
+        case kInstByteRange:
+          fanout++;
+          rstack.push(ip->out());
+          break;
+
+        case kInstAlt:
+        case kInstAltMatch:
+          nstack.push(ip->out1());
+          // fall through
+
+        case kInstCapture:
+        case kInstEmptyWidth:
+        case kInstNop:
+          nstack.push(ip->out());
+          break;
+
+        case kInstMatch:
+        case kInstFail:
+          break;
+      }
+    }
+
+    // TODO(junyer): Optimise this?
+    int bucket = 0;
+    while (1 << bucket < fanout) {
+      bucket++;
+    }
+    (*histogram)[bucket]++;
+  }
+
+  return histogram->rbegin()->first;
+}
+
+}  // namespace re2

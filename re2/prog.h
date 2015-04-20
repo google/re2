@@ -329,6 +329,11 @@ class Prog {
   // Returns true on success, false on error.
   bool PossibleMatchRange(string* min, string* max, int maxlen);
 
+  // EXPERIMENTAL! SUBJECT TO CHANGE!
+  // Outputs the fanout as a histogram bucketed by powers of 2.
+  // Returns the number of the largest non-empty bucket.
+  int Fanout(map<int, int>* histogram);
+
   // Compiles a collection of regexps to Prog.  Each regexp will have
   // its own Match instruction recording the index in the vector.
   static Prog* CompileSet(const RE2::Options& options, RE2::Anchor anchor,

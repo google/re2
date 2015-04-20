@@ -462,11 +462,36 @@ TEST(QuoteMeta, HasNull) {
 TEST(ProgramSize, BigProgram) {
   RE2 re_simple("simple regexp");
   RE2 re_medium("medium.*regexp");
-  RE2 re_complex("hard.{1,128}regexp");
+  RE2 re_complex("complex.{1,128}regexp");
 
   CHECK_GT(re_simple.ProgramSize(), 0);
   CHECK_GT(re_medium.ProgramSize(), re_simple.ProgramSize());
   CHECK_GT(re_complex.ProgramSize(), re_medium.ProgramSize());
+}
+
+TEST(ProgramFanout, BigProgram) {
+  RE2 re1("(?:(?:(?:(?:(?:.)?){1})*)+)");
+  RE2 re10("(?:(?:(?:(?:(?:.)?){10})*)+)");
+  RE2 re100("(?:(?:(?:(?:(?:.)?){100})*)+)");
+  RE2 re1000("(?:(?:(?:(?:(?:.)?){1000})*)+)");
+
+  map<int, int> histogram;
+
+  // 3 is the largest non-empty bucket and has 1 element.
+  CHECK_EQ(3, re1.ProgramFanout(&histogram));
+  CHECK_EQ(1, histogram[3]);
+
+  // 7 is the largest non-empty bucket and has 10 elements.
+  CHECK_EQ(7, re10.ProgramFanout(&histogram));
+  CHECK_EQ(10, histogram[7]);
+
+  // 10 is the largest non-empty bucket and has 100 elements.
+  CHECK_EQ(10, re100.ProgramFanout(&histogram));
+  CHECK_EQ(100, histogram[10]);
+
+  // 13 is the largest non-empty bucket and has 1000 elements.
+  CHECK_EQ(13, re1000.ProgramFanout(&histogram));
+  CHECK_EQ(1000, histogram[13]);
 }
 
 // Issue 956519: handling empty character sets was
