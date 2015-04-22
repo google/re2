@@ -86,7 +86,6 @@ OFILES=\
 	obj/util/arena.o\
 	obj/util/hash.o\
 	obj/util/rune.o\
-	obj/util/stringpiece.o\
 	obj/util/stringprintf.o\
 	obj/util/strutil.o\
 	obj/util/valgrind.o\
@@ -106,6 +105,7 @@ OFILES=\
 	obj/re2/regexp.o\
 	obj/re2/set.o\
 	obj/re2/simplify.o\
+	obj/re2/stringpiece.o\
 	obj/re2/tostring.o\
 	obj/re2/unicode_casefold.o\
 	obj/re2/unicode_groups.o\
