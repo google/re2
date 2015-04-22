@@ -51,7 +51,6 @@ INSTALL_HFILES=\
 	re2/variadic_function.h\
 
 HFILES=\
-	util/arena.h\
 	util/atomicops.h\
 	util/benchmark.h\
 	util/flags.h\
@@ -83,7 +82,6 @@ HFILES=\
 	re2/walker-inl.h\
 
 OFILES=\
-	obj/util/arena.o\
 	obj/util/hash.o\
 	obj/util/rune.o\
 	obj/util/stringpiece.o\
