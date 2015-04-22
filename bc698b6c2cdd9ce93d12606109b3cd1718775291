@@ -46,6 +46,30 @@
       "revId": "bc698b6c2cdd9ce93d12606109b3cd1718775291",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30867a2e_09f189ad",
+        "filename": "util/util.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 5390
+      },
+      "writtenOn": "2015-04-22T04:17:02Z",
+      "side": 1,
+      "message": "Ah, cool, I indeed didn\u0027t see that. However, I\u0027m told that _snprintf_s is still different from regular snprintf in that it crashes your process (\"invokes the invalid parameter handling function\") while snprintf will just write as much as fits and then null-terminates. Maybe that\u0027s not an issue for re2?\n\n(Sorry about the zombie comment!)",
+      "parentUuid": "a153ecfb_394e1336",
+      "range": {
+        "startLine": 62,
+        "startChar": 17,
+        "endLine": 62,
+        "endChar": 28
+      },
+      "revId": "bc698b6c2cdd9ce93d12606109b3cd1718775291",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
