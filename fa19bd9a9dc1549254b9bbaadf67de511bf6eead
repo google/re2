@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f07f82e4_d06472cc",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-22T14:42:56Z",
+      "side": 1,
+      "message": "I think I can guess why you might want this as a separate rule, but please add a comment that explains why.",
+      "range": {
+        "startLine": 6,
+        "startChar": 10,
+        "endLine": 6,
+        "endChar": 21
+      },
+      "revId": "fa19bd9a9dc1549254b9bbaadf67de511bf6eead",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f07f82e4_f06176b9",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-22T14:42:56Z",
+      "side": 1,
+      "message": "This will be in the re2/ directory soon.",
+      "range": {
+        "startLine": 12,
+        "startChar": 5,
+        "endLine": 12,
+        "endChar": 9
+      },
+      "revId": "fa19bd9a9dc1549254b9bbaadf67de511bf6eead",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f07f82e4_104e0a4e",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-22T14:42:56Z",
+      "side": 1,
+      "message": "This will be deleted soon.",
+      "range": {
+        "startLine": 43,
+        "startChar": 10,
+        "endLine": 43,
+        "endChar": 15
+      },
+      "revId": "fa19bd9a9dc1549254b9bbaadf67de511bf6eead",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f07f82e4_704d864d",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-22T14:42:56Z",
+      "side": 1,
+      "message": "This is only for testing?",
+      "range": {
+        "startLine": 48,
+        "startChar": 10,
+        "endLine": 48,
+        "endChar": 14
+      },
+      "revId": "fa19bd9a9dc1549254b9bbaadf67de511bf6eead",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f07f82e4_90411a1a",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-22T14:42:56Z",
+      "side": 1,
+      "message": "This is only for testing?",
+      "range": {
+        "startLine": 49,
+        "startChar": 10,
+        "endLine": 49,
+        "endChar": 16
+      },
+      "revId": "fa19bd9a9dc1549254b9bbaadf67de511bf6eead",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f07f82e4_30530ef3",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-22T14:42:56Z",
+      "side": 1,
+      "message": "This will be deleted soon.",
+      "range": {
+        "startLine": 74,
+        "startChar": 10,
+        "endLine": 74,
+        "endChar": 15
+      },
+      "revId": "fa19bd9a9dc1549254b9bbaadf67de511bf6eead",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f07f82e4_d03b9297",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-22T14:42:56Z",
+      "side": 1,
+      "message": "This is only for testing?",
+      "range": {
+        "startLine": 76,
+        "startChar": 10,
+        "endLine": 76,
+        "endChar": 14
+      },
+      "revId": "fa19bd9a9dc1549254b9bbaadf67de511bf6eead",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f07f82e4_b03e1e89",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-22T14:42:56Z",
+      "side": 1,
+      "message": "This is only for testing?",
+      "range": {
+        "startLine": 77,
+        "startChar": 10,
+        "endLine": 77,
+        "endChar": 16
+      },
+      "revId": "fa19bd9a9dc1549254b9bbaadf67de511bf6eead",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f07f82e4_5048823e",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-22T14:42:56Z",
+      "side": 1,
+      "message": "Is it really necessary to split these all out?",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 21
+      },
+      "revId": "fa19bd9a9dc1549254b9bbaadf67de511bf6eead",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f07f82e4_30ceae35",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-04-22T14:42:56Z",
+      "side": 1,
+      "message": "Please add a TODO to add the \"big\" tests as per the Makefile. Note that you will need util/thread.{cc,h} for dfa_test. Oh, and re2/testing/exhaustive_tester.{cc,h} for the exhaustive tests.",
+      "revId": "fa19bd9a9dc1549254b9bbaadf67de511bf6eead",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
