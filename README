@@ -10,6 +10,15 @@ make test
 make install
 make testinstall
 
+More information can be found on the wiki:
+https://github.com/google/re2/wiki
+
+Issue tracker:
+https://github.com/google/re2/issues
+
+Mailing list:
+https://groups.google.com/group/re2-dev
+
 Unless otherwise noted, the RE2 source files are distributed
 under the BSD-style license found in the LICENSE file.
 
