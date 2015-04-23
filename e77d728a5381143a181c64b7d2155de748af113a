@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "706b9231_32beaef7",
+        "filename": "re2/nfa.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2015-04-23T16:27:27Z",
+      "side": 1,
+      "message": "Could use a short overview comment (see later comments for context).\n\n// For every instruction i in the program reachable from the start,\n// compute the number of instructions reachable form i by following\n// only empty transitions. Return this count as fanout[i].\n//\n// fanout is used both to hold results and as the work queue for the outer iteration.\n// reachable holds the reached nodes for the inner iteration.",
+      "revId": "e77d728a5381143a181c64b7d2155de748af113a",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "706b9231_57587c8c",
+        "filename": "re2/nfa.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 712,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2015-04-23T16:27:27Z",
+      "side": 1,
+      "message": "This (combined with rset) is a work queue. Use \u0027SparseSet\u003cint\u003e workq\u0027 instead.\n\nAlso I think you should separate the histogramming from the actual fanout computation and make Fanout just return the raw counts. That would be\n\nint Prog::Fanout(SparseArray\u003cint\u003e *fanout) \n\nWhere you can use fanout as both the work queue and the place where results are stored.",
+      "revId": "e77d728a5381143a181c64b7d2155de748af113a",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "706b9231_b767f04e",
+        "filename": "re2/nfa.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2015-04-23T16:27:27Z",
+      "side": 1,
+      "message": "This (combined with nset) is another work queue. Replace both with \u0027SparseSet\u003cint\u003e reachable\u0027, and declare it outside the while loop and reset it on each iteration. (Pretty much every possible computation on programs ends up using sparse arrays or sparse sets.)",
+      "revId": "e77d728a5381143a181c64b7d2155de748af113a",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
