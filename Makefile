@@ -255,6 +255,8 @@ install: obj/libre2.a obj/so/libre2.so
 testinstall:
 	@mkdir -p obj
 	cp testinstall.cc obj
+	(cd obj && $(CXX) -I$(DESTDIR)$(includedir) -L$(DESTDIR)$(libdir) testinstall.cc -lre2 -pthread -static -o testinstall)
+	obj/testinstall
 	(cd obj && $(CXX) -I$(DESTDIR)$(includedir) -L$(DESTDIR)$(libdir) testinstall.cc -lre2 -pthread -o testinstall)
 	LD_LIBRARY_PATH=$(DESTDIR)$(libdir) obj/testinstall
 
