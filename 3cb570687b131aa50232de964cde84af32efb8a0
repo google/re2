@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed5b293d_515b3f0e",
+        "filename": "util/util.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2015-05-08T18:54:10Z",
+      "side": 1,
+      "message": "This was copied from https://chromium.googlesource.com/chromium/src/+/64c0c26f95206174372236faf5992b5fe5921e71/base/compiler_specific.h#93",
+      "revId": "3cb570687b131aa50232de964cde84af32efb8a0",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
