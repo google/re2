@@ -9,14 +9,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include <stddef.h>         // For size_t
+#include <stddef.h>     // For size_t
 #include <assert.h>
 #include <stdarg.h>
 #include <time.h>
-#include <ctype.h>	// For isdigit, isalpha.
+#include <ctype.h>      // For isdigit, isalpha
 
 #if !defined(WIN32)
-#include <sys/time.h>  // For gettimeofday
+#include <sys/time.h>   // For gettimeofday
 #endif
 
 // C++
@@ -92,15 +92,13 @@ typedef unsigned long ulong;
 typedef unsigned int uint;
 typedef unsigned short ushort;
 
-// Annotate a variable indicating it's ok if the variable is not used.
-// (Typically used to silence a compiler warning when the assignment
-// is important for some other reason.)
-// Use like:
-//   int x ALLOW_UNUSED = ...;
+// Prevent the compiler from complaining about or optimizing away variables
+// that appear unused.
+#undef ATTRIBUTE_UNUSED
 #if defined(__GNUC__)
-#define ALLOW_UNUSED __attribute__((unused))
+#define ATTRIBUTE_UNUSED __attribute__ ((unused))
 #else
-#define ALLOW_UNUSED
+#define ATTRIBUTE_UNUSED
 #endif
 
 // COMPILE_ASSERT causes a compile error about msg if expr is not true.
@@ -109,7 +107,7 @@ typedef unsigned short ushort;
 #else
 template<bool> struct CompileAssert {};
 #define COMPILE_ASSERT(expr, msg) \
-  typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1] ALLOW_UNUSED
+  typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1] ATTRIBUTE_UNUSED
 #endif
 
 // DISALLOW_COPY_AND_ASSIGN disallows the copy and operator= functions.
