@@ -815,7 +815,8 @@ Frag Compiler::PostVisit(Regexp* re, Frag, Frag, Frag* child_frags,
         // If this range contains all of A-Za-z or none of it,
         // the fold flag is unnecessary; don't bother.
         bool fold = foldascii;
-        if ((i->lo <= 'A' && 'z' <= i->hi) || i->hi < 'A' || 'z' < i->lo)
+        if ((i->lo <= 'A' && 'z' <= i->hi) || i->hi < 'A' || 'z' < i->lo ||
+            ('Z' < i->lo && i->hi < 'a'))
           fold = false;
 
         AddRuneRange(i->lo, i->hi, fold);

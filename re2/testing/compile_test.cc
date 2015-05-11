@@ -99,6 +99,10 @@ static Test tests[] = {
   { "[Aa]",
     "1. byte/i [61-61] -> 2\n"
     "2. match! 0\n" },
+  // Issue 20992936
+  { "[[-`]",
+    "1. byte [5b-60] -> 2\n"
+    "2. match! 0\n" },
 };
 
 TEST(TestRegexpCompileToProg, Simple) {
