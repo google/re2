@@ -1142,7 +1142,7 @@ bool RE2::Arg::parse_uint_radix(const char* str,
   return true;
 }
 
-#ifdef RE2_HAVE_LONGLONG
+#if RE2_HAVE_LONGLONG
 bool RE2::Arg::parse_longlong_radix(const char* str,
                                    int n,
                                    void* dest,
