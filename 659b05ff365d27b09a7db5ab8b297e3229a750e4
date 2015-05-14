@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d9a7579_d8fe6530",
+        "filename": "re2.pc",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-05-14T07:16:32Z",
+      "side": 1,
+      "message": "Please remove \"/re2\".",
+      "range": {
+        "startLine": 9,
+        "startChar": 23,
+        "endLine": 9,
+        "endChar": 27
+      },
+      "revId": "659b05ff365d27b09a7db5ab8b297e3229a750e4",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dbd79c9_f686dead",
+        "filename": "re2.pc",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-05-14T07:16:32Z",
+      "side": 1,
+      "message": "Please add \"-pthread\".",
+      "revId": "659b05ff365d27b09a7db5ab8b297e3229a750e4",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
