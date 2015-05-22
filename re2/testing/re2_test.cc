@@ -1511,4 +1511,15 @@ TEST(RE2, Bug18523943) {
   CHECK(!RE2::PartialMatch((const char*)a, re, &s1));
 }
 
+TEST(RE2, Bug21371806) {
+  // Bug in parser accepting Unicode groups in Latin-1 mode,
+  // causing compiler to fail in DCHECK in prog.cc.
+
+  RE2::Options opt;
+  opt.set_encoding(RE2::Options::EncodingLatin1);
+
+  RE2 re("g\\p{Zl}]", opt);
+  CHECK(re.ok());
+}
+
 }  // namespace re2
