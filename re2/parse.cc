@@ -216,6 +216,7 @@ bool Regexp::ParseState::PushRegexp(Regexp* re) {
   // analysis does better with fewer character classes.
   // Similarly, [Aa] can be rewritten as a literal A with ASCII case folding.
   if (re->op_ == kRegexpCharClass) {
+    re->ccb_->RemoveAbove(rune_max_);
     if (re->ccb_->size() == 1) {
       Rune r = re->ccb_->begin()->lo;
       re->Decref();
@@ -378,7 +379,6 @@ bool Regexp::ParseState::PushLiteral(Rune r) {
       }
       r = CycleFoldRune(r);
     } while (r != r1);
-    re->ccb_->RemoveAbove(rune_max_);
     return PushRegexp(re);
   }
 
@@ -1832,7 +1832,6 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
 
   if (negated)
     re->ccb_->Negate();
-  re->ccb_->RemoveAbove(rune_max_);
 
   *out_re = re;
   return true;
