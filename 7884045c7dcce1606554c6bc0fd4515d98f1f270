@@ -1,0 +1,6 @@
+Code-Review+2: Russ Cox <rsc@swtch.com>
+Submitted-by: Paul Wankadia <junyer@google.com>
+Submitted-at: Fri, 29 May 2015 02:13:40 +0000
+Reviewed-on: https://code-review.googlesource.com/2622
+Project: re2
+Branch: refs/heads/master
