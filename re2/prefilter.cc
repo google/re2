@@ -15,6 +15,7 @@ static const int Trace = false;
 typedef set<string>::iterator SSIter;
 typedef set<string>::const_iterator ConstSSIter;
 
+GLOBAL_MUTEX(alloc_id_mutex);
 static int alloc_id = 100000;  // Used for debugging.
 // Initializes a Prefilter, allocating subs_ as necessary.
 Prefilter::Prefilter(Op op) {
@@ -23,7 +24,9 @@ Prefilter::Prefilter(Op op) {
   if (op_ == AND || op_ == OR)
     subs_ = new vector<Prefilter*>;
 
+  GLOBAL_MUTEX_LOCK(alloc_id_mutex);
   alloc_id_ = alloc_id++;
+  GLOBAL_MUTEX_UNLOCK(alloc_id_mutex);
   VLOG(10) << "alloc_id: " << alloc_id_;
 }
 
