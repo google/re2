@@ -39,8 +39,10 @@ SONAME=0
 
 ifeq ($(shell uname),Darwin)
 MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib $(LDFLAGS) -exported_symbols_list libre2.symbols.darwin
+else ifeq ($(shell uname),SunOS)
+MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.so.$(SONAME),-M,libre2.symbols $(LDFLAGS)
 else
-MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.so.$(SONAME),--version-script=libre2.symbols $(LDFLAGS)
+MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.so.$(SONAME),--version-script,libre2.symbols $(LDFLAGS)
 endif
 
 INSTALL_HFILES=\
