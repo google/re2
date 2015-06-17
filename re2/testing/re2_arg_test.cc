@@ -86,22 +86,22 @@ const SuccessTable kSuccessTable[] = {
 
 const int kNumStrings = arraysize(kSuccessTable);
 
-// It's ugly to use a macro, but we apparently can't use the ASSERT_TRUE_M
+// It's ugly to use a macro, but we apparently can't use the EXPECT_EQ
 // macro outside of a TEST block and this seems to be the only way to
 // avoid code duplication.  I can also pull off a couple nice tricks
 // using concatenation for the type I'm checking against.
 #define PARSE_FOR_TYPE(type, column) {                                   \
   type r;                                                                \
-  for ( int i = 0; i < kNumStrings; ++i ) {                              \
+  for (int i = 0; i < kNumStrings; ++i) {                                \
     RE2::Arg arg(&r);                                                    \
     const char* const p = kSuccessTable[i].value_string;                 \
     bool retval = arg.Parse(p, strlen(p));                               \
     bool success = kSuccessTable[i].success[column];                     \
-    ASSERT_TRUE_M(retval == success,                                     \
-      StringPrintf("Parsing '%s' for type " #type " should return %d",   \
-                   p, success).c_str());                                 \
-    if ( success ) {                                                     \
-      ASSERT_EQUALS(r, (type)kSuccessTable[i].value);                          \
+    EXPECT_EQ(retval, success)                                           \
+        << "Parsing '" << p << "' for type " #type " should return "     \
+        << success;                                                      \
+    if (success) {                                                       \
+      EXPECT_EQ(r, (type)kSuccessTable[i].value);                        \
     }                                                                    \
   }                                                                      \
 }
