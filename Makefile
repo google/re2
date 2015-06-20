@@ -11,7 +11,7 @@ all: obj/libre2.a obj/so/libre2.so
 
 CXX?=g++
 CXXFLAGS?=-Wall -O3 -g -pthread # can override
-RE2_CXXFLAGS?=-Wsign-compare -c -I. $(CCPCRE)  # required
+RE2_CXXFLAGS?=-Wsign-compare -c -I. -DHAVE_PTHREAD=1 -DHAVE_RWLOCK=1 $(CCPCRE)  # required
 LDFLAGS?=-pthread
 AR?=ar
 ARFLAGS?=rsc

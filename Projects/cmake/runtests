@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+success=true
+for i in `ls -1 build/Release`
+do
+	if [ -x "build/Release/$i" ]; then
+		printf "%-40s" $i
+		if sh -c "build/Release/$i >$i.log 2>&1" 2>/dev/null
+		then
+			echo PASS
+		else
+			echo FAIL';' output in $i.log
+			success=false
+		fi
+	fi
+done
+
+if $success; then
+	echo 'ALL TESTS PASSED.'
+	exit 0
+fi
+echo 'TESTS FAILED.'
+exit 1

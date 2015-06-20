@@ -69,11 +69,16 @@ using std::unordered_set;
 #define strtof strtod /* not really correct but best we can do */
 #define strtoll _strtoi64
 #define strtoull _strtoui64
-#define vsnprintf vsnprintf_s
 
 #pragma warning(disable: 4018) // signed/unsigned mismatch
 #pragma warning(disable: 4244) // possible data loss in int conversion
 #pragma warning(disable: 4800) // conversion from int to bool
+
+#else // Non-Win32
+# include <pthread.h>
+
+#define vsnprintf_s(_dest, _destLen, _dummy, _format, _src) vsnprintf((_dest), _destLen, (_format), (_src))
+#define sprintf_s(_dest, _dummy, _format, _arg) sprintf((_dest), (_format), (_arg))
 
 #endif
 

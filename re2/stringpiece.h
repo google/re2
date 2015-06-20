@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <iosfwd>
 #include <string>
+#include <algorithm>
 
 namespace re2 {
 
@@ -146,7 +147,7 @@ class StringPiece {
   int rfind(char c, size_type pos = npos) const;
 
   StringPiece substr(size_type pos, size_type n = npos) const;
-  
+
   static bool _equal(const StringPiece&, const StringPiece&);
 };
 

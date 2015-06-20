@@ -6,7 +6,15 @@
 // TODO: Test extractions for PartialMatch/Consume
 
 #include <sys/types.h>
-#include <sys/mman.h>
+#ifdef WIN32
+#include <Windows.h>
+#include <iostream>
+#include <string>
+# include <stdio.h>
+# define snprintf _snprintf_s
+#else
+# include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 #include <errno.h>
 #include <vector>
@@ -702,6 +710,42 @@ TEST(RE2, FullMatchTypedNullArg) {
 
 // Check that numeric parsing code does not read past the end of
 // the number being parsed.
+#ifdef WIN32
+TEST(RE2, NULTerminated) {
+  char *v;
+  int x;
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+  long pagesize = si.dwPageSize;
+  char* buffer = new char[pagesize];
+  memset(buffer, 0x0, pagesize);
+
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
+  HANDLE mmap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+                                  0, 2*pagesize, NULL);
+  if (NULL == mmap)
+  {
+    wchar_t buf[256];
+    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf, 256, NULL);
+    std::wstring foo = buf;
+  }
+  DWORD numBytesRead = 0;
+  ReadFile(mmap, buffer, pagesize, &numBytesRead, NULL);
+  v = buffer;
+  CHECK(mmap != NULL);
+  LOG(INFO) << "Memory at " << (void*)buffer;
+  CloseHandle(mmap);
+  v[pagesize - 1] = '1';
+
+  x = 0;
+  CHECK(RE2::FullMatch(StringPiece(v + pagesize - 1, 1), "(.*)", &x));
+  CHECK_EQ(x, 1);
+}
+#else
 TEST(RE2, NULTerminated) {
   char *v;
   int x;
@@ -721,7 +765,7 @@ TEST(RE2, NULTerminated) {
   CHECK(RE2::FullMatch(StringPiece(v + pagesize - 1, 1), "(.*)", &x));
   CHECK_EQ(x, 1);
 }
-
+#endif // WIN32
 TEST(RE2, FullMatchTypeTests) {
   // Type tests
   string zeros(1000, '0');

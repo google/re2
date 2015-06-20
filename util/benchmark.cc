@@ -24,12 +24,36 @@ void Benchmark::Register() {
 	nbenchmarks++;
 }
 
+#ifdef WIN32
+static int64 nsec()
+{
+    // The unix code counts the number of uSec since epoch: 1970-01-01.
+    // It then converts to nSec.
+
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+
+    // current is the number of 100nSec increments since 1601-01-01.
+    ULARGE_INTEGER current;
+    current.LowPart = ft.dwLowDateTime;
+    current.HighPart = ft.dwHighDateTime;
+
+    // The delta between the two epochs is 116444736000000000ULL in (nSec*100).
+    ULARGE_INTEGER epochDeltaUSec;
+    epochDeltaUSec.QuadPart = 116444736000000000ULL;
+
+    // Subtract the epochDelta (nSec*100) from current (nSec*100)
+    // and then divide that by 100 to get nSec.
+    return (current.QuadPart - epochDeltaUSec.QuadPart) / 100ULL;
+}
+#else
 static int64 nsec() {
 	struct timeval tv;
 	if(gettimeofday(&tv, 0) < 0)
 		return -1;
 	return (int64)tv.tv_sec*1000*1000*1000 + tv.tv_usec*1000;
 }
+#endif
 
 static int64 bytes;
 static int64 ns;
@@ -82,7 +106,7 @@ static void runN(Benchmark *b, int n, int siz) {
 
 static int round(int n) {
 	int base = 1;
-	
+
 	while(base*10 < n)
 		base *= 10;
 	if(n < 2*base)
@@ -98,7 +122,7 @@ void RunBench(Benchmark* b, int nthread, int siz) {
 	// TODO(rsc): Threaded benchmarks.
 	if(nthread != 1)
 		return;
-	
+
 	// run once in case it's expensive
 	n = 1;
 	runN(b, n, siz);
@@ -108,12 +132,12 @@ void RunBench(Benchmark* b, int nthread, int siz) {
 			n = 1e9;
 		else
 			n = 1e9 / (ns/n);
-		
+
 		n = max(last+1, min(n+n/2, 100*last));
 		n = round(n);
 		runN(b, n, siz);
 	}
-	
+
 	char mb[100];
 	char suf[100];
 	mb[0] = '\0';

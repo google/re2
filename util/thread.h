@@ -5,7 +5,11 @@
 #ifndef RE2_UTIL_THREAD_H__
 #define RE2_UTIL_THREAD_H__
 
-#include <pthread.h>
+#ifdef WIN32
+# include <windows.h>
+#else
+# include <pthread.h>
+#endif
 
 class Thread {
  public:
@@ -15,9 +19,13 @@ class Thread {
   void Join();
   void SetJoinable(bool);
   virtual void Run() = 0;
- 
+
  private:
+#ifdef WIN32
+     HANDLE pid_;
+#else
   pthread_t pid_;
+#endif
   bool running_;
   bool joinable_;
 };

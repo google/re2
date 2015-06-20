@@ -38,7 +38,11 @@ int CEscapeString(const char* src, int src_len, char* dest,
         if (c < ' ' || c > '~') {
           if (dest_len - used < 5)   // space for four-character escape + \0
             return -1;
-          sprintf(dest + used, "\\%03o", c);
+#ifdef WIN32
+          sprintf_s(dest + used, dest_len - used, "\\%03o", c);
+#else
+           sprintf(dest + used, "\\%03o", c);
+#endif
           used += 4;
         } else {
           dest[used++] = c; break;
