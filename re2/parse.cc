@@ -215,7 +215,7 @@ bool Regexp::ParseState::PushRegexp(Regexp* re) {
   // single characters (e.g., [.] instead of \.), and some
   // analysis does better with fewer character classes.
   // Similarly, [Aa] can be rewritten as a literal A with ASCII case folding.
-  if (re->op_ == kRegexpCharClass) {
+  if (re->op_ == kRegexpCharClass && re->ccb_ != NULL) {
     re->ccb_->RemoveAbove(rune_max_);
     if (re->ccb_->size() == 1) {
       Rune r = re->ccb_->begin()->lo;
@@ -596,46 +596,34 @@ bool Regexp::ParseState::DoVerticalBar() {
   Regexp* r1;
   Regexp* r2;
   if ((r1 = stacktop_) != NULL &&
-      (r2 = stacktop_->down_) != NULL &&
+      (r2 = r1->down_) != NULL &&
       r2->op() == kVerticalBar) {
-    // If above and below vertical bar are literal or char class,
-    // can merge into a single char class.
     Regexp* r3;
-    if ((r1->op() == kRegexpLiteral ||
-         r1->op() == kRegexpCharClass ||
-         r1->op() == kRegexpAnyChar) &&
-        (r3 = r2->down_) != NULL) {
-      Rune rune;
-      switch (r3->op()) {
-        case kRegexpLiteral:  // convert to char class
-          rune = r3->rune_;
-          r3->op_ = kRegexpCharClass;
-          r3->cc_ = NULL;
-          r3->ccb_ = new CharClassBuilder;
-          AddLiteral(r3->ccb_, rune, r3->parse_flags_ & Regexp::FoldCase);
-          // fall through
-        case kRegexpCharClass:
-          if (r1->op() == kRegexpLiteral)
-            AddLiteral(r3->ccb_, r1->rune_,
-                       r1->parse_flags_ & Regexp::FoldCase);
-          else if (r1->op() == kRegexpCharClass)
-            r3->ccb_->AddCharClass(r1->ccb_);
-          if (r1->op() == kRegexpAnyChar || r3->ccb_->full()) {
-            delete r3->ccb_;
-            r3->ccb_ = NULL;
-            r3->op_ = kRegexpAnyChar;
-          }
-          // fall through
-        case kRegexpAnyChar:
-          // pop r1
-          stacktop_ = r2;
-          r1->Decref();
-          return true;
-        default:
-          break;
+    if ((r3 = r2->down_) != NULL &&
+        (r1->op() == kRegexpAnyChar || r3->op() == kRegexpAnyChar)) {
+      // AnyChar is above or below the vertical bar. Let it subsume
+      // the other when the other is Literal, CharClass or AnyChar.
+      if (r3->op() == kRegexpAnyChar &&
+          (r1->op() == kRegexpLiteral ||
+           r1->op() == kRegexpCharClass ||
+           r1->op() == kRegexpAnyChar)) {
+        // Discard r1.
+        stacktop_ = r2;
+        r1->Decref();
+        return true;
+      }
+      if (r1->op() == kRegexpAnyChar &&
+          (r3->op() == kRegexpLiteral ||
+           r3->op() == kRegexpCharClass ||
+           r3->op() == kRegexpAnyChar)) {
+        // Rearrange the stack and discard r3.
+        r1->down_ = r3->down_;
+        r2->down_ = r1;
+        stacktop_ = r2;
+        r3->Decref();
+        return true;
       }
     }
-
     // Swap r1 below vertical bar (r2).
     r1->down_ = r2->down_;
     r2->down_ = r1;
