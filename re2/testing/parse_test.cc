@@ -118,8 +118,15 @@ static Test tests[] = {
   { "(?:a)", "lit{a}" },
   { "(?:ab)(?:cd)", "str{abcd}" },
   { "(?:a|b)|(?:c|d)", "cc{0x61-0x64}" },
+  { "a|c", "cc{0x61 0x63}" },
+  { "a|[cd]", "cc{0x61 0x63-0x64}" },
   { "a|.", "dot{}" },
-  { ".|a", "dot{}" },
+  { "[ab]|c", "cc{0x61-0x63}" },
+  { "[ab]|[cd]", "cc{0x61-0x64}" },
+  { "[ab]|.", "dot{}" },
+  { ".|c", "dot{}" },
+  { ".|[cd]", "dot{}" },
+  { ".|.", "dot{}" },
 
   // Test Perl quoted literals
   { "\\Q+|*?{[\\E", "str{+|*?{[}" },
@@ -299,6 +306,14 @@ Test prefix_tests[] = {
     "cat{rep{2,2 lit{x}}alt{emp{}cc{0x30-0x39}}}" },
   { "x{2}y|x{2}[0-9]y",
     "cat{rep{2,2 lit{x}}alt{lit{y}cat{cc{0x30-0x39}lit{y}}}}" },
+  { "n|r|rs",
+    "alt{lit{n}cat{lit{r}alt{emp{}lit{s}}}}" },
+  { "n|rs|r",
+    "alt{lit{n}cat{lit{r}alt{lit{s}emp{}}}}" },
+  { "r|rs|n",
+    "alt{cat{lit{r}alt{emp{}lit{s}}}lit{n}}" },
+  { "rs|r|n",
+    "alt{cat{lit{r}alt{lit{s}emp{}}}lit{n}}" },
 };
 
 // Test that prefix factoring works.
