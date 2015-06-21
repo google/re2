@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <unistd.h>  /* for sysconf */
 #include <vector>
 #include "util/test.h"
 #include "re2/re2.h"
