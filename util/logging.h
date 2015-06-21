@@ -7,11 +7,7 @@
 #ifndef RE2_UTIL_LOGGING_H__
 #define RE2_UTIL_LOGGING_H__
 
-#ifdef WIN32
-#include <io.h>      /* for _write */
-#else
-#include <unistd.h>  /* for write */
-#endif
+#include <stdio.h>  /* for fwrite */
 #include <sstream>
 
 // Debug-only checking.
@@ -58,12 +54,8 @@ class LogMessage {
   void Flush() {
     stream() << "\n";
     string s = str_.str();
-    int n = (int)s.size();  // shut up msvc
-#ifdef WIN32
-    if (_write(2, s.data(), n) < 0) {}  // shut up msvc
-#else
-    if (write(2, s.data(), n) < 0) {}  // shut up gcc
-#endif
+    size_t n = s.size();
+    if (fwrite(s.data(), 1, n, stderr) < n) {}  // shut up gcc
     flushed_ = true;
   }
   ~LogMessage() {
