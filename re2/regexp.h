@@ -211,7 +211,8 @@ class RegexpStatus {
   DISALLOW_COPY_AND_ASSIGN(RegexpStatus);
 };
 
-// Walker to implement Simplify.
+// Walkers to implement Simplify.
+class CoalesceWalker;
 class SimplifyWalker;
 
 // Compiled form; see prog.h
@@ -353,6 +354,7 @@ class Regexp {
   // removed.  The result will capture exactly the same
   // subexpressions the original did, unless formatted with ToString.
   Regexp* Simplify();
+  friend class CoalesceWalker;
   friend class SimplifyWalker;
 
   // Parses the regexp src and then simplifies it and sets *dst to the
