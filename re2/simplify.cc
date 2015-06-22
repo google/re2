@@ -97,6 +97,36 @@ bool Regexp::ComputeSimple() {
 }
 
 // Walker subclass used by Simplify.
+// Coalesces runs of star/plus/quest/repeat of the same literal along with any
+// occurrences of that literal into repeats of that literal. It also works for
+// char classes, any char and any byte.
+// PostVisit creates the coalesced result, which should then be simplified.
+class CoalesceWalker : public Regexp::Walker<Regexp*> {
+ public:
+  CoalesceWalker() {}
+  virtual Regexp* PostVisit(Regexp* re, Regexp* parent_arg, Regexp* pre_arg,
+                            Regexp** child_args, int nchild_args);
+  virtual Regexp* Copy(Regexp* re);
+  virtual Regexp* ShortVisit(Regexp* re, Regexp* parent_arg);
+
+ private:
+  // These functions are declared inside CoalesceWalker so that
+  // they can edit the private fields of the Regexps they construct.
+
+  // Returns true if r1 and r2 can be coalesced. In particular, ensures that
+  // the parse flags are consistent. (They will not be checked again later.)
+  static bool CanCoalesce(Regexp* r1, Regexp* r2);
+
+  // Coalesces *r1ptr and *r2ptr. In most cases, the array elements afterwards
+  // will be empty match and the coalesced op. In other cases, where part of a
+  // literal string was removed to be coalesced, the array elements afterwards
+  // will be the coalesced op and the remainder of the literal string.
+  static void DoCoalesce(Regexp** r1ptr, Regexp** r2ptr);
+
+  DISALLOW_COPY_AND_ASSIGN(CoalesceWalker);
+};
+
+// Walker subclass used by Simplify.
 // The simplify walk is purely post-recursive: given the simplified children,
 // PostVisit creates the simplified result.
 // The child_args are simplified Regexp*s.
@@ -104,9 +134,7 @@ class SimplifyWalker : public Regexp::Walker<Regexp*> {
  public:
   SimplifyWalker() {}
   virtual Regexp* PreVisit(Regexp* re, Regexp* parent_arg, bool* stop);
-  virtual Regexp* PostVisit(Regexp* re,
-                            Regexp* parent_arg,
-                            Regexp* pre_arg,
+  virtual Regexp* PostVisit(Regexp* re, Regexp* parent_arg, Regexp* pre_arg,
                             Regexp** child_args, int nchild_args);
   virtual Regexp* Copy(Regexp* re);
   virtual Regexp* ShortVisit(Regexp* re, Regexp* parent_arg);
@@ -143,13 +171,261 @@ class SimplifyWalker : public Regexp::Walker<Regexp*> {
 // Caller must Decref() return value when done with it.
 
 Regexp* Regexp::Simplify() {
-  if (simple_)
-    return Incref();
-  SimplifyWalker w;
-  return w.Walk(this, NULL);
+  CoalesceWalker cw;
+  Regexp* cre = cw.Walk(this, NULL);
+  if (cre == NULL)
+    return cre;
+  SimplifyWalker sw;
+  Regexp* sre = sw.Walk(cre, NULL);
+  cre->Decref();
+  return sre;
 }
 
 #define Simplify DontCallSimplify  // Avoid accidental recursion
+
+// Utility function for PostVisit implementations that compares re->sub() with
+// child_args to determine whether any child_args changed. In the common case,
+// where nothing changed, calls Decref() for all child_args and returns false,
+// so PostVisit must return re->Incref(). Otherwise, returns true.
+static bool ChildArgsChanged(Regexp* re, Regexp** child_args) {
+  bool changed = false;
+  for (int i = 0; i < re->nsub(); i++) {
+    Regexp* sub = re->sub()[i];
+    Regexp* newsub = child_args[i];
+    if (newsub != sub) {
+      changed = true;
+      break;
+    }
+  }
+  if (!changed) {
+    for (int i = 0; i < re->nsub(); i++) {
+      Regexp* newsub = child_args[i];
+      newsub->Decref();
+    }
+  }
+  return changed;
+}
+
+Regexp* CoalesceWalker::Copy(Regexp* re) {
+  return re->Incref();
+}
+
+Regexp* CoalesceWalker::ShortVisit(Regexp* re, Regexp* parent_arg) {
+  // This should never be called, since we use Walk and not
+  // WalkExponential.
+  LOG(DFATAL) << "CoalesceWalker::ShortVisit called";
+  return re->Incref();
+}
+
+Regexp* CoalesceWalker::PostVisit(Regexp* re,
+                                  Regexp* parent_arg,
+                                  Regexp* pre_arg,
+                                  Regexp** child_args,
+                                  int nchild_args) {
+  if (re->nsub() == 0)
+    return re->Incref();
+
+  if (re->op() != kRegexpConcat) {
+    if (!ChildArgsChanged(re, child_args))
+      return re->Incref();
+
+    // Something changed. Build a new op.
+    Regexp* nre = new Regexp(re->op(), re->parse_flags());
+    nre->AllocSub(re->nsub());
+    Regexp** nre_subs = nre->sub();
+    for (int i = 0; i < re->nsub(); i++)
+      nre_subs[i] = child_args[i];
+    return nre;
+  }
+
+  bool can_coalesce = false;
+  for (int i = 0; i < re->nsub(); i++) {
+    if (i+1 < re->nsub() &&
+        CanCoalesce(child_args[i], child_args[i+1])) {
+      can_coalesce = true;
+      break;
+    }
+  }
+  if (!can_coalesce) {
+    if (!ChildArgsChanged(re, child_args))
+      return re->Incref();
+
+    // Something changed. Build a new op.
+    Regexp* nre = new Regexp(re->op(), re->parse_flags());
+    nre->AllocSub(re->nsub());
+    Regexp** nre_subs = nre->sub();
+    for (int i = 0; i < re->nsub(); i++)
+      nre_subs[i] = child_args[i];
+    return nre;
+  }
+
+  for (int i = 0; i < re->nsub(); i++) {
+    if (i+1 < re->nsub() &&
+        CanCoalesce(child_args[i], child_args[i+1]))
+      DoCoalesce(&child_args[i], &child_args[i+1]);
+  }
+  // Determine how many empty matches were left by DoCoalesce.
+  int n = 0;
+  for (int i = n; i < re->nsub(); i++) {
+    if (child_args[i]->op() == kRegexpEmptyMatch)
+      n++;
+  }
+  // Build a new op.
+  Regexp* nre = new Regexp(re->op(), re->parse_flags());
+  nre->AllocSub(re->nsub() - n);
+  Regexp** nre_subs = nre->sub();
+  for (int i = 0, j = 0; i < re->nsub(); i++) {
+    if (child_args[i]->op() == kRegexpEmptyMatch) {
+      child_args[i]->Decref();
+      continue;
+    }
+    nre_subs[j] = child_args[i];
+    j++;
+  }
+  return nre;
+}
+
+bool CoalesceWalker::CanCoalesce(Regexp* r1, Regexp* r2) {
+  // r1 must be a star/plus/quest/repeat of a literal, char class, any char or
+  // any byte.
+  if ((r1->op() == kRegexpStar ||
+       r1->op() == kRegexpPlus ||
+       r1->op() == kRegexpQuest ||
+       r1->op() == kRegexpRepeat) &&
+      (r1->sub()[0]->op() == kRegexpLiteral ||
+       r1->sub()[0]->op() == kRegexpCharClass ||
+       r1->sub()[0]->op() == kRegexpAnyChar ||
+       r1->sub()[0]->op() == kRegexpAnyByte)) {
+    // r2 must be a star/plus/quest/repeat of the same literal, char class,
+    // any char or any byte.
+    if ((r2->op() == kRegexpStar ||
+         r2->op() == kRegexpPlus ||
+         r2->op() == kRegexpQuest ||
+         r2->op() == kRegexpRepeat) &&
+        Regexp::Equal(r1->sub()[0], r2->sub()[0]) &&
+        // The parse flags must be consistent.
+        ((r1->parse_flags() & Regexp::NonGreedy) ==
+         (r2->parse_flags() & Regexp::NonGreedy))) {
+      return true;
+    }
+    // ... OR an occurrence of that literal, char class, any char or any byte
+    if (Regexp::Equal(r1->sub()[0], r2)) {
+      return true;
+    }
+    // ... OR a literal string that begins with that literal.
+    if (r1->sub()[0]->op() == kRegexpLiteral &&
+        r2->op() == kRegexpLiteralString &&
+        r2->runes()[0] == r1->sub()[0]->rune() &&
+        // The parse flags must be consistent.
+        ((r1->sub()[0]->parse_flags() & Regexp::FoldCase) ==
+         (r2->parse_flags() & Regexp::FoldCase))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void CoalesceWalker::DoCoalesce(Regexp** r1ptr, Regexp** r2ptr) {
+  Regexp* r1 = *r1ptr;
+  Regexp* r2 = *r2ptr;
+
+  Regexp* nre = Regexp::Repeat(
+      r1->sub()[0]->Incref(), r1->parse_flags(), 0, 0);
+
+  switch (r1->op()) {
+    case kRegexpStar:
+      nre->min_ = 0;
+      nre->max_ = -1;
+      break;
+
+    case kRegexpPlus:
+      nre->min_ = 1;
+      nre->max_ = -1;
+      break;
+
+    case kRegexpQuest:
+      nre->min_ = 0;
+      nre->max_ = 1;
+      break;
+
+    case kRegexpRepeat:
+      nre->min_ = r1->min();
+      nre->max_ = r1->max();
+      break;
+
+    default:
+      LOG(DFATAL) << "DoCoalesce failed: r1->op() is " << r1->op();
+      nre->Decref();
+      return;
+  }
+
+  switch (r2->op()) {
+    case kRegexpStar:
+      nre->max_ = -1;
+      goto LeaveEmpty;
+
+    case kRegexpPlus:
+      nre->min_ += 1;
+      nre->max_ = -1;
+      goto LeaveEmpty;
+
+    case kRegexpQuest:
+      if (nre->max() != -1)
+        nre->max_ += 1;
+      goto LeaveEmpty;
+
+    case kRegexpRepeat:
+      nre->min_ += r2->min();
+      if (r2->max() == -1)
+        nre->max_ = -1;
+      else if (nre->max() != -1)
+        nre->max_ += r2->max();
+      goto LeaveEmpty;
+
+    case kRegexpLiteral:
+    case kRegexpCharClass:
+    case kRegexpAnyChar:
+    case kRegexpAnyByte:
+      nre->min_ += 1;
+      if (nre->max() != -1)
+        nre->max_ += 1;
+      goto LeaveEmpty;
+
+    LeaveEmpty:
+      *r1ptr = new Regexp(kRegexpEmptyMatch, Regexp::NoParseFlags);
+      *r2ptr = nre;
+      break;
+
+    case kRegexpLiteralString: {
+      // Determine how much of the literal string is removed.
+      // We know that we have at least one rune. :)
+      int n = 1;
+      for (int i = n; i < r2->nrunes(); i++) {
+        if (r2->runes()[i] == r1->sub()[0]->rune())
+          n++;
+        else
+          break;
+      }
+      nre->min_ += n;
+      if (nre->max() != -1)
+        nre->max_ += n;
+      if (n == r2->nrunes())
+        goto LeaveEmpty;
+      *r1ptr = nre;
+      *r2ptr = Regexp::LiteralString(
+          &r2->runes()[n], r2->nrunes() - n, r2->parse_flags());
+      break;
+    }
+
+    default:
+      LOG(DFATAL) << "DoCoalesce failed: r2->op() is " << r2->op();
+      nre->Decref();
+      return;
+  }
+
+  r1->Decref();
+  r2->Decref();
+}
 
 Regexp* SimplifyWalker::Copy(Regexp* re) {
   return re->Incref();
@@ -196,29 +472,14 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
     case kRegexpConcat:
     case kRegexpAlternate: {
       // These are simple as long as the subpieces are simple.
-      // Two passes to avoid allocation in the common case.
-      bool changed = false;
-      Regexp** subs = re->sub();
-      for (int i = 0; i < re->nsub_; i++) {
-        Regexp* sub = subs[i];
-        Regexp* newsub = child_args[i];
-        if (newsub != sub) {
-          changed = true;
-          break;
-        }
-      }
-      if (!changed) {
-        for (int i = 0; i < re->nsub_; i++) {
-          Regexp* newsub = child_args[i];
-          newsub->Decref();
-        }
+      if (!ChildArgsChanged(re, child_args)) {
         re->simple_ = true;
         return re->Incref();
       }
       Regexp* nre = new Regexp(re->op(), re->parse_flags());
-      nre->AllocSub(re->nsub_);
+      nre->AllocSub(re->nsub());
       Regexp** nre_subs = nre->sub();
-      for (int i = 0; i <re->nsub_; i++)
+      for (int i = 0; i < re->nsub(); i++)
         nre_subs[i] = child_args[i];
       nre->simple_ = true;
       return nre;
