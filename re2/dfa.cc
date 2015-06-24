@@ -228,9 +228,8 @@ class DFA {
   // sets *ismatch to true.
   // L >= mutex_
   void RunWorkqOnByte(Workq* q, Workq* nq,
-                             int c, uint flag, bool* ismatch,
-                             Prog::MatchKind kind,
-                             int new_byte_loop);
+                      int c, uint flag, bool* ismatch,
+                      Prog::MatchKind kind);
 
   // Runs a Workq on a set of empty-string flags, producing a new Workq in nq.
   // L >= mutex_
@@ -908,8 +907,7 @@ void DFA::RunWorkqOnEmptyString(Workq* oldq, Workq* newq, uint flag) {
 // regular expression program has been reached (the regexp has matched).
 void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
                          int c, uint flag, bool* ismatch,
-                         Prog::MatchKind kind,
-                         int new_byte_loop) {
+                         Prog::MatchKind kind) {
   if (DEBUG_MODE)
     mutex_.AssertHeld();
 
@@ -1033,8 +1031,8 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
     swap(q0_, q1_);
   }
   bool ismatch = false;
-  RunWorkqOnByte(q0_, q1_, c, afterflag, &ismatch, kind_, start_unanchored_);
-  
+  RunWorkqOnByte(q0_, q1_, c, afterflag, &ismatch, kind_);
+
   // Most of the time, we build the state from the output of
   // RunWorkqOnByte, so swap q0_ and q1_ here.  However, so that
   // RE2::Set can tell exactly which match instructions
