@@ -25,7 +25,7 @@ void RegisterTest(void (*fn)(void), const char *name) {
 
 namespace re2 {
 int64 VirtualProcessSize() {
-#ifdef WIN32
+#ifdef _WIN32
   return 0;
 #else
   struct rusage ru;

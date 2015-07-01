@@ -53,7 +53,7 @@ using std::tr1::unordered_set;
 #else
 
 #include <unordered_set>
-#if defined(WIN32)
+#if defined(_WIN32)
 using std::tr1::unordered_set;
 #else
 using std::unordered_set;
@@ -61,7 +61,7 @@ using std::unordered_set;
 
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #define snprintf _snprintf_s
 #define sprintf sprintf_s
