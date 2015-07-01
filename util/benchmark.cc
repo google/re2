@@ -122,11 +122,23 @@ void RunBench(Benchmark* b, int nthread, int siz) {
 		snprintf(mb, sizeof mb, "\t%7.2f MB/s", ((double)bytes/1e6)/((double)ns/1e9));
 	if(b->fnr || b->lo != b->hi) {
 		if(siz >= (1<<20))
+#if defined(_WIN32)
+			_snprintf_s(suf, "/%dM", siz/(1<<20));
+#else
 			snprintf(suf, sizeof suf, "/%dM", siz/(1<<20));
+#endif
 		else if(siz >= (1<<10))
+#if defined(_WIN32)
+			_snprintf_s(suf, "/%dK", siz/(1<<10));
+#else
 			snprintf(suf, sizeof suf, "/%dK", siz/(1<<10));
+#endif
 		else
+#if defined(_WIN32)
+			_snprintf_s(suf, "/%d", siz);
+#else
 			snprintf(suf, sizeof suf, "/%d", siz);
+#endif
 	}
 	printf("%s%s\t%8lld\t%10lld ns/op%s\n", b->name, suf, (long long)n, (long long)ns/n, mb);
 	fflush(stdout);
