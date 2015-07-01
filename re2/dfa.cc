@@ -864,8 +864,10 @@ void DFA::AddToQueue(Workq* q, int id, uint flag) {
         break;
 
       case kInstEmptyWidth:
-        if ((ip->empty() & flag) == ip->empty())
-          stk[nstk++] = ip->out();
+        // Continue on if we have all the right flag bits.
+        if (ip->empty() & ~flag)
+          break;
+        stk[nstk++] = ip->out();
         break;
     }
   }
