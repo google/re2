@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "137d05ed_0890a7a0",
+        "filename": "re2/prefilter_tree.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 5945
+      },
+      "writtenOn": "2015-07-01T07:32:23Z",
+      "side": 1,
+      "message": "Ah, somehow, I missed that instance of WIN32 (despite grepping for it?). Shall I upload a change to revert the _snprintf_s changes, and fix the WIN32 in util/util.h?",
+      "parentUuid": "d3d9ad70_6ead0f74",
+      "revId": "1288586e7b8640be6fbb22c70ecb283ee9137e9b",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "137d05ed_0806e790",
         "filename": "util/benchmark.cc",
         "patchSetId": 1
