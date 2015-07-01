@@ -138,7 +138,11 @@ Prefilter* PrefilterTree::CanonicalNode(Prefilter* node) {
 
 static string Itoa(int n) {
   char buf[100];
+#if defined(_WIN32)
+  _snprintf_s(buf, "%d", n);
+#else
   snprintf(buf, sizeof buf, "%d", n);
+#endif
   return string(buf);
 }
 
