@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "d3d9ad70_0e7c4b2a",
+        "filename": "re2/prefilter_tree.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-07-01T10:54:56Z",
+      "side": 1,
+      "message": "These are all of the occurrences of WIN32 that you presumably ought to change:\n\n$ grep -r \u0027\\\u003cWIN32\\\u003e\u0027 \nutil/test.cc:#ifndef WIN32\nutil/test.cc:#ifdef WIN32\nutil/mutex.h:#elif defined(WIN32)\nutil/mutex.h:#elif defined(WIN32)\nutil/valgrind.cc:#ifndef WIN32\nutil/util.h:#if !defined(WIN32)\nutil/util.h:#if defined(WIN32)\nutil/util.h:#ifdef WIN32\n$ \n\nWith any luck, that will suit the Chromium folks as well!",
+      "parentUuid": "137d05ed_0890a7a0",
+      "revId": "1288586e7b8640be6fbb22c70ecb283ee9137e9b",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "137d05ed_0806e790",
         "filename": "util/benchmark.cc",
         "patchSetId": 1
