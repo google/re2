@@ -50,7 +50,36 @@ sub ComputeClass($) {
       $start = -1;
     }
   }
+  @ranges = AlterClass($class, @ranges);
   return @ranges;
+}
+
+sub AlterClass($@) {
+  my ($class, @ranges) = @_;
+  if ($class eq "\\s") {
+    # Perl 5.18 added \cK, the vertical tab, to the group matched by \s
+    # re2 isn't following suit
+    return StripChar(11, @ranges);
+  }
+  return @ranges;
+}
+
+sub StripChar($@) {
+  my ($char, @ranges) = @_;
+  my @output;
+  for (my $i = 0; $i < @ranges; $i++) {
+    my @range = @{$ranges[$i]};
+    if ($range[0] > $char || $range[1] < $char) {
+      push @output, [$range[0], $range[1]];
+    }
+    if ($range[0] < $char && $range[1] >= $char) {
+      push @output, [$range[0], $char - 1];
+    }
+    if ($range[0] <= $char && $range[1] > $char) {
+      push @output, [$char + 1, $range[1]];
+    }
+  }
+  return @output
 }
 
 sub PrintClass($$@) {
