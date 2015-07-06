@@ -204,6 +204,8 @@ re2/perl_groups.cc: re2/make_perl_groups.pl
 
 re2/unicode_%.cc: re2/make_unicode_%.py
 	python $< > $@
+
+.PRECIOUS: re2/perl_groups.cc re2/unicode_casefold.cc re2/unicode_groups.cc
 endif
 
 distclean: clean
