@@ -25,10 +25,17 @@ void Benchmark::Register() {
 }
 
 static int64 nsec() {
+#if defined(__APPLE__) || defined(WIN32)
 	struct timeval tv;
 	if(gettimeofday(&tv, 0) < 0)
 		return -1;
 	return (int64)tv.tv_sec*1000*1000*1000 + tv.tv_usec*1000;
+#else
+	struct timespec tp;
+	if(clock_gettime(CLOCK_REALTIME, &tp) != 0)
+		return -1;
+	return (int64)tp.tv_sec*1000*1000*1000 + tp.tv_nsec;
+#endif
 }
 
 static int64 bytes;

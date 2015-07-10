@@ -12,7 +12,7 @@
 #include <stddef.h>     // For size_t
 #include <assert.h>
 #include <stdarg.h>
-#include <time.h>
+#include <time.h>       // For clock_gettime, CLOCK_REALTIME
 #include <ctype.h>      // For isdigit, isalpha
 
 #if !defined(WIN32)
