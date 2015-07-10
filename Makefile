@@ -267,11 +267,19 @@ endif
 	(cd obj && $(CXX) -I$(DESTDIR)$(includedir) -L$(DESTDIR)$(libdir) testinstall.cc -lre2 -pthread -o testinstall)
 	LD_LIBRARY_PATH=$(DESTDIR)$(libdir) obj/testinstall
 
+hardware_model_cmd = \
+	sysctl -n machdep.cpu.brand_string 2>/dev/null || \
+	awk -F '[ :][ :]+' '/^model name/ { print $$2; exit; }' /proc/cpuinfo
+
 benchlog: obj/test/regexp_benchmark
-	(echo '==BENCHMARK==' `hostname` `date`; \
-	  (uname -a; $(CXX) --version; git rev-parse --short HEAD; file obj/test/regexp_benchmark) | sed 's/^/# /'; \
+	@(echo '==BENCHMARK==' `hostname` `date '+%F %T %z'`; \
+	  (echo 'Hardware:' `$(hardware_model_cmd)`; \
+	   echo 'OS:' `uname -a | cut -c -72`; \
+	   echo 'Compiler:' `$(CXX) --version | head -1`; \
+	   echo 'Git: commit' `git rev-parse --short HEAD`; \
+	   echo 'Program:' `file -b $< | cut -c -64`) | sed 's/^/# /'; \
 	  echo; \
-	  ./obj/test/regexp_benchmark 'PCRE|RE2') | tee -a benchlog.$$(hostname | sed 's/\..*//')
+	  $< 'PCRE|RE2') | tee -a benchlog.$$(hostname | sed 's/\..*//')
 
 # Keep gmake from deleting intermediate files it creates.
 # This makes repeated builds faster and preserves debug info on OS X.
