@@ -2,3 +2,4 @@
 *.orig
 core
 obj/
+benchlog.*
