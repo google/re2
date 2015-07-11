@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f823eee9_07fcf667",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2015-07-11T18:41:52Z",
+      "side": 1,
+      "message": "Could you describe the problem with WIN32? And why it needs to be _WIN32?\n\nI see _WIN32 is referenced by http://sourceforge.net/p/predef/wiki/OperatingSystems/. \n\nMaybe put that link in the CL description too?",
+      "revId": "6a497fa5be4dbb63b85c6e0ff404c5713b0be2c3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
