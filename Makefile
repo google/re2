@@ -281,8 +281,9 @@ benchlog: obj/test/regexp_benchmark
 	obj/test/% obj/so/test/% obj/dbg/test/%
 
 log:
-	make clean
-	make CXXFLAGS="$(CXXFLAGS) -DLOGGING=1" obj/test/exhaustive{,1,2,3}_test
+	$(MAKE) clean
+	$(MAKE) CXXFLAGS="$(CXXFLAGS) -DLOGGING=1" \
+		$(filter obj/test/exhaustive%_test,$(BIGTESTS))
 	echo '#' RE2 exhaustive tests built by make log >re2-exhaustive.txt
 	echo '#' $$(date) >>re2-exhaustive.txt
 	obj/test/exhaustive_test |grep -v '^PASS$$' >>re2-exhaustive.txt
@@ -290,7 +291,7 @@ log:
 	obj/test/exhaustive2_test |grep -v '^PASS$$' >>re2-exhaustive.txt
 	obj/test/exhaustive3_test |grep -v '^PASS$$' >>re2-exhaustive.txt
 
-	make CXXFLAGS="$(CXXFLAGS) -DLOGGING=1" obj/test/search_test
+	$(MAKE) CXXFLAGS="$(CXXFLAGS) -DLOGGING=1" obj/test/search_test
 	echo '#' RE2 basic search tests built by make $@ >re2-search.txt
 	echo '#' $$(date) >>re2-search.txt
 	obj/test/search_test |grep -v '^PASS$$' >>re2-search.txt
