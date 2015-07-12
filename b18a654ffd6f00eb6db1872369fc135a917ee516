@@ -52,6 +52,24 @@
       "revId": "b18a654ffd6f00eb6db1872369fc135a917ee516",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58ccfa7c_825f1a3f",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 5995
+      },
+      "writtenOn": "2015-07-12T12:50:11Z",
+      "side": 1,
+      "message": "Thanks again for your generous help. Integrated into patch set #2",
+      "parentUuid": "58ccfa7c_22500e32",
+      "revId": "b18a654ffd6f00eb6db1872369fc135a917ee516",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
