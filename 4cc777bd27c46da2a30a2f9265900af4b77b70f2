@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "389bc68e_a4db2c5b",
+        "filename": "libre2.symbols.darwin",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 6030
+      },
+      "writtenOn": "2015-07-14T15:22:37Z",
+      "side": 1,
+      "message": "I have limited understanding of this file and haven\u0027t encountered the issue myself. It does seem though that Homebrew has patched the Makefile for someone to get it to work. Not sure if I would find the time to test it either.\n\nMy only thought would be this patch differs slightly in that it leaves the existing entry behind whereas Homebrew replaces it when it patches. But I think you understand better than I the impact of that.\n\nAs such, I think it\u0027s better for someone else to review unless I happen to come across a Mountain Lion / Lion OS X machine to test with.",
+      "revId": "4cc777bd27c46da2a30a2f9265900af4b77b70f2",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
