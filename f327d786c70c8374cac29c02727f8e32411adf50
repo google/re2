@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98b592fa_dc104ddc",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-07-14T14:09:33Z",
+      "side": 1,
+      "message": "We probably want to use $(SOEXT) here too. Let\u0027s move this down that way too.",
+      "revId": "f327d786c70c8374cac29c02727f8e32411adf50",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98b592fa_1c86b59a",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-07-14T14:09:33Z",
+      "side": 1,
+      "message": "FWIW, specifying it as a linker option indirectly (i.e. like this) seems to be more popular than specifying it as a compiler option itself. Oh well.",
+      "revId": "f327d786c70c8374cac29c02727f8e32411adf50",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98b592fa_fc0b09af",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-07-14T14:09:33Z",
+      "side": 1,
+      "message": "Please flick that \u0027\u003d\u0027 back to \u0027,\u0027 just to make things slightly easier on my eyeballs when comparing. :)",
+      "revId": "f327d786c70c8374cac29c02727f8e32411adf50",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
