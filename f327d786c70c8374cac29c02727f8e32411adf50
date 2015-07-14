@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "389bc68e_c4bd1005",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 6030
+      },
+      "writtenOn": "2015-07-14T15:15:51Z",
+      "side": 1,
+      "message": "Interesting. I could change this if required. Though maybe there are certain CXX invocations that might be present on some versions of OS X that require -Wl and don\u0027t support just taking -install_name.",
+      "parentUuid": "98b592fa_1c86b59a",
+      "revId": "f327d786c70c8374cac29c02727f8e32411adf50",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98b592fa_fc0b09af",
         "filename": "Makefile",
         "patchSetId": 1
@@ -47,6 +65,24 @@
       "writtenOn": "2015-07-14T14:09:33Z",
       "side": 1,
       "message": "Please flick that \u0027\u003d\u0027 back to \u0027,\u0027 just to make things slightly easier on my eyeballs when comparing. :)",
+      "revId": "f327d786c70c8374cac29c02727f8e32411adf50",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "389bc68e_a4c20c79",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 6030
+      },
+      "writtenOn": "2015-07-14T15:15:51Z",
+      "side": 1,
+      "message": "My bad. When I rebased and it conflicted I did\u0027t notice this.",
+      "parentUuid": "98b592fa_fc0b09af",
       "revId": "f327d786c70c8374cac29c02727f8e32411adf50",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
