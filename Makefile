@@ -280,7 +280,7 @@ benchlog: obj/test/regexp_benchmark
 	(echo '==BENCHMARK==' `hostname` `date`; \
 	  (uname -a; $(CXX) --version; git rev-parse --short HEAD; file obj/test/regexp_benchmark) | sed 's/^/# /'; \
 	  echo; \
-	  ./obj/test/regexp_benchmark 'PCRE|RE2') | tee -a benchlog.$$(hostname | sed 's/\..*//')
+	  ./obj/test/regexp_benchmark 'PCRE|RE2') | tee -a benchlog.$$(hostname | sed 's/\..*//') && ./benchlog/benchplot.py benchlog.$$(hostname | sed 's/\..*//')
 
 # Keep gmake from deleting intermediate files it creates.
 # This makes repeated builds faster and preserves debug info on OS X.
