@@ -16,6 +16,24 @@
       "revId": "4cc777bd27c46da2a30a2f9265900af4b77b70f2",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "389d8670_fac87d46",
+        "filename": "libre2.symbols.darwin",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-07-15T02:29:11Z",
+      "side": 1,
+      "message": "No worries. As long as it doesn\u0027t introduce any breakage, I\u0027ll be happy.",
+      "parentUuid": "389bc68e_a4db2c5b",
+      "revId": "4cc777bd27c46da2a30a2f9265900af4b77b70f2",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
