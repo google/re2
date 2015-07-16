@@ -16,6 +16,24 @@
       "revId": "6a497fa5be4dbb63b85c6e0ff404c5713b0be2c3",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8cfb69d_0a2f87c9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 5945
+      },
+      "writtenOn": "2015-07-16T07:07:09Z",
+      "side": 1,
+      "message": "Yes, I can, and that\u0027d be a better message.\n\nIn short: `_WIN32` is predefined whereas `WIN32` isn\u0027t - according to the documentation: https://msdn.microsoft.com/en-us/library/b0084kay.aspx\n\nI\u0027m not sure that `WIN32` ever was actually predefined.",
+      "parentUuid": "f823eee9_07fcf667",
+      "revId": "6a497fa5be4dbb63b85c6e0ff404c5713b0be2c3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
