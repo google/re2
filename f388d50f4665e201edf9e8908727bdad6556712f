@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "580f9ab1_504ae478",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-07-16T14:11:21Z",
+      "side": 1,
+      "message": "I\u0027m more than happy to accept benchplot.py, but I\u0027d prefer not to wire it into the makefile like this. `make benchlog \u0026\u0026 …\u0027 if you want plots. :)",
+      "revId": "f388d50f4665e201edf9e8908727bdad6556712f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
