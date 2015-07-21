@@ -278,7 +278,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
     int id = CanonicalNode(prefilter_vec_[i])->unique_id();
     DCHECK_LE(0, id);
     Entry* entry = &entries_[id];
-    entry->regexps.push_back(i);
+    entry->regexps.push_back(static_cast<int>(i));
   }
 }
 
