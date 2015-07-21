@@ -869,7 +869,7 @@ void CharClassBuilder::Negate() {
 // The ranges are allocated in the same block as the header,
 // necessitating a special allocator and Delete method.
 
-CharClass* CharClass::New(int maxranges) {
+CharClass* CharClass::New(size_t maxranges) {
   CharClass* cc;
   uint8* data = new uint8[sizeof *cc + maxranges*sizeof cc->ranges_[0]];
   cc = reinterpret_cast<CharClass*>(data);
@@ -889,7 +889,7 @@ CharClass* CharClass::Negate() {
   CharClass* cc = CharClass::New(nranges_+1);
   cc->folds_ascii_ = folds_ascii_;
   cc->nrunes_ = Runemax + 1 - nrunes_;
-  int n = 0;
+  size_t n = 0;
   int nextlo = 0;
   for (CharClass::iterator it = begin(); it != end(); ++it) {
     if (it->lo == nextlo) {
@@ -907,9 +907,9 @@ CharClass* CharClass::Negate() {
 
 bool CharClass::Contains(Rune r) {
   RuneRange* rr = ranges_;
-  int n = nranges_;
+  size_t n = nranges_;
   while (n > 0) {
-    int m = n/2;
+    size_t m = n/2;
     if (rr[m].hi < r) {
       rr += m+1;
       n -= m+1;
@@ -928,7 +928,7 @@ CharClass* CharClassBuilder::GetCharClass() {
   for (iterator it = begin(); it != end(); ++it)
     cc->ranges_[n++] = *it;
   cc->nranges_ = n;
-  DCHECK_LE(static_cast<size_t>(n), ranges_.size());
+  DCHECK_LE(n, ranges_.size());
   cc->nrunes_ = nrunes_;
   cc->folds_ascii_ = FoldsASCII();
   return cc;

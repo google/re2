@@ -253,14 +253,14 @@ class CharClass {
  private:
   CharClass();  // not implemented
   ~CharClass();  // not implemented
-  static CharClass* New(int maxranges);
+  static CharClass* New(size_t maxranges);
 
   friend class CharClassBuilder;
 
   bool folds_ascii_;
   int nrunes_;
   RuneRange *ranges_;
-  int nranges_;
+  size_t nranges_;
   DISALLOW_COPY_AND_ASSIGN(CharClass);
 };
 
