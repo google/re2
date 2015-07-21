@@ -58,7 +58,7 @@ void FilteredRE2::Compile(vector<string>* atoms) {
 int FilteredRE2::SlowFirstMatch(const StringPiece& text) const {
   for (size_t i = 0; i < re2_vec_.size(); i++)
     if (RE2::PartialMatch(text, *re2_vec_[i]))
-      return i;
+      return static_cast<int>(i);
   return -1;
 }
 
