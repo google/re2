@@ -4,7 +4,7 @@
 
 #include "util/util.h"
 
-namespace re2 { 
+namespace re2 {
 
 static void StringAppendV(string* dst, const char* format, va_list ap) {
   // First try with a small fixed size buffer
@@ -38,7 +38,14 @@ static void StringAppendV(string* dst, const char* format, va_list ap) {
 
     // Restore the va_list before we use it again
     va_copy(backup_ap, ap);
+#if !defined(_WIN32)
     result = vsnprintf(buf, length, format, backup_ap);
+#else
+    // On Windows, the function takes five arguments, not four. With an array,
+    // the buffer size will be inferred, but not with a pointer. C'est la vie.
+    // (See https://github.com/google/re2/issues/40 for more details.)
+    result = vsnprintf(buf, length, _TRUNCATE, format, backup_ap);
+#endif
     va_end(backup_ap);
 
     if ((result >= 0) && (result < length)) {
