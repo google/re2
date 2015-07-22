@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6dd2dee8_d8ed4500",
+        "filename": "re2/prog.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-07-22T15:54:47Z",
+      "side": 1,
+      "message": "This should probably return int too then?",
+      "revId": "88f9a120f957a92c643bd52a8030a2e3895ad94b",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dd2dee8_7806995b",
+        "filename": "re2/re2.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-07-22T15:54:47Z",
+      "side": 1,
+      "message": "Maybe redo the loop body like this:\n\n  if (*s !\u003d \u0027\\\\\u0027) {\n    out-\u003epush_back(*s);\n    continue;\n  }\n  s++;\n  int c \u003d (s \u003c end) ? *s : -1;\n…",
+      "revId": "88f9a120f957a92c643bd52a8030a2e3895ad94b",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
