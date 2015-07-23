@@ -16,6 +16,24 @@
       "revId": "667c0c626ee4a145413f4af20e88bb7d75b9c77e",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dd2dee8_c1f46c4b",
+        "filename": "re2/testing/parse_test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-07-23T11:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "edaece64_2676b64e",
+      "revId": "667c0c626ee4a145413f4af20e88bb7d75b9c77e",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
