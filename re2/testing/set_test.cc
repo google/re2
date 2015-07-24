@@ -71,10 +71,10 @@ TEST(Set, UnanchoredFactored) {
 
 TEST(Set, UnanchoredDollar) {
   RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
-  
+
   CHECK_EQ(s.Add("foo$", NULL), 0);
   CHECK_EQ(s.Compile(), true);
-  
+
   vector<int> v;
   CHECK_EQ(s.Match("foo", &v), true);
   CHECK_EQ(v.size(), 1);
@@ -107,8 +107,34 @@ TEST(Set, Anchored) {
   CHECK_EQ(s.Match("bar", &v), true);
   CHECK_EQ(v.size(), 1);
   CHECK_EQ(v[0], 1);
+}
 
+TEST(Set, EmptyUnanchored) {
+  RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
+
+  CHECK_EQ(s.Compile(), true);
+
+  vector<int> v;
+  CHECK_EQ(s.Match("", &v), false);
+  CHECK_EQ(v.size(), 0);
+
+  v.clear();
+  CHECK_EQ(s.Match("foobar", &v), false);
+  CHECK_EQ(v.size(), 0);
+}
+
+TEST(Set, EmptyAnchored) {
+  RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_BOTH);
+
+  CHECK_EQ(s.Compile(), true);
+
+  vector<int> v;
+  CHECK_EQ(s.Match("", &v), false);
+  CHECK_EQ(v.size(), 0);
+
+  v.clear();
+  CHECK_EQ(s.Match("foobar", &v), false);
+  CHECK_EQ(v.size(), 0);
 }
 
 }  // namespace re2
-
