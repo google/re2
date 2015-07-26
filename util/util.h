@@ -135,12 +135,20 @@ static inline uint32 Hash32StringWithSeed(const char* s, int len, uint32 seed) {
   return hashword((uint32*)s, len/4, seed);
 }
 
-static inline uint64 Hash64StringWithSeed(const char* s, int len, uint32 seed) {
+static inline uint64 Hash64StringWithSeed(const char* s, int len, uint64 seed) {
   uint32 x, y;
   x = seed;
   y = 0;
   hashword2((uint32*)s, len/4, &x, &y);
   return ((uint64)x << 32) | y;
+}
+
+static inline size_t HashStringThoroughlyWithSeed(const char* s, int len,
+                                                  size_t seed) {
+  if (sizeof(size_t) == sizeof(uint32))
+    return static_cast<size_t>(Hash32StringWithSeed(s, len, seed));
+  else
+    return static_cast<size_t>(Hash64StringWithSeed(s, len, seed));
 }
 
 int RunningOnValgrind();

@@ -140,10 +140,7 @@ class DFA {
         return 0;
       const char* s = reinterpret_cast<const char*>(a->inst_);
       int len = a->ninst_ * sizeof a->inst_[0];
-      if (sizeof(size_t) == sizeof(uint32))
-        return Hash32StringWithSeed(s, len, a->flag_);
-      else
-        return Hash64StringWithSeed(s, len, a->flag_);
+      return HashStringThoroughlyWithSeed(s, len, a->flag_);
     }
 #ifdef STL_MSVC
     // Less than operator.
