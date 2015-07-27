@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0d4162d7_7f5fcfbc",
+        "filename": "re2/compile.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 5195
+      },
+      "writtenOn": "2015-07-27T21:15:49Z",
+      "side": 1,
+      "message": "Ran clang-format on this chunk and changed to its output.",
+      "parentUuid": "0da7a2c0_af54f94f",
+      "revId": "703cc9916d2beec64075dd47684c22d0de2416dc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0da7a2c0_ef4e01bc",
         "filename": "re2/dfa.cc",
         "patchSetId": 4
@@ -71,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0d4162d7_ff52ffb6",
+        "filename": "re2/re2.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 893,
+      "author": {
+        "id": 5195
+      },
+      "writtenOn": "2015-07-27T21:15:49Z",
+      "side": 1,
+      "message": "Oops.  Done.",
+      "parentUuid": "0da7a2c0_92c67a8d",
+      "revId": "703cc9916d2beec64075dd47684c22d0de2416dc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0da7a2c0_d2d00244",
         "filename": "util/rune.cc",
         "patchSetId": 4
@@ -82,6 +118,24 @@
       "writtenOn": "2015-07-24T12:29:51Z",
       "side": 1,
       "message": "Have I correctly inferred that MSVC would not gripe about these if they were masked using \u0026 0xFF? That might be a little easier on the eye. :/",
+      "revId": "703cc9916d2beec64075dd47684c22d0de2416dc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d4162d7_3f82a7a0",
+        "filename": "util/rune.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 5195
+      },
+      "writtenOn": "2015-07-27T21:15:49Z",
+      "side": 1,
+      "message": "I believe you\u0027re correct.\n\nHowever, I think the cast feels slightly clearer.  In all the locations I\u0027ve inserted casts, we know the value being cast already fits in a char.  If we were to write \"\u0026 0xFF\", it would imply (to me at least) that the value didn\u0027t fit, and needed to be masked.  Whereas the cast is in some sense just saying that the type needs to be changed.\n\nThis is kind of a hand-wavey difference.  That said, I know the WebRTC folks (for whom I\u0027ve been fixing similar issues) preferred the cast version to the mask version.",
+      "parentUuid": "0da7a2c0_d2d00244",
       "revId": "703cc9916d2beec64075dd47684c22d0de2416dc",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
