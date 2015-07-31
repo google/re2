@@ -451,7 +451,7 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
                  (sizeof(int)+sizeof(int)) * 2;  // q0, q1
   mem_budget_ -= nastack_ * sizeof(int);  // astack
   if (mem_budget_ < 0) {
-    LOG(INFO) << StringPrintf("DFA out of memory: prog size %lld mem %lld",
+    LOG(INFO) << StringPrintf("DFA out of memory: prog size %d mem %lld",
                               prog_->size(), max_mem);
     init_failed_ = true;
     return;
@@ -466,7 +466,7 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
   int64 one_state = sizeof(State) + (prog_->size()+nmark)*sizeof(int) +
                     (prog_->bytemap_range()+1)*sizeof(State*);
   if (state_budget_ < 20*one_state) {
-    LOG(INFO) << StringPrintf("DFA out of memory: prog size %lld mem %lld",
+    LOG(INFO) << StringPrintf("DFA out of memory: prog size %d mem %lld",
                               prog_->size(), max_mem);
     init_failed_ = true;
     return;
