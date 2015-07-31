@@ -230,6 +230,15 @@ Regexp* CoalesceWalker::PostVisit(Regexp* re,
     Regexp** nre_subs = nre->sub();
     for (int i = 0; i < re->nsub(); i++)
       nre_subs[i] = child_args[i];
+    // Repeats and Captures have additional data that must be copied.
+    if (re->op() == kRegexpRepeat) {
+      nre->min_ = re->min();
+      nre->max_ = re->max();
+    } else if (re->op() == kRegexpCapture) {
+      nre->cap_ = re->cap();
+      if (re->name() != NULL)
+        nre->name_ = new string(*re->name());
+    }
     return nre;
   }
 
@@ -487,7 +496,9 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
       Regexp* nre = new Regexp(kRegexpCapture, re->parse_flags());
       nre->AllocSub(1);
       nre->sub()[0] = newsub;
-      nre->cap_ = re->cap_;
+      nre->cap_ = re->cap();
+      if (re->name() != NULL)
+        nre->name_ = new string(*re->name());
       nre->simple_ = true;
       return nre;
     }
