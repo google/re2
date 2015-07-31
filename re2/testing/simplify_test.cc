@@ -219,6 +219,16 @@ static Test tests[] = {
   { "(a?)(aa)", "(a?)(aa)" },
   // Just for fun:
   { "aa*aa+aa?aa{2}aaa{2,}aaa{2,3}a", "aaaaaaaaaaaaaaaa+" },
+
+  // Regression test: During coalescing, the child of the repeat changes, so
+  // we build a new repeat. The new repeat must have the min and max of the
+  // old repeat. Failure to copy them results in min=0 and max=0.
+  { "(?:a*aab){2}", "aa+baa+b" },
+
+  // Regression test: During coalescing, the child of the capture changes, so
+  // we build a new capture. The new capture must have the cap and name of the
+  // old capture. Failure to copy them results in cap=0 and name=NULL.
+  { "(?P<name>a*aab)", "(?P<name>aa+b)" },
 };
 
 TEST(TestSimplify, SimpleRegexps) {
