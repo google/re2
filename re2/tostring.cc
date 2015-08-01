@@ -94,6 +94,8 @@ int ToStringWalker::PreVisit(Regexp* re, int parent_arg, bool* stop) {
 
     case kRegexpCapture:
       t_->append("(");
+      if (re->cap() == 0)
+        LOG(DFATAL) << "kRegexpCapture cap() == 0";
       if (re->name()) {
         t_->append("?P<");
         t_->append(*re->name());

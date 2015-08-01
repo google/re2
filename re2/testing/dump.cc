@@ -120,6 +120,8 @@ static void DumpRegexpAppending(Regexp* re, string* s) {
       DumpRegexpAppending(re->sub()[0], s);
       break;
     case kRegexpCapture:
+      if (re->cap() == 0)
+        LOG(DFATAL) << "kRegexpCapture cap() == 0";
       if (re->name()) {
         s->append(*re->name());
         s->append(":");

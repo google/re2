@@ -236,8 +236,6 @@ Regexp* CoalesceWalker::PostVisit(Regexp* re,
       nre->max_ = re->max();
     } else if (re->op() == kRegexpCapture) {
       nre->cap_ = re->cap();
-      if (re->name() != NULL)
-        nre->name_ = new string(*re->name());
     }
     return nre;
   }
@@ -497,8 +495,6 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
       nre->AllocSub(1);
       nre->sub()[0] = newsub;
       nre->cap_ = re->cap();
-      if (re->name() != NULL)
-        nre->name_ = new string(*re->name());
       nre->simple_ = true;
       return nre;
     }
