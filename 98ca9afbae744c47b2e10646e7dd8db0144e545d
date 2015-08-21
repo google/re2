@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4ee4936_7dc8574a",
+        "filename": "re2/regexp.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-08-21T08:48:38Z",
+      "side": 1,
+      "message": "Are these just because MSVC complains about indexing with int instead of size_t? :(",
+      "revId": "98ca9afbae744c47b2e10646e7dd8db0144e545d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4ee4936_1dbb13bb",
+        "filename": "re2/regexp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-08-21T08:48:38Z",
+      "side": 1,
+      "message": "Although CharClass isn\u0027t the most size-critical class in RE2, I don\u0027t think this change is worth the extra four bytes. Plus it looks slightly odd given that nrunes_ is int.",
+      "revId": "98ca9afbae744c47b2e10646e7dd8db0144e545d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
