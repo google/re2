@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "048f817d_1e93312f",
+        "filename": "re2/regexp.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 5195
+      },
+      "writtenOn": "2015-08-21T17:35:30Z",
+      "side": 1,
+      "message": "No, MSVC doesn\u0027t complain about that.  The changes in this file are all because the way you actually use nranges_ and the variables associated with it are as size_ts: they\u0027re counts of bytes or objects in memory.  The existing cast in GetCharClass() was indicative of this.",
+      "parentUuid": "c4ee4936_7dc8574a",
+      "revId": "98ca9afbae744c47b2e10646e7dd8db0144e545d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4ee4936_1dbb13bb",
         "filename": "re2/regexp.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2015-08-21T08:48:38Z",
       "side": 1,
       "message": "Although CharClass isn\u0027t the most size-critical class in RE2, I don\u0027t think this change is worth the extra four bytes. Plus it looks slightly odd given that nrunes_ is int.",
+      "revId": "98ca9afbae744c47b2e10646e7dd8db0144e545d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "048f817d_fe72ed89",
+        "filename": "re2/regexp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 5195
+      },
+      "writtenOn": "2015-08-21T17:35:30Z",
+      "side": 1,
+      "message": "Looking through the source code, it looks like maybe nrunes_ should more properly be a size_t as well, as it\u0027s an expected-to-be-nonnegative count of objects in memory.",
+      "parentUuid": "c4ee4936_1dbb13bb",
       "revId": "98ca9afbae744c47b2e10646e7dd8db0144e545d",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
