@@ -33,6 +33,10 @@ void StringPiece::CopyToString(string* target) const {
   target->assign(ptr_, length_);
 }
 
+void StringPiece::AppendToString(string* target) const {
+  target->append(ptr_, length_);
+}
+
 int StringPiece::copy(char* buf, size_type n, size_type pos) const {
   int ret = min(length_ - pos, n);
   memcpy(buf, ptr_ + pos, ret);
