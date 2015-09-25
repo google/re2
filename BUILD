@@ -1,3 +1,7 @@
+# Copyright 2009 The RE2 Authors.  All Rights Reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
 # Bazel (http://bazel.io/) BUILD file for RE2.
 
 licenses(["notice"])
@@ -76,20 +80,25 @@ cc_library(
     srcs = [
         "re2/testing/backtrack.cc",
         "re2/testing/dump.cc",
+        "re2/testing/exhaustive_tester.cc",
+        "re2/testing/null_walker.cc",
         "re2/testing/regexp_generator.cc",
         "re2/testing/string_generator.cc",
         "re2/testing/tester.cc",
         "util/pcre.cc",
         "util/random.cc",
         "util/test.cc",
+        "util/thread.cc",
     ],
     hdrs = [
+        "re2/testing/exhaustive_tester.h",
         "re2/testing/regexp_generator.h",
         "re2/testing/string_generator.h",
         "re2/testing/tester.h",
         "util/pcre.h",
         "util/random.h",
         "util/test.h",
+        "util/thread.h",
     ],
     includes = ["."],
     deps = [
@@ -114,6 +123,11 @@ re2_test("set_test")
 re2_test("simplify_test")
 re2_test("string_generator_test")
 
-# TODO: Add the "big" tests from the Makefile.
-# util/thread.{cc,h} will be needed for the DFA test.
-# re2/testing/exhaustive_tester.{cc,h} will be needed for the exhaustive tests.
+re2_test("dfa_test")
+re2_test("exhaustive1_test")
+re2_test("exhaustive2_test")
+re2_test("exhaustive3_test")
+re2_test("exhaustive_test")
+re2_test("random_test")
+
+# TODO: Add support for regexp_benchmark.
