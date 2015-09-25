@@ -64,7 +64,6 @@ using std::unordered_set;
 #ifdef _WIN32
 
 #define snprintf _snprintf_s
-#define sprintf sprintf_s
 #define stricmp _stricmp
 #define strtof strtod /* not really correct but best we can do */
 #define strtoll _strtoi64
