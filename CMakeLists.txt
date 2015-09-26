@@ -9,8 +9,6 @@ project(RE2 CXX)
 
 if(WIN32)
   add_definitions(-DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX)
-  # Used in a couple of places.
-  add_definitions(-DCOMPILER_MSVC)
   set(THREADING threadwin)
   set(EXTRA_TARGET_LINK_LIBRARIES)
 else()
