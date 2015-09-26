@@ -75,7 +75,7 @@ bool RE2::Set::Compile() {
 
   Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
     options_.ParseFlags());
-  re2::Regexp* re = re2::Regexp::Alternate(const_cast<re2::Regexp**>(&re_[0]),
+  re2::Regexp* re = re2::Regexp::Alternate(const_cast<re2::Regexp**>(re_.data()),
                                            re_.size(), pf);
   re_.clear();
   re2::Regexp* sre = re->Simplify();
