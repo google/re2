@@ -34,6 +34,11 @@
 #define LOG_FATAL LogMessageFatal(__FILE__, __LINE__)
 #define LOG_QFATAL LOG_FATAL
 
+// It seems that one of the Windows header files defines ERROR as 0.
+#ifdef _WIN32
+#define LOG_0 LOG_INFO
+#endif
+
 #define VLOG(x) if((x)>0){}else LOG_INFO.stream()
 
 #ifdef NDEBUG
