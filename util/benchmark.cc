@@ -25,11 +25,22 @@ void Benchmark::Register() {
 }
 
 static int64 nsec() {
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__)
 	struct timeval tv;
 	if(gettimeofday(&tv, 0) < 0)
 		return -1;
 	return (int64)tv.tv_sec*1000*1000*1000 + tv.tv_usec*1000;
+#elif defined(_WIN32)
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/dn553408.aspx
+	// describes how to query ticks and convert to microseconds. Of course,
+	// what we want in this case are nanoseconds. Also, note that .QuadPart
+	// is a signed 64-bit integer, so casting to int64 shouldn't be needed.
+	LARGE_INTEGER freq;
+	QueryPerformanceFrequency(&freq);
+	LARGE_INTEGER ticks;
+	QueryPerformanceCounter(&ticks);
+	ticks.QuadPart *= 1000*1000*1000;
+	ticks.QuadPart /= freq.QuadPart;
 #else
 	struct timespec tp;
 	if(clock_gettime(CLOCK_REALTIME, &tp) < 0)
