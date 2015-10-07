@@ -115,8 +115,9 @@ TEST(SingleThreaded, BuildEntireDFA) {
       continue;
     //LOG(INFO) << StringPrintf("Limit %d: prog used %d, DFA budget %d, total %d\n",
     //                          limit, progusage, dfamem, usage);
-    CHECK_GT(usage, limit*8/10);
-    CHECK_LT(usage, limit + (16<<10));  // 16kB of slop okay
+    // Tolerate +/- 10%.
+    CHECK_GT(usage, limit*9/10);
+    CHECK_LT(usage, limit*11/10);
   }
   re->Decref();
 }
