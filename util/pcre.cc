@@ -23,6 +23,42 @@ DEFINE_int32(regexp_stack_limit, 256<<10, "default PCRE stack limit (bytes)");
 DEFINE_int32(regexp_match_limit, 1000000,
              "default PCRE match limit (function calls)");
 
+#ifndef USEPCRE
+
+// Fake just enough of the PCRE API to allow this file to build. :)
+
+struct pcre_extra {
+  int flags;
+  int match_limit;
+  int match_limit_recursion;
+};
+
+#define PCRE_EXTRA_MATCH_LIMIT 0
+#define PCRE_EXTRA_MATCH_LIMIT_RECURSION 0
+#define PCRE_ANCHORED 0
+#define PCRE_NOTEMPTY 0
+#define PCRE_ERROR_NOMATCH 1
+#define PCRE_ERROR_MATCHLIMIT 2
+#define PCRE_ERROR_RECURSIONLIMIT 3
+#define PCRE_INFO_CAPTURECOUNT 0
+
+void pcre_free(void*) {
+}
+
+pcre* pcre_compile(const char*, int, const char**, int*, const unsigned char*) {
+  return NULL;
+}
+
+int pcre_exec(const pcre*, const pcre_extra*, const char*, int, int, int, int*, int) {
+  return 0;
+}
+
+int pcre_fullinfo(const pcre*, const pcre_extra*, int, void*) {
+  return 0;
+}
+
+#endif
+
 namespace re2 {
 
 // Maximum number of args we can set
@@ -114,7 +150,7 @@ pcre* PCRE::Compile(Anchor anchor) {
   //    ANCHOR_BOTH     Tack a "\z" to the end of the original pattern
   //                    and use a pcre anchored match.
 
-  const char* error;
+  const char* error = "";
   int eoffset;
   pcre* re;
   if (anchor != ANCHOR_BOTH) {
@@ -179,7 +215,7 @@ bool PCRE::FullMatchFunctor::operator ()(const StringPiece& text,
 done:
 
   int consumed;
-  int vec[kVecSize];
+  int vec[kVecSize] = {};
   return re.DoMatchImpl(text, ANCHOR_BOTH, &consumed, args, n, vec, kVecSize);
 }
 
@@ -222,7 +258,7 @@ bool PCRE::PartialMatchFunctor::operator ()(const StringPiece& text,
 done:
 
   int consumed;
-  int vec[kVecSize];
+  int vec[kVecSize] = {};
   return re.DoMatchImpl(text, UNANCHORED, &consumed, args, n, vec, kVecSize);
 }
 
@@ -265,7 +301,7 @@ bool PCRE::ConsumeFunctor::operator ()(StringPiece* input,
 done:
 
   int consumed;
-  int vec[kVecSize];
+  int vec[kVecSize] = {};
   if (pattern.DoMatchImpl(*input, ANCHOR_START, &consumed,
                           args, n, vec, kVecSize)) {
     input->remove_prefix(consumed);
@@ -314,7 +350,7 @@ bool PCRE::FindAndConsumeFunctor::operator ()(StringPiece* input,
 done:
 
   int consumed;
-  int vec[kVecSize];
+  int vec[kVecSize] = {};
   if (pattern.DoMatchImpl(*input, UNANCHORED, &consumed,
                           args, n, vec, kVecSize)) {
     input->remove_prefix(consumed);
@@ -327,7 +363,7 @@ done:
 bool PCRE::Replace(string *str,
                  const PCRE& pattern,
                  const StringPiece& rewrite) {
-  int vec[kVecSize];
+  int vec[kVecSize] = {};
   int matches = pattern.TryMatch(*str, 0, UNANCHORED, true, vec, kVecSize);
   if (matches == 0)
     return false;
@@ -346,7 +382,7 @@ int PCRE::GlobalReplace(string *str,
                       const PCRE& pattern,
                       const StringPiece& rewrite) {
   int count = 0;
-  int vec[kVecSize];
+  int vec[kVecSize] = {};
   string out;
   size_t start = 0;
   bool last_match_was_empty_string = false;
@@ -402,7 +438,7 @@ bool PCRE::Extract(const StringPiece &text,
                  const PCRE& pattern,
                  const StringPiece &rewrite,
                  string *out) {
-  int vec[kVecSize];
+  int vec[kVecSize] = {};
   int matches = pattern.TryMatch(text, 0, UNANCHORED, true, vec, kVecSize);
   if (matches == 0)
     return false;
