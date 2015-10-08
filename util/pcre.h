@@ -167,22 +167,9 @@ namespace re2 {
 const bool UsingPCRE = true;
 }  // namespace re2
 #else
+struct pcre;  // opaque
 namespace re2 {
 const bool UsingPCRE = false;
-struct pcre;
-struct pcre_extra { int flags, match_limit, match_limit_recursion; };
-#define pcre_free(x) {}
-#define PCRE_EXTRA_MATCH_LIMIT 0
-#define PCRE_EXTRA_MATCH_LIMIT_RECURSION 0
-#define PCRE_ANCHORED 0
-#define PCRE_NOTEMPTY 0
-#define PCRE_ERROR_NOMATCH 1
-#define PCRE_ERROR_MATCHLIMIT 2
-#define PCRE_ERROR_RECURSIONLIMIT 3
-#define PCRE_INFO_CAPTURECOUNT 0
-#define pcre_compile(a,b,c,d,e) ({ (void)(a); (void)(b); *(c)=""; *(d)=0; (void)(e); ((pcre*)0); })
-#define pcre_exec(a, b, c, d, e, f, g, h) ({ (void)(a); (void)(b); (void)(c); (void)(d); (void)(e); (void)(f); (void)(g); (void)(h); 0; })
-#define pcre_fullinfo(a, b, c, d) ({ (void)(a); (void)(b); (void)(c); *(d) = 0; 0; })
 }  // namespace re2
 #endif
 
