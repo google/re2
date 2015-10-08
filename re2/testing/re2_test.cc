@@ -5,11 +5,13 @@
 
 // TODO: Test extractions for PartialMatch/Consume
 
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 #include <errno.h>
 #include <unistd.h>  /* for sysconf */
+#if defined(_POSIX_MAPPED_FILES) && _POSIX_MAPPED_FILES > 0
+#include <sys/mman.h>
+#endif
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <vector>
 #include "util/test.h"
 #include "re2/re2.h"
@@ -728,7 +730,10 @@ TEST(RE2, FullMatchTypedNullArg) {
 
 // Check that numeric parsing code does not read past the end of
 // the number being parsed.
+// This implementation requires mmap(2) et al. and thus cannot
+// be used unless they are available.
 TEST(RE2, NULTerminated) {
+#if defined(_POSIX_MAPPED_FILES) && _POSIX_MAPPED_FILES > 0
   char *v;
   int x;
   long pagesize = sysconf(_SC_PAGE_SIZE);
@@ -746,6 +751,7 @@ TEST(RE2, NULTerminated) {
   x = 0;
   CHECK(RE2::FullMatch(StringPiece(v + pagesize - 1, 1), "(.*)", &x));
   CHECK_EQ(x, 1);
+#endif
 }
 
 TEST(RE2, FullMatchTypeTests) {
