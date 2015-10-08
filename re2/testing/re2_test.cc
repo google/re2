@@ -6,8 +6,8 @@
 // TODO: Test extractions for PartialMatch/Consume
 
 #include <errno.h>
+#ifndef _MSC_VER
 #include <unistd.h>  /* for sysconf */
-#if defined(_POSIX_MAPPED_FILES) && _POSIX_MAPPED_FILES > 0
 #include <sys/mman.h>
 #endif
 #include <sys/stat.h>

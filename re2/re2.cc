@@ -35,7 +35,7 @@ const VariadicFunction2<bool, StringPiece*, const RE2&, RE2::Arg, RE2::FindAndCo
 // This will trigger LNK2005 error in MSVC.
 #ifndef _MSC_VER
 const int RE2::Options::kDefaultMaxMem;  // initialized in re2.h
-#endif  // _MSC_VER
+#endif
 
 RE2::Options::Options(RE2::CannedOptions opt)
   : encoding_(opt == RE2::Latin1 ? EncodingLatin1 : EncodingUTF8),
