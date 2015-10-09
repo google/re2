@@ -100,10 +100,10 @@ set(BENCHMARK_TARGETS
 
 foreach(target ${TEST_TARGETS})
   add_executable(${target} re2/testing/${target}.cc)
-  target_link_libraries(${target} test re2 $<JOIN:${EXTRA_TARGET_LINK_LIBRARIES}, >)
+  target_link_libraries(${target} test re2 ${EXTRA_TARGET_LINK_LIBRARIES})
 endforeach(target)
 
 foreach(target ${BENCHMARK_TARGETS})
   add_executable(${target} re2/testing/${target}.cc)
-  target_link_libraries(${target} benchmark re2 $<JOIN:${EXTRA_TARGET_LINK_LIBRARIES}, >)
+  target_link_libraries(${target} benchmark re2 ${EXTRA_TARGET_LINK_LIBRARIES})
 endforeach(target)
