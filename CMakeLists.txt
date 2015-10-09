@@ -7,13 +7,19 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(RE2 CXX)
 
+set(EXTRA_TARGET_LINK_LIBRARIES)
+
 if(WIN32)
   add_definitions(-DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX)
   set(THREADING threadwin)
-  set(EXTRA_TARGET_LINK_LIBRARIES)
 else()
   set(THREADING thread)
-  set(EXTRA_TARGET_LINK_LIBRARIES -pthread)
+  list(APPEND EXTRA_TARGET_LINK_LIBRARIES -pthread)
+endif()
+
+if(USEPCRE)
+  add_definitions(-DUSEPCRE)
+  list(APPEND EXTRA_TARGET_LINK_LIBRARIES pcre)
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR})
@@ -94,10 +100,10 @@ set(BENCHMARK_TARGETS
 
 foreach(target ${TEST_TARGETS})
   add_executable(${target} re2/testing/${target}.cc)
-  target_link_libraries(${target} test re2 ${EXTRA_TARGET_LINK_LIBRARIES})
+  target_link_libraries(${target} test re2 $<JOIN:${EXTRA_TARGET_LINK_LIBRARIES}, >)
 endforeach(target)
 
 foreach(target ${BENCHMARK_TARGETS})
   add_executable(${target} re2/testing/${target}.cc)
-  target_link_libraries(${target} benchmark re2 ${EXTRA_TARGET_LINK_LIBRARIES})
+  target_link_libraries(${target} benchmark re2 $<JOIN:${EXTRA_TARGET_LINK_LIBRARIES}, >)
 endforeach(target)
