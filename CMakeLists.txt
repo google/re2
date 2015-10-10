@@ -6,6 +6,7 @@
 cmake_minimum_required(VERSION 2.8.7)
 
 project(RE2 CXX)
+option(USEPCRE "use PCRE in tests and benchmarks" OFF)
 
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
