@@ -75,7 +75,7 @@ static inline void WriteMemoryBarrier() {
   ((void(*)(void))0xffff0fa0)();
 }
 
-#elif defined(__windows__)
+#elif defined(__windows__) || defined(_WIN32)
 
 // Windows
 inline void WriteMemoryBarrier() {
