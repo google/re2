@@ -77,13 +77,28 @@ static inline void WriteMemoryBarrier() {
 
 #elif defined(__windows__) || defined(_WIN32)
 
+#include <intrin.h>
 #include <windows.h>
+
+#if defined(_M_IX86) || defined(_M_X64)
+
+// x86 and x64 CPUs have a strong memory model that prohibits most types of
+// reordering, so a non-instruction intrinsic to suppress compiler reordering is
+// sufficient. _WriteBarrier is deprecated but is still appropriate for the
+// "old compiler" path (pre C++11).
+inline void WriteMemoryBarrier() {
+  _WriteBarrier();
+}
+
+#else
 
 // Windows
 inline void WriteMemoryBarrier() {
   LONG x;
   ::InterlockedExchange(&x, 0);
 }
+
+#endif
 
 #elif defined(OS_NACL)
 
