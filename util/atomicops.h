@@ -77,6 +77,8 @@ static inline void WriteMemoryBarrier() {
 
 #elif defined(__windows__) || defined(_WIN32)
 
+#include <windows.h>
+
 // Windows
 inline void WriteMemoryBarrier() {
   LONG x;
