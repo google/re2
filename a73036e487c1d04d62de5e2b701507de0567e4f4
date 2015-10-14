@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eadb2204_708f906c",
+        "filename": "util/atomicops.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-10-14T03:13:08Z",
+      "side": 1,
+      "message": "As per https://msdn.microsoft.com/en-us/library/65tt87y8.aspx, the intrinsics are deprecated and should not be used. I\u0027m not going to block you, of course, because the performance gain is significant and the suggested alternatives require C++11, but please leave some sort of comment about that for posterity. (We could conceivably have to do something different for future versions of MSVC, for example.)",
+      "revId": "a73036e487c1d04d62de5e2b701507de0567e4f4",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eadb2204_508a8c5d",
+        "filename": "util/atomicops.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-10-14T03:13:08Z",
+      "side": 1,
+      "message": "Please leave a blank line before this.",
+      "revId": "a73036e487c1d04d62de5e2b701507de0567e4f4",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
