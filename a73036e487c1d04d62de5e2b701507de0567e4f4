@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "eadb2204_d07d1ceb",
+        "filename": "util/atomicops.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-10-14T04:38:40Z",
+      "side": 1,
+      "message": "BTW, _M_X64 means the same thing, apparently, but would match the comment below. :)",
+      "range": {
+        "startLine": 83,
+        "startChar": 32,
+        "endLine": 83,
+        "endChar": 40
+      },
+      "revId": "a73036e487c1d04d62de5e2b701507de0567e4f4",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eadb2204_708f906c",
         "filename": "util/atomicops.h",
         "patchSetId": 2
