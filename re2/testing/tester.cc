@@ -515,7 +515,7 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
     }
 
     // We disagree with PCRE on the meaning of some Unicode matches.
-    // In particular, we treat all non-ASCII UTF-8 as word characters.
+    // In particular, we treat non-ASCII UTF-8 as non-word characters.
     // We also treat "empty" character sets like [^\w\W] as being
     // impossible to match, while PCRE apparently excludes some code
     // points (e.g., 0x0080) from both \w and \W.
