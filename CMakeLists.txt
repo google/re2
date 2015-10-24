@@ -47,6 +47,7 @@ set(RE2_LIBRARY_SOURCES
     re2/unicode_casefold.cc
     re2/unicode_groups.cc
     util/hash.cc
+    util/logging.cc
     util/rune.cc
     util/stringprintf.cc
     util/strutil.cc

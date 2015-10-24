@@ -95,6 +95,7 @@ HFILES=\
 
 OFILES=\
 	obj/util/hash.o\
+	obj/util/logging.o\
 	obj/util/rune.o\
 	obj/util/stringprintf.o\
 	obj/util/strutil.o\

@@ -48,6 +48,7 @@ cc_library(
         "util/atomicops.h",
         "util/flags.h",
         "util/hash.cc",
+        "util/logging.cc",
         "util/logging.h",
         "util/mutex.h",
         "util/rune.cc",
