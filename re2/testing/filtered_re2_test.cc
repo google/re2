@@ -197,7 +197,7 @@ void FindAtomIndices(const vector<string> atoms,
     size_t j = 0;
     for (; j < atoms.size(); j++) {
       if (matched_atoms[i] == atoms[j]) {
-        atom_indices->push_back(j);
+        atom_indices->push_back(static_cast<const int>(j));
         break;
       }
       EXPECT_LT(j, atoms.size());

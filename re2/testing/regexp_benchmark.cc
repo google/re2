@@ -347,7 +347,7 @@ BENCHMARK_RANGE(Search_Success1_Cached_RE2,     8, 16<<20)->ThreadRange(1, NumCP
 
 void SearchDigits(int iters, SearchImpl* search) {
   const char *text = "650-253-0001";
-  int len = strlen(text);
+  int len = static_cast<int>(strlen(text));
   BenchmarkMemoryUsage();
   search(iters, "([0-9]+)-([0-9]+)-([0-9]+)",
          StringPiece(text, len), Prog::kAnchored, true);

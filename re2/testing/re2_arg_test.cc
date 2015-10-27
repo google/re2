@@ -92,10 +92,10 @@ const int kNumStrings = arraysize(kSuccessTable);
 // using concatenation for the type I'm checking against.
 #define PARSE_FOR_TYPE(type, column) {                                   \
   type r;                                                                \
-  for (int i = 0; i < kNumStrings; ++i) {                                \
+for (int i = 0; i < kNumStrings; ++i) {                                  \
     RE2::Arg arg(&r);                                                    \
     const char* const p = kSuccessTable[i].value_string;                 \
-    bool retval = arg.Parse(p, strlen(p));                               \
+    bool retval = arg.Parse(p, static_cast<int>(strlen(p)));             \
     bool success = kSuccessTable[i].success[column];                     \
     EXPECT_EQ(retval, success)                                           \
         << "Parsing '" << p << "' for type " #type " should return "     \

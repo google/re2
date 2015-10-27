@@ -84,6 +84,10 @@ class LogMessage {
   std::ostringstream str_;
   DISALLOW_COPY_AND_ASSIGN(LogMessage);
 };
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable: 4722)
+#endif
 
 class LogMessageFatal : public LogMessage {
  public:
@@ -93,7 +97,10 @@ class LogMessageFatal : public LogMessage {
     Flush();
     abort();
   }
- private:
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
+private:
   DISALLOW_COPY_AND_ASSIGN(LogMessageFatal);
 };
 

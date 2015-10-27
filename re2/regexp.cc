@@ -453,7 +453,7 @@ bool Regexp::Equal(Regexp* a, Regexp* b) {
         continue;
     }
 
-    int n = stk.size();
+    int n = static_cast<int>(stk.size());
     if (n == 0)
       break;
 

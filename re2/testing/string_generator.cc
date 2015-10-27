@@ -43,8 +43,8 @@ void StringGenerator::Reset() {
 // Returns false if all the numbers have been used.
 bool StringGenerator::IncrementDigits() {
   // First try to increment the current number.
-  for (int i = digits_.size() - 1; i >= 0; i--) {
-    if (++digits_[i] < static_cast<int>(alphabet_.size()))
+  for (long long i = digits_.size() - 1; i >= 0; i--) {
+    if (++digits_[i] < alphabet_.size())
       return true;
     digits_[i] = 0;
   }
@@ -68,7 +68,7 @@ bool StringGenerator::RandomDigits() {
   int len = acm_->Uniform(maxlen_+1);
   digits_.resize(len);
   for (int i = 0; i < len; i++)
-    digits_[i] = acm_->Uniform(alphabet_.size());
+     digits_[i] = acm_->Uniform(static_cast<re2::int32>(alphabet_.size()));
   return true;
 }
 

@@ -32,7 +32,7 @@ TEST(Regexp, BigConcat) {
   for (size_t i = 0; i < v.size(); i++)
     x->Incref();
   CHECK_EQ(x->Ref(), 1 + static_cast<int>(v.size())) << x->Ref();
-  Regexp* re = Regexp::Concat(&v[0], v.size(), Regexp::NoParseFlags);
+  Regexp* re = Regexp::Concat(&v[0], static_cast<int>(v.size()), Regexp::NoParseFlags);
   CHECK_EQ(re->ToString(), string(v.size(), 'x'));
   re->Decref();
   CHECK_EQ(x->Ref(), 1) << x->Ref();

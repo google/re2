@@ -96,7 +96,8 @@ class Prog {
     void InitFail();
 
     // Getters
-    int id(Prog* p) { return this - p->inst_; }
+    int id(Prog* p) { return static_cast<int>(this - p->inst_)
+       ; }
     InstOp opcode() { return static_cast<InstOp>(out_opcode_&7); }
     int out()     { return out_opcode_>>3; }
     int out1()    { DCHECK(opcode() == kInstAlt || opcode() == kInstAltMatch); return out1_; }

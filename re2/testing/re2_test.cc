@@ -373,7 +373,7 @@ static void TestRecursion(int size, const char *pattern) {
   // Fill up a string repeating the pattern given
   string domain;
   domain.resize(size);
-  int patlen = strlen(pattern);
+  int patlen = static_cast<int>(strlen(pattern));
   for (int i = 0; i < size; ++i) {
     domain[i] = pattern[i % patlen];
   }

@@ -400,7 +400,7 @@ int PCRE::GlobalReplace(string *str,
     //    perl -le '$_ = "aa"; s/b*|aa/@/g; print'
     int matches;
     if (last_match_was_empty_string) {
-      matches = pattern.TryMatch(*str, start, ANCHOR_START, false,
+      matches = pattern.TryMatch(*str, static_cast<int>(start), ANCHOR_START, false,
                                  vec, kVecSize);
       if (matches <= 0) {
         if (start < str->length())
@@ -410,7 +410,7 @@ int PCRE::GlobalReplace(string *str,
         continue;
       }
     } else {
-      matches = pattern.TryMatch(*str, start, UNANCHORED, true, vec, kVecSize);
+       matches = pattern.TryMatch(*str, static_cast<int>(start), UNANCHORED, true, vec, kVecSize);
       if (matches <= 0)
         break;
     }
@@ -632,7 +632,7 @@ bool PCRE::DoMatch(const StringPiece& text,
                  const Arg* const args[],
                  int n) const {
   assert(n >= 0);
-  size_t const vecsize = (1 + n) * 3;  // results + PCRE workspace
+  int const vecsize = (1 + n) * 3;  // results + PCRE workspace
                                        // (as for kVecSize)
   int *vec = new int[vecsize];
   bool b = DoMatchImpl(text, anchor, consumed, args, n, vec, vecsize);
@@ -840,7 +840,7 @@ bool PCRE::Arg::parse_short_radix(const char* str,
   if (!parse_long_radix(str, n, &r, radix)) return false; // Could not parse
   if ((short)r != r) return false;       // Out of range
   if (dest == NULL) return true;
-  *(reinterpret_cast<short*>(dest)) = r;
+  *(reinterpret_cast<short*>(dest)) = static_cast<short>(r);
   return true;
 }
 
@@ -852,7 +852,7 @@ bool PCRE::Arg::parse_ushort_radix(const char* str,
   if (!parse_ulong_radix(str, n, &r, radix)) return false; // Could not parse
   if ((ushort)r != r) return false;                      // Out of range
   if (dest == NULL) return true;
-  *(reinterpret_cast<unsigned short*>(dest)) = r;
+  *(reinterpret_cast<unsigned short*>(dest)) = static_cast<short>(r);
   return true;
 }
 

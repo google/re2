@@ -108,7 +108,7 @@ TEST(SingleThreaded, BuildEntireDFA) {
       //dfamem = prog->dfa_mem();
       prog->BuildEntireDFA(Prog::kFirstMatch);
       prog->BuildEntireDFA(Prog::kLongestMatch);
-      usage = m.HeapGrowth();
+      usage = static_cast<int>(m.HeapGrowth());
       delete prog;
     }
     if (!UsingMallocCounter)
