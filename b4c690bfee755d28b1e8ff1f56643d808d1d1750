@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96cad9dc_263ff67f",
+        "filename": "re2/bitstate.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 6510
+      },
+      "writtenOn": "2015-10-28T17:10:24Z",
+      "side": 1,
+      "message": "Adding this cast just codifies the existing sub-optimal pattern. size() naturally returns a size_t, and pointer subtraction naturally returns a ptrdiff_t. Squeezing these into a uint is illogical, and adding a cast just tells the compiler to not complain about our illogical code.\n\nIn this case it looks trivial to change \u0027n\u0027 to the right type, presumably size_t or uint_p.",
+      "revId": "b4c690bfee755d28b1e8ff1f56643d808d1d1750",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96cad9dc_463672a9",
+        "filename": "re2/bitstate.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 6510
+      },
+      "writtenOn": "2015-10-28T17:10:24Z",
+      "side": 1,
+      "message": "Including reformatting changes makes the CL hardware to review. It took me a minute to realize that this was not a real change.",
+      "revId": "b4c690bfee755d28b1e8ff1f56643d808d1d1750",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
