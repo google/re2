@@ -6,6 +6,7 @@
 cmake_minimum_required(VERSION 2.8.7)
 
 project(RE2 CXX)
+option(BUILD_SHARED_LIBS "build shared libraries" OFF)
 option(USEPCRE "use PCRE in tests and benchmarks" OFF)
 
 set(EXTRA_TARGET_LINK_LIBRARIES)
@@ -54,7 +55,7 @@ set(RE2_LIBRARY_SOURCES
     util/valgrind.cc
     )
 
-add_library(re2 STATIC ${RE2_LIBRARY_SOURCES})
+add_library(re2 ${RE2_LIBRARY_SOURCES})
 
 set(TEST_LIBRARY_SOURCES
     re2/testing/backtrack.cc
