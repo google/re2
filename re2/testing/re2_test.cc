@@ -176,7 +176,7 @@ TEST(RE2, Replace) {
     { "", NULL, NULL, NULL, NULL, 0 }
   };
 
-  for (const ReplaceTest *t = tests; t->original != NULL; ++t) {
+  for (const ReplaceTest* t = tests; t->original != NULL; t++) {
     VLOG(1) << StringPrintf("\"%s\" =~ s/%s/%s/g", t->original, t->regexp, t->rewrite);
     string one(t->original);
     CHECK(RE2::Replace(&one, t->regexp, t->rewrite));
@@ -369,12 +369,12 @@ TEST(RE2, Match) {
   CHECK_EQ(port, 9000);
 }
 
-static void TestRecursion(int size, const char *pattern) {
+static void TestRecursion(int size, const char* pattern) {
   // Fill up a string repeating the pattern given
   string domain;
   domain.resize(size);
-  int patlen = strlen(pattern);
-  for (int i = 0; i < size; ++i) {
+  size_t patlen = strlen(pattern);
+  for (int i = 0; i < size; i++) {
     domain[i] = pattern[i % patlen];
   }
   // Just make sure it doesn't crash due to too much recursion.
