@@ -85,6 +85,11 @@ class LogMessage {
   DISALLOW_COPY_AND_ASSIGN(LogMessage);
 };
 
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable: 4722) // destructor never returns
+#endif
+
 class LogMessageFatal : public LogMessage {
  public:
   LogMessageFatal(const char* file, int line)
@@ -96,5 +101,9 @@ class LogMessageFatal : public LogMessage {
  private:
   DISALLOW_COPY_AND_ASSIGN(LogMessageFatal);
 };
+
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
 
 #endif  // RE2_UTIL_LOGGING_H__

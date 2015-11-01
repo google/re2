@@ -384,10 +384,10 @@ int PCRE::GlobalReplace(string *str,
   int count = 0;
   int vec[kVecSize] = {};
   string out;
-  size_t start = 0;
+  int start = 0;
   bool last_match_was_empty_string = false;
 
-  for (; start <= str->length();) {
+  while (start <= static_cast<int>(str->size())) {
     // If the previous match was for the empty string, we shouldn't
     // just match again: we'll match in the same way and get an
     // infinite loop.  Instead, we do the match in a special way:
@@ -403,18 +403,19 @@ int PCRE::GlobalReplace(string *str,
       matches = pattern.TryMatch(*str, start, ANCHOR_START, false,
                                  vec, kVecSize);
       if (matches <= 0) {
-        if (start < str->length())
+        if (start < static_cast<int>(str->size()))
           out.push_back((*str)[start]);
         start++;
         last_match_was_empty_string = false;
         continue;
       }
     } else {
-      matches = pattern.TryMatch(*str, start, UNANCHORED, true, vec, kVecSize);
+      matches = pattern.TryMatch(*str, start, UNANCHORED, true,
+                                 vec, kVecSize);
       if (matches <= 0)
         break;
     }
-    size_t matchstart = vec[0], matchend = vec[1];
+    int matchstart = vec[0], matchend = vec[1];
     assert(matchstart >= start);
     assert(matchend >= matchstart);
 
@@ -428,8 +429,8 @@ int PCRE::GlobalReplace(string *str,
   if (count == 0)
     return 0;
 
-  if (start < str->length())
-    out.append(*str, start, str->length() - start);
+  if (start < static_cast<int>(str->size()))
+    out.append(*str, start, static_cast<int>(str->size()) - start);
   swap(out, *str);
   return count;
 }
@@ -632,9 +633,9 @@ bool PCRE::DoMatch(const StringPiece& text,
                  const Arg* const args[],
                  int n) const {
   assert(n >= 0);
-  size_t const vecsize = (1 + n) * 3;  // results + PCRE workspace
-                                       // (as for kVecSize)
-  int *vec = new int[vecsize];
+  const int vecsize = (1 + n) * 3;  // results + PCRE workspace
+                                    // (as for kVecSize)
+  int* vec = new int[vecsize];
   bool b = DoMatchImpl(text, anchor, consumed, args, n, vec, vecsize);
   delete[] vec;
   return b;
@@ -840,7 +841,7 @@ bool PCRE::Arg::parse_short_radix(const char* str,
   if (!parse_long_radix(str, n, &r, radix)) return false; // Could not parse
   if ((short)r != r) return false;       // Out of range
   if (dest == NULL) return true;
-  *(reinterpret_cast<short*>(dest)) = r;
+  *(reinterpret_cast<short*>(dest)) = (short)r;
   return true;
 }
 
@@ -852,7 +853,7 @@ bool PCRE::Arg::parse_ushort_radix(const char* str,
   if (!parse_ulong_radix(str, n, &r, radix)) return false; // Could not parse
   if ((ushort)r != r) return false;                      // Out of range
   if (dest == NULL) return true;
-  *(reinterpret_cast<unsigned short*>(dest)) = r;
+  *(reinterpret_cast<unsigned short*>(dest)) = (ushort)r;
   return true;
 }
 

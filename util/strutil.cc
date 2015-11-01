@@ -83,7 +83,7 @@ string PrefixSuccessor(const StringPiece& prefix) {
   // 255's, we just return the empty string.
   bool done = false;
   string limit(prefix.data(), prefix.size());
-  int index = limit.length() - 1;
+  int index = static_cast<int>(limit.size()) - 1;
   while (!done && index >= 0) {
     if ((limit[index]&255) == 255) {
       limit.erase(index);
