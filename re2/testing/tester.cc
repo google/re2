@@ -392,10 +392,13 @@ void TestInstance::RunSearch(Engine type,
       if (kind_ == Prog::kFullMatch)
         re_anchor = RE2::ANCHOR_BOTH;
 
-      result->matched = re2_->Match(context,
-                                    text.begin() - context.begin(),
-                                    text.end() - context.begin(),
-                                    re_anchor, result->submatch, nsubmatch);
+      result->matched = re2_->Match(
+          context,
+          static_cast<int>(text.begin() - context.begin()),
+          static_cast<int>(text.end() - context.begin()),
+          re_anchor,
+          result->submatch,
+          nsubmatch);
       result->have_submatch = nsubmatch > 0;
       break;
     }

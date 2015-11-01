@@ -189,18 +189,16 @@ TEST(FilteredRE2Test, AtomTests) {
   EXPECT_EQ(0, nfail);
 }
 
-void FindAtomIndices(const vector<string> atoms,
-                     const vector<string> matched_atoms,
+void FindAtomIndices(const vector<string>& atoms,
+                     const vector<string>& matched_atoms,
                      vector<int>* atom_indices) {
   atom_indices->clear();
   for (size_t i = 0; i < matched_atoms.size(); i++) {
-    size_t j = 0;
-    for (; j < atoms.size(); j++) {
+    for (size_t j = 0; j < atoms.size(); j++) {
       if (matched_atoms[i] == atoms[j]) {
-        atom_indices->push_back(j);
+        atom_indices->push_back(static_cast<int>(j));
         break;
       }
-      EXPECT_LT(j, atoms.size());
     }
   }
 }

@@ -265,6 +265,7 @@ BENCHMARK_RANGE(Search_BigFixed_CachedPCRE,    8, 32<<10)->ThreadRange(1, NumCPU
 BENCHMARK_RANGE(Search_BigFixed_CachedRE2,     8, 1<<20)->ThreadRange(1, NumCPUs());
 
 // Benchmark: FindAndConsume
+
 void FindAndConsume(int iters, int nbytes) {
   StopBenchmarkTiming();
   string s;
@@ -286,9 +287,11 @@ BENCHMARK_RANGE(FindAndConsume, 8, 16<<20)->ThreadRange(1, NumCPUs());
 // Benchmark: successful anchored search.
 
 void SearchSuccess(int iters, int nbytes, const char* regexp, SearchImpl* search) {
+  StopBenchmarkTiming();
   string s;
   MakeText(&s, nbytes);
   BenchmarkMemoryUsage();
+  StartBenchmarkTiming();
   search(iters, regexp, s, Prog::kAnchored, true);
   SetBenchmarkBytesProcessed(static_cast<int64>(iters)*nbytes);
 }
@@ -346,11 +349,9 @@ BENCHMARK_RANGE(Search_Success1_Cached_RE2,     8, 16<<20)->ThreadRange(1, NumCP
 // Benchmark: use regexp to find phone number.
 
 void SearchDigits(int iters, SearchImpl* search) {
-  const char *text = "650-253-0001";
-  int len = strlen(text);
+  StringPiece s("650-253-0001");
   BenchmarkMemoryUsage();
-  search(iters, "([0-9]+)-([0-9]+)-([0-9]+)",
-         StringPiece(text, len), Prog::kAnchored, true);
+  search(iters, "([0-9]+)-([0-9]+)-([0-9]+)", s, Prog::kAnchored, true);
   SetBenchmarkItemsProcessed(iters);
 }
 
@@ -687,7 +688,6 @@ BENCHMARK(BM_Regexp_Compile)->ThreadRange(1, NumCPUs());
 BENCHMARK(BM_Regexp_SimplifyCompile)->ThreadRange(1, NumCPUs());
 BENCHMARK(BM_Regexp_NullWalk)->ThreadRange(1, NumCPUs());
 BENCHMARK(BM_RE2_Compile)->ThreadRange(1, NumCPUs());
-
 
 // Makes text of size nbytes, then calls run to search
 // the text for regexp iters times.
