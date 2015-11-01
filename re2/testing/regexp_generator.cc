@@ -134,7 +134,7 @@ void RegexpGenerator::GeneratePostfix(vector<string>* post, int nstk,
 
 // Generates a random postfix command sequence.
 // Stops and returns true once a single sequence has been generated.
-bool RegexpGenerator::GenerateRandomPostfix(vector<string> *post, int nstk,
+bool RegexpGenerator::GenerateRandomPostfix(vector<string>* post, int nstk,
                                             int ops, int atoms) {
   for (;;) {
     // Stop if we get to a single element, but only sometimes.
@@ -151,7 +151,7 @@ bool RegexpGenerator::GenerateRandomPostfix(vector<string> *post, int nstk,
 
     // Add operators if there are enough arguments.
     if (ops < maxops_ && acm_->Uniform(2) == 0) {
-      const string& fmt = ops_[acm_->Uniform(ops_.size())];
+      const string& fmt = ops_[acm_->Uniform(static_cast<int32>(ops_.size()))];
       int nargs = CountArgs(fmt);
       if (nargs <= nstk) {
         post->push_back(fmt);
@@ -165,7 +165,7 @@ bool RegexpGenerator::GenerateRandomPostfix(vector<string> *post, int nstk,
 
     // Add atoms if there is room.
     if (atoms < maxatoms_ && acm_->Uniform(2) == 0) {
-      post->push_back(atoms_[acm_->Uniform(atoms_.size())]);
+      post->push_back(atoms_[acm_->Uniform(static_cast<int32>(atoms_.size()))]);
       bool ret = GenerateRandomPostfix(post, nstk + 1, ops, atoms + 1);
       post->pop_back();
       if (ret)
