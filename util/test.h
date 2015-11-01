@@ -31,20 +31,15 @@ class TestRegisterer {
 #define EXPECT_GE CHECK_GE
 #define EXPECT_FALSE(x) CHECK(!(x))
 
-const bool UsingMallocCounter = false;
 namespace testing {
 class MallocCounter {
  public:
-  MallocCounter(int x) { } 
+  MallocCounter(int x) {}
   static const int THIS_THREAD_ONLY = 0;
   long long HeapGrowth() { return 0; }
   long long PeakHeapGrowth() { return 0; }
-  void Reset() { }
+  void Reset() {}
 };
 }  // namespace testing
-
-namespace re2 {
-int64 VirtualProcessSize();
-} // namespace re2
 
 #endif  // RE2_UTIL_TEST_H__
