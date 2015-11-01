@@ -10,6 +10,8 @@
 #include "re2/testing/regexp_generator.h"
 #include "re2/testing/string_generator.h"
 
+const bool UsingMallocCounter = false;
+
 DECLARE_bool(re2_dfa_bail_when_slow);
 
 DEFINE_int32(size, 8, "log2(number of DFA nodes)");
