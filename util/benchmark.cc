@@ -124,9 +124,9 @@ void RunBench(Benchmark* b, int nthread, int siz) {
 	while(ns < (int)1e9 && n < (int)1e9) {
 		last = n;
 		if(ns/n == 0)
-			n = 1e9;
+			n = (int)1e9;
 		else
-			n = 1e9 / (ns/n);
+			n = (int)1e9 / (ns/n);
 		
 		n = max(last+1, min(n+n/2, 100*last));
 		n = round(n);
