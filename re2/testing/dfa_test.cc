@@ -94,14 +94,13 @@ TEST(SingleThreaded, BuildEntireDFA) {
     s += "[ab]";
   s += "b";
 
-  //LOG(INFO) << s;
   Regexp* re = Regexp::Parse(s, Regexp::LikePerl, NULL);
   CHECK(re);
   int max = 24;
   for (int i = 17; i < max; i++) {
-    int limit = 1<<i;
-    int usage;
-    //int progusage, dfamem;
+    int64 limit = 1<<i;
+    int64 usage;
+    //int64 progusage, dfamem;
     {
       testing::MallocCounter m(testing::MallocCounter::THIS_THREAD_ONLY);
       Prog* prog = re->CompileToProg(limit);
@@ -115,8 +114,10 @@ TEST(SingleThreaded, BuildEntireDFA) {
     }
     if (!UsingMallocCounter)
       continue;
-    //LOG(INFO) << StringPrintf("Limit %d: prog used %d, DFA budget %d, total %d\n",
-    //                          limit, progusage, dfamem, usage);
+    //LOG(INFO) << "limit " << limit << ", "
+    //          << "prog usage " << progusage << ", "
+    //          << "DFA budget " << dfamem << ", "
+    //          << "total " << usage;
     // Tolerate +/- 10%.
     CHECK_GT(usage, limit*9/10);
     CHECK_LT(usage, limit*11/10);
@@ -224,13 +225,13 @@ TEST(SingleThreaded, SearchDFA) {
     peak_usage = m.PeakHeapGrowth();
     delete prog;
   }
-  re->Decref();
-
   if (!UsingMallocCounter)
     return;
-  //LOG(INFO) << "usage " << usage << " " << peak_usage;
+  //LOG(INFO) << "usage " << usage << ", "
+  //          << "peak usage " << peak_usage;
   CHECK_LT(usage, 1<<n);
   CHECK_LT(peak_usage, 1<<n);
+  re->Decref();
 }
 
 // Helper thread: searches for match, which should match,
