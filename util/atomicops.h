@@ -15,7 +15,17 @@
 #define __has_builtin(x) 0
 #endif
 
-#if !defined(OS_NACL) && (__has_builtin(__atomic_load_n) || (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__ >= 40801))
+#if __cplusplus >= 201103L
+
+#include <atomic>
+
+#define ATOMIC_LOAD_RELAXED(x, p) do { (x) = *(p); std::atomic_thread_fence(std::memory_order_relaxed); } while (0)
+#define ATOMIC_LOAD_CONSUME(x, p) do { (x) = *(p); std::atomic_thread_fence(std::memory_order_consume); } while (0)
+#define ATOMIC_LOAD_ACQUIRE(x, p) do { (x) = *(p); std::atomic_thread_fence(std::memory_order_acquire); } while (0)
+#define ATOMIC_STORE_RELAXED(p, v) do { std::atomic_thread_fence(std::memory_order_relaxed); *(p) = (v); } while (0)
+#define ATOMIC_STORE_RELEASE(p, v) do { std::atomic_thread_fence(std::memory_order_release); *(p) = (v); } while (0)
+
+#elif !defined(OS_NACL) && (__has_builtin(__atomic_load_n) || (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__ >= 40801))
 
 #define ATOMIC_LOAD_RELAXED(x, p) do { (x) = __atomic_load_n((p), __ATOMIC_RELAXED); } while (0)
 #define ATOMIC_LOAD_CONSUME(x, p) do { (x) = __atomic_load_n((p), __ATOMIC_CONSUME); } while (0)
@@ -53,19 +63,19 @@ static inline void WriteMemoryBarrier() {
 #elif defined(__ppc__) || defined(__powerpc64__)
 
 static inline void WriteMemoryBarrier() {
-  __asm__ __volatile__("eieio" : : : "memory");
-}
-
-#elif defined(__alpha__)
-
-static inline void WriteMemoryBarrier() {
-  __asm__ __volatile__("wmb" : : : "memory");
+  __asm__ __volatile__("lwsync" : : : "memory");
 }
 
 #elif defined(__aarch64__)
 
 static inline void WriteMemoryBarrier() {
   __asm__ __volatile__("dmb st" : : : "memory");
+}
+
+#elif defined(__alpha__)
+
+static inline void WriteMemoryBarrier() {
+  __asm__ __volatile__("wmb" : : : "memory");
 }
 
 #elif defined(__arm__) && defined(__linux__)
@@ -80,36 +90,28 @@ static inline void WriteMemoryBarrier() {
 #include <intrin.h>
 #include <windows.h>
 
+static inline void WriteMemoryBarrier() {
 #if defined(_M_IX86) || defined(_M_X64)
-
-// x86 and x64 CPUs have a strong memory model that prohibits most types of
-// reordering, so a non-instruction intrinsic to suppress compiler reordering is
-// sufficient. _WriteBarrier is deprecated but is still appropriate for the
-// "old compiler" path (pre C++11).
-inline void WriteMemoryBarrier() {
+  // x86 and x64 CPUs have a strong memory model that prohibits most types of
+  // reordering, so a non-instruction intrinsic to suppress compiler reordering
+  // is sufficient. _WriteBarrier is deprecated, but is still appropriate for
+  // the "old compiler" path (pre C++11).
   _WriteBarrier();
-}
-
 #else
-
-// Windows
-inline void WriteMemoryBarrier() {
   LONG x;
   ::InterlockedExchange(&x, 0);
-}
-
 #endif
+}
 
 #elif defined(OS_NACL)
 
-// Native Client
-inline void WriteMemoryBarrier() {
+static inline void WriteMemoryBarrier() {
   __sync_synchronize();
 }
 
 #elif defined(__mips__)
 
-inline void WriteMemoryBarrier() {
+static inline void WriteMemoryBarrier() {
   __asm__ __volatile__("sync" : : : "memory");
 }
 
@@ -148,7 +150,13 @@ static inline void MaybeReadMemoryBarrier() {}
 
 // Read barrier for various targets.
 
-#if defined(__aarch64__)
+#if defined(__ppc__) || defined(__powerpc64__)
+
+static inline void ReadMemoryBarrier() {
+  __asm__ __volatile__("lwsync" : : : "memory");
+}
+
+#elif defined(__aarch64__)
 
 static inline void ReadMemoryBarrier() {
   __asm__ __volatile__("dmb ld" : : : "memory");
@@ -162,7 +170,7 @@ static inline void ReadMemoryBarrier() {
 
 #elif defined(__mips__)
 
-inline void ReadMemoryBarrier() {
+static inline void ReadMemoryBarrier() {
   __asm__ __volatile__("sync" : : : "memory");
 }
 
