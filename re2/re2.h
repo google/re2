@@ -447,7 +447,6 @@ class RE2 {
   // does not count: if the regexp is "(a)(b)", returns 2.
   int NumberOfCapturingGroups() const;
 
-
   // Return a map from names to capturing indices.
   // The map records the index of the leftmost group
   // with the given name.
