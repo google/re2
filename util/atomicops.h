@@ -15,17 +15,7 @@
 #define __has_builtin(x) 0
 #endif
 
-#if __cplusplus >= 201103L
-
-#include <atomic>
-
-#define ATOMIC_LOAD_RELAXED(x, p) do { (x) = *(p); std::atomic_thread_fence(std::memory_order_relaxed); } while (0)
-#define ATOMIC_LOAD_CONSUME(x, p) do { (x) = *(p); std::atomic_thread_fence(std::memory_order_consume); } while (0)
-#define ATOMIC_LOAD_ACQUIRE(x, p) do { (x) = *(p); std::atomic_thread_fence(std::memory_order_acquire); } while (0)
-#define ATOMIC_STORE_RELAXED(p, v) do { std::atomic_thread_fence(std::memory_order_relaxed); *(p) = (v); } while (0)
-#define ATOMIC_STORE_RELEASE(p, v) do { std::atomic_thread_fence(std::memory_order_release); *(p) = (v); } while (0)
-
-#elif !defined(OS_NACL) && (__has_builtin(__atomic_load_n) || (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__ >= 40801))
+#if !defined(OS_NACL) && (__has_builtin(__atomic_load_n) || (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__ >= 40801))
 
 #define ATOMIC_LOAD_RELAXED(x, p) do { (x) = __atomic_load_n((p), __ATOMIC_RELAXED); } while (0)
 #define ATOMIC_LOAD_CONSUME(x, p) do { (x) = __atomic_load_n((p), __ATOMIC_CONSUME); } while (0)
