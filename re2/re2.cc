@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <string>
 #include <errno.h>
-#include "util/atomicops.h"
 #include "util/util.h"
 #include "util/flags.h"
 #include "util/sparse_array.h"
@@ -289,8 +288,19 @@ int RE2::ProgramFanout(map<int, int>* histogram) const {
   return histogram->rbegin()->first;
 }
 
+// Returns num_captures_, computing it if needed, or -1 if the
+// regexp wasn't valid on construction.
+int RE2::NumberOfCapturingGroups() const {
+  MutexLock l(mutex_);
+  if (suffix_regexp_ == NULL)
+    return -1;
+  if (num_captures_ == -1)
+    num_captures_ = suffix_regexp_->NumCaptures();
+  return num_captures_;
+}
+
 // Returns named_groups_, computing it if needed.
-const map<string, int>&  RE2::NamedCapturingGroups() const {
+const map<string, int>& RE2::NamedCapturingGroups() const {
   MutexLock l(mutex_);
   if (!ok())
     return *empty_named_groups;
@@ -303,7 +313,7 @@ const map<string, int>&  RE2::NamedCapturingGroups() const {
 }
 
 // Returns group_names_, computing it if needed.
-const map<int, string>&  RE2::CapturingGroupNames() const {
+const map<int, string>& RE2::CapturingGroupNames() const {
   MutexLock l(mutex_);
   if (!ok())
     return *empty_group_names;
@@ -905,20 +915,6 @@ bool RE2::Rewrite(string *out, const StringPiece &rewrite,
     }
   }
   return true;
-}
-
-// Return the number of capturing subpatterns, or -1 if the
-// regexp wasn't valid on construction.
-int RE2::NumberOfCapturingGroups() const {
-  if (suffix_regexp_ == NULL)
-    return -1;
-  int n;
-  ATOMIC_LOAD_RELAXED(n, &num_captures_);
-  if (n == -1) {
-    n = suffix_regexp_->NumCaptures();
-    ATOMIC_STORE_RELAXED(&num_captures_, n);
-  }
-  return n;
 }
 
 // Checks that the rewrite string is well-formed with respect to this
