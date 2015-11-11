@@ -10,7 +10,7 @@
 #include "re2/testing/regexp_generator.h"
 #include "re2/testing/string_generator.h"
 
-const bool UsingMallocCounter = false;
+static const bool UsingMallocCounter = false;
 
 DECLARE_bool(re2_dfa_bail_when_slow);
 
