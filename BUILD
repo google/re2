@@ -10,7 +10,14 @@ licenses(["notice"])
 # all of the other parts of RE2.
 cc_library(
     name = "stringpiece",
-    srcs = ["re2/stringpiece.cc"],
+    srcs = [
+        "re2/stringpiece.cc",
+        "util/util.h",
+        "util/flags.h",
+        "util/logging.cc",
+        "util/logging.h",
+        "util/mutex.h",
+        "util/utf.h"],
     hdrs = ["re2/stringpiece.h"],
     includes = ["."],
     visibility = ["//visibility:public"],
@@ -39,6 +46,8 @@ cc_library(
         "re2/regexp.h",
         "re2/set.cc",
         "re2/simplify.cc",
+        "re2/stringpiece.cc",
+        "re2/stringpiece.h",
         "re2/tostring.cc",
         "re2/unicode_casefold.cc",
         "re2/unicode_casefold.h",
@@ -70,9 +79,6 @@ cc_library(
     includes = ["."],
     linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
-    deps = [
-        ":stringpiece",
-    ],
 )
 
 cc_library(
