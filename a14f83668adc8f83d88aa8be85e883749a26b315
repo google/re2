@@ -46,6 +46,30 @@
       "revId": "a14f83668adc8f83d88aa8be85e883749a26b315",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d67c5259_08ae4ba8",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 6735
+      },
+      "writtenOn": "2015-11-16T13:31:00Z",
+      "side": 1,
+      "message": "That\u0027s *even* better. I was wondering why you had the stringpiece target in the first place :)",
+      "parentUuid": "dbe8fb67_85730485",
+      "range": {
+        "startLine": 18,
+        "startChar": 22,
+        "endLine": 18,
+        "endChar": 24
+      },
+      "revId": "a14f83668adc8f83d88aa8be85e883749a26b315",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
