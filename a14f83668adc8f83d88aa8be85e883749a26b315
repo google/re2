@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d67c5259_8563245b",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 6735
+      },
+      "writtenOn": "2015-11-16T13:20:58Z",
+      "side": 1,
+      "message": "Are you sure that this works?\n\nThis was the original approach I wanted to take, but then I realized that util/strutil.h and util/pcre.h say \"#include stringpiece.h\", so util must depend on stringpiece, but stringpiece must apparently also depend on util.",
+      "range": {
+        "startLine": 18,
+        "startChar": 22,
+        "endLine": 18,
+        "endChar": 24
+      },
+      "revId": "a14f83668adc8f83d88aa8be85e883749a26b315",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
