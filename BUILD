@@ -6,16 +6,6 @@
 
 licenses(["notice"])
 
-# stringpiece is a standalone library so that it can be used without pulling in
-# all of the other parts of RE2.
-cc_library(
-    name = "stringpiece",
-    srcs = ["re2/stringpiece.cc"],
-    hdrs = ["re2/stringpiece.h"],
-    includes = ["."],
-    visibility = ["//visibility:public"],
-)
-
 cc_library(
     name = "re2",
     srcs = [
@@ -39,6 +29,7 @@ cc_library(
         "re2/regexp.h",
         "re2/set.cc",
         "re2/simplify.cc",
+        "re2/stringpiece.cc",
         "re2/tostring.cc",
         "re2/unicode_casefold.cc",
         "re2/unicode_casefold.h",
@@ -65,14 +56,12 @@ cc_library(
         "re2/filtered_re2.h",
         "re2/re2.h",
         "re2/set.h",
+        "re2/stringpiece.h",
         "re2/variadic_function.h",
     ],
     includes = ["."],
     linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
-    deps = [
-        ":stringpiece",
-    ],
 )
 
 cc_library(
@@ -102,9 +91,7 @@ cc_library(
         "util/thread.h",
     ],
     includes = ["."],
-    deps = [
-        ":re2",
-    ],
+    deps = [":re2"],
 )
 
 load("re2_test", "re2_test")
