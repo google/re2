@@ -6,14 +6,49 @@
 
 licenses(["notice"])
 
+cc_library(
+    name = "util",
+    srcs = [
+        "util/hash.cc",
+        "util/logging.cc",
+        "util/pcre.cc",
+        "util/random.cc",
+        "util/rune.cc",
+        "util/stringprintf.cc",
+        "util/strutil.cc",
+        "util/test.cc",
+        "util/thread.cc",
+        "util/valgrind.cc",
+    ],
+    hdrs = [
+        "util/atomicops.h",
+        "util/flags.h",
+        "util/logging.h",
+        "util/mutex.h",
+        "util/pcre.h",
+        "util/random.h",
+        "util/sparse_array.h",
+        "util/sparse_set.h",
+        "util/test.h",
+        "util/thread.h",
+        "util/utf.h",
+        "util/util.h",
+        "util/valgrind.h",
+    ],
+    includes = ["."],
+    linkopts = ["-pthread"],
+    visibility = ["//visibility:public"],
+)
+
 # stringpiece is a standalone library so that it can be used without pulling in
-# all of the other parts of RE2.
+# the core of RE2.
 cc_library(
     name = "stringpiece",
     srcs = ["re2/stringpiece.cc"],
     hdrs = ["re2/stringpiece.h"],
     includes = ["."],
     visibility = ["//visibility:public"],
+    deps = [":util"],
 )
 
 cc_library(
@@ -45,21 +80,6 @@ cc_library(
         "re2/unicode_groups.cc",
         "re2/unicode_groups.h",
         "re2/walker-inl.h",
-        "util/atomicops.h",
-        "util/flags.h",
-        "util/hash.cc",
-        "util/logging.cc",
-        "util/logging.h",
-        "util/mutex.h",
-        "util/rune.cc",
-        "util/sparse_array.h",
-        "util/sparse_set.h",
-        "util/stringprintf.cc",
-        "util/strutil.cc",
-        "util/utf.h",
-        "util/util.h",
-        "util/valgrind.cc",
-        "util/valgrind.h",
     ],
     hdrs = [
         "re2/filtered_re2.h",
@@ -68,10 +88,10 @@ cc_library(
         "re2/variadic_function.h",
     ],
     includes = ["."],
-    linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
     deps = [
         ":stringpiece",
+        ":util",
     ],
 )
 
@@ -86,24 +106,18 @@ cc_library(
         "re2/testing/regexp_generator.cc",
         "re2/testing/string_generator.cc",
         "re2/testing/tester.cc",
-        "util/pcre.cc",
-        "util/random.cc",
-        "util/test.cc",
-        "util/thread.cc",
     ],
     hdrs = [
         "re2/testing/exhaustive_tester.h",
         "re2/testing/regexp_generator.h",
         "re2/testing/string_generator.h",
         "re2/testing/tester.h",
-        "util/pcre.h",
-        "util/random.h",
-        "util/test.h",
-        "util/thread.h",
     ],
     includes = ["."],
     deps = [
         ":re2",
+        ":stringpiece",
+        ":util",
     ],
 )
 
