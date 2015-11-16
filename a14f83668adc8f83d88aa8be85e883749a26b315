@@ -22,6 +22,30 @@
       "revId": "a14f83668adc8f83d88aa8be85e883749a26b315",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbe8fb67_85730485",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-11-16T13:29:39Z",
+      "side": 1,
+      "message": "Ouch! Thanks for catching that.\n\nI\u0027ll fold stringpiece into re2 for now. That will unblock you while I consider how to untangle this.",
+      "parentUuid": "d67c5259_8563245b",
+      "range": {
+        "startLine": 18,
+        "startChar": 22,
+        "endLine": 18,
+        "endChar": 24
+      },
+      "revId": "a14f83668adc8f83d88aa8be85e883749a26b315",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
