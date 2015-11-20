@@ -5,6 +5,7 @@ visit https://github.com/google/re2/.
 
 The short version is:
 
+bazel build
 make
 make test
 make install
