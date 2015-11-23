@@ -84,7 +84,7 @@ TEST(InterestingUTF8, AB) {
     "[[:upper:]] [[:xdigit:]] [\\s\\S] [\\d\\D] [^\\w\\W] [^\\d\\D]");
   vector<string> ops;  // no ops
   vector<string> alpha = InterestingUTF8();
-  for (int i = 0; i < alpha.size(); i++)
+  for (size_t i = 0; i < alpha.size(); i++)
     alpha[i] = "a" + alpha[i] + "b";
   ExhaustiveTest(1, 0, atoms, ops,
                  1, alpha, "a%sb", "");
