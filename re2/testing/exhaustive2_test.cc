@@ -4,6 +4,8 @@
 
 // Exhaustive testing of regular expression matching.
 
+#include <stddef.h>
+
 #include "util/test.h"
 #include "re2/re2.h"
 #include "re2/testing/exhaustive_tester.h"
@@ -23,7 +25,7 @@ TEST(EmptyString, Exhaustive) {
 TEST(Punctuation, Literals) {
   vector<string> alphabet = Explode("()*+?{}[]\\^$.");
   vector<string> escaped = alphabet;
-  for (int i = 0; i < escaped.size(); i++)
+  for (size_t i = 0; i < escaped.size(); i++)
     escaped[i] = "\\" + escaped[i];
   ExhaustiveTest(1, 1, escaped, RegexpGenerator::EgrepOps(),
                  2, alphabet, "", "");
