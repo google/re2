@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb6bff2e_a36b3ac4",
+        "filename": "re2/testing/exhaustive2_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-11-24T02:39:37Z",
+      "side": 1,
+      "message": "Please omit this.",
+      "revId": "0021dde1a3c9b8d17510e1399a3a08636ab84c65",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb6bff2e_836e3ed5",
+        "filename": "re2/testing/exhaustive3_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-11-24T02:39:37Z",
+      "side": 1,
+      "message": "Please omit this.",
+      "revId": "0021dde1a3c9b8d17510e1399a3a08636ab84c65",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
