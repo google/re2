@@ -8,8 +8,8 @@
 # LDPCRE=-L/usr/local/lib -lpcre
 
 CXX?=g++
-CXXFLAGS?=-Wall -O3 -g -pthread # can override
-RE2_CXXFLAGS?=-Wsign-compare -c -I. $(CCPCRE)  # required
+CXXFLAGS?=-O3 -g  # can override
+RE2_CXXFLAGS?=-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCPCRE)  # required
 LDFLAGS?=-pthread
 AR?=ar
 ARFLAGS?=rsc
@@ -169,15 +169,15 @@ DBIGTESTS=$(patsubst obj/%,obj/dbg/%,$(BIGTESTS))
 
 obj/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CXX) -o $@ $(CPPFLAGS) $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.cc
+	$(CXX) -c -o $@ $(CPPFLAGS) $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.cc
 
 obj/dbg/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CXX) -o $@ -fPIC $(CPPFLAGS) $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc
+	$(CXX) -c -o $@ $(CPPFLAGS) $(CXXFLAGS) $(RE2_CXXFLAGS) $*.cc
 
 obj/so/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CXX) -o $@ -fPIC $(CPPFLAGS) $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.cc
+	$(CXX) -c -o $@ -fPIC $(CPPFLAGS) $(CXXFLAGS) $(RE2_CXXFLAGS) -DNDEBUG $*.cc
 
 obj/libre2.a: $(OFILES)
 	@mkdir -p obj
