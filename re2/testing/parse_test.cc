@@ -133,6 +133,9 @@ static Test tests[] = {
   { "\\Q+\\E+", "plus{lit{+}}" },
   { "\\Q\\\\E", "lit{\\}" },
   { "\\Q\\\\\\E", "str{\\\\}" },
+  { "\\Qa\\E*", "star{lit{a}}" },
+  { "\\Qab\\E*", "cat{lit{a}star{lit{b}}}" },
+  { "\\Qabc\\E*", "cat{str{ab}star{lit{c}}}" },
 
   // Test Perl \A and \z
   { "(?m)^", "bol{}" },
@@ -362,6 +365,7 @@ const char* badtests[] = {
   "a{100000,}",
   "((((((((((x{2}){2}){2}){2}){2}){2}){2}){2}){2}){2})",
   "(((x{7}){11}){13})",
+  "\\Q\\E*",
 };
 
 // Valid in Perl, bad in POSIX
