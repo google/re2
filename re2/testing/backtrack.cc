@@ -72,7 +72,7 @@ class Backtracker {
   // Search state
   const char* cap_[64];     // capture registers
   uint32 *visited_;         // bitmap: (Inst*, char*) pairs already backtracked
-  int nvisited_;            //   # of words in bitmap
+  size_t nvisited_;         //   # of words in bitmap
 };
 
 Backtracker::Backtracker(Prog* prog)
@@ -150,7 +150,7 @@ bool Backtracker::Visit(int id, const char* p) {
   // either it didn't match or it did but we're hoping for a better match.
   // Either way, don't go down that road again.
   CHECK(p <= text_.end());
-  int n = id*(text_.size()+1) + (p - text_.begin());
+  size_t n = id*(text_.size()+1) + (p - text_.begin());
   CHECK_LT(n/32, nvisited_);
   if (visited_[n/32] & (1 << (n&31)))
     return false;
@@ -212,7 +212,8 @@ bool Backtracker::Visit(int id, const char* p) {
       if (submatch_[0].data() == NULL ||           // First match so far ...
           (longest_ && p > submatch_[0].end())) {  // ... or better match
         for (int i = 0; i < nsubmatch_; i++)
-          submatch_[i] = StringPiece(cap_[2*i], cap_[2*i+1] - cap_[2*i]);
+          submatch_[i].set(cap_[2*i],
+                           static_cast<int>(cap_[2*i+1] - cap_[2*i]));
       }
       return true;
 

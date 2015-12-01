@@ -45,7 +45,7 @@ int RE2::Set::Add(const StringPiece& pattern, string* error) {
   }
 
   // Concatenate with match index and push on vector.
-  int n = re_.size();
+  int n = static_cast<int>(re_.size());
   re2::Regexp* m = re2::Regexp::HaveMatch(n, pf);
   if (re->op() == kRegexpConcat) {
     int nsub = re->nsub();
@@ -76,7 +76,7 @@ bool RE2::Set::Compile() {
   Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
     options_.ParseFlags());
   re2::Regexp* re = re2::Regexp::Alternate(const_cast<re2::Regexp**>(re_.data()),
-                                           re_.size(), pf);
+                                           static_cast<int>(re_.size()), pf);
   re_.clear();
   re2::Regexp* sre = re->Simplify();
   re->Decref();

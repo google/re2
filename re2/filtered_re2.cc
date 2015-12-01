@@ -33,7 +33,7 @@ RE2::ErrorCode FilteredRE2::Add(const StringPiece& pattern,
     }
     delete re;
   } else {
-    *id = re2_vec_.size();
+    *id = static_cast<int>(re2_vec_.size());
     re2_vec_.push_back(re);
   }
 
