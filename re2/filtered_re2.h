@@ -76,7 +76,7 @@ class FilteredRE2 {
                      vector<int>* potential_regexps) const;
 
   // The number of regexps added.
-  int NumRegexps() const { return re2_vec_.size(); }
+  int NumRegexps() const { return static_cast<int>(re2_vec_.size()); }
 
  private:
 
