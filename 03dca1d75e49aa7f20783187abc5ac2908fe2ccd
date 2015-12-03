@@ -39,6 +39,24 @@
       "revId": "03dca1d75e49aa7f20783187abc5ac2908fe2ccd",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db655bc5_9afe2d5b",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2015-12-03T03:51:08Z",
+      "side": 1,
+      "message": "I was going to do that, actually, but I would have had to move all of the other -o arguments as well. :)",
+      "parentUuid": "fb421f2f_eb15911a",
+      "revId": "03dca1d75e49aa7f20783187abc5ac2908fe2ccd",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
