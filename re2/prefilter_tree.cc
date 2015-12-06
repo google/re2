@@ -168,7 +168,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
   for (size_t i = 0; i < prefilter_vec_.size(); i++) {
     Prefilter* f = prefilter_vec_[i];
     if (f == NULL)
-      unfiltered_.push_back(i);
+      unfiltered_.push_back(static_cast<int>(i));
 
     // We push NULL also on to v, so that we maintain the
     // mapping of index==regexpid for level=0 prefilter nodes.
@@ -189,7 +189,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
 
   // Identify unique nodes.
   int unique_id = 0;
-  for (int i = v.size() - 1; i >= 0; i--) {
+  for (int i = static_cast<int>(v.size()) - 1; i >= 0; i--) {
     Prefilter *node = v[i];
     if (node == NULL)
       continue;
@@ -211,7 +211,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
   entries_.resize(node_map_.size());
 
   // Create parent StdIntMap for the entries.
-  for (int i = v.size()  - 1; i >= 0; i--) {
+  for (int i = static_cast<int>(v.size()) - 1; i >= 0; i--) {
     Prefilter* prefilter = v[i];
     if (prefilter == NULL)
       continue;
@@ -224,7 +224,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
   }
 
   // Fill the entries.
-  for (int i = v.size()  - 1; i >= 0; i--) {
+  for (int i = static_cast<int>(v.size()) - 1; i >= 0; i--) {
     Prefilter* prefilter = v[i];
     if (prefilter == NULL)
       continue;
@@ -263,8 +263,9 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
             (*child_entry->parents)[prefilter->unique_id()] = 1;
           }
         }
-        entry->propagate_up_at_count =
-            prefilter->op() == Prefilter::AND ? uniq_child.size() : 1;
+        entry->propagate_up_at_count = prefilter->op() == Prefilter::AND
+                                           ? static_cast<int>(uniq_child.size())
+                                           : 1;
 
         break;
       }
@@ -290,10 +291,10 @@ void PrefilterTree::RegexpsGivenStrings(
   if (!compiled_) {
     LOG(WARNING) << "Compile() not called";
     for (size_t i = 0; i < prefilter_vec_.size(); ++i)
-      regexps->push_back(i);
+      regexps->push_back(static_cast<int>(i));
   } else {
     if (!prefilter_vec_.empty()) {
-      IntMap regexps_map(prefilter_vec_.size());
+      IntMap regexps_map(static_cast<int>(prefilter_vec_.size()));
       vector<int> matched_atom_ids;
       for (size_t j = 0; j < matched_atoms.size(); j++) {
         matched_atom_ids.push_back(atom_index_to_id_[matched_atoms[j]]);
@@ -313,8 +314,8 @@ void PrefilterTree::RegexpsGivenStrings(
 
 void PrefilterTree::PropagateMatch(const vector<int>& atom_ids,
                                    IntMap* regexps) const {
-  IntMap count(entries_.size());
-  IntMap work(entries_.size());
+  IntMap count(static_cast<int>(entries_.size()));
+  IntMap work(static_cast<int>(entries_.size()));
   for (size_t i = 0; i < atom_ids.size(); i++)
     work.set(atom_ids[i], 1);
   for (IntMap::iterator it = work.begin(); it != work.end(); ++it) {
