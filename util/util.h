@@ -70,9 +70,6 @@ using std::unordered_set;
 #define strtoull _strtoui64
 #define vsnprintf vsnprintf_s
 
-#pragma warning(disable: 4018) // signed/unsigned mismatch
-#pragma warning(disable: 4800) // conversion from int to bool
-
 #endif
 
 namespace re2 {
@@ -141,7 +138,7 @@ static inline uint64 Hash64StringWithSeed(const char* s, int len, uint32 seed) {
   return ((uint64)x << 32) | y;
 }
 
-int RunningOnValgrind();
+bool RunningOnValgrind();
 
 }  // namespace re2
 

@@ -485,7 +485,7 @@ string PCRE::QuoteMeta(const StringPiece& unquoted) {
 /***** Actual matching and rewriting code *****/
 
 bool PCRE::HitLimit() {
-  return hit_limit_;
+  return hit_limit_ != 0;
 }
 
 void PCRE::ClearHitLimit() {

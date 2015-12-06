@@ -678,7 +678,7 @@ bool Regexp::RequiredPrefix(string *prefix, bool *foldcase, Regexp** suffix) {
       }
       break;
   }
-  *foldcase = (sub[i]->parse_flags() & FoldCase);
+  *foldcase = (sub[i]->parse_flags() & FoldCase) != 0;
   i++;
 
   // The rest.

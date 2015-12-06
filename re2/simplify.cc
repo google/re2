@@ -61,7 +61,7 @@ bool Regexp::ComputeSimple() {
       // These are simple as long as the subpieces are simple.
       subs = sub();
       for (int i = 0; i < nsub_; i++)
-        if (!subs[i]->simple_)
+        if (!subs[i]->simple())
           return false;
       return true;
     case kRegexpCharClass:
@@ -71,12 +71,12 @@ bool Regexp::ComputeSimple() {
       return !cc_->empty() && !cc_->full();
     case kRegexpCapture:
       subs = sub();
-      return subs[0]->simple_;
+      return subs[0]->simple();
     case kRegexpStar:
     case kRegexpPlus:
     case kRegexpQuest:
       subs = sub();
-      if (!subs[0]->simple_)
+      if (!subs[0]->simple())
         return false;
       switch (subs[0]->op_) {
         case kRegexpStar:
@@ -438,7 +438,7 @@ Regexp* SimplifyWalker::ShortVisit(Regexp* re, Regexp* parent_arg) {
 }
 
 Regexp* SimplifyWalker::PreVisit(Regexp* re, Regexp* parent_arg, bool* stop) {
-  if (re->simple_) {
+  if (re->simple()) {
     *stop = true;
     return re->Incref();
   }
