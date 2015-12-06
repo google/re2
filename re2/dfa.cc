@@ -94,7 +94,7 @@ class DFA {
   // States, linked by the next_ pointers.  If in state s and reading
   // byte c, the next state should be s->next_[c].
   struct State {
-    inline bool IsMatch() const { return flag_ & kFlagMatch; }
+    inline bool IsMatch() const { return (flag_ & kFlagMatch) != 0; }
     void SaveMatch(vector<int>* v);
 
     int* inst_;         // Instruction pointers in the state.
@@ -1015,7 +1015,7 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   // The state flag kFlagLastWord says whether the last
   // byte processed was a word character.  Use that info to
   // insert empty-width (non-)word boundaries.
-  bool islastword = state->flag_ & kFlagLastWord;
+  bool islastword = (state->flag_ & kFlagLastWord) != 0;
   bool isword = (c != kByteEndText && Prog::IsWordChar(static_cast<uint8>(c)));
   if (isword == islastword)
     beforeflag |= kEmptyNonWordBoundary;

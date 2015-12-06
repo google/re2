@@ -51,28 +51,18 @@
 
 namespace re2 {
 
-static bool InitMemory() {
-#ifdef MEMORY_SANITIZER
-  return true;
-#else
-  return RunningOnValgrind();
-#endif
-}
-
 class SparseSet {
  public:
   SparseSet()
-    : size_(0), max_size_(0), sparse_to_dense_(NULL), dense_(NULL),
-      init_memory_(InitMemory()) {}
+    : size_(0), max_size_(0), sparse_to_dense_(NULL), dense_(NULL) {}
 
   SparseSet(int max_size) {
     max_size_ = max_size;
     sparse_to_dense_ = new int[max_size];
     dense_ = new int[max_size];
-    init_memory_ = InitMemory();
     // Don't need to zero the memory, but do so anyway
     // to appease Valgrind.
-    if (init_memory_) {
+    if (InitMemory()) {
       for (int i = 0; i < max_size; i++) {
         dense_[i] = 0xababababU;
         sparse_to_dense_[i] = 0xababababU;
@@ -104,7 +94,7 @@ class SparseSet {
       int* a = new int[new_max_size];
       if (sparse_to_dense_) {
         memmove(a, sparse_to_dense_, max_size_*sizeof a[0]);
-        if (init_memory_) {
+        if (InitMemory()) {
           for (int i = max_size_; i < new_max_size; i++)
             a[i] = 0xababababU;
         }
@@ -115,7 +105,7 @@ class SparseSet {
       a = new int[new_max_size];
       if (dense_) {
         memmove(a, dense_, size_*sizeof a[0]);
-        if (init_memory_) {
+        if (InitMemory()) {
           for (int i = size_; i < new_max_size; i++)
             a[i] = 0xababababU;
         }
@@ -174,11 +164,18 @@ class SparseSet {
   static bool less(int a, int b) { return a < b; }
 
  private:
+  static bool InitMemory() {
+#ifdef MEMORY_SANITIZER
+    return true;
+#else
+    return RunningOnValgrind();
+#endif
+  }
+
   int size_;
   int max_size_;
   int* sparse_to_dense_;
   int* dense_;
-  bool init_memory_;
 
   DISALLOW_COPY_AND_ASSIGN(SparseSet);
 };

@@ -762,16 +762,16 @@ Frag Compiler::PostVisit(Regexp* re, Frag, Frag, Frag* child_frags,
     }
 
     case kRegexpStar:
-      return Star(child_frags[0], re->parse_flags()&Regexp::NonGreedy);
+      return Star(child_frags[0], (re->parse_flags()&Regexp::NonGreedy) != 0);
 
     case kRegexpPlus:
-      return Plus(child_frags[0], re->parse_flags()&Regexp::NonGreedy);
+      return Plus(child_frags[0], (re->parse_flags()&Regexp::NonGreedy) != 0);
 
     case kRegexpQuest:
-      return Quest(child_frags[0], re->parse_flags()&Regexp::NonGreedy);
+      return Quest(child_frags[0], (re->parse_flags()&Regexp::NonGreedy) != 0);
 
     case kRegexpLiteral:
-      return Literal(re->rune(), re->parse_flags()&Regexp::FoldCase);
+      return Literal(re->rune(), (re->parse_flags()&Regexp::FoldCase) != 0);
 
     case kRegexpLiteralString: {
       // Concatenation of literals.
@@ -779,7 +779,8 @@ Frag Compiler::PostVisit(Regexp* re, Frag, Frag, Frag* child_frags,
         return Nop();
       Frag f;
       for (int i = 0; i < re->nrunes(); i++) {
-        Frag f1 = Literal(re->runes()[i], re->parse_flags()&Regexp::FoldCase);
+        Frag f1 = Literal(re->runes()[i],
+                          (re->parse_flags()&Regexp::FoldCase) != 0);
         if (i == 0)
           f = f1;
         else

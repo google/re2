@@ -313,7 +313,7 @@ class Regexp {
   // Get.  No set, Regexps are logically immutable once created.
   RegexpOp op() { return static_cast<RegexpOp>(op_); }
   int nsub() { return nsub_; }
-  bool simple() { return simple_; }
+  bool simple() { return simple_ != 0; }
   enum ParseFlags parse_flags() { return static_cast<ParseFlags>(parse_flags_); }
   int Ref();  // For testing.
 

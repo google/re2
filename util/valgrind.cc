@@ -9,17 +9,11 @@
 
 namespace re2 {
 
-#ifndef __has_feature
-#define __has_feature(x) 0
-#endif
-
-int RunningOnValgrind() {
-#if __has_feature(memory_sanitizer)
-	return true;
-#elif defined(RUNNING_ON_VALGRIND)
-	return RUNNING_ON_VALGRIND;
+bool RunningOnValgrind() {
+#ifdef RUNNING_ON_VALGRIND
+  return RUNNING_ON_VALGRIND != 0;
 #else
-	return 0;
+  return false;
 #endif
 }
 

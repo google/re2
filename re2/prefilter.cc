@@ -503,7 +503,7 @@ Prefilter::Info* Prefilter::BuildInfo(Regexp* re) {
     LOG(INFO) << "BuildPrefilter::Info: " << re->ToString();
   }
 
-  bool latin1 = re->parse_flags() & Regexp::Latin1;
+  bool latin1 = (re->parse_flags() & Regexp::Latin1) != 0;
   Prefilter::Info::Walker w(latin1);
   Prefilter::Info* info = w.WalkExponential(re, NULL, 100000);
 
