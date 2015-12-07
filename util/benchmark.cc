@@ -126,7 +126,7 @@ void RunBench(Benchmark* b, int nthread, int siz) {
 		if(ns/n == 0)
 			n = (int)1e9;
 		else
-			n = (int)1e9 / (ns/n);
+			n = (int)1e9 / static_cast<int>(ns/n);
 		
 		n = max(last+1, min(n+n/2, 100*last));
 		n = round(n);
