@@ -279,16 +279,22 @@ void SparseArray<Value>::resize(int new_max_size) {
     int* a = new int[new_max_size];
     if (sparse_to_dense_) {
       memmove(a, sparse_to_dense_, max_size_*sizeof a[0]);
-      // Don't need to zero the memory but appease Valgrind.
-      if (InitMemory()) {
-        for (int i = max_size_; i < new_max_size; i++)
-          a[i] = 0xababababU;
-      }
       delete[] sparse_to_dense_;
     }
     sparse_to_dense_ = a;
 
     dense_.resize(new_max_size);
+
+    // These don't need to be initialized for correctness,
+    // but Valgrind will warn about use of uninitialized memory,
+    // so initialize the new memory when compiling debug binaries.
+    // Initialize it to garbage to detect bugs in the future.
+    if (InitMemory()) {
+      for (int i = max_size_; i < new_max_size; i++) {
+        sparse_to_dense_[i] = 0xababababU;
+        dense_[i].index_ = 0xababababU;
+      }
+    }
   }
   max_size_ = new_max_size;
   if (size_ > max_size_)
