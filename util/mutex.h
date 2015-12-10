@@ -55,7 +55,9 @@ namespace re2 {
 # include <pthread.h>
   typedef pthread_mutex_t MutexType;
 #elif defined(_WIN32)
-# define WIN32_LEAN_AND_MEAN  // We only need minimal includes
+# ifndef WIN32_LEAN_AND_MEAN
+#   define WIN32_LEAN_AND_MEAN  // We only need minimal includes
+# endif
 # ifdef GMUTEX_TRYLOCK
   // We need Windows NT or later for TryEnterCriticalSection().  If you
   // don't need that functionality, you can remove these _WIN32_WINNT
