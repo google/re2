@@ -279,12 +279,12 @@ void SparseArray<Value>::resize(int new_max_size) {
     int* a = new int[new_max_size];
     if (sparse_to_dense_) {
       memmove(a, sparse_to_dense_, max_size_*sizeof a[0]);
-      // Don't need to zero the memory but appease Valgrind.
-      if (InitMemory()) {
-        for (int i = max_size_; i < new_max_size; i++)
-          a[i] = 0xababababU;
-      }
       delete[] sparse_to_dense_;
+    }
+    // Don't need to zero the memory but appease Valgrind.
+    if (InitMemory()) {
+      for (int i = max_size_; i < new_max_size; i++)
+        a[i] = 0xababababU;
     }
     sparse_to_dense_ = a;
 
