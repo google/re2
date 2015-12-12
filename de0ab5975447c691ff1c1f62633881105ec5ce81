@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25673634_34179095",
+        "filename": "util/mutex.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2015-12-12T14:01:25Z",
+      "side": 1,
+      "message": "lgtm.\n\nWe do this in build/common.gypi and build/config/win/BUILD.gn so it is globally applied.",
+      "range": {
+        "startLine": 58,
+        "startChar": 9,
+        "endLine": 58,
+        "endChar": 28
+      },
+      "revId": "de0ab5975447c691ff1c1f62633881105ec5ce81",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
