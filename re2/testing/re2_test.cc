@@ -1410,12 +1410,56 @@ TEST(RE2, UnicodeClasses) {
 
 // Bug reported by saito. 2009/02/17
 TEST(RE2, NullVsEmptyString) {
-  RE2 re2(".*");
-  StringPiece v1("");
-  EXPECT_TRUE(RE2::FullMatch(v1, re2));
+  RE2 re(".*");
+  EXPECT_TRUE(re.ok());
 
-  StringPiece v2;
-  EXPECT_TRUE(RE2::FullMatch(v2, re2));
+  StringPiece null;
+  EXPECT_TRUE(RE2::FullMatch(null, re));
+
+  StringPiece empty("");
+  EXPECT_TRUE(RE2::FullMatch(empty, re));
+}
+
+// Similar to the previous test, check that the null string and the empty
+// string both match, but also that the null string can only provide null
+// submatches whereas the empty string can also provide empty submatches.
+TEST(RE2, NullVsEmptyStringSubmatches) {
+  RE2 re("()|(foo)");
+  EXPECT_TRUE(re.ok());
+
+  // matches[0] is overall match, [1] is (), [2] is (foo), [3] is nonexistent.
+  StringPiece matches[4];
+
+  for (int i = 0; i < arraysize(matches); i++)
+    matches[i] = "bar";
+
+  StringPiece null;
+  EXPECT_TRUE(re.Match(null, 0, null.size(), RE2::UNANCHORED,
+                       matches, arraysize(matches)));
+  for (int i = 0; i < arraysize(matches); i++) {
+    EXPECT_TRUE(matches[i] == NULL);
+    EXPECT_TRUE(matches[i].data() == NULL);  // always null
+    EXPECT_TRUE(matches[i] == "");
+  }
+
+  for (int i = 0; i < arraysize(matches); i++)
+    matches[i] = "bar";
+
+  StringPiece empty("");
+  EXPECT_TRUE(re.Match(empty, 0, empty.size(), RE2::UNANCHORED,
+                       matches, arraysize(matches)));
+  EXPECT_TRUE(matches[0] == NULL);
+  EXPECT_TRUE(matches[0].data() != NULL);  // empty, not null
+  EXPECT_TRUE(matches[0] == "");
+  EXPECT_TRUE(matches[1] == NULL);
+  EXPECT_TRUE(matches[1].data() != NULL);  // empty, not null
+  EXPECT_TRUE(matches[1] == "");
+  EXPECT_TRUE(matches[2] == NULL);
+  EXPECT_TRUE(matches[2].data() == NULL);
+  EXPECT_TRUE(matches[2] == "");
+  EXPECT_TRUE(matches[3] == NULL);
+  EXPECT_TRUE(matches[3].data() == NULL);
+  EXPECT_TRUE(matches[3] == "");
 }
 
 // Issue 1816809

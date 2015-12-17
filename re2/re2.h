@@ -465,8 +465,8 @@ class RE2 {
   // On a successful match, fills in match[] (up to nmatch entries)
   // with information about submatches.
   // I.e. matching RE2("(foo)|(bar)baz") on "barbazbla" will return true,
-  // setting match[0] = "barbaz", match[1] = NULL, match[2] = "bar",
-  // match[3] = NULL, ..., up to match[nmatch-1] = NULL.
+  // setting match[0] = "barbaz", match[1].data() = NULL, match[2] = "bar",
+  // match[3].data() = NULL, ..., up to match[nmatch-1].data() = NULL.
   //
   // Don't ask for more match information than you will use:
   // runs much faster with nmatch == 1 than nmatch > 1, and
@@ -477,7 +477,7 @@ class RE2 {
   // Passing text == StringPiece(NULL, 0) will be handled like any other
   // empty string, but note that on return, it will not be possible to tell
   // whether submatch i matched the empty string or did not match:
-  // either way, match[i] == NULL.
+  // either way, match[i].data() == NULL.
   bool Match(const StringPiece& text,
              int startpos,
              int endpos,
