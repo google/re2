@@ -1351,7 +1351,7 @@ void SmallHTTPPartialMatchPCRE(int n) {
   StringPiece a;
   PCRE re("(?-s)^(?:GET|POST) +([^ ]+) HTTP");
   for (int i = 0; i < n; i++) {
-    PCRE::PartialMatch(http_text, re, &a);
+    PCRE::PartialMatch(http_smalltext, re, &a);
   }
 }
 
@@ -1359,7 +1359,7 @@ void SmallHTTPPartialMatchRE2(int n) {
   StringPiece a;
   RE2 re("(?-s)^(?:GET|POST) +([^ ]+) HTTP");
   for (int i = 0; i < n; i++) {
-    RE2::PartialMatch(http_text, re, &a);
+    RE2::PartialMatch(http_smalltext, re, &a);
   }
 }
 
