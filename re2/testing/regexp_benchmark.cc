@@ -1344,14 +1344,14 @@ BENCHMARK(HTTPPartialMatchPCRE)->ThreadRange(1, NumCPUs());
 #endif
 BENCHMARK(HTTPPartialMatchRE2)->ThreadRange(1, NumCPUs());
 
-static string http_smalltext =
+static string smallhttp_text =
   "GET /abc HTTP/1.1";
 
 void SmallHTTPPartialMatchPCRE(int n) {
   StringPiece a;
   PCRE re("(?-s)^(?:GET|POST) +([^ ]+) HTTP");
   for (int i = 0; i < n; i++) {
-    PCRE::PartialMatch(http_text, re, &a);
+    PCRE::PartialMatch(smallhttp_text, re, &a);
   }
 }
 
@@ -1359,7 +1359,7 @@ void SmallHTTPPartialMatchRE2(int n) {
   StringPiece a;
   RE2 re("(?-s)^(?:GET|POST) +([^ ]+) HTTP");
   for (int i = 0; i < n; i++) {
-    RE2::PartialMatch(http_text, re, &a);
+    RE2::PartialMatch(smallhttp_text, re, &a);
   }
 }
 
