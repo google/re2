@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a727721_c5083a0b",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 5160
+      },
+      "writtenOn": "2016-01-01T09:25:40Z",
+      "side": 0,
+      "message": "What\u0027s the rationale for dropping -pthread?\n\ngcc(1) says:\n\n-pthread Adds support for multithreading with the pthreads library. This option sets flags for both the preprocessor and linker.\n\nWhich means in should be present in both CPPFLAGS (or equivalent) and LDFLAGS",
+      "revId": "db24b44b23ab5500cb4a311bed9bd299bbcee5e4",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
