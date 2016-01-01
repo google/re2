@@ -158,9 +158,8 @@ BIGTESTS=\
 	obj/test/random_test\
 
 SOFILES=$(patsubst obj/%,obj/so/%,$(OFILES))
-STESTOFILES=$(patsubst obj/%,obj/so/%,$(TESTOFILES))
-STESTS=$(patsubst obj/%,obj/so/%,$(TESTS))
-SBIGTESTS=$(patsubst obj/%,obj/so/%,$(BIGTESTS))
+STESTS=$(patsubst obj/test/%,obj/sotest/%,$(TESTS))
+SBIGTESTS=$(patsubst obj/test/%,obj/sotest/%,$(BIGTESTS))
 
 DOFILES=$(patsubst obj/%,obj/dbg/%,$(OFILES))
 DTESTOFILES=$(patsubst obj/%,obj/dbg/%,$(TESTOFILES))
@@ -200,9 +199,9 @@ obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/
 	@mkdir -p obj/dbg/test
 	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a $(LDFLAGS) $(LDPCRE)
 
-obj/so/test/%: obj/so/libre2.$(SOEXT) obj/libre2.a obj/so/re2/testing/%.o $(STESTOFILES) obj/so/util/test.o
-	@mkdir -p obj/so/test
-	$(CXX) -o $@ obj/so/re2/testing/$*.o $(STESTOFILES) obj/so/util/test.o -Lobj/so -lre2 obj/libre2.a $(LDFLAGS) $(LDPCRE)
+obj/sotest/%: obj/so/libre2.$(SOEXT) obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
+	@mkdir -p obj/sotest/test
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o -Lobj/so -lre2 obj/libre2.a $(LDFLAGS) $(LDPCRE)
 
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o
 	@mkdir -p obj/test
@@ -288,7 +287,7 @@ benchlog: obj/test/regexp_benchmark
 
 .PRECIOUS: obj/%.o obj/dbg/%.o obj/so/%.o obj/libre2.a \
 	obj/dbg/libre2.a obj/so/libre2.a \
-	obj/test/% obj/so/test/% obj/dbg/test/%
+	obj/test/% obj/sotest/% obj/dbg/test/%
 
 log:
 	$(MAKE) clean
