@@ -8,7 +8,7 @@
 # LDPCRE=-L/usr/local/lib -lpcre
 
 CXX?=g++
-CXXFLAGS?=-O3 -g  # can override
+CXXFLAGS?=-O3 -g -pthread  # can override
 RE2_CXXFLAGS?=-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCPCRE)  # required
 LDFLAGS?=-pthread
 AR?=ar
