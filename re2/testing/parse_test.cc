@@ -303,8 +303,8 @@ Test prefix_tests[] = {
   { "abc|x|abd", "alt{str{abc}lit{x}str{abd}}" },
   { "(?i)abc|ABD", "cat{strfold{ab}cc{0x43-0x44 0x63-0x64}}" },
   { "[ab]c|[ab]d", "cat{cc{0x61-0x62}cc{0x63-0x64}}" },
-  { "(?:xx|yy)c|(?:xx|yy)d",
-    "cat{alt{str{xx}str{yy}}cc{0x63-0x64}}" },
+  { ".c|.d", "cat{cc{0-0x9 0xb-0x10ffff}cc{0x63-0x64}}" },
+  { "\\Cc|\\Cd", "cat{byte{}cc{0x63-0x64}}" },
   { "x{2}|x{2}[0-9]",
     "cat{rep{2,2 lit{x}}alt{emp{}cc{0x30-0x39}}}" },
   { "x{2}y|x{2}[0-9]y",
@@ -317,6 +317,8 @@ Test prefix_tests[] = {
     "alt{cat{lit{r}alt{emp{}lit{s}}}lit{n}}" },
   { "rs|r|n",
     "alt{cat{lit{r}alt{lit{s}emp{}}}lit{n}}" },
+  { "a\\C*?c|a\\C*?b",
+    "cat{lit{a}alt{cat{nstar{byte{}}lit{c}}cat{nstar{byte{}}lit{b}}}}" },
 };
 
 // Test that prefix factoring works.

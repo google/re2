@@ -1573,4 +1573,23 @@ TEST(RE2, Bug21371806) {
   CHECK(re.ok());
 }
 
+TEST(RE2, Bug26356109) {
+  // Bug in parser caused by factoring of common prefixes in alternations.
+
+  // In the past, this was factored to "a\\C*?[bc]". Thus, the automaton would
+  // consume "ab" and then stop (when unanchored) whereas it should consume all
+  // of "abc" as per leftmost semantics.
+  RE2 re("a\\C*?c|a\\C*?b");
+  CHECK(re.ok());
+
+  string s = "abc";
+  StringPiece m;
+
+  CHECK(re.Match(s, 0, s.size(), RE2::UNANCHORED, &m, 1));
+  CHECK_EQ(m, s) << " (UNANCHORED) got m='" << m << "', want '" << s << "'";
+
+  CHECK(re.Match(s, 0, s.size(), RE2::ANCHOR_BOTH, &m, 1));
+  CHECK_EQ(m, s) << " (ANCHOR_BOTH) got m='" << m << "', want '" << s << "'";
+}
+
 }  // namespace re2

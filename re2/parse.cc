@@ -919,9 +919,14 @@ int Regexp::FactorAlternationRecursive(
   }
   n = out;
 
-  // Round 2: Factor out common complex prefixes,
-  // just the first piece of each concatenation,
-  // whatever it is.  This is good enough a lot of the time.
+  // Round 2: Factor out common simple prefixes,
+  // just the first piece of each concatenation.
+  // This will be good enough a lot of the time.
+  //
+  // Complex subexpressions (e.g. involving quantifiers)
+  // are not safe to factor because that collapses their
+  // distinct paths through the automaton, which affects
+  // correctness in some cases.
   start = 0;
   out = 0;
   Regexp* first = NULL;
@@ -934,7 +939,18 @@ int Regexp::FactorAlternationRecursive(
     Regexp* first_i = NULL;
     if (i < n) {
       first_i = LeadingRegexp(sub[i]);
-      if (first != NULL && Regexp::Equal(first, first_i)) {
+      if (first != NULL && Regexp::Equal(first, first_i) &&
+          // first must be a char class, any char or any byte
+          // OR a fixed repeat of a literal, char class, any char or any byte.
+          (first->op() == kRegexpCharClass ||
+           first->op() == kRegexpAnyChar ||
+           first->op() == kRegexpAnyByte ||
+           (first->op() == kRegexpRepeat &&
+            first->min() == first->max() &&
+            (first->sub()[0]->op() == kRegexpLiteral ||
+             first->sub()[0]->op() == kRegexpCharClass ||
+             first->sub()[0]->op() == kRegexpAnyChar ||
+             first->sub()[0]->op() == kRegexpAnyByte)))) {
         continue;
       }
     }
