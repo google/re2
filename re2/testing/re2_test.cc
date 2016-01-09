@@ -1578,7 +1578,7 @@ TEST(RE2, Bug26356109) {
 
   // In the past, this was factored to "a\\C*?[bc]". Thus, the automaton would
   // consume "ab" and then stop (when unanchored) whereas it should consume all
-  // of "abc" as per leftmost semantics.
+  // of "abc" as per first-match semantics.
   RE2 re("a\\C*?c|a\\C*?b");
   CHECK(re.ok());
 
