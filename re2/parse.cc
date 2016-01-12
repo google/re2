@@ -940,9 +940,14 @@ int Regexp::FactorAlternationRecursive(
     if (i < n) {
       first_i = LeadingRegexp(sub[i]);
       if (first != NULL && Regexp::Equal(first, first_i) &&
-          // first must be a char class, any char or any byte
+          // first must be an empty-width op (but $ and \z don't make sense)
+          // OR a char class, any char or any byte
           // OR a fixed repeat of a literal, char class, any char or any byte.
-          (first->op() == kRegexpCharClass ||
+          (first->op() == kRegexpBeginLine ||
+           first->op() == kRegexpBeginText ||
+           first->op() == kRegexpWordBoundary ||
+           first->op() == kRegexpNoWordBoundary ||
+           first->op() == kRegexpCharClass ||
            first->op() == kRegexpAnyChar ||
            first->op() == kRegexpAnyByte ||
            (first->op() == kRegexpRepeat &&
