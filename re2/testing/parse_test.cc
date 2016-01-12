@@ -319,6 +319,8 @@ Test prefix_tests[] = {
     "alt{cat{lit{r}alt{lit{s}emp{}}}lit{n}}" },
   { "a\\C*?c|a\\C*?b",
     "cat{lit{a}alt{cat{nstar{byte{}}lit{c}}cat{nstar{byte{}}lit{b}}}}" },
+  { "^/a/bc|^/a/de",
+    "cat{bol{}cat{str{/a/}alt{str{bc}str{de}}}}" },
 };
 
 // Test that prefix factoring works.
