@@ -117,6 +117,6 @@ re2_test("exhaustive1_test")
 re2_test("exhaustive2_test")
 re2_test("exhaustive3_test")
 re2_test("exhaustive_test")
-re2_test("random_test")
+re2_test("random_test", size="large")
 
 # TODO: Add support for regexp_benchmark.
