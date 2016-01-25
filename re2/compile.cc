@@ -113,7 +113,7 @@ struct Frag {
 // Input encodings.
 enum Encoding {
   kEncodingUTF8 = 1,  // UTF-8 (0-10FFFF)
-  kEncodingLatin1,    // Latin1 (0-FF)
+  kEncodingLatin1,    // Latin-1 (0-FF)
 };
 
 class Compiler : public Regexp::Walker<Frag> {
@@ -193,11 +193,27 @@ class Compiler : public Regexp::Walker<Frag> {
   void Add_80_10ffff();
 
   // New suffix that matches the byte range lo-hi, then goes to next.
-  int RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next);
   int UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next);
+  int CachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next);
+
+  // Returns true iff the suffix is cached.
+  bool IsCachedRuneByteSuffix(int id);
 
   // Adds a suffix to alternation.
   void AddSuffix(int id);
+
+  // Adds a suffix to the trie starting from the given root node.
+  // Returns zero iff allocating an instruction fails. Otherwise, returns
+  // the current root node, which might be different from what was given.
+  int AddSuffixRecursive(int root, int id);
+
+  // Finds the trie node for the given suffix. Returns a Frag in order to
+  // distinguish between pointing at the root node directly (end.p == 0)
+  // and pointing at an Alt's out1 or out (end.p&1 == 1 or 0, respectively).
+  Frag FindByteRange(int root, int id);
+
+  // Compares two ByteRanges and returns true iff they are equal.
+  bool ByteRangeEqual(int id1, int id2);
 
   // Returns the alternation of all the added suffixes.
   Frag EndRange();
@@ -496,21 +512,17 @@ int Compiler::UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase,
   return f.begin;
 }
 
-int Compiler::RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next) {
-  // In Latin1 mode, there's no point in caching.
-  // In forward UTF-8 mode, only need to cache continuation bytes.
-  if (encoding_ == kEncodingLatin1 ||
-      (encoding_ == kEncodingUTF8 &&
-       !reversed_ &&
-       !(0x80 <= lo && hi <= 0xbf))) {
-    return UncachedRuneByteSuffix(lo, hi, foldcase, next);
-  }
+static uint64 MakeRuneCacheKey(uint8 lo, uint8 hi, bool foldcase, int next) {
+  return (uint64)next << 17 |
+         (uint64)lo   <<  9 |
+         (uint64)hi   <<  1 |
+         (uint64)foldcase;
+}
 
-  uint64 key = (uint64)next << 17 |
-               (uint64)lo   <<  9 |
-               (uint64)hi   <<  1 |
-               (uint64)foldcase;
-  map<uint64, int>::iterator it = rune_cache_.find(key);
+int Compiler::CachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase,
+                                   int next) {
+  uint64 key = MakeRuneCacheKey(lo, hi, foldcase, next);
+  map<uint64, int>::const_iterator it = rune_cache_.find(key);
   if (it != rune_cache_.end())
     return it->second;
   int id = UncachedRuneByteSuffix(lo, hi, foldcase, next);
@@ -518,9 +530,25 @@ int Compiler::RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next) {
   return id;
 }
 
+bool Compiler::IsCachedRuneByteSuffix(int id) {
+  uint8 lo = inst_[id].lo_;
+  uint8 hi = inst_[id].hi_;
+  bool foldcase = inst_[id].foldcase() != 0;
+  int next = inst_[id].out();
+
+  uint64 key = MakeRuneCacheKey(lo, hi, foldcase, next);
+  return rune_cache_.find(key) != rune_cache_.end();
+}
+
 void Compiler::AddSuffix(int id) {
   if (rune_range_.begin == 0) {
     rune_range_.begin = id;
+    return;
+  }
+
+  if (encoding_ == kEncodingUTF8) {
+    // Build a trie in order to reduce fanout.
+    rune_range_.begin = AddSuffixRecursive(rune_range_.begin, id);
     return;
   }
 
@@ -531,6 +559,105 @@ void Compiler::AddSuffix(int id) {
   }
   inst_[alt].InitAlt(rune_range_.begin, id);
   rune_range_.begin = alt;
+}
+
+int Compiler::AddSuffixRecursive(int root, int id) {
+  DCHECK(inst_[root].opcode() == kInstAlt ||
+         inst_[root].opcode() == kInstByteRange);
+
+  Frag f = FindByteRange(root, id);
+  if (IsNoMatch(f)) {
+    int alt = AllocInst(1);
+    if (alt < 0)
+      return 0;
+    inst_[alt].InitAlt(root, id);
+    return alt;
+  }
+
+  int br;
+  if (f.end.p == 0)
+    br = root;
+  else if (f.end.p&1)
+    br = inst_[f.begin].out1();
+  else
+    br = inst_[f.begin].out();
+
+  if (IsCachedRuneByteSuffix(br)) {
+    // We can't fiddle with cached suffixes, so make a clone of the head.
+    int byterange = AllocInst(1);
+    if (byterange < 0)
+      return 0;
+    inst_[byterange].InitByteRange(inst_[br].lo(), inst_[br].hi(),
+                                   inst_[br].foldcase(), inst_[br].out());
+
+    // Ensure that the parent points to the clone, not to the original.
+    // Note that this could leave the head unreachable except via the cache.
+    br = byterange;
+    if (f.end.p == 0)
+      root = br;
+    else if (f.end.p&1)
+      inst_[f.begin].out1_ = br;
+    else
+      inst_[f.begin].set_out(br);
+  }
+
+  // We just saved one ByteRange instruction. :)
+  prog_->byte_inst_count_--;
+
+  int out = inst_[id].out();
+  if (!IsCachedRuneByteSuffix(id)) {
+    // The head should be the instruction most recently allocated, so free it
+    // instead of leaving it unreachable.
+    DCHECK_EQ(id, inst_len_-1);
+    inst_[id].out_opcode_ = 0;
+    inst_[id].out1_ = 0;
+    inst_len_--;
+  }
+
+  out = AddSuffixRecursive(inst_[br].out(), out);
+  if (out == 0)
+    return 0;
+
+  inst_[br].set_out(out);
+  return root;
+}
+
+bool Compiler::ByteRangeEqual(int id1, int id2) {
+  return (inst_[id1].lo() == inst_[id2].lo() &&
+          inst_[id1].hi() == inst_[id2].hi() &&
+          inst_[id1].foldcase() == inst_[id2].foldcase());
+}
+
+Frag Compiler::FindByteRange(int root, int id) {
+  if (inst_[root].opcode() == kInstByteRange) {
+    if (ByteRangeEqual(root, id))
+      return Frag(root, nullPatchList);
+    else
+      return NoMatch();
+  }
+
+  while (inst_[root].opcode() == kInstAlt) {
+    int out1 = inst_[root].out1();
+    if (ByteRangeEqual(out1, id))
+      return Frag(root, PatchList::Mk((root << 1) | 1));
+
+    // CharClass is a sorted list of ranges, so if out1 of the root Alt wasn't
+    // what we're looking for, then we can stop immediately. Unfortunately, we
+    // can't short-circuit the search in reverse mode.
+    if (!reversed_)
+      return NoMatch();
+
+    int out = inst_[root].out();
+    if (inst_[out].opcode() == kInstAlt)
+      root = out;
+    else if (ByteRangeEqual(out, id))
+      return Frag(root, PatchList::Mk(root << 1));
+    else
+      return NoMatch();
+  }
+
+  LOG(DFATAL) << "should never happen";
+  return NoMatch();
 }
 
 Frag Compiler::EndRange() {
@@ -556,13 +683,13 @@ void Compiler::AddRuneRange(Rune lo, Rune hi, bool foldcase) {
 }
 
 void Compiler::AddRuneRangeLatin1(Rune lo, Rune hi, bool foldcase) {
-  // Latin1 is easy: runes *are* bytes.
+  // Latin-1 is easy: runes *are* bytes.
   if (lo > hi || lo > 0xFF)
     return;
   if (hi > 0xFF)
     hi = 0xFF;
-  AddSuffix(RuneByteSuffix(static_cast<uint8>(lo), static_cast<uint8>(hi),
-                           foldcase, 0));
+  AddSuffix(UncachedRuneByteSuffix(static_cast<uint8>(lo),
+                                   static_cast<uint8>(hi), foldcase, 0));
 }
 
 // Table describing how to make a UTF-8 matching machine
@@ -633,8 +760,8 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
 
   // ASCII range is always a special case.
   if (hi < Runeself) {
-    AddSuffix(RuneByteSuffix(static_cast<uint8>(lo), static_cast<uint8>(hi),
-                             foldcase, 0));
+    AddSuffix(UncachedRuneByteSuffix(static_cast<uint8>(lo),
+                                     static_cast<uint8>(hi), foldcase, 0));
     return;
   }
 
@@ -664,11 +791,29 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
 
   int id = 0;
   if (reversed_) {
-    for (int i = 0; i < n; i++)
-      id = RuneByteSuffix(ulo[i], uhi[i], false, id);
+    for (int i = 0; i < n; i++) {
+      // In reverse UTF-8 mode: cache the leading byte; don't cache the last
+      // continuation byte; cache anything else iff it's a single byte (XX-XX).
+      bool should_cache = ulo[i] == uhi[i];
+      if (i == 0) should_cache = true;
+      else if (i == n-1) should_cache = false;
+      if (should_cache)
+        id = CachedRuneByteSuffix(ulo[i], uhi[i], false, id);
+      else
+        id = UncachedRuneByteSuffix(ulo[i], uhi[i], false, id);
+    }
   } else {
-    for (int i = n-1; i >= 0; i--)
-      id = RuneByteSuffix(ulo[i], uhi[i], false, id);
+    for (int i = n-1; i >= 0; i--) {
+      // In forward UTF-8 mode: don't cache the leading byte; cache the last
+      // continuation byte; cache anything else iff it's a byte range (XX-YY).
+      bool should_cache = ulo[i] < uhi[i];
+      if (i == 0) should_cache = false;
+      else if (i == n-1) should_cache = true;
+      if (should_cache)
+        id = CachedRuneByteSuffix(ulo[i], uhi[i], false, id);
+      else
+        id = UncachedRuneByteSuffix(ulo[i], uhi[i], false, id);
+    }
   }
   AddSuffix(id);
 }
