@@ -172,4 +172,90 @@ TEST(TestCompile, ByteRanges) {
   re->Decref();
 }
 
+static void Dump(StringPiece pattern, Regexp::ParseFlags flags,
+                 string* forward, string* reverse) {
+  Regexp* re = Regexp::Parse(pattern, flags, NULL);
+  EXPECT_TRUE(re != NULL);
+
+  if (forward != NULL) {
+    Prog* prog = re->CompileToProg(0);
+    EXPECT_TRUE(prog != NULL);
+    *forward = prog->Dump();
+    delete prog;
+  }
+
+  if (reverse != NULL) {
+    Prog* prog = re->CompileToReverseProg(0);
+    EXPECT_TRUE(prog != NULL);
+    *reverse = prog->Dump();
+    delete prog;
+  }
+
+  re->Decref();
+}
+
+TEST(TestCompile, Bug26705922) {
+  // Bug in the compiler caused inefficient bytecode to be generated for Unicode
+  // groups: common suffixes were cached, but common prefixes were not factored.
+
+  string forward, reverse;
+
+  Dump("[\\x{10000}\\x{10010}]", Regexp::LikePerl, &forward, &reverse);
+  EXPECT_EQ("4. byte [f0-f0] -> 3\n"
+            "3. byte [90-90] -> 2\n"
+            "2. byte [80-80] -> 6\n"
+            "6. alt -> 1 | 5\n"
+            "1. byte [80-80] -> 7\n"
+            "5. byte [90-90] -> 7\n"
+            "7. match! 0\n",
+            forward);
+  EXPECT_EQ("6. alt -> 4 | 5\n"
+            "4. byte [80-80] -> 3\n"
+            "5. byte [90-90] -> 3\n"
+            "3. byte [80-80] -> 2\n"
+            "2. byte [90-90] -> 1\n"
+            "1. byte [f0-f0] -> 7\n"
+            "7. match! 0\n",
+            reverse);
+
+  Dump("[\\x{8000}-\\x{10FFF}]", Regexp::LikePerl, &forward, &reverse);
+  EXPECT_EQ("6. alt -> 3 | 5\n"
+            "3. byte [e8-ef] -> 2\n"
+            "5. byte [f0-f0] -> 4\n"
+            "2. byte [80-bf] -> 1\n"
+            "4. byte [90-90] -> 2\n"
+            "1. byte [80-bf] -> 7\n"
+            "7. match! 0\n",
+            forward);
+  EXPECT_EQ("3. byte [80-bf] -> 2\n"
+            "2. byte [80-bf] -> 6\n"
+            "6. alt -> 1 | 5\n"
+            "1. byte [e8-ef] -> 7\n"
+            "5. byte [90-90] -> 4\n"
+            "7. match! 0\n"
+            "4. byte [f0-f0] -> 7\n",
+            reverse);
+
+  Dump("[\\x{80}-\\x{10FFFF}]", Regexp::LikePerl, NULL, &reverse);
+  EXPECT_EQ("2. byte [80-bf] -> 8\n"
+            "8. alt -> 5 | 7\n"
+            "5. alt -> 1 | 4\n"
+            "7. byte [80-bf] -> 17\n"
+            "1. byte [c2-df] -> 18\n"
+            "4. byte [a0-bf] -> 3\n"
+            "17. alt -> 14 | 16\n"
+            "18. match! 0\n"
+            "3. byte [e0-e0] -> 18\n"
+            "14. alt -> 11 | 13\n"
+            "16. byte [80-8f] -> 15\n"
+            "11. alt -> 6 | 10\n"
+            "13. byte [80-bf] -> 12\n"
+            "15. byte [f4-f4] -> 18\n"
+            "6. byte [e1-ef] -> 18\n"
+            "10. byte [90-bf] -> 9\n"
+            "12. byte [f1-f3] -> 18\n"
+            "9. byte [f0-f0] -> 18\n",
+            reverse);
+}
+
 }  // namespace re2
