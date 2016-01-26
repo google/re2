@@ -59,7 +59,6 @@ cc_library(
         "re2/stringpiece.h",
         "re2/variadic_function.h",
     ],
-    copts = ["-pthread"],
     includes = ["."],
     linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
