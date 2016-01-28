@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4e9b2fb_1a8a4103",
+        "filename": "re2/compile.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2016-01-28T01:26:07Z",
+      "side": 1,
+      "message": "drop unnecessary outer ( )",
+      "revId": "a3256412d85d06a355108e048c9e4da8facc1a37",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4e9b2fb_9a74f1d3",
+        "filename": "re2/compile.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2016-01-28T01:26:07Z",
+      "side": 1,
+      "message": "always put if/else bodies on new lines.\nbut really this should be\n\nbool should_cache \u003d i \u003d\u003d 0 || (ulo[i] \u003d\u003d uhi[i] \u0026\u0026 i !\u003d n-1);",
+      "revId": "a3256412d85d06a355108e048c9e4da8facc1a37",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4e9b2fb_ba6fb502",
+        "filename": "re2/compile.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 807,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2016-01-28T01:26:07Z",
+      "side": 1,
+      "message": "This could do with more explanation, as could the reverse case. I don\u0027t remember why these are the conditions. I don\u0027t see why you\u0027d avoid caching those particular cases. Do you understand it?",
+      "revId": "a3256412d85d06a355108e048c9e4da8facc1a37",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4e9b2fb_3a64e520",
+        "filename": "re2/compile.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2016-01-28T01:26:07Z",
+      "side": 1,
+      "message": "bool should_cache \u003d i \u003d\u003d n-1 || (ulo[i] \u003c uhi[i] \u0026\u0026 i !\u003d 0);",
+      "revId": "a3256412d85d06a355108e048c9e4da8facc1a37",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
