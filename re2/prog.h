@@ -360,8 +360,8 @@ class Prog {
   Inst* inst_;              // pointer to instruction array
 
   Mutex dfa_mutex_;    // Protects dfa_first_, dfa_longest_
-  DFA* volatile dfa_first_;     // DFA cached for kFirstMatch
-  DFA* volatile dfa_longest_;   // DFA cached for kLongestMatch and kFullMatch
+  DFA* dfa_first_;     // DFA cached for kFirstMatch
+  DFA* dfa_longest_;   // DFA cached for kLongestMatch and kFullMatch
   int64 dfa_mem_;      // Maximum memory for DFAs.
   void (*delete_dfa_)(DFA* dfa);
 

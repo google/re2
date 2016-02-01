@@ -283,7 +283,7 @@ class DFA {
   struct StartInfo {
     StartInfo() : start(NULL), firstbyte(kFbUnknown) { }
     State* start;
-    volatile int firstbyte;
+    int firstbyte;
   };
 
   // Fills in params->start and params->firstbyte using
@@ -1794,7 +1794,7 @@ static void DeleteDFA(DFA* dfa) {
 }
 
 DFA* Prog::GetDFA(MatchKind kind) {
-  DFA*volatile* pdfa;
+  DFA** pdfa;
   if (kind == kFirstMatch || kind == kManyMatch) {
     pdfa = &dfa_first_;
   } else {
@@ -1803,7 +1803,7 @@ DFA* Prog::GetDFA(MatchKind kind) {
   }
 
   // Quick check.
-  DFA *dfa;
+  DFA* dfa;
   ATOMIC_LOAD_ACQUIRE(dfa, pdfa);
   if (dfa != NULL)
     return dfa;

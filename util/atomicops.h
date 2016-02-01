@@ -5,17 +5,44 @@
 #ifndef RE2_UTIL_ATOMICOPS_H__
 #define RE2_UTIL_ATOMICOPS_H__
 
-// The memory ordering constraints resemble the ones in C11.
+// The memory ordering constraints resemble the ones in C++11.
 // RELAXED - no memory ordering, just an atomic operation.
 // CONSUME - data-dependent ordering.
 // ACQUIRE - prevents memory accesses from hoisting above the operation.
 // RELEASE - prevents memory accesses from sinking below the operation.
 
+#if __cplusplus >= 201103L
+#include <atomic>
+#include <type_traits>
+#endif
+
 #ifndef __has_builtin
 #define __has_builtin(x) 0
 #endif
 
-#if !defined(OS_NACL) && (__has_builtin(__atomic_load_n) || (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__ >= 40801))
+#if defined(ATOMIC_INT_LOCK_FREE) && ATOMIC_INT_LOCK_FREE == 2 && defined(ATOMIC_POINTER_LOCK_FREE) && ATOMIC_POINTER_LOCK_FREE == 2
+
+// We have C++11 atomics and, vitally, we know that they are always lock-free
+// for the types used by the DFA execution engine: int and T*.
+
+#define CAST_TO_STD_ATOMIC_PTR(p)                 \
+  reinterpret_cast<                               \
+      std::add_pointer<                           \
+          std::atomic<                            \
+              std::remove_pointer<                \
+                  decltype(p)>::type>>::type>(p)
+
+#define ATOMIC_LOAD_RELAXED(x, p) do { (x) = CAST_TO_STD_ATOMIC_PTR(p)->load(std::memory_order_relaxed); } while (0)
+#define ATOMIC_LOAD_CONSUME(x, p) do { (x) = CAST_TO_STD_ATOMIC_PTR(p)->load(std::memory_order_consume); } while (0)
+#define ATOMIC_LOAD_ACQUIRE(x, p) do { (x) = CAST_TO_STD_ATOMIC_PTR(p)->load(std::memory_order_acquire); } while (0)
+#define ATOMIC_STORE_RELAXED(p, v) CAST_TO_STD_ATOMIC_PTR(p)->store((v), std::memory_order_relaxed)
+#define ATOMIC_STORE_RELEASE(p, v) CAST_TO_STD_ATOMIC_PTR(p)->store((v), std::memory_order_release)
+
+#elif !defined(OS_NACL) && (__has_builtin(__atomic_load_n) || (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__ >= 40801))
+
+// We have GCC's built-in functions that work much like C++11 atomics, but we
+// don't check that they are always lock-free. (Presumably because we would
+// prefer not to fall back to the last option...)
 
 #define ATOMIC_LOAD_RELAXED(x, p) do { (x) = __atomic_load_n((p), __ATOMIC_RELAXED); } while (0)
 #define ATOMIC_LOAD_CONSUME(x, p) do { (x) = __atomic_load_n((p), __ATOMIC_CONSUME); } while (0)
@@ -23,7 +50,9 @@
 #define ATOMIC_STORE_RELAXED(p, v) __atomic_store_n((p), (v), __ATOMIC_RELAXED)
 #define ATOMIC_STORE_RELEASE(p, v) __atomic_store_n((p), (v), __ATOMIC_RELEASE)
 
-#else  // old compiler
+#else
+
+// We have an old compiler. And hope. Lots and lots of hope.
 
 #define ATOMIC_LOAD_RELAXED(x, p) do { (x) = *(p); } while (0)
 #define ATOMIC_LOAD_CONSUME(x, p) do { (x) = *(p); MaybeReadMemoryBarrier(); } while (0)
