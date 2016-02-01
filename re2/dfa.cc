@@ -102,7 +102,7 @@ class DFA {
     uint flag_;         // Empty string bitfield flags in effect on the way
                         // into this state, along with kFlagMatch if this
                         // is a matching state.
-    State** next_;      // Outgoing arrows from State,
+    State* next_[1];    // Outgoing arrows from State,
                         // one per input byte class
   };
 
@@ -463,8 +463,9 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
   // At minimum, the search requires room for two states in order
   // to limp along, restarting frequently.  We'll get better performance
   // if there is room for a larger number of states, say 20.
-  int64 one_state = sizeof(State) + (prog_->size()+nmark)*sizeof(int) +
-                    (prog_->bytemap_range()+1)*sizeof(State*);
+  int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
+  int64 one_state = sizeof(State) + (nnext-1)*sizeof(State*) +
+                    (prog_->size()+nmark)*sizeof(int);
   if (state_budget_ < 20*one_state) {
     LOG(INFO) << StringPrintf("DFA out of memory: prog size %d mem %lld",
                               prog_->size(), max_mem);
@@ -734,7 +735,7 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint flag) {
     mutex_.AssertHeld();
 
   // Look in the cache for a pre-existing state.
-  State state = { inst, ninst, flag, NULL };
+  State state = {inst, ninst, flag, {NULL}};
   StateSet::iterator it = state_cache_.find(&state);
   if (it != state_cache_.end()) {
     if (DebugDFA)
@@ -748,17 +749,16 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint flag) {
   // State*, empirically.
   const int kStateCacheOverhead = 32;
   int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
-  int mem = sizeof(State) + nnext*sizeof(State*) + ninst*sizeof(int);
+  int mem = sizeof(State) + (nnext-1)*sizeof(State*) + ninst*sizeof(int);
   if (mem_budget_ < mem + kStateCacheOverhead) {
     mem_budget_ = -1;
     return NULL;
   }
   mem_budget_ -= mem + kStateCacheOverhead;
 
-  // Allocate new state, along with room for next and inst.
+  // Allocate new state, along with room for next_ and inst_.
   char* space = new char[mem];
   State* s = reinterpret_cast<State*>(space);
-  s->next_ = reinterpret_cast<State**>(s + 1);
   s->inst_ = reinterpret_cast<int*>(s->next_ + nnext);
   memset(s->next_, 0, nnext*sizeof s->next_[0]);
   memmove(s->inst_, inst, ninst*sizeof s->inst_[0]);
