@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "314ea0ac_fce7c9fd",
+        "filename": "util/atomicops.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2016-02-02T06:57:26Z",
+      "side": 1,
+      "message": "\u003e Is it possible to use an inline function with a static_assert to\n \u003e enforce either that restriction or the underlying alignment\n \u003e requirement?\n\nDefinitely +1 to enforcement. Depending on what Chandler says, I might just write ATOMIC_INT and ATOMIC_POINTER macros like I alluded. I\u0027m rapidly losing enthusiasm for the approach that I took in this change. :)",
+      "parentUuid": "f465d6c4_abb476ef",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 48
+      },
+      "revId": "e74ea6ab821367b965a45c816adba8afdd865f1c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f465d6c4_9532732b",
         "filename": "util/atomicops.h",
         "patchSetId": 1
@@ -132,6 +156,30 @@
       "side": 1,
       "message": "My preference would be  to either fix the broken branches, particularly aarch64, or have them  fail to compile.  That seems much safer than having them generate incorrect code.",
       "parentUuid": "314ea0ac_dcb2cd03",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 60
+      },
+      "revId": "e74ea6ab821367b965a45c816adba8afdd865f1c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "314ea0ac_dce48dfc",
+        "filename": "util/atomicops.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2016-02-02T06:57:26Z",
+      "side": 1,
+      "message": "\u003e My preference would be  to either fix the broken branches,\n \u003e particularly aarch64, or have them  fail to compile.  That seems\n \u003e much safer than having them generate incorrect code.\n\nIndeed. I\u0027m leaning towards dropping anything that uses inline assembly mostly because it\u0027s probably not going to work on anything other than GCC/Clang – and those folks should have been handled already. I\u0027ll do that after I\u0027ve rectified the situation with C++11 atomics and built-in functions. The other fallbacks (e.g. Windows and the worst-case one with a mutex) could be retained, I suppose?",
+      "parentUuid": "f465d6c4_ebc4ae6c",
       "range": {
         "startLine": 55,
         "startChar": 0,
