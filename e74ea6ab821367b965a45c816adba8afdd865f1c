@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "f465d6c4_abb476ef",
+        "filename": "util/atomicops.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-02T06:13:28Z",
+      "side": 1,
+      "message": "Is it possible to use an inline function with a static_assert to enforce either that restriction or the underlying alignment requirement?",
+      "parentUuid": "314ea0ac_fcb509ee",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 48
+      },
+      "revId": "e74ea6ab821367b965a45c816adba8afdd865f1c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f465d6c4_9532732b",
         "filename": "util/atomicops.h",
         "patchSetId": 1
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "\u003e Delete this option?  This seems too broken to ever be useful.  At a\n \u003e minimum, you would need to cast to volatile, I think.  Bit even\n \u003e then several of the fences below are just wrong, and would need\n \u003e fixing.\n\nRight now, Windows folks fall into this \"old compiler\" category, but they probably have the only barrier that actually works! Most of my motivation for this change is to provide a decent solution for non-GCC/Clang users so that I can eventually remove the barriers.",
       "parentUuid": "f465d6c4_9532732b",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 60
+      },
+      "revId": "e74ea6ab821367b965a45c816adba8afdd865f1c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f465d6c4_ebc4ae6c",
+        "filename": "util/atomicops.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-02T06:13:28Z",
+      "side": 1,
+      "message": "My preference would be  to either fix the broken branches, particularly aarch64, or have them  fail to compile.  That seems much safer than having them generate incorrect code.",
+      "parentUuid": "314ea0ac_dcb2cd03",
       "range": {
         "startLine": 55,
         "startChar": 0,
