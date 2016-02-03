@@ -8,7 +8,7 @@
 # LDPCRE=-L/usr/local/lib -lpcre
 
 CXX?=g++
-CXXFLAGS?=-O3 -g -pthread  # can override
+CXXFLAGS?=-std=c++0x -O3 -g -pthread  # can override
 RE2_CXXFLAGS?=-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCPCRE)  # required
 LDFLAGS?=-pthread
 AR?=ar
@@ -62,7 +62,6 @@ INSTALL_HFILES=\
 	re2/variadic_function.h\
 
 HFILES=\
-	util/atomicops.h\
 	util/benchmark.h\
 	util/flags.h\
 	util/logging.h\

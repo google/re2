@@ -21,7 +21,6 @@
 //
 // See http://swtch.com/~rsc/regexp/ for a very bare-bones equivalent.
 
-#include "util/atomicops.h"
 #include "util/flags.h"
 #include "util/sparse_set.h"
 #include "re2/prog.h"
@@ -102,7 +101,7 @@ class DFA {
     uint flag_;         // Empty string bitfield flags in effect on the way
                         // into this state, along with kFlagMatch if this
                         // is a matching state.
-    State* next_[1];    // Outgoing arrows from State,
+    std::atomic<State*> next_[1];    // Outgoing arrows from State,
                         // one per input byte class
   };
 
@@ -283,7 +282,7 @@ class DFA {
   struct StartInfo {
     StartInfo() : start(NULL), firstbyte(kFbUnknown) { }
     State* start;
-    volatile int firstbyte;
+    std::atomic<int> firstbyte;
   };
 
   // Fills in params->start and params->firstbyte using
@@ -464,7 +463,7 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
   // to limp along, restarting frequently.  We'll get better performance
   // if there is room for a larger number of states, say 20.
   int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
-  int64 one_state = sizeof(State) + (nnext-1)*sizeof(State*) +
+  int64 one_state = sizeof(State) + (nnext-1)*sizeof(std::atomic<State*>) +
                     (prog_->size()+nmark)*sizeof(int);
   if (state_budget_ < 20*one_state) {
     LOG(INFO) << StringPrintf("DFA out of memory: prog size %d mem %lld",
@@ -735,7 +734,7 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint flag) {
     mutex_.AssertHeld();
 
   // Look in the cache for a pre-existing state.
-  State state = {inst, ninst, flag, {NULL}};
+  State state = {inst, ninst, flag, {}};
   StateSet::iterator it = state_cache_.find(&state);
   if (it != state_cache_.end()) {
     if (DebugDFA)
@@ -749,7 +748,8 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint flag) {
   // State*, empirically.
   const int kStateCacheOverhead = 32;
   int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
-  int mem = sizeof(State) + (nnext-1)*sizeof(State*) + ninst*sizeof(int);
+  int mem = sizeof(State) + (nnext-1)*sizeof(std::atomic<State*>) +
+            ninst*sizeof(int);
   if (mem_budget_ < mem + kStateCacheOverhead) {
     mem_budget_ = -1;
     return NULL;
@@ -984,8 +984,7 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   }
 
   // If someone else already computed this, return it.
-  State* ns;
-  ATOMIC_LOAD_CONSUME(ns, &state->next_[ByteMap(c)]);
+  State* ns = state->next_[ByteMap(c)].load(std::memory_order_consume);
   if (ns != NULL)
     return ns;
 
@@ -1055,7 +1054,7 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   // Write barrier before updating state->next_ so that the
   // main search loop can proceed without any locking, for speed.
   // (Otherwise it would need one mutex operation per input byte.)
-  ATOMIC_STORE_RELEASE(&state->next_[ByteMap(c)], ns);
+  state->next_[ByteMap(c)].store(ns, std::memory_order_release);
   return ns;
 }
 
@@ -1155,7 +1154,7 @@ void DFA::ResetCache(RWLocker* cache_lock) {
   // Clear the cache, reset the memory budget.
   for (int i = 0; i < kMaxStart; i++) {
     start_[i].start = NULL;
-    start_[i].firstbyte = kFbUnknown;
+    start_[i].firstbyte.store(kFbUnknown, std::memory_order_relaxed);
   }
   ClearCache();
   mem_budget_ = state_budget_;
@@ -1376,8 +1375,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     // Okay to use bytemap[] not ByteMap() here, because
     // c is known to be an actual byte and not kByteEndText.
 
-    State* ns;
-    ATOMIC_LOAD_CONSUME(ns, &s->next_[bytemap[c]]);
+    State* ns = s->next_[bytemap[c]].load(std::memory_order_consume);
     if (ns == NULL) {
       ns = RunStateOnByteUnlocked(s, c);
       if (ns == NULL) {
@@ -1464,8 +1462,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       lastbyte = params->text.begin()[-1] & 0xFF;
   }
 
-  State* ns;
-  ATOMIC_LOAD_CONSUME(ns, &s->next_[ByteMap(lastbyte)]);
+  State* ns = s->next_[ByteMap(lastbyte)].load(std::memory_order_consume);
   if (ns == NULL) {
     ns = RunStateOnByteUnlocked(s, lastbyte);
     if (ns == NULL) {
@@ -1654,15 +1651,14 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
   }
 
   if (DebugDFA) {
-    int fb;
-    ATOMIC_LOAD_RELAXED(fb, &info->firstbyte);
+    int fb = info->firstbyte.load(std::memory_order_relaxed);
     fprintf(stderr, "anchored=%d fwd=%d flags=%#x state=%s firstbyte=%d\n",
             params->anchored, params->run_forward, flags,
             DumpState(info->start).c_str(), fb);
   }
 
   params->start = info->start;
-  ATOMIC_LOAD_ACQUIRE(params->firstbyte, &info->firstbyte);
+  params->firstbyte = info->firstbyte.load(std::memory_order_acquire);
 
   return true;
 }
@@ -1671,13 +1667,13 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
 bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
                               uint flags) {
   // Quick check.
-  int fb;
-  ATOMIC_LOAD_ACQUIRE(fb, &info->firstbyte);
+  int fb = info->firstbyte.load(std::memory_order_acquire);
   if (fb != kFbUnknown)
     return true;
 
   MutexLock l(&mutex_);
-  if (info->firstbyte != kFbUnknown)
+  fb = info->firstbyte.load(std::memory_order_relaxed);
+  if (fb != kFbUnknown)
     return true;
 
   q0_->clear();
@@ -1690,13 +1686,13 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
 
   if (info->start == DeadState) {
     // Synchronize with "quick check" above.
-    ATOMIC_STORE_RELEASE(&info->firstbyte, kFbNone);
+    info->firstbyte.store(kFbNone, std::memory_order_release);
     return true;
   }
 
   if (info->start == FullMatchState) {
     // Synchronize with "quick check" above.
-    ATOMIC_STORE_RELEASE(&info->firstbyte, kFbNone);	// will be ignored
+    info->firstbyte.store(kFbNone, std::memory_order_release);  // will be ignored
     return true;
   }
 
@@ -1708,7 +1704,7 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
     State* s = RunStateOnByte(info->start, i);
     if (s == NULL) {
       // Synchronize with "quick check" above.
-      ATOMIC_STORE_RELEASE(&info->firstbyte, firstbyte);
+      info->firstbyte.store(firstbyte, std::memory_order_release);
       return false;
     }
     if (s == info->start)
@@ -1721,8 +1717,9 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
       break;
     }
   }
+
   // Synchronize with "quick check" above.
-  ATOMIC_STORE_RELEASE(&info->firstbyte, firstbyte);
+  info->firstbyte.store(firstbyte, std::memory_order_release);
   return true;
 }
 
@@ -1794,7 +1791,7 @@ static void DeleteDFA(DFA* dfa) {
 }
 
 DFA* Prog::GetDFA(MatchKind kind) {
-  DFA*volatile* pdfa;
+  std::atomic<DFA*>* pdfa;
   if (kind == kFirstMatch || kind == kManyMatch) {
     pdfa = &dfa_first_;
   } else {
@@ -1803,13 +1800,12 @@ DFA* Prog::GetDFA(MatchKind kind) {
   }
 
   // Quick check.
-  DFA *dfa;
-  ATOMIC_LOAD_ACQUIRE(dfa, pdfa);
+  DFA* dfa = pdfa->load(std::memory_order_acquire);
   if (dfa != NULL)
     return dfa;
 
   MutexLock l(&dfa_mutex_);
-  dfa = *pdfa;
+  dfa = pdfa->load(std::memory_order_relaxed);
   if (dfa != NULL)
     return dfa;
 
@@ -1828,7 +1824,7 @@ DFA* Prog::GetDFA(MatchKind kind) {
   delete_dfa_ = DeleteDFA;
 
   // Synchronize with "quick check" above.
-  ATOMIC_STORE_RELEASE(pdfa, dfa);
+  pdfa->store(dfa, std::memory_order_release);
 
   return dfa;
 }
@@ -2094,19 +2090,9 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
 
 // PossibleMatchRange for a Prog.
 bool Prog::PossibleMatchRange(string* min, string* max, int maxlen) {
-  DFA* dfa = NULL;
-  {
-    MutexLock l(&dfa_mutex_);
-    // Have to use dfa_longest_ to get all strings for full matches.
-    // For example, (a|aa) never matches aa in first-match mode.
-    dfa = dfa_longest_;
-    if (dfa == NULL) {
-      dfa = new DFA(this, Prog::kLongestMatch, dfa_mem_/2);
-      ATOMIC_STORE_RELEASE(&dfa_longest_, dfa);
-      delete_dfa_ = DeleteDFA;
-    }
-  }
-  return dfa->PossibleMatchRange(min, max, maxlen);
+  // Have to use dfa_longest_ to get all strings for full matches.
+  // For example, (a|aa) never matches aa in first-match mode.
+  return GetDFA(kLongestMatch)->PossibleMatchRange(min, max, maxlen);
 }
 
 }  // namespace re2
