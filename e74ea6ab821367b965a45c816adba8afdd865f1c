@@ -216,6 +216,30 @@
     },
     {
       "key": {
+        "uuid": "f19a4877_d200044d",
+        "filename": "util/atomicops.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2016-02-03T06:37:43Z",
+      "side": 1,
+      "message": "\u003e I\u0027m not sure what compilers you have to worry about.  Microsoft was\n \u003e an active participant in the C++11 atomics design, and I think they\n \u003e also adopted them fairly quickly.  Both clauses of the Windows\n \u003e WriteMemoryBarrrier implementation below look questionable to me. \n \u003e _WriteBarrier doesn\u0027t seem to guarantee compiled LoadStore\n \u003e ordering.  It\u0027s unclear to me what InterlockedExchange means on\n \u003e aarch64.  I may ask my Microsoft contacts.\n \u003e \n \u003e The mutex one is actually also wrong for several reasons.  A\n \u003e thread-local mutex can correctly be optimized out. In addition,\n \u003e mutexes have \"roach motel\" semantics: Memory accesses can move in,\n \u003e but not out.  This means they don\u0027t order say, a store before the\n \u003e critical section and a store after.  I would say definitely kill\n \u003e that one.\n\nWow. I really should just jettison this entire section as you initially suggested! The NaCl case does seem fairly deliberately separate from the earlier GCC/Clang section, however, so I will preserve that for now.",
+      "parentUuid": "711bb8b8_e9b531ee",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 60
+      },
+      "revId": "e74ea6ab821367b965a45c816adba8afdd865f1c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f465d6c4_15990361",
         "filename": "util/atomicops.h",
         "patchSetId": 1
