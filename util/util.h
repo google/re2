@@ -30,6 +30,7 @@
 #include <ostream>
 #include <utility>
 #include <set>
+#include <atomic>
 
 // Use std names.
 using std::set;
@@ -112,6 +113,10 @@ template<bool> struct CompileAssert {};
   void operator=(const TypeName&)
 
 #define arraysize(array) (int)(sizeof(array)/sizeof((array)[0]))
+
+#ifndef NO_THREAD_SAFETY_ANALYSIS
+#define NO_THREAD_SAFETY_ANALYSIS
+#endif
 
 class StringPiece;
 
