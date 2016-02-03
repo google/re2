@@ -36,7 +36,6 @@ cc_library(
         "re2/unicode_groups.cc",
         "re2/unicode_groups.h",
         "re2/walker-inl.h",
-        "util/atomicops.h",
         "util/flags.h",
         "util/hash.cc",
         "util/logging.cc",
