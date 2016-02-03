@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "711bb8b8_a0e066b8",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-03T19:20:04Z",
+      "side": 1,
+      "message": "I would use c++11 unless you have to support a compiler that doesn\u0027t understand that.  -std\u003dc++0x is officially deprecated for newer gcc versions.",
+      "range": {
+        "startLine": 11,
+        "startChar": 15,
+        "endLine": 11,
+        "endChar": 20
+      },
+      "revId": "0fb482eeec68b190044f8315251781547248264f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "711bb8b8_a0f8662d",
+        "filename": "re2/dfa.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-03T19:20:04Z",
+      "side": 1,
+      "message": "Use placement new instead?",
+      "range": {
+        "startLine": 760,
+        "startChar": 2,
+        "endLine": 761,
+        "endChar": 45
+      },
+      "revId": "0fb482eeec68b190044f8315251781547248264f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "711bb8b8_40e89263",
+        "filename": "re2/dfa.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 763,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-03T19:20:04Z",
+      "side": 1,
+      "message": "Technically this should use atomic_init calls.  The standard officially allows implementations that need locks requiring initialization inside atomics.  I\u0027m pretty sure no compiler we care about does this.",
+      "range": {
+        "startLine": 763,
+        "startChar": 2,
+        "endLine": 763,
+        "endChar": 48
+      },
+      "revId": "0fb482eeec68b190044f8315251781547248264f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "711bb8b8_00921a09",
+        "filename": "re2/dfa.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1378,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-03T19:20:04Z",
+      "side": 1,
+      "message": "My usual advice is to avoid memory_order_consume.  The standards committee is still trying to figure out what it should really mean.  (Details on request; the issue is amazingly subtle.)  Compilers are either wrong or conservatively interpret it as memory_order_acquire.  I would just use acquire everyplace you currently use consume.",
+      "range": {
+        "startLine": 1378,
+        "startChar": 42,
+        "endLine": 1378,
+        "endChar": 67
+      },
+      "revId": "0fb482eeec68b190044f8315251781547248264f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "711bb8b8_a021867d",
+        "filename": "re2/dfa.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1654,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-03T19:20:04Z",
+      "side": 1,
+      "message": "For something like this that\u0027s way off the critical path, I would always just use int fb \u003d info-\u003efirstbyte.  This defaults to memory_order_seq_cst.  The extra fence on ARM, or even two on Power, are worth it to avoid having to think about memory orders.",
+      "range": {
+        "startLine": 1654,
+        "startChar": 8,
+        "endLine": 1654,
+        "endChar": 61
+      },
+      "revId": "0fb482eeec68b190044f8315251781547248264f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
