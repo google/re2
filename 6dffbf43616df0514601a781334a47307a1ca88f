@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "711bb8b8_867e1f8b",
+        "filename": "re2/dfa.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 763,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-04T18:24:44Z",
+      "side": 1,
+      "message": "I think this is still not 100% technically correct, since the standard doesn\u0027t tie ATOMIC_IS_LOCK_FREE to extra stuff in the implementation.  I might add a comment to that effect, but I think that in practice this will work fine.  There is discussion in the standards committees about legitimizing it.\n\nFrom a practical perspective, I\u0027m more concerned about the reinterpret_casts here vs. type-based alias analysis.  But that\u0027s a different (preexisting) can of worms, and I\u0027m not the best expert there.",
+      "range": {
+        "startLine": 763,
+        "startChar": 2,
+        "endLine": 763,
+        "endChar": 48
+      },
+      "revId": "6dffbf43616df0514601a781334a47307a1ca88f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "711bb8b8_e640b33b",
+        "filename": "re2/dfa.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1660,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-04T18:24:44Z",
+      "side": 1,
+      "message": "You could even get rid of fb altogether.  It wasn\u0027t clear to me from the style guide which is preferred.",
+      "range": {
+        "startLine": 1660,
+        "startChar": 4,
+        "endLine": 1660,
+        "endChar": 29
+      },
+      "revId": "6dffbf43616df0514601a781334a47307a1ca88f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
