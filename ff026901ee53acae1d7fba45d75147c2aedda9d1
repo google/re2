@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "315940ea_87292830",
+        "filename": "re2/dfa.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-05T22:08:22Z",
+      "side": 1,
+      "message": "I don\u0027t think this actually initializes the storage, due to C++ atomics weirdness having to do with C compatibility.\n\nThere are ongoing standards committee discussions about some of this, but ...\n\nN4431 29.6.5p4:\n\nA ::A () noexcept \u003d default;\n\nEffects: leaves the atomic object in an uninitialized state. [ Note: These semantics ensure compatibility\nwith C. — end note ]",
+      "range": {
+        "startLine": 764,
+        "startChar": 2,
+        "endLine": 764,
+        "endChar": 57
+      },
+      "revId": "ff026901ee53acae1d7fba45d75147c2aedda9d1",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
