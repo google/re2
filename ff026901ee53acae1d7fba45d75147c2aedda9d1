@@ -22,6 +22,30 @@
       "revId": "ff026901ee53acae1d7fba45d75147c2aedda9d1",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd19d873_73be80df",
+        "filename": "re2/dfa.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2016-02-06T04:53:51Z",
+      "side": 1,
+      "message": "My reasoning was based on §8.5[dcl.init]/7, but unless there\u0027s some guarantee that zero-initialisation suffices for correct initialisation of locks, I guess I\u0027d better initialise them explicitly. :)\n\nThanks to https://gcc.gnu.org/bugzilla/show_bug.cgi?id\u003d64658, I\u0027ve had to use placement new for each array element. It\u0027s a tad unsightly, but c\u0027est la vie.",
+      "parentUuid": "315940ea_87292830",
+      "range": {
+        "startLine": 764,
+        "startChar": 2,
+        "endLine": 764,
+        "endChar": 57
+      },
+      "revId": "ff026901ee53acae1d7fba45d75147c2aedda9d1",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
