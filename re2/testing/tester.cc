@@ -26,7 +26,7 @@ enum {
   kMaxSubmatch = 1+16,  // $0...$16
 };
 
-const char* engine_types[kEngineMax] = {
+const char* engine_names[kEngineMax] = {
   "Backtrack",
   "NFA",
   "DFA",
@@ -39,18 +39,18 @@ const char* engine_types[kEngineMax] = {
   "PCRE",
 };
 
-// Returns the name string for the type t.
-static string EngineString(Engine t) {
-  if (t < 0 || t >= arraysize(engine_types) || engine_types[t] == NULL) {
-    return StringPrintf("type%d", static_cast<int>(t));
-  }
-  return engine_types[t];
+// Returns the name of the engine.
+static StringPiece EngineName(Engine e) {
+  CHECK_GE(e, 0);
+  CHECK_LT(e, arraysize(engine_names));
+  CHECK(engine_names[e] != NULL);
+  return engine_names[e];
 }
 
 // Returns bit mask of engines to use.
 static uint32 Engines() {
-  static uint32 cached_engines;
-  static bool did_parse;
+  static bool did_parse = false;
+  static uint32 cached_engines = 0;
 
   if (did_parse)
     return cached_engines;
@@ -59,7 +59,7 @@ static uint32 Engines() {
     cached_engines = ~0;
   } else {
     for (Engine i = static_cast<Engine>(0); i < kEngineMax; i++)
-      if (strstr(EngineString(i).c_str(), FLAGS_regexp_engines.c_str()))
+      if (StringPiece(FLAGS_regexp_engines).contains(EngineName(i)))
         cached_engines |= 1<<i;
   }
 
@@ -69,8 +69,9 @@ static uint32 Engines() {
     cached_engines &= ~(1<<kEnginePCRE);
   for (Engine i = static_cast<Engine>(0); i < kEngineMax; i++) {
     if (cached_engines & (1<<i))
-      LOG(INFO) << EngineString(i) << " enabled";
+      LOG(INFO) << EngineName(i) << " enabled";
   }
+
   did_parse = true;
   return cached_engines;
 }
@@ -566,7 +567,7 @@ void TestInstance::LogMatch(const char* prefix, Engine e,
                             const StringPiece& text, const StringPiece& context,
                             Prog::Anchor anchor) {
   LOG(INFO) << prefix
-    << EngineString(e)
+    << EngineName(e)
     << " regexp "
     << CEscape(regexp_str_)
     << " "

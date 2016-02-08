@@ -20,7 +20,7 @@ class Regexp;
 
 // All the supported regexp engines.
 enum Engine {
-  kEngineBacktrack = 0,    // Prog::BadSearchBacktrack
+  kEngineBacktrack = 0,    // Prog::UnsafeSearchBacktrack
   kEngineNFA,              // Prog::SearchNFA
   kEngineDFA,              // Prog::SearchDFA, only ask whether it matched
   kEngineDFA1,             // Prog::SearchDFA, ask for match[0]

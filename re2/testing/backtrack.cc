@@ -4,7 +4,7 @@
 
 // Tested by search_test.cc, exhaustive_test.cc, tester.cc
 //
-// Prog::BadSearchBacktrack is a backtracking regular expression search,
+// Prog::UnsafeSearchBacktrack is a backtracking regular expression search,
 // except that it remembers where it has been, trading a lot of
 // memory for a lot of time. It exists only for testing purposes.
 //
