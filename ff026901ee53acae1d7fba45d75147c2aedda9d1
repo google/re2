@@ -46,6 +46,30 @@
       "revId": "ff026901ee53acae1d7fba45d75147c2aedda9d1",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d8e7442_8e965bc3",
+        "filename": "re2/dfa.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 7095
+      },
+      "writtenOn": "2016-02-09T19:13:39Z",
+      "side": 1,
+      "message": "I still read the standard as default initializing each array element, which I think does nothing for atomics.",
+      "parentUuid": "dd19d873_73be80df",
+      "range": {
+        "startLine": 764,
+        "startChar": 2,
+        "endLine": 764,
+        "endChar": 57
+      },
+      "revId": "ff026901ee53acae1d7fba45d75147c2aedda9d1",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
