@@ -23,6 +23,12 @@
 #include "re2/unicode_groups.h"
 #include "re2/walker-inl.h"
 
+#if defined(RE2_USE_ICU)
+#include "unicode/uniset.h"
+#include "unicode/unistr.h"
+#include "unicode/utypes.h"
+#endif
+
 namespace re2 {
 
 // Regular expression parse state.
@@ -1488,11 +1494,6 @@ static const UGroup* LookupGroup(const StringPiece& name,
   return NULL;
 }
 
-// Fake UGroup containing all Runes
-static URange16 any16[] = { { 0, 65535 } };
-static URange32 any32[] = { { 65536, Runemax } };
-static UGroup anygroup = { "Any", +1, any16, 1, any32, 1 };
-
 // Look for a POSIX group with the given name (e.g., "[:^alpha:]")
 static const UGroup* LookupPosixGroup(const StringPiece& name) {
   return LookupGroup(name, posix_groups, num_posix_groups);
@@ -1502,6 +1503,12 @@ static const UGroup* LookupPerlGroup(const StringPiece& name) {
   return LookupGroup(name, perl_groups, num_perl_groups);
 }
 
+#if !defined(RE2_USE_ICU)
+// Fake UGroup containing all Runes
+static URange16 any16[] = { { 0, 65535 } };
+static URange32 any32[] = { { 65536, Runemax } };
+static UGroup anygroup = { "Any", +1, any16, 1, any32, 1 };
+
 // Look for a Unicode group with the given name (e.g., "Han")
 static const UGroup* LookupUnicodeGroup(const StringPiece& name) {
   // Special case: "Any" means any.
@@ -1509,6 +1516,7 @@ static const UGroup* LookupUnicodeGroup(const StringPiece& name) {
     return &anygroup;
   return LookupGroup(name, unicode_groups, num_unicode_groups);
 }
+#endif
 
 // Add a UGroup or its negation to the character class.
 static void AddUGroup(CharClassBuilder *cc, const UGroup *g, int sign,
@@ -1600,7 +1608,7 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
   // Committed to parse.  Results:
   int sign = +1;  // -1 = negated char class
   if (c == 'P')
-    sign = -1;
+    sign = -sign;
   StringPiece seq = *s;  // \p{Han} or \pL
   StringPiece name;  // Han or L
   s->remove_prefix(2);  // '\\', 'p'
@@ -1630,11 +1638,13 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
   // Chop seq where s now begins.
   seq = StringPiece(seq.begin(), static_cast<int>(s->begin() - seq.begin()));
 
-  // Look up group
   if (name.size() > 0 && name[0] == '^') {
     sign = -sign;
     name.remove_prefix(1);  // '^'
   }
+
+#if !defined(RE2_USE_ICU)
+  // Look up the group in the RE2 Unicode data.
   const UGroup *g = LookupUnicodeGroup(name);
   if (g == NULL) {
     status->set_code(kRegexpBadCharRange);
@@ -1643,6 +1653,31 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
   }
 
   AddUGroup(cc, g, sign, parse_flags);
+#else
+  // Look up the group in the ICU Unicode data. Because ICU provides full
+  // Unicode properties support, this could be more than a lookup by name.
+  ::icu::UnicodeString ustr = ::icu::UnicodeString::fromUTF8(
+      string("\\p{") + name.ToString() + string("}"));
+  UErrorCode uerr = U_ZERO_ERROR;
+  ::icu::UnicodeSet uset(ustr, uerr);
+  if (uerr != U_ZERO_ERROR) {
+    status->set_code(kRegexpBadCharRange);
+    status->set_error_arg(seq);
+    return kParseError;
+  }
+
+  // Convert the UnicodeSet to a URange32 and UGroup that we can add.
+  int nr = uset.getRangeCount();
+  URange32* r = new URange32[nr];
+  for (int i = 0; i < nr; i++) {
+    r[i].lo = uset.getRangeStart(i);
+    r[i].hi = uset.getRangeEnd(i);
+  }
+  UGroup g = {"", +1, 0, 0, r, nr};
+  AddUGroup(cc, &g, sign, parse_flags);
+  delete[] r;
+#endif
+
   return kParseOk;
 }
 
