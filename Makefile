@@ -2,15 +2,20 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# to build against PCRE for testing or benchmarking,
-# uncomment the next two lines
+# To build against ICU for full Unicode properties support,
+# uncomment the next two lines:
+# CCICU=$(shell pkg-config icu-uc --cflags) -DRE2_USE_ICU
+# LDICU=$(shell pkg-config icu-uc --libs)
+
+# To build against PCRE for testing or benchmarking,
+# uncomment the next two lines:
 # CCPCRE=-I/usr/local/include -DUSEPCRE
 # LDPCRE=-L/usr/local/lib -lpcre
 
 CXX?=g++
 CXXFLAGS?=-std=c++11 -O3 -g -pthread  # can override
-RE2_CXXFLAGS?=-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCPCRE)  # required
-LDFLAGS?=-pthread
+RE2_CXXFLAGS?=-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCPCRE)  # required
+LDFLAGS?=-pthread $(LDICU)
 AR?=ar
 ARFLAGS?=rsc
 NM?=nm
