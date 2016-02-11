@@ -1660,7 +1660,7 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
       string("\\p{") + name.ToString() + string("}"));
   UErrorCode uerr = U_ZERO_ERROR;
   ::icu::UnicodeSet uset(ustr, uerr);
-  if (uerr != U_ZERO_ERROR) {
+  if (U_FAILURE(uerr)) {
     status->set_code(kRegexpBadCharRange);
     status->set_error_arg(seq);
     return kParseError;
