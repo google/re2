@@ -169,12 +169,12 @@ bool BitState::TrySearch(int id0, const char* p0) {
     //         << (p - text_.begin()) << " " << arg;
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
-      case kInstFail:
-        return false;
-
       default:
         LOG(DFATAL) << "Unexpected opcode: " << ip->opcode() << " arg " << arg;
         return false;
+
+      case kInstFail:
+        continue;
 
       case kInstAlt:
         // Cannot just
@@ -196,7 +196,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
             id = ip->out1();
             goto CheckAndLoop;
         }
-        LOG(DFATAL) << "Bad arg in kInstCapture: " << arg;
+        LOG(DFATAL) << "Bad arg in kInstAlt: " << arg;
         continue;
 
       case kInstAltMatch:

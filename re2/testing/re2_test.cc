@@ -17,8 +17,6 @@
 #include "re2/re2.h"
 #include "re2/regexp.h"
 
-DECLARE_bool(logtostderr);
-
 namespace re2 {
 
 TEST(RE2, HexTests) {
@@ -1540,7 +1538,7 @@ TEST(RE2, Bug18458852) {
 }
 
 TEST(RE2, Bug18523943) {
-  // Bug in bitstate: case kFailInst was merged into the default with LOG(DFATAL).
+  // Bug in BitState: case kFailInst failed the match entirely.
 
   RE2::Options opt;
   const char a[] = {
@@ -1559,7 +1557,7 @@ TEST(RE2, Bug18523943) {
   RE2 re((const char*)b, opt);
   CHECK(re.ok());
   string s1;
-  CHECK(!RE2::PartialMatch((const char*)a, re, &s1));
+  CHECK(RE2::PartialMatch((const char*)a, re, &s1));
 }
 
 TEST(RE2, Bug21371806) {
