@@ -22,6 +22,8 @@ https://groups.google.com/group/re2-dev
 Unless otherwise noted, the RE2 source files are distributed
 under the BSD-style license found in the LICENSE file.
 
+The best way to learn how to use RE2 is by reading [the re2.h include file](re2/re2.h).
+
 RE2's native language is C++.
 
 A C wrapper is at https://github.com/marcomaggi/cre2/.
