@@ -31,7 +31,7 @@ class RE2::Set {
 
   // Compile prepares the Set for matching.
   // Add must not be called again after Compile.
-  // Compile must be called before FullMatch or PartialMatch.
+  // Compile must be called before Match.
   // Compile may return false if it runs out of memory.
   bool Compile();
 
