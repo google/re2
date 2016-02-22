@@ -11,11 +11,15 @@ option(USEPCRE "use PCRE in tests and benchmarks" OFF)
 
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_compile_options(-std=c++11)
+endif()
+
 if(WIN32)
   add_definitions(-DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX)
   set(THREADING threadwin)
 else()
-  add_compile_options(-std=c++11 -pthread)
+  add_compile_options(-pthread)
   set(THREADING thread)
   list(APPEND EXTRA_TARGET_LINK_LIBRARIES -pthread)
 endif()
