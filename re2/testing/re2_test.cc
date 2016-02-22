@@ -6,7 +6,7 @@
 // TODO: Test extractions for PartialMatch/Consume
 
 #include <errno.h>
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__MINGW32__)
 #include <unistd.h>  /* for sysconf */
 #include <sys/mman.h>
 #endif
