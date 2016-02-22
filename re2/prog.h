@@ -363,7 +363,7 @@ class Prog {
   std::atomic<DFA*> dfa_first_;     // DFA cached for kFirstMatch
   std::atomic<DFA*> dfa_longest_;   // DFA cached for kLongestMatch and kFullMatch
   int64 dfa_mem_;      // Maximum memory for DFAs.
-  void (*delete_dfa_)(DFA* dfa);
+  void (*delete_dfa_)(std::atomic<DFA*>* pdfa);
 
   Bitmap<256> byterange_;    // byterange.Get(x) true if x ends a
                              // commonly-treated byte range.
