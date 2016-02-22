@@ -113,11 +113,9 @@ Prog::Prog()
 }
 
 Prog::~Prog() {
-  if (delete_dfa_) {
-    if (dfa_first_)
-      delete_dfa_(dfa_first_);
-    if (dfa_longest_)
-      delete_dfa_(dfa_longest_);
+  if (delete_dfa_ != NULL) {
+    delete_dfa_(&dfa_first_);
+    delete_dfa_(&dfa_longest_);
   }
   delete[] onepass_nodes_;
   delete[] inst_;

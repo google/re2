@@ -1783,13 +1783,17 @@ bool DFA::Search(const StringPiece& text,
 //
 // This is a separate function so that
 // prog.h can be used without moving the definition of
-// class DFA out of this file.  If you set
-//   prog->dfa_ = dfa;
+// class DFA out of this file.  If you (atomically) set
+//   prog->dfa_first_ = dfa;
+// or
+//   prog->dfa_longest_ = dfa;
 // then you also have to set
 //   prog->delete_dfa_ = DeleteDFA;
-// so that ~Prog can delete the dfa.
-static void DeleteDFA(DFA* dfa) {
-  delete dfa;
+// so that ~Prog can delete the DFA.
+static void DeleteDFA(std::atomic<DFA*>* pdfa) {
+  DFA* dfa = pdfa->load(std::memory_order_relaxed);
+  if (dfa != NULL)
+    delete dfa;
 }
 
 DFA* Prog::GetDFA(MatchKind kind) {
@@ -1827,7 +1831,6 @@ DFA* Prog::GetDFA(MatchKind kind) {
 
   // Synchronize with "quick check" above.
   pdfa->store(dfa, std::memory_order_release);
-
   return dfa;
 }
 
