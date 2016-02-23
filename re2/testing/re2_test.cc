@@ -1583,10 +1583,10 @@ TEST(RE2, Bug26356109) {
   string s = "abc";
   StringPiece m;
 
-  CHECK(re.Match(s, 0, s.size(), RE2::UNANCHORED, &m, 1));
+  CHECK(re.Match(s, 0, static_cast<int>(s.size()), RE2::UNANCHORED, &m, 1));
   CHECK_EQ(m, s) << " (UNANCHORED) got m='" << m << "', want '" << s << "'";
 
-  CHECK(re.Match(s, 0, s.size(), RE2::ANCHOR_BOTH, &m, 1));
+  CHECK(re.Match(s, 0, static_cast<int>(s.size()), RE2::ANCHOR_BOTH, &m, 1));
   CHECK_EQ(m, s) << " (ANCHOR_BOTH) got m='" << m << "', want '" << s << "'";
 }
 
