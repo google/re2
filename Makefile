@@ -55,7 +55,7 @@ ifeq ($(shell uname),Darwin)
 SOEXT=dylib
 SOEXTVER=$(SONAME).$(SOEXT)
 SOEXTVER00=$(SONAME).0.0.$(SOEXT)
-MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib -Wl,-install_name,@rpath/libre2.$(SOEXTVER),-exported_symbols_list,libre2.symbols.darwin $(RE2_LDFLAGS) $(LDFLAGS)
+MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib -Wl,-install_name,$(libdir)/libre2.$(SOEXTVER),-exported_symbols_list,libre2.symbols.darwin $(RE2_LDFLAGS) $(LDFLAGS)
 else ifeq ($(shell uname),SunOS)
 SOEXT=so
 SOEXTVER=$(SOEXT).$(SONAME)
