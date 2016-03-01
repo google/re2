@@ -94,9 +94,6 @@ class Prefilter {
   // and -1 for duplicate nodes.
   int unique_id_;
 
-  // Used for debugging, helps in tracking memory leaks.
-  int alloc_id_;
-
   DISALLOW_COPY_AND_ASSIGN(Prefilter);
 };
 
