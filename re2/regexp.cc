@@ -60,30 +60,29 @@ bool Regexp::QuickDestroy() {
   return false;
 }
 
-static map<Regexp*, int> *ref_map;
-GLOBAL_MUTEX(ref_mutex);
+// Lazily allocated.
+static Mutex* ref_mutex = NULL;
+static map<Regexp*, int>* ref_map = NULL;
 
 int Regexp::Ref() {
   if (ref_ < kMaxRef)
     return ref_;
 
-  GLOBAL_MUTEX_LOCK(ref_mutex);
-  int r = 0;
-  if (ref_map != NULL) {
-    r = (*ref_map)[this];
-  }
-  GLOBAL_MUTEX_UNLOCK(ref_mutex);
-  return r;
+  MutexLock l(ref_mutex);
+  return (*ref_map)[this];
 }
 
 // Increments reference count, returns object as convenience.
 Regexp* Regexp::Incref() {
   if (ref_ >= kMaxRef-1) {
-    // Store ref count in overflow map.
-    GLOBAL_MUTEX_LOCK(ref_mutex);
-    if (ref_map == NULL) {
+    static std::once_flag ref_once;
+    std::call_once(ref_once, []() {
+      ref_mutex = new Mutex;
       ref_map = new map<Regexp*, int>;
-    }
+    });
+
+    // Store ref count in overflow map.
+    MutexLock l(ref_mutex);
     if (ref_ == kMaxRef) {
       // already overflowed
       (*ref_map)[this]++;
@@ -92,7 +91,6 @@ Regexp* Regexp::Incref() {
       (*ref_map)[this] = kMaxRef;
       ref_ = kMaxRef;
     }
-    GLOBAL_MUTEX_UNLOCK(ref_mutex);
     return this;
   }
 
@@ -104,7 +102,7 @@ Regexp* Regexp::Incref() {
 void Regexp::Decref() {
   if (ref_ == kMaxRef) {
     // Ref count is stored in overflow map.
-    GLOBAL_MUTEX_LOCK(ref_mutex);
+    MutexLock l(ref_mutex);
     int r = (*ref_map)[this] - 1;
     if (r < kMaxRef) {
       ref_ = static_cast<uint16>(r);
@@ -112,7 +110,6 @@ void Regexp::Decref() {
     } else {
       (*ref_map)[this] = r;
     }
-    GLOBAL_MUTEX_UNLOCK(ref_mutex);
     return;
   }
   ref_--;

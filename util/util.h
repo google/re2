@@ -31,6 +31,7 @@
 #include <utility>
 #include <set>
 #include <atomic>
+#include <mutex>        // For std::call_once
 
 // Use std names.
 using std::set;
