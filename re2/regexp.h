@@ -185,10 +185,10 @@ class RegexpStatus {
   RegexpStatus() : code_(kRegexpSuccess), tmp_(NULL) {}
   ~RegexpStatus() { delete tmp_; }
 
-  void set_code(enum RegexpStatusCode code) { code_ = code; }
+  void set_code(RegexpStatusCode code) { code_ = code; }
   void set_error_arg(const StringPiece& error_arg) { error_arg_ = error_arg; }
   void set_tmp(string* tmp) { delete tmp_; tmp_ = tmp; }
-  enum RegexpStatusCode code() const { return code_; }
+  RegexpStatusCode code() const { return code_; }
   const StringPiece& error_arg() const { return error_arg_; }
   bool ok() const { return code() == kRegexpSuccess; }
 
@@ -197,14 +197,14 @@ class RegexpStatus {
 
   // Returns text equivalent of code, e.g.:
   //   "Bad character class"
-  static string CodeText(enum RegexpStatusCode code);
+  static string CodeText(RegexpStatusCode code);
 
   // Returns text describing error, e.g.:
   //   "Bad character class: [z-a]"
   string Text() const;
 
  private:
-  enum RegexpStatusCode code_;  // Kind of error
+  RegexpStatusCode code_;  // Kind of error
   StringPiece error_arg_;       // Piece of regexp containing syntax error.
   string* tmp_;                 // Temporary storage, possibly where error_arg_ is.
 
@@ -314,7 +314,7 @@ class Regexp {
   RegexpOp op() { return static_cast<RegexpOp>(op_); }
   int nsub() { return nsub_; }
   bool simple() { return simple_ != 0; }
-  enum ParseFlags parse_flags() { return static_cast<ParseFlags>(parse_flags_); }
+  ParseFlags parse_flags() { return static_cast<ParseFlags>(parse_flags_); }
   int Ref();  // For testing.
 
   Regexp** sub() {
@@ -627,8 +627,6 @@ inline Regexp::ParseFlags operator~(Regexp::ParseFlags a)
 {
   return static_cast<Regexp::ParseFlags>(~static_cast<int>(a));
 }
-
-
 
 }  // namespace re2
 
