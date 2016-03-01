@@ -52,22 +52,11 @@ RE2::Options::Options(RE2::CannedOptions opt)
     one_line_(false) {
 }
 
-// static empty things for use as const references.
-// To avoid global constructors, initialized on demand.
-GLOBAL_MUTEX(empty_mutex);
-static const string *empty_string;
-static const map<string, int> *empty_named_groups;
-static const map<int, string> *empty_group_names;
-
-static void InitEmpty() {
-  GLOBAL_MUTEX_LOCK(empty_mutex);
-  if (empty_string == NULL) {
-    empty_string = new string;
-    empty_named_groups = new map<string, int>;
-    empty_group_names = new map<int, string>;
-  }
-  GLOBAL_MUTEX_UNLOCK(empty_mutex);
-}
+// static empty objects for use as const references.
+// To avoid global constructors, allocated in RE2::Init().
+static const string* empty_string = NULL;
+static const map<string, int>* empty_named_groups = NULL;
+static const map<int, string>* empty_group_names = NULL;
 
 // Converts from Regexp error code to RE2 error code.
 // Maybe some day they will diverge.  In any event, this
@@ -174,19 +163,25 @@ int RE2::Options::ParseFlags() const {
 }
 
 void RE2::Init(const StringPiece& pattern, const Options& options) {
+  static std::once_flag empty_once;
+  std::call_once(empty_once, []() {
+    empty_string = new string;
+    empty_named_groups = new map<string, int>;
+    empty_group_names = new map<int, string>;
+  });
+
   mutex_ = new Mutex;
   pattern_ = pattern.as_string();
   options_.Copy(options);
-  InitEmpty();
-  error_ = empty_string;
-  error_code_ = NoError;
-  suffix_regexp_ = NULL;
   entire_regexp_ = NULL;
+  suffix_regexp_ = NULL;
   prog_ = NULL;
   rprog_ = NULL;
+  error_ = empty_string;
+  error_code_ = NoError;
+  num_captures_ = -1;
   named_groups_ = NULL;
   group_names_ = NULL;
-  num_captures_ = -1;
 
   RegexpStatus status;
   entire_regexp_ = Regexp::Parse(
@@ -194,14 +189,12 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
     static_cast<Regexp::ParseFlags>(options_.ParseFlags()),
     &status);
   if (entire_regexp_ == NULL) {
-    if (error_ == empty_string)
-      error_ = new string(status.Text());
-    if (options_.log_errors()) {
+    if (options_.log_errors())
       LOG(ERROR) << "Error parsing '" << trunc(pattern_) << "': "
                  << status.Text();
-    }
-    error_arg_ = status.error_arg().as_string();
+    error_ = new string(status.Text());
     error_code_ = RegexpErrorToRE2(status.code());
+    error_arg_ = status.error_arg().as_string();
     return;
   }
 

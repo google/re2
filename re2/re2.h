@@ -716,8 +716,9 @@ class RE2 {
   re2::Regexp*  entire_regexp_;    // parsed regular expression
   re2::Regexp*  suffix_regexp_;    // parsed regular expression, prefix removed
   re2::Prog*    prog_;             // compiled program for regexp
-  mutable re2::Prog* rprog_;       // reverse program for regexp
-  bool                     is_one_pass_;   // can use prog_->SearchOnePass?
+  bool          is_one_pass_;      // can use prog_->SearchOnePass?
+
+  mutable re2::Prog*       rprog_;         // reverse program for regexp
   mutable const string*    error_;         // Error indicator
                                            // (or points to empty string)
   mutable ErrorCode        error_code_;    // Error code
