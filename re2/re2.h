@@ -181,6 +181,7 @@
 
 #include <stdint.h>
 #include <map>
+#include <mutex>
 #include <string>
 #include "re2/stringpiece.h"
 #include "re2/variadic_function.h"
@@ -193,7 +194,6 @@ namespace re2 {
 
 using std::string;
 using std::map;
-class Mutex;
 class Prog;
 class Regexp;
 
@@ -708,7 +708,6 @@ class RE2 {
 
   re2::Prog* ReverseProg() const;
 
-  mutable Mutex*           mutex_;
   string                   pattern_;       // string regular expression
   Options                  options_;       // option flags
   string        prefix_;           // required prefix (before regexp_)
@@ -719,17 +718,21 @@ class RE2 {
   bool          is_one_pass_;      // can use prog_->SearchOnePass?
 
   mutable re2::Prog*       rprog_;         // reverse program for regexp
+  mutable std::once_flag   rprog_once_;
   mutable const string*    error_;         // Error indicator
                                            // (or points to empty string)
   mutable ErrorCode        error_code_;    // Error code
   mutable string           error_arg_;     // Fragment of regexp showing error
   mutable int              num_captures_;  // Number of capturing groups
+  mutable std::once_flag   num_captures_once_;
 
   // Map from capture names to indices
   mutable const map<string, int>* named_groups_;
+  mutable std::once_flag          named_groups_once_;
 
   // Map from capture indices to names
   mutable const map<int, string>* group_names_;
+  mutable std::once_flag          group_names_once_;
 
   //DISALLOW_COPY_AND_ASSIGN(RE2);
   RE2(const RE2&);
