@@ -228,14 +228,12 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
 // Returns rprog_, computing it if needed.
 re2::Prog* RE2::ReverseProg() const {
   std::call_once(rprog_once_, [this]() {
-    if (error_ == empty_string) {
-      rprog_ = suffix_regexp_->CompileToReverseProg(options_.max_mem()/3);
-      if (rprog_ == NULL) {
-        if (options_.log_errors())
-          LOG(ERROR) << "Error reverse compiling '" << trunc(pattern_) << "'";
-        error_ = new string("pattern too large - reverse compile failed");
-        error_code_ = RE2::ErrorPatternTooLarge;
-      }
+    rprog_ = suffix_regexp_->CompileToReverseProg(options_.max_mem()/3);
+    if (rprog_ == NULL) {
+      if (options_.log_errors())
+        LOG(ERROR) << "Error reverse compiling '" << trunc(pattern_) << "'";
+      error_ = new string("pattern too large - reverse compile failed");
+      error_code_ = RE2::ErrorPatternTooLarge;
     }
   });
   return rprog_;
@@ -283,9 +281,7 @@ int RE2::ProgramFanout(map<int, int>* histogram) const {
 // regexp wasn't valid on construction.
 int RE2::NumberOfCapturingGroups() const {
   std::call_once(num_captures_once_, [this]() {
-    if (suffix_regexp_ == NULL)
-      num_captures_ = -1;
-    else
+    if (suffix_regexp_ != NULL)
       num_captures_ = suffix_regexp_->NumCaptures();
   });
   return num_captures_;
@@ -294,7 +290,7 @@ int RE2::NumberOfCapturingGroups() const {
 // Returns named_groups_, computing it if needed.
 const map<string, int>& RE2::NamedCapturingGroups() const {
   std::call_once(named_groups_once_, [this]() {
-    if (ok())
+    if (suffix_regexp_ != NULL)
       named_groups_ = suffix_regexp_->NamedCaptures();
     if (named_groups_ == NULL)
       named_groups_ = empty_named_groups;
@@ -305,7 +301,7 @@ const map<string, int>& RE2::NamedCapturingGroups() const {
 // Returns group_names_, computing it if needed.
 const map<int, string>& RE2::CapturingGroupNames() const {
   std::call_once(group_names_once_, [this]() {
-    if (ok())
+    if (suffix_regexp_ != NULL)
       group_names_ = suffix_regexp_->CaptureNames();
     if (group_names_ == NULL)
       group_names_ = empty_group_names;
