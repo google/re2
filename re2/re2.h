@@ -708,8 +708,8 @@ class RE2 {
 
   re2::Prog* ReverseProg() const;
 
-  string                   pattern_;       // string regular expression
-  Options                  options_;       // option flags
+  string        pattern_;          // string regular expression
+  Options       options_;          // option flags
   string        prefix_;           // required prefix (before regexp_)
   bool          prefix_foldcase_;  // prefix is ASCII case-insensitive
   re2::Regexp*  entire_regexp_;    // parsed regular expression
@@ -717,22 +717,24 @@ class RE2 {
   re2::Prog*    prog_;             // compiled program for regexp
   bool          is_one_pass_;      // can use prog_->SearchOnePass?
 
-  mutable re2::Prog*       rprog_;         // reverse program for regexp
-  mutable std::once_flag   rprog_once_;
-  mutable const string*    error_;         // Error indicator
-                                           // (or points to empty string)
-  mutable ErrorCode        error_code_;    // Error code
-  mutable string           error_arg_;     // Fragment of regexp showing error
-  mutable int              num_captures_;  // Number of capturing groups
-  mutable std::once_flag   num_captures_once_;
+  mutable re2::Prog*     rprog_;         // reverse program for regexp
+  mutable const string*  error_;         // Error indicator
+                                         // (or points to empty string)
+  mutable ErrorCode      error_code_;    // Error code
+  mutable string         error_arg_;     // Fragment of regexp showing error
+  mutable int            num_captures_;  // Number of capturing groups
 
   // Map from capture names to indices
   mutable const map<string, int>* named_groups_;
-  mutable std::once_flag          named_groups_once_;
 
   // Map from capture indices to names
   mutable const map<int, string>* group_names_;
-  mutable std::once_flag          group_names_once_;
+
+  // Onces for lazy computations.
+  mutable std::once_flag rprog_once_;
+  mutable std::once_flag num_captures_once_;
+  mutable std::once_flag named_groups_once_;
+  mutable std::once_flag group_names_once_;
 
   //DISALLOW_COPY_AND_ASSIGN(RE2);
   RE2(const RE2&);
