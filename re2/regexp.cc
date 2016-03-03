@@ -61,8 +61,8 @@ bool Regexp::QuickDestroy() {
 }
 
 // Lazily allocated.
-static Mutex* ref_mutex = NULL;
-static map<Regexp*, int>* ref_map = NULL;
+static Mutex* ref_mutex;
+static map<Regexp*, int>* ref_map;
 
 int Regexp::Ref() {
   if (ref_ < kMaxRef)

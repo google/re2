@@ -54,9 +54,9 @@ RE2::Options::Options(RE2::CannedOptions opt)
 
 // static empty objects for use as const references.
 // To avoid global constructors, allocated in RE2::Init().
-static const string* empty_string = NULL;
-static const map<string, int>* empty_named_groups = NULL;
-static const map<int, string>* empty_group_names = NULL;
+static const string* empty_string;
+static const map<string, int>* empty_named_groups;
+static const map<int, string>* empty_group_names;
 
 // Converts from Regexp error code to RE2 error code.
 // Maybe some day they will diverge.  In any event, this
@@ -188,9 +188,10 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
     static_cast<Regexp::ParseFlags>(options_.ParseFlags()),
     &status);
   if (entire_regexp_ == NULL) {
-    if (options_.log_errors())
+    if (options_.log_errors()) {
       LOG(ERROR) << "Error parsing '" << trunc(pattern_) << "': "
                  << status.Text();
+    }
     error_ = new string(status.Text());
     error_code_ = RegexpErrorToRE2(status.code());
     error_arg_ = status.error_arg().as_string();
