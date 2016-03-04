@@ -6,6 +6,8 @@
 
 licenses(["notice"])
 
+exports_files(["LICENSE"])
+
 cc_library(
     name = "re2",
     srcs = [
@@ -97,25 +99,61 @@ cc_library(
 load("re2_test", "re2_test")
 
 re2_test("charclass_test")
+
 re2_test("compile_test")
+
 re2_test("filtered_re2_test")
+
 re2_test("mimics_pcre_test")
+
 re2_test("parse_test")
+
 re2_test("possible_match_test")
+
 re2_test("re2_arg_test")
+
 re2_test("re2_test")
+
 re2_test("regexp_test")
+
 re2_test("required_prefix_test")
+
 re2_test("search_test")
+
 re2_test("set_test")
+
 re2_test("simplify_test")
+
 re2_test("string_generator_test")
 
-re2_test("dfa_test", size="large")
-re2_test("exhaustive1_test", size="large")
-re2_test("exhaustive2_test", size="large")
-re2_test("exhaustive3_test", size="large")
-re2_test("exhaustive_test", size="large")
-re2_test("random_test", size="large")
+re2_test(
+    "dfa_test",
+    size = "large",
+)
+
+re2_test(
+    "exhaustive1_test",
+    size = "large",
+)
+
+re2_test(
+    "exhaustive2_test",
+    size = "large",
+)
+
+re2_test(
+    "exhaustive3_test",
+    size = "large",
+)
+
+re2_test(
+    "exhaustive_test",
+    size = "large",
+)
+
+re2_test(
+    "random_test",
+    size = "large",
+)
 
 # TODO: Add support for regexp_benchmark.
