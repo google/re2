@@ -96,7 +96,8 @@ bool RE2::Set::Match(const StringPiece& text, vector<int>* v) const {
     LOG(DFATAL) << "RE2::Set::Match without Compile";
     return false;
   }
-  v->clear();
+  if (v != NULL)
+    v->clear();
   bool failed;
   bool ret = prog_->SearchDFA(text, text, Prog::kAnchored,
                               Prog::kManyMatch, NULL, &failed, v);
@@ -105,7 +106,7 @@ bool RE2::Set::Match(const StringPiece& text, vector<int>* v) const {
 
   if (ret == false)
     return false;
-  if (v->size() == 0) {
+  if (v != NULL && v->empty()) {
     LOG(DFATAL) << "RE2::Set::Match: match but unknown regexp set";
     return false;
   }

@@ -18,8 +18,11 @@ TEST(Set, Unanchored) {
   CHECK_EQ(s.Add("foo", NULL), 0);
   CHECK_EQ(s.Add("(", NULL), -1);
   CHECK_EQ(s.Add("bar", NULL), 1);
-
   CHECK_EQ(s.Compile(), true);
+
+  CHECK_EQ(s.Match("foobar", NULL), true);
+  CHECK_EQ(s.Match("fooba", NULL), true);
+  CHECK_EQ(s.Match("oobar", NULL), true);
 
   vector<int> v;
   CHECK_EQ(s.Match("foobar", &v), true);
@@ -27,12 +30,10 @@ TEST(Set, Unanchored) {
   CHECK_EQ(v[0], 0);
   CHECK_EQ(v[1], 1);
 
-  v.clear();
   CHECK_EQ(s.Match("fooba", &v), true);
   CHECK_EQ(v.size(), 1);
   CHECK_EQ(v[0], 0);
 
-  v.clear();
   CHECK_EQ(s.Match("oobar", &v), true);
   CHECK_EQ(v.size(), 1);
   CHECK_EQ(v[0], 1);
@@ -44,8 +45,12 @@ TEST(Set, UnanchoredFactored) {
   CHECK_EQ(s.Add("foo", NULL), 0);
   CHECK_EQ(s.Add("(", NULL), -1);
   CHECK_EQ(s.Add("foobar", NULL), 1);
-
   CHECK_EQ(s.Compile(), true);
+
+  CHECK_EQ(s.Match("foobar", NULL), true);
+  CHECK_EQ(s.Match("obarfoobaroo", NULL), true);
+  CHECK_EQ(s.Match("fooba", NULL), true);
+  CHECK_EQ(s.Match("oobar", NULL), false);
 
   vector<int> v;
   CHECK_EQ(s.Match("foobar", &v), true);
@@ -53,18 +58,15 @@ TEST(Set, UnanchoredFactored) {
   CHECK_EQ(v[0], 0);
   CHECK_EQ(v[1], 1);
 
-  v.clear();
   CHECK_EQ(s.Match("obarfoobaroo", &v), true);
   CHECK_EQ(v.size(), 2);
   CHECK_EQ(v[0], 0);
   CHECK_EQ(v[1], 1);
 
-  v.clear();
   CHECK_EQ(s.Match("fooba", &v), true);
   CHECK_EQ(v.size(), 1);
   CHECK_EQ(v[0], 0);
 
-  v.clear();
   CHECK_EQ(s.Match("oobar", &v), false);
   CHECK_EQ(v.size(), 0);
 }
@@ -74,6 +76,8 @@ TEST(Set, UnanchoredDollar) {
 
   CHECK_EQ(s.Add("foo$", NULL), 0);
   CHECK_EQ(s.Compile(), true);
+
+  CHECK_EQ(s.Match("foo", NULL), true);
 
   vector<int> v;
   CHECK_EQ(s.Match("foo", &v), true);
@@ -87,8 +91,13 @@ TEST(Set, Anchored) {
   CHECK_EQ(s.Add("foo", NULL), 0);
   CHECK_EQ(s.Add("(", NULL), -1);
   CHECK_EQ(s.Add("bar", NULL), 1);
-
   CHECK_EQ(s.Compile(), true);
+
+  CHECK_EQ(s.Match("foobar", NULL), false);
+  CHECK_EQ(s.Match("fooba", NULL), false);
+  CHECK_EQ(s.Match("oobar", NULL), false);
+  CHECK_EQ(s.Match("foo", NULL), true);
+  CHECK_EQ(s.Match("bar", NULL), true);
 
   vector<int> v;
   CHECK_EQ(s.Match("foobar", &v), false);
@@ -114,11 +123,13 @@ TEST(Set, EmptyUnanchored) {
 
   CHECK_EQ(s.Compile(), true);
 
+  CHECK_EQ(s.Match("", NULL), false);
+  CHECK_EQ(s.Match("foobar", NULL), false);
+
   vector<int> v;
   CHECK_EQ(s.Match("", &v), false);
   CHECK_EQ(v.size(), 0);
 
-  v.clear();
   CHECK_EQ(s.Match("foobar", &v), false);
   CHECK_EQ(v.size(), 0);
 }
@@ -128,11 +139,13 @@ TEST(Set, EmptyAnchored) {
 
   CHECK_EQ(s.Compile(), true);
 
+  CHECK_EQ(s.Match("", NULL), false);
+  CHECK_EQ(s.Match("foobar", NULL), false);
+
   vector<int> v;
   CHECK_EQ(s.Match("", &v), false);
   CHECK_EQ(v.size(), 0);
 
-  v.clear();
   CHECK_EQ(s.Match("foobar", &v), false);
   CHECK_EQ(v.size(), 0);
 }

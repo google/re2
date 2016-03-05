@@ -36,7 +36,7 @@ class RE2::Set {
   bool Compile();
 
   // Match returns true if text matches any of the regexps in the set.
-  // If so, it fills v with the indices of the matching regexps.
+  // If so, it fills v (if not NULL) with the indices of the matching regexps.
   bool Match(const StringPiece& text, vector<int>* v) const;
 
  private:
