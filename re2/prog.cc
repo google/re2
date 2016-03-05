@@ -94,6 +94,7 @@ Prog::Prog()
   : anchor_start_(false),
     anchor_end_(false),
     reversed_(false),
+    did_flatten_(false),
     did_onepass_(false),
     start_(0),
     start_unanchored_(0),
@@ -131,7 +132,6 @@ static inline void AddToQueue(Workq* q, int id) {
 
 static string ProgToString(Prog* prog, Workq* q) {
   string s;
-
   for (Workq::iterator i = q->begin(); i != q->end(); ++i) {
     int id = *i;
     Prog::Inst* ip = prog->inst(id);
@@ -143,7 +143,22 @@ static string ProgToString(Prog* prog, Workq* q) {
   return s;
 }
 
+static string FlattenedProgToString(Prog* prog, int start) {
+  string s;
+  for (int id = start; id < prog->size(); id++) {
+    Prog::Inst* ip = prog->inst(id);
+    if (ip->last())
+      StringAppendF(&s, "%d. %s\n", id, ip->Dump().c_str());
+    else
+      StringAppendF(&s, "%d %s\n", id, ip->Dump().c_str());
+  }
+  return s;
+}
+
 string Prog::Dump() {
+  if (did_flatten_)
+    return FlattenedProgToString(this, start_);
+
   string map;
   if (false) {  // Debugging
     int lo = 0;
@@ -161,6 +176,9 @@ string Prog::Dump() {
 }
 
 string Prog::DumpUnanchored() {
+  if (did_flatten_)
+    return FlattenedProgToString(this, start_unanchored_);
+
   Workq q(size_);
   AddToQueue(&q, start_unanchored_);
   return ProgToString(this, &q);
@@ -337,5 +355,166 @@ void Prog::ComputeByteMap() {
   }
 }
 
-}  // namespace re2
+void Prog::Flatten() {
+  if (did_flatten_)
+    return;
+  did_flatten_ = true;
 
+  // First pass: Marks "roots".
+  // Builds the mapping from inst-ids to root-ids.
+  SparseArray<int> rootmap(size());
+  MarkRoots(&rootmap);
+
+  // Second pass: Emits "lists". Remaps outs to root-ids.
+  // Builds the mapping from root-ids to flat-ids.
+  vector<int> flatmap(rootmap.size());
+  vector<Inst> flat;
+  flat.reserve(size());
+  for (SparseArray<int>::const_iterator i = rootmap.begin();
+       i != rootmap.end();
+       ++i) {
+    flatmap[i->value()] = flat.size();
+    EmitList(i->index(), &rootmap, &flat);
+    flat.back().set_last();
+  }
+
+  // Third pass: Remaps outs to flat-ids.
+  for (int id = 0; id < static_cast<int>(flat.size()); id++) {
+    Inst* ip = &flat[id];
+    if (ip->opcode() != kInstAltMatch)  // handled in EmitList()
+      ip->set_out(flatmap[ip->out()]);
+  }
+
+  // Remap start_unanchored and start.
+  if (start_unanchored() == 0) {
+    DCHECK_EQ(start(), 0);
+  } else if (start_unanchored() == start()) {
+    set_start_unanchored(flatmap[1]);
+    set_start(flatmap[1]);
+  } else {
+    set_start_unanchored(flatmap[1]);
+    set_start(flatmap[2]);
+  }
+
+  // Finally, replace the old instructions with the new instructions.
+  size_ = flat.size();
+  delete[] inst_;
+  inst_ = new Inst[size_];
+  memmove(inst_, flat.data(), size_ * sizeof *inst_);
+}
+
+void Prog::MarkRoots(SparseArray<int>* rootmap) {
+  // Mark the kInstFail instruction.
+  rootmap->set_new(0, rootmap->size());
+
+  // Mark the start_unanchored and start instructions.
+  if (!rootmap->has_index(start_unanchored()))
+    rootmap->set_new(start_unanchored(), rootmap->size());
+  if (!rootmap->has_index(start()))
+    rootmap->set_new(start(), rootmap->size());
+
+  Workq q(size());
+  stack<int> stk;
+  stk.push(start_unanchored());
+  while (!stk.empty()) {
+    int id = stk.top();
+    stk.pop();
+  Loop:
+    if (q.contains(id))
+      continue;
+    q.insert_new(id);
+
+    Inst* ip = inst(id);
+    switch (ip->opcode()) {
+      default:
+        LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+        break;
+
+      case kInstAltMatch:
+      case kInstAlt:
+        stk.push(ip->out1());
+        id = ip->out();
+        goto Loop;
+
+      case kInstByteRange:
+      case kInstCapture:
+      case kInstEmptyWidth:
+        // Mark the out of this instruction.
+        if (!rootmap->has_index(ip->out()))
+          rootmap->set_new(ip->out(), rootmap->size());
+        id = ip->out();
+        goto Loop;
+
+      case kInstNop:
+        id = ip->out();
+        goto Loop;
+
+      case kInstMatch:
+      case kInstFail:
+        break;
+    }
+  }
+}
+
+void Prog::EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat) {
+  Workq q(size());
+  stack<int> stk;
+  stk.push(root);
+  while (!stk.empty()) {
+    int id = stk.top();
+    stk.pop();
+  Loop:
+    if (q.contains(id))
+      continue;
+    q.insert_new(id);
+
+    if (id != root && rootmap->has_index(id)) {
+      // We reached another "tree" via epsilon transition. Emit a kInstNop
+      // instruction so that the Prog does not become quadratically larger.
+      flat->emplace_back();
+      flat->back().set_opcode(kInstNop);
+      flat->back().set_out(rootmap->get_existing(id));
+      continue;
+    }
+
+    Inst* ip = inst(id);
+    switch (ip->opcode()) {
+      default:
+        LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+        break;
+
+      case kInstAltMatch:
+        flat->emplace_back();
+        flat->back().set_opcode(kInstAltMatch);
+        flat->back().set_out(id+1);
+        flat->back().out1_ = id+2;
+        // Fall through.
+
+      case kInstAlt:
+        stk.push(ip->out1());
+        id = ip->out();
+        goto Loop;
+
+      case kInstByteRange:
+      case kInstCapture:
+      case kInstEmptyWidth:
+        flat->emplace_back();
+        memmove(&flat->back(), ip, sizeof *ip);
+        flat->back().set_out(rootmap->get_existing(ip->out()));
+        id = ip->out();
+        break;
+
+      case kInstNop:
+        id = ip->out();
+        goto Loop;
+
+      case kInstMatch:
+      case kInstFail:
+        flat->emplace_back();
+        memmove(&flat->back(), ip, sizeof *ip);
+        break;
+    }
+  }
+}
+
+}  // namespace re2
