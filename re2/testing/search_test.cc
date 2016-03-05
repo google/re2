@@ -264,7 +264,7 @@ RegexpTest simple_tests[] = {
   { "[A-Z]+", "aAzZ" },
   { "[^\\\\]+", "Aa\\" },
   { "[acegikmoqsuwy]+", "acegikmoqsuwyACEGIKMOQSUWY" },
-  
+
   // Anchoring.  (^abc in aabcdef was a former bug)
   // The tester checks for a match in the text and
   // subpieces of the text with a byte removed on either side.
@@ -297,7 +297,12 @@ RegexpTest simple_tests[] = {
   { "a", "a" },
   { "ab*", "a" },
   { "a\\C*", "a" },
-  
+  { "a\\C+", "a" },
+  { "a\\C?", "a" },
+  { "a\\C*?", "a" },
+  { "a\\C+?", "a" },
+  { "a\\C??", "a" },
+
   // Former bugs.
   { "a\\C*|ba\\C", "baba" },
 };
