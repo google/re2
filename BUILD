@@ -8,6 +8,37 @@ licenses(["notice"])
 
 exports_files(["LICENSE"])
 
+config_setting(
+    name = "ios_armv7",
+    values = {
+        "ios_cpu": "armv7",
+    },
+)
+
+config_setting(
+    name = "ios_armv7s",
+    values = {
+        "ios_cpu": "armv7s",
+    },
+)
+
+config_setting(
+    name = "ios_arm64",
+    values = {
+        "ios_cpu": "arm64",
+    },
+)
+
+IOS_ARM_TF_COPTS = [
+    "-DOS_IOS",
+    "-miphoneos-version-min=7.0",
+    "-arch armv7",
+    "-arch armv7s",
+    "-arch arm64",
+    "-D__thread=",
+    "-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk/",
+]
+
 cc_library(
     name = "re2",
     srcs = [
@@ -60,7 +91,12 @@ cc_library(
         "re2/stringpiece.h",
         "re2/variadic_function.h",
     ],
-    copts = ["-pthread"],
+    copts = select({
+        ":ios_armv7": IOS_ARM_TF_COPTS,
+        ":ios_armv7s": IOS_ARM_TF_COPTS,
+        ":ios_arm64": IOS_ARM_TF_COPTS,
+        "//conditions:default": ["-pthread"],
+    }),
     includes = ["."],
     linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
