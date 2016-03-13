@@ -44,7 +44,7 @@ ifeq ($(shell uname),Darwin)
 SOEXT=dylib
 SOEXTVER=$(SONAME).$(SOEXT)
 SOEXTVER00=$(SONAME).0.0.$(SOEXT)
-MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib $(LDFLAGS) -Wl,-install_name,@rpath/libre2.$(SOEXTVER) -exported_symbols_list libre2.symbols.darwin
+MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib -Wl,-install_name,@rpath/libre2.$(SOEXTVER),-exported_symbols_list,libre2.symbols.darwin $(LDFLAGS)
 else ifeq ($(shell uname),SunOS)
 SOEXT=so
 SOEXTVER=$(SOEXT).$(SONAME)
@@ -275,11 +275,15 @@ install: obj/libre2.a obj/so/libre2.$(SOEXT)
 testinstall:
 	@mkdir -p obj
 	cp testinstall.cc obj
-ifneq ($(shell uname),Darwin)
-	(cd obj && $(CXX) -I$(DESTDIR)$(includedir) -L$(DESTDIR)$(libdir) testinstall.cc -lre2 -pthread -static -o testinstall)
+ifeq ($(shell uname),Darwin)
+	@echo Skipping test for libre2.a on Darwin.
+else ifeq ($(shell uname),SunOS)
+	@echo Skipping test for libre2.a on SunOS.
+else
+	(cd obj && $(CXX) $(CXXFLAGS) -I$(DESTDIR)$(includedir) -L$(DESTDIR)$(libdir) testinstall.cc -l:libre2.a -o testinstall)
 	obj/testinstall
 endif
-	(cd obj && $(CXX) -I$(DESTDIR)$(includedir) -L$(DESTDIR)$(libdir) testinstall.cc -lre2 -pthread -o testinstall)
+	(cd obj && $(CXX) $(CXXFLAGS) -I$(DESTDIR)$(includedir) -L$(DESTDIR)$(libdir) testinstall.cc -lre2 -o testinstall)
 	LD_LIBRARY_PATH=$(DESTDIR)$(libdir) obj/testinstall
 
 benchlog: obj/test/regexp_benchmark
