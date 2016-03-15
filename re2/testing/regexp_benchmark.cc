@@ -349,6 +349,51 @@ BENCHMARK_RANGE(Search_Success1_Cached_PCRE,     8, 16<<20)->ThreadRange(1, NumC
 BENCHMARK_RANGE(Search_Success1_Cached_RE2,      8, 16<<20)->ThreadRange(1, NumCPUs());
 BENCHMARK_RANGE(Search_Success1_Cached_BitState, 8, 2<<20)->ThreadRange(1, NumCPUs());
 
+// Benchmark: AltMatch optimisation (just to verify that it works)
+// Note that OnePass doesn't implement it!
+
+void SearchAltMatch(int iters, int nbytes, SearchImpl* search) {
+  StopBenchmarkTiming();
+  string s;
+  MakeText(&s, nbytes);
+  BenchmarkMemoryUsage();
+  StartBenchmarkTiming();
+  search(iters, "\\C*", s, Prog::kAnchored, true);
+  SetBenchmarkBytesProcessed(static_cast<int64>(iters)*nbytes);
+}
+
+void Search_AltMatch_DFA(int i, int n)      { SearchAltMatch(i, n, SearchDFA); }
+void Search_AltMatch_NFA(int i, int n)      { SearchAltMatch(i, n, SearchNFA); }
+void Search_AltMatch_OnePass(int i, int n)  { SearchAltMatch(i, n, SearchOnePass); }
+void Search_AltMatch_BitState(int i, int n) { SearchAltMatch(i, n, SearchBitState); }
+void Search_AltMatch_PCRE(int i, int n)     { SearchAltMatch(i, n, SearchPCRE); }
+void Search_AltMatch_RE2(int i, int n)      { SearchAltMatch(i, n, SearchRE2); }
+
+BENCHMARK_RANGE(Search_AltMatch_DFA,      8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_AltMatch_NFA,      8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_AltMatch_OnePass,  8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_AltMatch_BitState, 8, 16<<20)->ThreadRange(1, NumCPUs());
+#ifdef USEPCRE
+BENCHMARK_RANGE(Search_AltMatch_PCRE,     8, 16<<20)->ThreadRange(1, NumCPUs());
+#endif
+BENCHMARK_RANGE(Search_AltMatch_RE2,      8, 16<<20)->ThreadRange(1, NumCPUs());
+
+void Search_AltMatch_CachedDFA(int i, int n)      { SearchAltMatch(i, n, SearchCachedDFA); }
+void Search_AltMatch_CachedNFA(int i, int n)      { SearchAltMatch(i, n, SearchCachedNFA); }
+void Search_AltMatch_CachedOnePass(int i, int n)  { SearchAltMatch(i, n, SearchCachedOnePass); }
+void Search_AltMatch_CachedBitState(int i, int n) { SearchAltMatch(i, n, SearchCachedBitState); }
+void Search_AltMatch_CachedPCRE(int i, int n)     { SearchAltMatch(i, n, SearchCachedPCRE); }
+void Search_AltMatch_CachedRE2(int i, int n)      { SearchAltMatch(i, n, SearchCachedRE2); }
+
+BENCHMARK_RANGE(Search_AltMatch_CachedDFA,      8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_AltMatch_CachedNFA,      8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_AltMatch_CachedOnePass,  8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_AltMatch_CachedBitState, 8, 16<<20)->ThreadRange(1, NumCPUs());
+#ifdef USEPCRE
+BENCHMARK_RANGE(Search_AltMatch_CachedPCRE,     8, 16<<20)->ThreadRange(1, NumCPUs());
+#endif
+BENCHMARK_RANGE(Search_AltMatch_CachedRE2,      8, 16<<20)->ThreadRange(1, NumCPUs());
+
 // Benchmark: use regexp to find phone number.
 
 void SearchDigits(int iters, SearchImpl* search) {
