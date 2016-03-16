@@ -99,6 +99,18 @@ static Test tests[] = {
   { "[Aa]",
     "1. byte/i [61-61] -> 2\n"
     "2. match! 0\n" },
+  { "\\C+",
+    "1. byte [00-ff] -> 2\n"
+    "2. altmatch -> 1 | 3\n"
+    "3. match! 0\n" },
+  { "\\C*",
+    "2. altmatch -> 1 | 3\n"
+    "1. byte [00-ff] -> 2\n"
+    "3. match! 0\n" },
+  { "\\C?",
+    "2. alt -> 1 | 3\n"
+    "1. byte [00-ff] -> 3\n"
+    "3. match! 0\n" },
   // Issue 20992936
   { "[[-`]",
     "1. byte [5b-60] -> 2\n"
