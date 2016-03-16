@@ -55,9 +55,13 @@ class Backtracker {
               StringPiece* submatch, int nsubmatch);
 
  private:
-  // Explores from instruction ip at string position p looking for a match.
+  // Explores from instruction id at string position p looking for a match.
   // Returns true if found (so that caller can stop trying other possibilities).
   bool Visit(int id, const char* p);
+
+  // Tries instruction id at string position p.
+  // Returns true if a match is found.
+  bool Try(int id, const char* p);
 
   // Search parameters
   Prog* prog_;              // program being run
@@ -143,7 +147,7 @@ bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
   return false;
 }
 
-// Explores from instruction ip at string position p looking for a match.
+// Explores from instruction id at string position p looking for a match.
 // Return true if found (so that caller can stop trying other possibilities).
 bool Backtracker::Visit(int id, const char* p) {
   // Check bitmap.  If we've already explored from here,
@@ -156,6 +160,20 @@ bool Backtracker::Visit(int id, const char* p) {
     return false;
   visited_[n/32] |= 1 << (n&31);
 
+  Prog::Inst* ip = prog_->inst(id);
+  if (Try(id, p)) {
+    if (longest_ && !ip->last())
+      Visit(id+1, p);
+    return true;
+  }
+  if (!ip->last())
+    return Visit(id+1, p);
+  return false;
+}
+
+// Tries instruction id at string position p.
+// Returns true if a match is found.
+bool Backtracker::Try(int id, const char* p) {
   // Pick out byte at current position.  If at end of string,
   // have to explore in hope of finishing a match.  Use impossible byte -1.
   int c = -1;
@@ -168,15 +186,9 @@ bool Backtracker::Visit(int id, const char* p) {
       LOG(FATAL) << "Unexpected opcode: " << (int)ip->opcode();
       return false;  // not reached
 
-    case kInstAlt:
     case kInstAltMatch:
-      // Try both possible next states: out is preferred to out1.
-      if (Visit(ip->out(), p)) {
-        if (longest_)
-          Visit(ip->out1(), p);
-        return true;
-      }
-      return Visit(ip->out1(), p);
+      // Ignored.
+      return false;
 
     case kInstByteRange:
       if (ip->Matches(c))

@@ -27,94 +27,89 @@ struct Test {
 
 static Test tests[] = {
   { "a",
-    "1. byte [61-61] -> 2\n"
-    "2. match! 0\n" },
-  { "ab",
-    "1. byte [61-61] -> 2\n"
-    "2. byte [62-62] -> 3\n"
-    "3. match! 0\n" },
-  { "a|c",
-    "3. alt -> 1 | 2\n"
-    "1. byte [61-61] -> 4\n"
-    "2. byte [63-63] -> 4\n"
-    "4. match! 0\n" },
-  { "a|b",
-    "1. byte [61-62] -> 2\n"
-    "2. match! 0\n" },
-  { "[ab]",
-    "1. byte [61-62] -> 2\n"
-    "2. match! 0\n" },
-  { "a+",
-    "1. byte [61-61] -> 2\n"
-    "2. alt -> 1 | 3\n"
-    "3. match! 0\n" },
-  { "a+?",
-    "1. byte [61-61] -> 2\n"
-    "2. alt -> 3 | 1\n"
-    "3. match! 0\n" },
-  { "a*",
-    "2. alt -> 1 | 3\n"
-    "1. byte [61-61] -> 2\n"
-    "3. match! 0\n" },
-  { "a*?",
-    "2. alt -> 3 | 1\n"
-    "3. match! 0\n"
-    "1. byte [61-61] -> 2\n" },
-  { "a?",
-    "2. alt -> 1 | 3\n"
-    "1. byte [61-61] -> 3\n"
-    "3. match! 0\n" },
-  { "a??",
-    "2. alt -> 3 | 1\n"
-    "3. match! 0\n"
-    "1. byte [61-61] -> 3\n" },
-  { "a{4}",
-    "1. byte [61-61] -> 2\n"
-    "2. byte [61-61] -> 3\n"
     "3. byte [61-61] -> 4\n"
+    "4. match! 0\n" },
+  { "ab",
+    "3. byte [61-61] -> 4\n"
+    "4. byte [62-62] -> 5\n"
+    "5. match! 0\n" },
+  { "a|c",
+    "3+ byte [61-61] -> 5\n"
+    "4. byte [63-63] -> 5\n"
+    "5. match! 0\n" },
+  { "a|b",
+    "3. byte [61-62] -> 4\n"
+    "4. match! 0\n" },
+  { "[ab]",
+    "3. byte [61-62] -> 4\n"
+    "4. match! 0\n" },
+  { "a+",
+    "3. byte [61-61] -> 4\n"
+    "4+ nop -> 3\n"
+    "5. match! 0\n" },
+  { "a+?",
+    "3. byte [61-61] -> 4\n"
+    "4+ match! 0\n"
+    "5. nop -> 3\n" },
+  { "a*",
+    "3+ byte [61-61] -> 3\n"
+    "4. match! 0\n" },
+  { "a*?",
+    "3+ match! 0\n"
+    "4. byte [61-61] -> 3\n" },
+  { "a?",
+    "3+ byte [61-61] -> 5\n"
+    "4. nop -> 5\n"
+    "5. match! 0\n" },
+  { "a??",
+    "3+ nop -> 5\n"
     "4. byte [61-61] -> 5\n"
     "5. match! 0\n" },
+  { "a{4}",
+    "3. byte [61-61] -> 4\n"
+    "4. byte [61-61] -> 5\n"
+    "5. byte [61-61] -> 6\n"
+    "6. byte [61-61] -> 7\n"
+    "7. match! 0\n" },
   { "(a)",
-    "2. capture 2 -> 1\n"
-    "1. byte [61-61] -> 3\n"
-    "3. capture 3 -> 4\n"
-    "4. match! 0\n" },
+    "3. capture 2 -> 4\n"
+    "4. byte [61-61] -> 5\n"
+    "5. capture 3 -> 6\n"
+    "6. match! 0\n" },
   { "(?:a)",
-    "1. byte [61-61] -> 2\n"
-    "2. match! 0\n" },
-  { "",
-    "2. match! 0\n" },
-  { ".",
-    "3. alt -> 1 | 2\n"
-    "1. byte [00-09] -> 4\n"
-    "2. byte [0b-ff] -> 4\n"
+    "3. byte [61-61] -> 4\n"
     "4. match! 0\n" },
+  { "",
+    "3. match! 0\n" },
+  { ".",
+    "3+ byte [00-09] -> 5\n"
+    "4. byte [0b-ff] -> 5\n"
+    "5. match! 0\n" },
   { "[^ab]",
-    "5. alt -> 3 | 4\n"
-    "3. alt -> 1 | 2\n"
-    "4. byte [63-ff] -> 6\n"
-    "1. byte [00-09] -> 6\n"
-    "2. byte [0b-60] -> 6\n"
+    "3+ byte [00-09] -> 6\n"
+    "4+ byte [0b-60] -> 6\n"
+    "5. byte [63-ff] -> 6\n"
     "6. match! 0\n" },
   { "[Aa]",
-    "1. byte/i [61-61] -> 2\n"
-    "2. match! 0\n" },
+    "3. byte/i [61-61] -> 4\n"
+    "4. match! 0\n" },
   { "\\C+",
-    "1. byte [00-ff] -> 2\n"
-    "2. altmatch -> 1 | 3\n"
-    "3. match! 0\n" },
+    "3. byte [00-ff] -> 4\n"
+    "4+ altmatch -> 5 | 6\n"
+    "5+ nop -> 3\n"
+    "6. match! 0\n" },
   { "\\C*",
-    "2. altmatch -> 1 | 3\n"
-    "1. byte [00-ff] -> 2\n"
-    "3. match! 0\n" },
+    "3+ altmatch -> 4 | 5\n"
+    "4+ byte [00-ff] -> 3\n"
+    "5. match! 0\n" },
   { "\\C?",
-    "2. alt -> 1 | 3\n"
-    "1. byte [00-ff] -> 3\n"
-    "3. match! 0\n" },
+    "3+ byte [00-ff] -> 5\n"
+    "4. nop -> 5\n"
+    "5. match! 0\n" },
   // Issue 20992936
   { "[[-`]",
-    "1. byte [5b-60] -> 2\n"
-    "2. match! 0\n" },
+    "3. byte [5b-60] -> 4\n"
+    "4. match! 0\n" },
 };
 
 TEST(TestRegexpCompileToProg, Simple) {
@@ -213,60 +208,51 @@ TEST(TestCompile, Bug26705922) {
   string forward, reverse;
 
   Dump("[\\x{10000}\\x{10010}]", Regexp::LikePerl, &forward, &reverse);
-  EXPECT_EQ("4. byte [f0-f0] -> 3\n"
-            "3. byte [90-90] -> 2\n"
-            "2. byte [80-80] -> 6\n"
-            "6. alt -> 1 | 5\n"
-            "1. byte [80-80] -> 7\n"
-            "5. byte [90-90] -> 7\n"
-            "7. match! 0\n",
+  EXPECT_EQ("3. byte [f0-f0] -> 4\n"
+            "4. byte [90-90] -> 5\n"
+            "5. byte [80-80] -> 6\n"
+            "6+ byte [80-80] -> 8\n"
+            "7. byte [90-90] -> 8\n"
+            "8. match! 0\n",
             forward);
-  EXPECT_EQ("6. alt -> 4 | 5\n"
-            "4. byte [80-80] -> 3\n"
-            "5. byte [90-90] -> 3\n"
-            "3. byte [80-80] -> 2\n"
-            "2. byte [90-90] -> 1\n"
-            "1. byte [f0-f0] -> 7\n"
-            "7. match! 0\n",
+  EXPECT_EQ("3+ byte [80-80] -> 5\n"
+            "4. byte [90-90] -> 5\n"
+            "5. byte [80-80] -> 6\n"
+            "6. byte [90-90] -> 7\n"
+            "7. byte [f0-f0] -> 8\n"
+            "8. match! 0\n",
             reverse);
 
   Dump("[\\x{8000}-\\x{10FFF}]", Regexp::LikePerl, &forward, &reverse);
-  EXPECT_EQ("6. alt -> 3 | 5\n"
-            "3. byte [e8-ef] -> 2\n"
-            "5. byte [f0-f0] -> 4\n"
-            "2. byte [80-bf] -> 1\n"
-            "4. byte [90-90] -> 2\n"
-            "1. byte [80-bf] -> 7\n"
-            "7. match! 0\n",
-            forward);
-  EXPECT_EQ("3. byte [80-bf] -> 2\n"
-            "2. byte [80-bf] -> 6\n"
-            "6. alt -> 1 | 5\n"
-            "1. byte [e8-ef] -> 7\n"
-            "5. byte [90-90] -> 4\n"
+  EXPECT_EQ("3+ byte [e8-ef] -> 5\n"
+            "4. byte [f0-f0] -> 8\n"
+            "5. byte [80-bf] -> 6\n"
+            "6. byte [80-bf] -> 7\n"
             "7. match! 0\n"
-            "4. byte [f0-f0] -> 7\n",
+            "8. byte [90-90] -> 5\n",
+            forward);
+  EXPECT_EQ("3. byte [80-bf] -> 4\n"
+            "4. byte [80-bf] -> 5\n"
+            "5+ byte [e8-ef] -> 7\n"
+            "6. byte [90-90] -> 8\n"
+            "7. match! 0\n"
+            "8. byte [f0-f0] -> 7\n",
             reverse);
 
   Dump("[\\x{80}-\\x{10FFFF}]", Regexp::LikePerl, NULL, &reverse);
-  EXPECT_EQ("2. byte [80-bf] -> 8\n"
-            "8. alt -> 5 | 7\n"
-            "5. alt -> 1 | 4\n"
-            "7. byte [80-bf] -> 17\n"
-            "1. byte [c2-df] -> 18\n"
-            "4. byte [a0-bf] -> 3\n"
-            "17. alt -> 14 | 16\n"
-            "18. match! 0\n"
-            "3. byte [e0-e0] -> 18\n"
-            "14. alt -> 11 | 13\n"
-            "16. byte [80-8f] -> 15\n"
-            "11. alt -> 6 | 10\n"
-            "13. byte [80-bf] -> 12\n"
-            "15. byte [f4-f4] -> 18\n"
-            "6. byte [e1-ef] -> 18\n"
-            "10. byte [90-bf] -> 9\n"
-            "12. byte [f1-f3] -> 18\n"
-            "9. byte [f0-f0] -> 18\n",
+  EXPECT_EQ("3. byte [80-bf] -> 4\n"
+            "4+ byte [c2-df] -> 7\n"
+            "5+ byte [a0-bf] -> 8\n"
+            "6. byte [80-bf] -> 9\n"
+            "7. match! 0\n"
+            "8. byte [e0-e0] -> 7\n"
+            "9+ byte [e1-ef] -> 7\n"
+            "10+ byte [90-bf] -> 13\n"
+            "11+ byte [80-bf] -> 14\n"
+            "12. byte [80-8f] -> 15\n"
+            "13. byte [f0-f0] -> 7\n"
+            "14. byte [f1-f3] -> 7\n"
+            "15. byte [f4-f4] -> 7\n",
             reverse);
 }
 

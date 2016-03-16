@@ -216,7 +216,7 @@ class DFA {
 
   // Converts a State into a Workq: the opposite of WorkqToCachedState.
   // L >= mutex_
-  static void StateToWorkq(State* s, Workq* q);
+  void StateToWorkq(State* s, Workq* q);
 
   // Runs a State on a given byte, returning the next state.
   State* RunStateOnByteUnlocked(State*, int);  // cache_mutex_.r <= L < mutex_
@@ -640,31 +640,17 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
           return FullMatchState;
         }
         // Fall through.
-      case kInstByteRange:    // These are useful.
-      case kInstEmptyWidth:
-      case kInstMatch:
-      case kInstAlt:          // Not useful, but necessary [*]
-        inst[n++] = *it;
+      default:
+        // Record iff id is the head of its list, which must
+        // be the case if id-1 is the last of *its* list. :)
+        if (prog_->inst(id-1)->last())
+          inst[n++] = *it;
         if (ip->opcode() == kInstEmptyWidth)
           needflags |= ip->empty();
         if (ip->opcode() == kInstMatch && !prog_->anchor_end())
           sawmatch = true;
         break;
-
-      default:                // The rest are not.
-        break;
     }
-
-    // [*] kInstAlt would seem useless to record in a state, since
-    // we've already followed both its arrows and saved all the
-    // interesting states we can reach from there.  The problem
-    // is that one of the empty-width instructions might lead
-    // back to the same kInstAlt (if an empty-width operator is starred),
-    // producing a different evaluation order depending on whether
-    // we keep the kInstAlt to begin with.  Sigh.
-    // A specific case that this affects is /(^|a)+/ matching "a".
-    // If we don't save the kInstAlt, we will match the whole "a" (0,1)
-    // but in fact the correct leftmost-first match is the leading "" (0,0).
   }
   DCHECK_LE(n, q->size());
   if (n > 0 && inst[n-1] == Mark)
@@ -797,12 +783,12 @@ void DFA::StateToWorkq(State* s, Workq* q) {
     if (s->inst_[i] == Mark)
       q->mark();
     else
-      q->insert_new(s->inst_[i]);
+      // Explore from the head of the list.
+      AddToQueue(q, s->inst_[i], s->flag_ & kFlagEmptyMask);
   }
 }
 
-// Adds ip to the work queue, following empty arrows according to flag
-// and expanding kInstAlt instructions (two-target gotos).
+// Adds ip to the work queue, following empty arrows according to flag.
 void DFA::AddToQueue(Workq* q, int id, uint flag) {
 
   // Use astack_ to hold our stack of states yet to process.
@@ -828,9 +814,8 @@ void DFA::AddToQueue(Workq* q, int id, uint flag) {
       continue;
 
     // If ip is already on the queue, nothing to do.
-    // Otherwise add it.  We don't actually keep all the ones
-    // that get added -- for example, kInstAlt is ignored
-    // when on a work queue -- but adding all ip's here
+    // Otherwise add it.  We don't actually keep all the
+    // ones that get added, but adding all of them here
     // increases the likelihood of q->contains(id),
     // reducing the amount of duplicated work.
     if (q->contains(id))
@@ -840,34 +825,40 @@ void DFA::AddToQueue(Workq* q, int id, uint flag) {
     // Process instruction.
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
-      case kInstFail:       // can't happen: discarded above
+      default:
+        LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
         break;
 
       case kInstByteRange:  // just save these on the queue
       case kInstMatch:
+        if (!ip->last())
+          stk[nstk++] = id+1;
         break;
 
       case kInstCapture:    // DFA treats captures as no-ops.
       case kInstNop:
-        stk[nstk++] = ip->out();
-        break;
+        if (!ip->last())
+          stk[nstk++] = id+1;
 
-      case kInstAlt:        // two choices: expand both, in order
-      case kInstAltMatch:
-        // Want to visit out then out1, so push on stack in reverse order.
-        // This instruction is the [00-FF]* loop at the beginning of
-        // a leftmost-longest unanchored search, separate out from out1
-        // with a Mark, so that out1's threads (which will start farther
-        // to the right in the string being searched) are lower priority
-        // than the current ones.
-        stk[nstk++] = ip->out1();
-        if (q->maxmark() > 0 &&
+        // If this instruction is the [00-FF]* loop at the beginning of
+        // a leftmost-longest unanchored search, separate with a Mark so
+        // that future threads (which will start farther to the right in
+        // the input string) are lower priority than current threads.
+        if (ip->opcode() == kInstNop && q->maxmark() > 0 &&
             id == prog_->start_unanchored() && id != prog_->start())
           stk[nstk++] = Mark;
         stk[nstk++] = ip->out();
         break;
 
+      case kInstAltMatch:
+        DCHECK(!ip->last());
+        stk[nstk++] = id+1;
+        break;
+
       case kInstEmptyWidth:
+        if (!ip->last())
+          stk[nstk++] = id+1;
+
         // Continue on if we have all the right flag bits.
         if (ip->empty() & ~flag)
           break;
@@ -924,10 +915,13 @@ void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
     int id = *i;
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
+      default:
+        LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+        break;
+
       case kInstFail:        // never succeeds
       case kInstCapture:     // already followed
       case kInstNop:         // already followed
-      case kInstAlt:         // already followed
       case kInstAltMatch:    // already followed
       case kInstEmptyWidth:  // already followed
         break;
