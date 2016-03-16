@@ -230,25 +230,28 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
       break;
 
     case kInstAltMatch:
+      DCHECK(!ip->last());
+      stk[nstk++] = AddState(id+1);
+
       // Save state; will pick up at next byte.
       t = AllocThread();
       t->id = id;
       CopyCapture(t->capture, capture);
       *tp = t;
-      // fall through
-
-    case kInstAlt:
-      // Explore alternatives.
-      stk[nstk++] = AddState(ip->out1());
-      stk[nstk++] = AddState(ip->out());
       break;
 
     case kInstNop:
+      if (!ip->last())
+        stk[nstk++] = AddState(id+1);
+
       // Continue on.
       stk[nstk++] = AddState(ip->out());
       break;
 
     case kInstCapture:
+      if (!ip->last())
+        stk[nstk++] = AddState(id+1);
+
       if ((j=ip->cap()) < ncapture_) {
         // Push a dummy whose only job is to restore capture[j]
         // once we finish exploring this possibility.
@@ -262,6 +265,9 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
 
     case kInstMatch:
     case kInstByteRange:
+      if (!ip->last())
+        stk[nstk++] = AddState(id+1);
+
       // Save state; will pick up at next byte.
       t = AllocThread();
       t->id = id;
@@ -272,6 +278,9 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
       break;
 
     case kInstEmptyWidth:
+      if (!ip->last())
+        stk[nstk++] = AddState(id+1);
+
       // Continue on if we have all the right flag bits.
       if (ip->empty() & ~flag)
         break;
@@ -542,14 +551,6 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
             match_[1] = p;
             matched_ = true;
             break;
-
-          case kInstEmptyWidth:
-            if (ip->empty() & ~(kEmptyEndLine|kEmptyEndText)) {
-              LOG(DFATAL) << "Unexpected empty-width in short circuit: " << ip->empty();
-              break;
-            }
-            id = ip->out();
-            continue;
         }
         break;
       }
@@ -640,10 +641,16 @@ int NFA::ComputeFirstByte() {
         break;
 
       case kInstMatch:
+        if (!ip->last())
+          q.insert(id+1);
+
         // The empty string matches: no first byte.
         return -1;
 
       case kInstByteRange:
+        if (!ip->last())
+          q.insert(id+1);
+
         // Must match only a single byte
         if (ip->lo() != ip->hi())
           return -1;
@@ -660,6 +667,9 @@ int NFA::ComputeFirstByte() {
       case kInstNop:
       case kInstCapture:
       case kInstEmptyWidth:
+        if (!ip->last())
+          q.insert(id+1);
+
         // Continue on.
         // Ignore ip->empty() flags for kInstEmptyWidth
         // in order to be as conservative as possible
@@ -668,13 +678,9 @@ int NFA::ComputeFirstByte() {
           q.insert(ip->out());
         break;
 
-      case kInstAlt:
       case kInstAltMatch:
-        // Explore alternatives.
-        if (ip->out())
-          q.insert(ip->out());
-        if (ip->out1())
-          q.insert(ip->out1());
+        DCHECK(!ip->last());
+        q.insert(id+1);
         break;
 
       case kInstFail:
@@ -723,31 +729,42 @@ void Prog::Fanout(SparseArray<int>* fanout) {
     reachable.clear();
     reachable.insert(i->index());
     for (SparseSet::iterator j = reachable.begin(); j != reachable.end(); ++j) {
-      Prog::Inst* ip = inst(*j);
+      int id = *j;
+      Prog::Inst* ip = inst(id);
       switch (ip->opcode()) {
         default:
           LOG(DFATAL) << "unhandled " << ip->opcode() << " in Prog::Fanout()";
           break;
 
         case kInstByteRange:
+          if (!ip->last())
+            reachable.insert(id+1);
+
           (*count)++;
           if (!fanout->has_index(ip->out())) {
             fanout->set_new(ip->out(), 0);
           }
           break;
 
-        case kInstAlt:
         case kInstAltMatch:
-          reachable.insert(ip->out1());
-          // fall through
+          DCHECK(!ip->last());
+          reachable.insert(id+1);
+          break;
 
         case kInstCapture:
         case kInstEmptyWidth:
         case kInstNop:
+          if (!ip->last())
+            reachable.insert(id+1);
+
           reachable.insert(ip->out());
           break;
 
         case kInstMatch:
+          if (!ip->last())
+            reachable.insert(id+1);
+          break;
+
         case kInstFail:
           break;
       }

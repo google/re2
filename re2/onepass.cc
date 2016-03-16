@@ -427,21 +427,30 @@ bool Prog::IsOnePass() {
       Prog::Inst* ip = inst(id);
       uint32 cond = stack[nstack].cond;
       switch (ip->opcode()) {
+        default:
+          LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+          break;
+
         case kInstAltMatch:
           // TODO(rsc): Ignoring kInstAltMatch optimization.
           // Should implement it in this engine, but it's subtle.
-          // Fall through.
-        case kInstAlt:
+          DCHECK(!ip->last());
           // If already on work queue, (1) is violated: bail out.
-          if (!AddQ(&workq, ip->out()) || !AddQ(&workq, ip->out1()))
+          if (!AddQ(&workq, id+1))
             goto fail;
-          stack[nstack].id = ip->out1();
-          stack[nstack++].cond = cond;
-          stack[nstack].id = ip->out();
+          stack[nstack].id = id+1;
           stack[nstack++].cond = cond;
           break;
 
         case kInstByteRange: {
+          if (!ip->last()) {
+            // If already on work queue, (1) is violated: bail out.
+            if (!AddQ(&workq, id+1))
+              goto fail;
+            stack[nstack].id = id+1;
+            stack[nstack++].cond = cond;
+          }
+
           int nextindex = nodebyid[ip->out()];
           if (nextindex == -1) {
             if (nalloc >= maxnodes) {
@@ -501,16 +510,21 @@ bool Prog::IsOnePass() {
         }
 
         case kInstCapture:
-          if (ip->cap() < kMaxCap)
-            cond |= (1 << kCapShift) << ip->cap();
-          goto QueueEmpty;
-
         case kInstEmptyWidth:
-          cond |= ip->empty();
-          goto QueueEmpty;
-
         case kInstNop:
-        QueueEmpty:
+          if (!ip->last()) {
+            // If already on work queue, (1) is violated: bail out.
+            if (!AddQ(&workq, id+1))
+              goto fail;
+            stack[nstack].id = id+1;
+            stack[nstack++].cond = cond;
+          }
+
+          if (ip->opcode() == kInstCapture && ip->cap() < kMaxCap)
+            cond |= (1 << kCapShift) << ip->cap();
+          if (ip->opcode() == kInstEmptyWidth)
+            cond |= ip->empty();
+
           // kInstCapture and kInstNop always proceed to ip->out().
           // kInstEmptyWidth only sometimes proceeds to ip->out(),
           // but as a conservative approximation we assume it always does.
@@ -531,6 +545,14 @@ bool Prog::IsOnePass() {
           break;
 
         case kInstMatch:
+          if (!ip->last()) {
+            // If already on work queue, (1) is violated: bail out.
+            if (!AddQ(&workq, id+1))
+              goto fail;
+            stack[nstack].id = id+1;
+            stack[nstack++].cond = cond;
+          }
+
           if (matched) {
             // (3) is violated
             if (Debug) {

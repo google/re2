@@ -486,8 +486,8 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat) {
       case kInstAltMatch:
         flat->emplace_back();
         flat->back().set_opcode(kInstAltMatch);
-        flat->back().set_out(id+1);
-        flat->back().out1_ = id+2;
+        flat->back().set_out(flat->size());
+        flat->back().out1_ = flat->size()+1;
         // Fall through.
 
       case kInstAlt:
