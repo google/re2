@@ -1234,6 +1234,7 @@ Prog* Compiler::Finish() {
   prog_->ComputeByteMap();
 
   prog_->Optimize();
+  prog_->Flatten();
 
   // Record remaining memory for DFA.
   if (max_mem_ <= 0) {

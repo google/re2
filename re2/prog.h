@@ -111,9 +111,12 @@ class Prog {
     int foldcase()  { DCHECK_EQ(opcode(), kInstByteRange); return foldcase_; }
     int match_id()  { DCHECK_EQ(opcode(), kInstMatch); return match_id_; }
     EmptyOp empty() { DCHECK_EQ(opcode(), kInstEmptyWidth); return empty_; }
-    bool greedy(Prog *p) {
+
+    bool greedy(Prog* p) {
       DCHECK_EQ(opcode(), kInstAltMatch);
-      return p->inst(out())->opcode() == kInstByteRange;
+      return p->inst(out())->opcode() == kInstByteRange ||
+             (p->inst(out())->opcode() == kInstNop &&
+              p->inst(p->inst(out())->out())->opcode() == kInstByteRange);
     }
 
     // Does this inst (an kInstByteRange) match c?

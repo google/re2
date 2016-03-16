@@ -141,6 +141,7 @@ void BitState::Push(int id, const char* p, int arg) {
 // Return whether it succeeded.
 bool BitState::TrySearch(int id0, const char* p0) {
   bool matched = false;
+  bool inaltmatch = false;
   const char* end = text_.end();
   njob_ = 0;
   Push(id0, p0, 0);
@@ -159,6 +160,14 @@ bool BitState::TrySearch(int id0, const char* p0) {
     // would have, but we avoid the stack
     // manipulation.
     if (0) {
+    Next:
+      // If the Match of a non-greedy AltMatch failed,
+      // we stop ourselves from trying the ByteRange,
+      // which would steer us off the short circuit.
+      if (prog_->inst(id)->last() || inaltmatch)
+        continue;
+      id++;
+
     CheckAndLoop:
       if (!ShouldVisit(id, p))
         continue;
@@ -176,66 +185,63 @@ bool BitState::TrySearch(int id0, const char* p0) {
       case kInstFail:
         continue;
 
-      case kInstAlt:
-        // Cannot just
-        //   Push(ip->out1(), p, 0);
-        //   Push(ip->out(), p, 0);
-        // If, during the processing of ip->out(), we encounter
-        // ip->out1() via another path, we want to process it then.
-        // Pushing it here will inhibit that.  Instead, re-push
-        // ip with arg==1 as a reminder to push ip->out1() later.
+      case kInstAltMatch:
         switch (arg) {
           case 0:
+            inaltmatch = true;
             Push(id, p, 1);  // come back when we're done
+
+            // One opcode is ByteRange; the other leads to Match
+            // (possibly via Nop or Capture).
+            if (ip->greedy(prog_)) {
+              // out1 is the match
+              Push(ip->out1(), p, 0);
+              id = ip->out1();
+              p = end;
+              goto CheckAndLoop;
+            }
+            // out is the match - non-greedy
+            Push(ip->out(), end, 0);
             id = ip->out();
             goto CheckAndLoop;
 
           case 1:
-            // Finished ip->out(); try ip->out1().
-            arg = 0;
-            id = ip->out1();
-            goto CheckAndLoop;
+            inaltmatch = false;
+            continue;
         }
-        LOG(DFATAL) << "Bad arg in kInstAlt: " << arg;
+        LOG(DFATAL) << "Bad arg in kInstAltMatch: " << arg;
         continue;
-
-      case kInstAltMatch:
-        // One opcode is byte range; the other leads to match.
-        if (ip->greedy(prog_)) {
-          // out1 is the match
-          Push(ip->out1(), p, 0);
-          id = ip->out1();
-          p = end;
-          goto CheckAndLoop;
-        }
-        // out is the match - non-greedy
-        Push(ip->out(), end, 0);
-        id = ip->out();
-        goto CheckAndLoop;
 
       case kInstByteRange: {
         int c = -1;
         if (p < end)
           c = *p & 0xFF;
-        if (ip->Matches(c)) {
-          id = ip->out();
-          p++;
-          goto CheckAndLoop;
-        }
-        continue;
+        if (!ip->Matches(c))
+          goto Next;
+
+        if (!ip->last())
+          Push(id+1, p, 0);  // try the next when we're done
+        id = ip->out();
+        p++;
+        goto CheckAndLoop;
       }
 
       case kInstCapture:
         switch (arg) {
           case 0:
+            if (!ip->last())
+              Push(id+1, p, 0);  // try the next when we're done
+
             if (0 <= ip->cap() && ip->cap() < ncap_) {
               // Capture p to register, but save old value.
               Push(id, cap_[ip->cap()], 1);  // come back when we're done
               cap_[ip->cap()] = p;
             }
+
             // Continue on.
             id = ip->out();
             goto CheckAndLoop;
+
           case 1:
             // Finished ip->out(); restore the old value.
             cap_[ip->cap()] = p;
@@ -246,17 +252,22 @@ bool BitState::TrySearch(int id0, const char* p0) {
 
       case kInstEmptyWidth:
         if (ip->empty() & ~Prog::EmptyFlags(context_, p))
-          continue;
+          goto Next;
+
+        if (!ip->last())
+          Push(id+1, p, 0);  // try the next when we're done
         id = ip->out();
         goto CheckAndLoop;
 
       case kInstNop:
+        if (!ip->last())
+          Push(id+1, p, 0);  // try the next when we're done
         id = ip->out();
         goto CheckAndLoop;
 
       case kInstMatch: {
         if (endmatch_ && p != text_.end())
-          continue;
+          goto Next;
 
         // VLOG(0) << "Found match.";
         // We found a match.  If the caller doesn't care
@@ -285,7 +296,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
           return true;
 
         // Otherwise, continue on in hope of a longer match.
-        continue;
+        goto Next;
       }
     }
   }
