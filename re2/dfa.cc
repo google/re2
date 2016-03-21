@@ -1493,8 +1493,13 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       v->clear();
       for (int i = 0; i < s->ninst_; i++) {
         Prog::Inst* ip = prog_->inst(s->inst_[i]);
-        if (ip->opcode() == kInstMatch)
-          v->push_back(ip->match_id());
+        for (;;) {
+          if (ip->opcode() == kInstMatch)
+            v->push_back(ip->match_id());
+          if (ip->last())
+            break;
+          ip++;
+        }
       }
     }
     if (DebugDFA)
