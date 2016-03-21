@@ -150,4 +150,27 @@ TEST(Set, EmptyAnchored) {
   CHECK_EQ(v.size(), 0);
 }
 
+TEST(Set, Prefix) {
+  RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_BOTH);
+
+  CHECK_EQ(s.Add("/prefix/\\d*", NULL), 0);
+  CHECK_EQ(s.Compile(), true);
+
+  CHECK_EQ(s.Match("/prefix", NULL), false);
+  CHECK_EQ(s.Match("/prefix/", NULL), true);
+  CHECK_EQ(s.Match("/prefix/42", NULL), true);
+
+  vector<int> v;
+  CHECK_EQ(s.Match("/prefix", &v), false);
+  CHECK_EQ(v.size(), 0);
+
+  CHECK_EQ(s.Match("/prefix/", &v), true);
+  CHECK_EQ(v.size(), 1);
+  CHECK_EQ(v[0], 0);
+
+  CHECK_EQ(s.Match("/prefix/42", &v), true);
+  CHECK_EQ(v.size(), 1);
+  CHECK_EQ(v[0], 0);
+}
+
 }  // namespace re2
