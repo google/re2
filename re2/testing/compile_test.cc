@@ -179,6 +179,18 @@ TEST(TestCompile, ByteRanges) {
   re->Decref();
 }
 
+TEST(TestCompile, InsufficientMemory) {
+  Regexp* re = Regexp::Parse(
+      "^(?P<name1>[^\\s]+)\\s+(?P<name2>[^\\s]+)\\s+(?P<name3>.+)$",
+      Regexp::LikePerl, NULL);
+  EXPECT_TRUE(re != NULL);
+  Prog* prog = re->CompileToProg(920);
+  // If the memory budget has been exhausted, compilation should fail
+  // and return NULL instead of trying to do anything with NoMatch().
+  EXPECT_TRUE(prog == NULL);
+  re->Decref();
+}
+
 static void Dump(StringPiece pattern, Regexp::ParseFlags flags,
                  string* forward, string* reverse) {
   Regexp* re = Regexp::Parse(pattern, flags, NULL);
