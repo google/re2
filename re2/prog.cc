@@ -6,7 +6,6 @@
 // Tested by compile_test.cc
 
 #include "util/util.h"
-#include "util/sparse_set.h"
 #include "re2/prog.h"
 #include "re2/stringpiece.h"
 
@@ -360,10 +359,16 @@ void Prog::Flatten() {
     return;
   did_flatten_ = true;
 
+  // Scratch structures. It's important that these are reused by EmitList()
+  // because we call it in a loop and it would thrash the heap otherwise.
+  SparseSet q(size());
+  vector<int> stk;
+  stk.reserve(size());
+
   // First pass: Marks "roots".
   // Builds the mapping from inst-ids to root-ids.
   SparseArray<int> rootmap(size());
-  MarkRoots(&rootmap);
+  MarkRoots(&rootmap, &q, &stk);
 
   // Second pass: Emits "lists". Remaps outs to root-ids.
   // Builds the mapping from root-ids to flat-ids.
@@ -374,7 +379,7 @@ void Prog::Flatten() {
        i != rootmap.end();
        ++i) {
     flatmap[i->value()] = flat.size();
-    EmitList(i->index(), &rootmap, &flat);
+    EmitList(i->index(), &rootmap, &flat, &q, &stk);
     flat.back().set_last();
   }
 
@@ -403,7 +408,8 @@ void Prog::Flatten() {
   memmove(inst_, flat.data(), size_ * sizeof *inst_);
 }
 
-void Prog::MarkRoots(SparseArray<int>* rootmap) {
+void Prog::MarkRoots(SparseArray<int>* rootmap,
+                     SparseSet* q, vector<int>* stk) {
   // Mark the kInstFail instruction.
   rootmap->set_new(0, rootmap->size());
 
@@ -413,16 +419,16 @@ void Prog::MarkRoots(SparseArray<int>* rootmap) {
   if (!rootmap->has_index(start()))
     rootmap->set_new(start(), rootmap->size());
 
-  Workq q(size());
-  stack<int> stk;
-  stk.push(start_unanchored());
-  while (!stk.empty()) {
-    int id = stk.top();
-    stk.pop();
+  q->clear();
+  stk->clear();
+  stk->push_back(start_unanchored());
+  while (!stk->empty()) {
+    int id = stk->back();
+    stk->pop_back();
   Loop:
-    if (q.contains(id))
+    if (q->contains(id))
       continue;
-    q.insert_new(id);
+    q->insert_new(id);
 
     Inst* ip = inst(id);
     switch (ip->opcode()) {
@@ -432,7 +438,7 @@ void Prog::MarkRoots(SparseArray<int>* rootmap) {
 
       case kInstAltMatch:
       case kInstAlt:
-        stk.push(ip->out1());
+        stk->push_back(ip->out1());
         id = ip->out();
         goto Loop;
 
@@ -456,17 +462,18 @@ void Prog::MarkRoots(SparseArray<int>* rootmap) {
   }
 }
 
-void Prog::EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat) {
-  Workq q(size());
-  stack<int> stk;
-  stk.push(root);
-  while (!stk.empty()) {
-    int id = stk.top();
-    stk.pop();
+void Prog::EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat,
+                    SparseSet* q, vector<int>* stk) {
+  q->clear();
+  stk->clear();
+  stk->push_back(root);
+  while (!stk->empty()) {
+    int id = stk->back();
+    stk->pop_back();
   Loop:
-    if (q.contains(id))
+    if (q->contains(id))
       continue;
-    q.insert_new(id);
+    q->insert_new(id);
 
     if (id != root && rootmap->has_index(id)) {
       // We reached another "tree" via epsilon transition. Emit a kInstNop
@@ -491,7 +498,7 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat) {
         // Fall through.
 
       case kInstAlt:
-        stk.push(ip->out1());
+        stk->push_back(ip->out1());
         id = ip->out();
         goto Loop;
 
@@ -501,7 +508,6 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat) {
         flat->emplace_back();
         memmove(&flat->back(), ip, sizeof *ip);
         flat->back().set_out(rootmap->get_existing(ip->out()));
-        id = ip->out();
         break;
 
       case kInstNop:

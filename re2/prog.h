@@ -11,6 +11,7 @@
 
 #include "util/util.h"
 #include "util/sparse_array.h"
+#include "util/sparse_set.h"
 #include "re2/re2.h"
 
 namespace re2 {
@@ -355,11 +356,13 @@ class Prog {
 
   // Marks the "roots" in the Prog: the outs of kInstByteRange, kInstCapture
   // and kInstEmptyWidth instructions.
-  void MarkRoots(SparseArray<int>* rootmap);
+  void MarkRoots(SparseArray<int>* rootmap,
+                 SparseSet* q, vector<int>* stk);
 
   // Emits one "list" via "tree" traversal from the given "root" instruction.
   // The new instructions are appended to the given vector.
-  void EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat);
+  void EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat,
+                SparseSet* q, vector<int>* stk);
 
  private:
   friend class Compiler;
