@@ -96,6 +96,16 @@ cc_library(
     deps = [":re2"],
 )
 
+cc_library(
+    name = "bench-main",
+    srcs = [
+        "util/benchmark.cc",
+    ],
+    deps = [
+        ":test",
+    ],
+)
+
 load("re2_test", "re2_test")
 
 re2_test("charclass_test")
