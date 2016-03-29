@@ -104,6 +104,24 @@
       "revId": "e0430e91727c1d3deeebdfed718b1b9108b566d4",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11b60105_9c6c0595",
+        "filename": "BUILD",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2016-03-29T14:13:24Z",
+      "side": 1,
+      "message": "\"Link with -lrt (only for glibc versions before 2.17).\"\n\nUbuntu Precise, I guess? :)",
+      "parentUuid": "7141fdd6_9ffbb35f",
+      "revId": "e0430e91727c1d3deeebdfed718b1b9108b566d4",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
