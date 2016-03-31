@@ -67,7 +67,7 @@ cc_library(
 )
 
 cc_library(
-    name = "testing",
+    name = "test",
     testonly = 1,
     srcs = [
         "re2/testing/backtrack.cc",
@@ -79,6 +79,7 @@ cc_library(
         "re2/testing/tester.cc",
         "util/pcre.cc",
         "util/random.cc",
+        "util/test.cc",
         "util/thread.cc",
     ],
     hdrs = [
@@ -88,22 +89,11 @@ cc_library(
         "re2/testing/tester.h",
         "util/pcre.h",
         "util/random.h",
+        "util/test.h",
         "util/thread.h",
     ],
     includes = ["."],
     deps = [":re2"],
-)
-
-cc_library(
-    name = "test",
-    srcs = [
-        "util/test.cc",
-    ],
-    hdrs = [
-        "util/test.h",
-    ],
-    includes = ["."],
-    deps = [":testing"],
 )
 
 load("re2_test", "re2_test")
@@ -166,23 +156,4 @@ re2_test(
     size = "large",
 )
 
-cc_library(
-    name = "benchmark",
-    srcs = [
-        "util/benchmark.cc",
-    ],
-    hdrs = [
-        "util/benchmark.h",
-    ],
-    includes = ["."],
-    deps = [":testing"],
-)
-
-cc_binary(
-    name = "regexp_benchmark",
-    srcs = [
-        "re2/testing/regexp_benchmark.cc",
-    ],
-    linkopts = ["-lrt"],
-    deps = [":benchmark"],
-)
+# TODO: Add support for regexp_benchmark.
