@@ -442,7 +442,7 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
   int nmark = 0;
   if (kind_ == Prog::kLongestMatch)
     nmark = prog->size();
-  nastack_ = 2 * prog->size() + nmark;
+  nastack_ = prog->size() + nmark;
 
   // Account for space needed for DFA, q0, q1, astack.
   mem_budget_ -= sizeof(DFA);
@@ -792,10 +792,10 @@ void DFA::StateToWorkq(State* s, Workq* q) {
 void DFA::AddToQueue(Workq* q, int id, uint flag) {
 
   // Use astack_ to hold our stack of states yet to process.
-  // It is sized to have room for nastack_ == 2*prog->size() + nmark
+  // It is sized to have room for nastack_ == prog->size() + nmark
   // instructions, which is enough: each instruction can be
   // processed by the switch below only once, and the processing
-  // pushes at most two instructions plus maybe a mark.
+  // pushes at most one instruction plus maybe a mark.
   // (If we're using marks, nmark == prog->size(); otherwise nmark == 0.)
   int* stk = astack_;
   int nstk = 0;
@@ -805,6 +805,7 @@ void DFA::AddToQueue(Workq* q, int id, uint flag) {
     DCHECK_LE(nstk, nastack_);
     id = stk[--nstk];
 
+  Loop:
     if (id == Mark) {
       q->mark();
       continue;
@@ -831,9 +832,10 @@ void DFA::AddToQueue(Workq* q, int id, uint flag) {
 
       case kInstByteRange:  // just save these on the queue
       case kInstMatch:
-        if (!ip->last())
-          stk[nstk++] = id+1;
-        break;
+        if (ip->last())
+          break;
+        id = id+1;
+        goto Loop;
 
       case kInstCapture:    // DFA treats captures as no-ops.
       case kInstNop:
@@ -847,13 +849,13 @@ void DFA::AddToQueue(Workq* q, int id, uint flag) {
         if (ip->opcode() == kInstNop && q->maxmark() > 0 &&
             id == prog_->start_unanchored() && id != prog_->start())
           stk[nstk++] = Mark;
-        stk[nstk++] = ip->out();
-        break;
+        id = ip->out();
+        goto Loop;
 
       case kInstAltMatch:
         DCHECK(!ip->last());
-        stk[nstk++] = id+1;
-        break;
+        id = id+1;
+        goto Loop;
 
       case kInstEmptyWidth:
         if (!ip->last())
@@ -862,8 +864,8 @@ void DFA::AddToQueue(Workq* q, int id, uint flag) {
         // Continue on if we have all the right flag bits.
         if (ip->empty() & ~flag)
           break;
-        stk[nstk++] = ip->out();
-        break;
+        id = ip->out();
+        goto Loop;
     }
   }
 }

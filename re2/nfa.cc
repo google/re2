@@ -199,7 +199,9 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
 
   while (nstk > 0) {
     DCHECK_LE(nstk, nastack_);
-    const AddState& a = stk[--nstk];
+    AddState a = stk[--nstk];
+
+  Loop:
     if (a.j >= 0)
       capture[a.j] = a.cap_j;
 
@@ -230,23 +232,23 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
       break;
 
     case kInstAltMatch:
-      DCHECK(!ip->last());
-      stk[nstk++] = AddState(id+1);
-
       // Save state; will pick up at next byte.
       t = AllocThread();
       t->id = id;
       CopyCapture(t->capture, capture);
       *tp = t;
-      break;
+
+      DCHECK(!ip->last());
+      a = AddState(id+1);
+      goto Loop;
 
     case kInstNop:
       if (!ip->last())
         stk[nstk++] = AddState(id+1);
 
       // Continue on.
-      stk[nstk++] = AddState(ip->out());
-      break;
+      a = AddState(ip->out());
+      goto Loop;
 
     case kInstCapture:
       if (!ip->last())
@@ -260,14 +262,11 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
         // Record capture.
         capture[j] = p;
       }
-      stk[nstk++] = AddState(ip->out());
-      break;
+      a = AddState(ip->out());
+      goto Loop;
 
     case kInstMatch:
     case kInstByteRange:
-      if (!ip->last())
-        stk[nstk++] = AddState(id+1);
-
       // Save state; will pick up at next byte.
       t = AllocThread();
       t->id = id;
@@ -275,7 +274,11 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
       *tp = t;
       if (Debug)
         fprintf(stderr, " + %d%s [%p]\n", id, FormatCapture(t->capture).c_str(), t);
-      break;
+
+      if (ip->last())
+        break;
+      a = AddState(id+1);
+      goto Loop;
 
     case kInstEmptyWidth:
       if (!ip->last())
@@ -284,8 +287,8 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
       // Continue on if we have all the right flag bits.
       if (ip->empty() & ~flag)
         break;
-      stk[nstk++] = AddState(ip->out());
-      break;
+      a = AddState(ip->out());
+      goto Loop;
     }
   }
 }

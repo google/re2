@@ -299,11 +299,13 @@ void SearchSuccess(int iters, int nbytes, const char* regexp, SearchImpl* search
 // Unambiguous search (RE2 can use OnePass).
 
 void Search_Success_DFA(int i, int n)     { SearchSuccess(i, n, ".*$", SearchDFA); }
+void Search_Success_NFA(int i, int n)     { SearchSuccess(i, n, ".*$", SearchNFA); }
 void Search_Success_PCRE(int i, int n)    { SearchSuccess(i, n, ".*$", SearchPCRE); }
 void Search_Success_RE2(int i, int n)     { SearchSuccess(i, n, ".*$", SearchRE2); }
 void Search_Success_OnePass(int i, int n) { SearchSuccess(i, n, ".*$", SearchOnePass); }
 
 BENCHMARK_RANGE(Search_Success_DFA,     8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_Success_NFA,     8, 16<<20)->ThreadRange(1, NumCPUs());
 #ifdef USEPCRE
 BENCHMARK_RANGE(Search_Success_PCRE,    8, 16<<20)->ThreadRange(1, NumCPUs());
 #endif
@@ -311,11 +313,13 @@ BENCHMARK_RANGE(Search_Success_RE2,     8, 16<<20)->ThreadRange(1, NumCPUs());
 BENCHMARK_RANGE(Search_Success_OnePass, 8, 2<<20)->ThreadRange(1, NumCPUs());
 
 void Search_Success_CachedDFA(int i, int n)     { SearchSuccess(i, n, ".*$", SearchCachedDFA); }
+void Search_Success_CachedNFA(int i, int n)     { SearchSuccess(i, n, ".*$", SearchCachedNFA); }
 void Search_Success_CachedPCRE(int i, int n)    { SearchSuccess(i, n, ".*$", SearchCachedPCRE); }
 void Search_Success_CachedRE2(int i, int n)     { SearchSuccess(i, n, ".*$", SearchCachedRE2); }
 void Search_Success_CachedOnePass(int i, int n) { SearchSuccess(i, n, ".*$", SearchCachedOnePass); }
 
 BENCHMARK_RANGE(Search_Success_CachedDFA,     8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_Success_CachedNFA,     8, 16<<20)->ThreadRange(1, NumCPUs());
 #ifdef USEPCRE
 BENCHMARK_RANGE(Search_Success_CachedPCRE,    8, 16<<20)->ThreadRange(1, NumCPUs());
 #endif
@@ -326,28 +330,32 @@ BENCHMARK_RANGE(Search_Success_CachedOnePass, 8, 2<<20)->ThreadRange(1, NumCPUs(
 // Used to be ".*.$", but that is coalesced to ".+$" these days.
 
 void Search_Success1_DFA(int i, int n)      { SearchSuccess(i, n, ".*\\C$", SearchDFA); }
+void Search_Success1_NFA(int i, int n)      { SearchSuccess(i, n, ".*\\C$", SearchNFA); }
 void Search_Success1_PCRE(int i, int n)     { SearchSuccess(i, n, ".*\\C$", SearchPCRE); }
 void Search_Success1_RE2(int i, int n)      { SearchSuccess(i, n, ".*\\C$", SearchRE2); }
 void Search_Success1_BitState(int i, int n) { SearchSuccess(i, n, ".*\\C$", SearchBitState); }
 
 BENCHMARK_RANGE(Search_Success1_DFA,      8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_Success1_NFA,      8, 16<<20)->ThreadRange(1, NumCPUs());
 #ifdef USEPCRE
 BENCHMARK_RANGE(Search_Success1_PCRE,     8, 16<<20)->ThreadRange(1, NumCPUs());
 #endif
 BENCHMARK_RANGE(Search_Success1_RE2,      8, 16<<20)->ThreadRange(1, NumCPUs());
 BENCHMARK_RANGE(Search_Success1_BitState, 8, 2<<20)->ThreadRange(1, NumCPUs());
 
-void Search_Success1_Cached_DFA(int i, int n)      { SearchSuccess(i, n, ".*\\C$", SearchCachedDFA); }
-void Search_Success1_Cached_PCRE(int i, int n)     { SearchSuccess(i, n, ".*\\C$", SearchCachedPCRE); }
-void Search_Success1_Cached_RE2(int i, int n)      { SearchSuccess(i, n, ".*\\C$", SearchCachedRE2); }
-void Search_Success1_Cached_BitState(int i, int n) { SearchSuccess(i, n, ".*\\C$", SearchCachedBitState); }
+void Search_Success1_CachedDFA(int i, int n)      { SearchSuccess(i, n, ".*\\C$", SearchCachedDFA); }
+void Search_Success1_CachedNFA(int i, int n)      { SearchSuccess(i, n, ".*\\C$", SearchCachedNFA); }
+void Search_Success1_CachedPCRE(int i, int n)     { SearchSuccess(i, n, ".*\\C$", SearchCachedPCRE); }
+void Search_Success1_CachedRE2(int i, int n)      { SearchSuccess(i, n, ".*\\C$", SearchCachedRE2); }
+void Search_Success1_CachedBitState(int i, int n) { SearchSuccess(i, n, ".*\\C$", SearchCachedBitState); }
 
-BENCHMARK_RANGE(Search_Success1_Cached_DFA,      8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_Success1_CachedDFA,      8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_Success1_CachedNFA,      8, 16<<20)->ThreadRange(1, NumCPUs());
 #ifdef USEPCRE
-BENCHMARK_RANGE(Search_Success1_Cached_PCRE,     8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_Success1_CachedPCRE,     8, 16<<20)->ThreadRange(1, NumCPUs());
 #endif
-BENCHMARK_RANGE(Search_Success1_Cached_RE2,      8, 16<<20)->ThreadRange(1, NumCPUs());
-BENCHMARK_RANGE(Search_Success1_Cached_BitState, 8, 2<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_Success1_CachedRE2,      8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_Success1_CachedBitState, 8, 2<<20)->ThreadRange(1, NumCPUs());
 
 // Benchmark: AltMatch optimisation (just to verify that it works)
 // Note that OnePass doesn't implement it!
