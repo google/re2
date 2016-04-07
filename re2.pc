@@ -6,5 +6,5 @@ libdir=${exec_prefix}/lib
 Name: re2
 Description: RE2 is a fast, safe, thread-friendly regular expression engine.
 Version: 0.0.0
-Cflags: -I${includedir} -pthread
-Libs: -L${libdir} -lre2 -pthread
+Cflags: -std=c++11 -pthread -I${includedir}
+Libs: -pthread -L${libdir} -lre2
