@@ -13,9 +13,10 @@
 # LDPCRE=-L/usr/local/lib -lpcre
 
 CXX?=g++
-CXXFLAGS?=-std=c++11 -O3 -g -pthread  # can override
-RE2_CXXFLAGS?=-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCPCRE)  # required
-LDFLAGS?=-pthread $(LDICU)
+CXXFLAGS?=-O3 -g # can override
+RE2_CXXFLAGS?=-std=c++11 -pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCPCRE)  # required
+LDFLAGS?= # can override
+RE2_LDFLAGS?=-pthread $(LDICU)
 AR?=ar
 ARFLAGS?=rsc
 NM?=nm
@@ -44,17 +45,17 @@ ifeq ($(shell uname),Darwin)
 SOEXT=dylib
 SOEXTVER=$(SONAME).$(SOEXT)
 SOEXTVER00=$(SONAME).0.0.$(SOEXT)
-MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib -Wl,-install_name,@rpath/libre2.$(SOEXTVER),-exported_symbols_list,libre2.symbols.darwin $(LDFLAGS)
+MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib -Wl,-install_name,@rpath/libre2.$(SOEXTVER),-exported_symbols_list,libre2.symbols.darwin $(RE2_LDFLAGS) $(LDFLAGS)
 else ifeq ($(shell uname),SunOS)
 SOEXT=so
 SOEXTVER=$(SOEXT).$(SONAME)
 SOEXTVER00=$(SOEXT).$(SONAME).0.0
-MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),-M,libre2.symbols $(LDFLAGS)
+MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),-M,libre2.symbols $(RE2_LDFLAGS) $(LDFLAGS)
 else
 SOEXT=so
 SOEXTVER=$(SOEXT).$(SONAME)
 SOEXTVER00=$(SOEXT).$(SONAME).0.0
-MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),--version-script,libre2.symbols $(LDFLAGS)
+MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),--version-script,libre2.symbols $(RE2_LDFLAGS) $(LDFLAGS)
 endif
 
 all: obj/libre2.a obj/so/libre2.$(SOEXT)
@@ -198,20 +199,20 @@ obj/so/libre2.$(SOEXT): $(SOFILES)
 
 obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/util/test.o
 	@mkdir -p obj/dbg/test
-	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a $(RE2_LDFLAGS) $(LDFLAGS) $(LDPCRE)
 
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS) $(LDPCRE)
 
 # Test the shared lib, falling back to the static lib for private symbols
 obj/so/test/%: obj/so/libre2.$(SOEXT) obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/so/test
-	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o -Lobj/so -lre2 obj/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o -Lobj/so -lre2 obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS) $(LDPCRE)
 
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a $(LDFLAGS) $(LDPCRE)
+	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS) $(LDPCRE)
 
 ifdef REBUILD_TABLES
 re2/perl_groups.cc: re2/make_perl_groups.pl
