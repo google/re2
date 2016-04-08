@@ -409,7 +409,6 @@ Frag Compiler::ByteRange(int lo, int hi, bool foldcase) {
   if (id < 0)
     return NoMatch();
   inst_[id].InitByteRange(lo, hi, foldcase, 0);
-  prog_->byte_inst_count_++;
   prog_->MarkByteRange(lo, hi);
   if (foldcase && lo <= 'z' && hi >= 'a') {
     if (lo < 'a')
@@ -603,9 +602,6 @@ int Compiler::AddSuffixRecursive(int root, int id) {
     else
       inst_[f.begin].set_out(br);
   }
-
-  // We just saved one ByteRange instruction. :)
-  prog_->byte_inst_count_--;
 
   int out = inst_[id].out();
   if (!IsCachedRuneByteSuffix(id)) {
