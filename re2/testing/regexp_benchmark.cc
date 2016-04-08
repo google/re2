@@ -174,6 +174,10 @@ void Search(int iters, int nbytes, const char* regexp, SearchImpl* search) {
 // figure out there's no match.
 #define HARD       "[ -~]*ABCDEFGHIJKLMNOPQRSTUVWXYZ$"
 
+// This has quite a high degree of fanout.
+// NFA execution will be particularly slow.
+#define FANOUT     "(?:[\\x{80}-\\x{10FFFF}]?){100}[\\x{80}-\\x{10FFFF}]"
+
 // This stresses engines that are trying to track parentheses.
 #define PARENS     "([ -~])*(A)(B)(C)(D)(E)(F)(G)(H)(I)(J)(K)(L)(M)" \
                    "(N)(O)(P)(Q)(R)(S)(T)(U)(V)(W)(X)(Y)(Z)$"
@@ -225,6 +229,18 @@ BENCHMARK_RANGE(Search_Hard_CachedNFA,     8, 256<<10)->ThreadRange(1, NumCPUs()
 BENCHMARK_RANGE(Search_Hard_CachedPCRE,    8, 4<<10)->ThreadRange(1, NumCPUs());
 #endif
 BENCHMARK_RANGE(Search_Hard_CachedRE2,     8, 16<<20)->ThreadRange(1, NumCPUs());
+
+void Search_Fanout_CachedDFA(int i, int n)     { Search(i, n, FANOUT, SearchCachedDFA); }
+void Search_Fanout_CachedNFA(int i, int n)     { Search(i, n, FANOUT, SearchCachedNFA); }
+void Search_Fanout_CachedPCRE(int i, int n)    { Search(i, n, FANOUT, SearchCachedPCRE); }
+void Search_Fanout_CachedRE2(int i, int n)     { Search(i, n, FANOUT, SearchCachedRE2); }
+
+BENCHMARK_RANGE(Search_Fanout_CachedDFA,     8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_Fanout_CachedNFA,     8, 256<<10)->ThreadRange(1, NumCPUs());
+#ifdef USEPCRE
+BENCHMARK_RANGE(Search_Fanout_CachedPCRE,    8, 4<<10)->ThreadRange(1, NumCPUs());
+#endif
+BENCHMARK_RANGE(Search_Fanout_CachedRE2,     8, 16<<20)->ThreadRange(1, NumCPUs());
 
 void Search_Parens_CachedDFA(int i, int n)     { Search(i, n, PARENS, SearchCachedDFA); }
 void Search_Parens_CachedNFA(int i, int n)     { Search(i, n, PARENS, SearchCachedNFA); }
