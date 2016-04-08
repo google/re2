@@ -58,6 +58,7 @@ enum InstOp {
   kInstMatch,        // found a match!
   kInstNop,          // no-op; occasionally unavoidable
   kInstFail,         // never match; occasionally unavoidable
+  kNumInst,
 };
 
 // Bit flags for empty-width specials
@@ -215,7 +216,8 @@ class Prog {
   int size() { return size_; }
   bool reversed() { return reversed_; }
   void set_reversed(bool reversed) { reversed_ = reversed; }
-  int byte_inst_count() { return byte_inst_count_; }
+  int list_count() { return list_count_; }
+  int inst_count(InstOp op) { return inst_count_[op]; }
   const Bitmap<256>& byterange() { return byterange_; }
   void set_dfa_mem(int64 dfa_mem) { dfa_mem_ = dfa_mem; }
   int64 dfa_mem() { return dfa_mem_; }
@@ -378,10 +380,12 @@ class Prog {
   int start_;               // entry point for program
   int start_unanchored_;    // unanchored entry point for program
   int size_;                // number of instructions
-  int byte_inst_count_;     // number of kInstByteRange instructions
   int bytemap_range_;       // bytemap_[x] < bytemap_range_
   int flags_;               // regexp parse flags
   int onepass_statesize_;   // byte size of each OneState* node
+
+  int list_count_;            // count of lists (see above)
+  int inst_count_[kNumInst];  // count of instructions by opcode
 
   Inst* inst_;              // pointer to instruction array
 
