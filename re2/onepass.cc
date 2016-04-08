@@ -384,7 +384,7 @@ bool Prog::IsOnePass() {
   // Willing to use at most 1/4 of the DFA budget (heuristic).
   // Limit max node count to 65000 as a conservative estimate to
   // avoid overflowing 16-bit node index in encoding.
-  int maxnodes = 2 + byte_inst_count_;
+  int maxnodes = 2 + inst_count(kInstByteRange);
   int statesize = sizeof(OneState) + (bytemap_range_-1)*sizeof(uint32);
   if (maxnodes >= 65000 || dfa_mem_ / 4 / statesize < maxnodes)
     return false;

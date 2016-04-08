@@ -441,8 +441,12 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
     fprintf(stderr, "\nkind %d\n%s\n", (int)kind_, prog_->DumpUnanchored().c_str());
   int nmark = 0;
   if (kind_ == Prog::kLongestMatch)
-    nmark = prog->size();
-  nastack_ = prog->size() + nmark;
+    nmark = prog_->size();
+  // See DFA::AddToQueue() for why this is so.
+  nastack_ = prog_->inst_count(kInstCapture) +
+             prog_->inst_count(kInstEmptyWidth) +
+             prog_->inst_count(kInstNop) +
+             nmark + 1;  // + 1 for start inst
 
   // Account for space needed for DFA, q0, q1, astack.
   mem_budget_ -= sizeof(DFA);
@@ -462,9 +466,11 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
   // At minimum, the search requires room for two states in order
   // to limp along, restarting frequently.  We'll get better performance
   // if there is room for a larger number of states, say 20.
+  // Note that a state stores list heads only, so we use the program
+  // list count for the upper bound, not the program size.
   int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
   int64 one_state = sizeof(State) + (nnext-1)*sizeof(std::atomic<State*>) +
-                    (prog_->size()+nmark)*sizeof(int);
+                    (prog_->list_count()+nmark)*sizeof(int);
   if (state_budget_ < 20*one_state) {
     LOG(INFO) << StringPrintf("DFA out of memory: prog size %d mem %lld",
                               prog_->size(), max_mem);
@@ -472,8 +478,8 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
     return;
   }
 
-  q0_ = new Workq(prog->size(), nmark);
-  q1_ = new Workq(prog->size(), nmark);
+  q0_ = new Workq(prog_->size(), nmark);
+  q1_ = new Workq(prog_->size(), nmark);
   astack_ = new int[nastack_];
 }
 
@@ -791,12 +797,15 @@ void DFA::StateToWorkq(State* s, Workq* q) {
 // Adds ip to the work queue, following empty arrows according to flag.
 void DFA::AddToQueue(Workq* q, int id, uint flag) {
 
-  // Use astack_ to hold our stack of states yet to process.
-  // It is sized to have room for nastack_ == prog->size() + nmark
-  // instructions, which is enough: each instruction can be
-  // processed by the switch below only once, and the processing
-  // pushes at most one instruction plus maybe a mark.
-  // (If we're using marks, nmark == prog->size(); otherwise nmark == 0.)
+  // Use astack_ to hold our stack of instructions yet to process.
+  // It was preallocated as follows:
+  //   one entry per Capture;
+  //   one entry per EmptyWidth; and
+  //   one entry per Nop.
+  // This reflects the maximum number of stack pushes that each can
+  // perform. (Each instruction can be processed at most once.)
+  // When using marks, we also added nmark == prog_->size().
+  // (Otherwise, nmark == 0.)
   int* stk = astack_;
   int nstk = 0;
 
@@ -1785,11 +1794,11 @@ bool DFA::Search(const StringPiece& text,
 // This is a separate function so that
 // prog.h can be used without moving the definition of
 // class DFA out of this file.  If you (atomically) set
-//   prog->dfa_first_ = dfa;
+//   prog_->dfa_first_ = dfa;
 // or
-//   prog->dfa_longest_ = dfa;
+//   prog_->dfa_longest_ = dfa;
 // then you also have to set
-//   prog->delete_dfa_ = DeleteDFA;
+//   prog_->delete_dfa_ = DeleteDFA;
 // so that ~Prog can delete the DFA.
 static void DeleteDFA(std::atomic<DFA*>* pdfa) {
   DFA* dfa = pdfa->load(std::memory_order_relaxed);

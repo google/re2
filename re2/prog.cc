@@ -98,7 +98,6 @@ Prog::Prog()
     start_(0),
     start_unanchored_(0),
     size_(0),
-    byte_inst_count_(0),
     bytemap_range_(0),
     flags_(0),
     onepass_statesize_(0),
@@ -383,12 +382,23 @@ void Prog::Flatten() {
     flat.back().set_last();
   }
 
+  list_count_ = flatmap.size();
+  for (int i = 0; i < kNumInst; i++)
+    inst_count_[i] = 0;
+
   // Third pass: Remaps outs to flat-ids.
+  // Counts instructions by opcode.
   for (int id = 0; id < static_cast<int>(flat.size()); id++) {
     Inst* ip = &flat[id];
     if (ip->opcode() != kInstAltMatch)  // handled in EmitList()
       ip->set_out(flatmap[ip->out()]);
+    inst_count_[ip->opcode()]++;
   }
+
+  int total = flat.size();
+  for (int i = 0; i < kNumInst; i++)
+    total -= inst_count_[i];
+  DCHECK_EQ(total, 0);
 
   // Remap start_unanchored and start.
   if (start_unanchored() == 0) {

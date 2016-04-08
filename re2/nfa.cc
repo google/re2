@@ -127,7 +127,7 @@ class NFA {
 
 NFA::NFA(Prog* prog) {
   prog_ = prog;
-  start_ = prog->start();
+  start_ = prog_->start();
   ncapture_ = 0;
   longest_ = false;
   endmatch_ = false;
@@ -135,7 +135,10 @@ NFA::NFA(Prog* prog) {
   etext_ = NULL;
   q0_.resize(prog_->size());
   q1_.resize(prog_->size());
-  nastack_ = 2*prog_->size();
+  // See NFA::AddToThreadq() for why this is so.
+  nastack_ = 2*prog_->inst_count(kInstCapture) +
+             prog_->inst_count(kInstEmptyWidth) +
+             prog_->inst_count(kInstNop) + 1;  // + 1 for start inst
   astack_ = new AddState[nastack_];
   match_ = NULL;
   matched_ = false;
@@ -188,15 +191,17 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
   if (id0 == 0)
     return;
 
-  // Astack_ is pre-allocated to avoid resize operations.
-  // It has room for 2*prog_->size() entries, which is enough:
-  // Each inst in prog can be processed at most once,
-  // pushing at most two entries on stk.
-
-  int nstk = 0;
+  // Use astack_ to hold our stack of instructions yet to process.
+  // It was preallocated as follows:
+  //   two entries per Capture;
+  //   one entry per EmptyWidth; and
+  //   one entry per Nop.
+  // This reflects the maximum number of stack pushes that each can
+  // perform. (Each instruction can be processed at most once.)
   AddState* stk = astack_;
-  stk[nstk++] = AddState(id0);
+  int nstk = 0;
 
+  stk[nstk++] = AddState(id0);
   while (nstk > 0) {
     DCHECK_LE(nstk, nastack_);
     AddState a = stk[--nstk];
