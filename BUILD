@@ -61,7 +61,6 @@ cc_library(
         "re2/variadic_function.h",
     ],
     copts = ["-pthread"],
-    includes = ["."],
     linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
 )
@@ -92,7 +91,6 @@ cc_library(
         "util/test.h",
         "util/thread.h",
     ],
-    includes = ["."],
     deps = [":re2"],
 )
 
