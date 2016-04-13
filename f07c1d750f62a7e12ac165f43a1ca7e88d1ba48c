@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b5ab2dd_85e282b9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2016-04-13T12:31:46Z",
+      "side": 1,
+      "message": "I would say \"from BUILD file\", but I\u0027m fine with your short version, I just like to be very precise when possible. To make things very clear when looking at the shortlog in the future.",
+      "revId": "f07c1d750f62a7e12ac165f43a1ca7e88d1ba48c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb82f650_92907c3d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2016-04-13T12:31:46Z",
+      "side": 1,
+      "message": "\"...include, so it is unneeded\" or \"...include, so it is unnecessary\", how you prefer.",
+      "revId": "f07c1d750f62a7e12ac165f43a1ca7e88d1ba48c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
