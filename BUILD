@@ -85,6 +85,7 @@ cc_library(
         "re2/testing/regexp_generator.h",
         "re2/testing/string_generator.h",
         "re2/testing/tester.h",
+        "util/benchmark.h",
         "util/pcre.h",
         "util/random.h",
         "util/test.h",
@@ -95,10 +96,7 @@ cc_library(
 
 cc_library(
     name = "test",
-    srcs = [
-        "util/test.cc",
-    ],
-    includes = ["."],
+    srcs = ["util/test.cc"],
     deps = [":testing"],
 )
 
@@ -164,24 +162,16 @@ re2_test(
 
 cc_library(
     name = "benchmark",
-    srcs = [
-        "util/benchmark.cc",
-    ],
-    hdrs = [
-        "util/benchmark.h",
-    ],
-    includes = ["."],
+    srcs = ["util/benchmark.cc"],
     deps = [":testing"],
 )
 
 cc_binary(
     name = "regexp_benchmark",
-    srcs = [
-        "re2/testing/regexp_benchmark.cc",
-    ],
+    srcs = ["re2/testing/regexp_benchmark.cc"],
     linkopts = [
-        "-lrt",
         "-lm",
+        "-lrt",
     ],
     deps = [":benchmark"],
 )
