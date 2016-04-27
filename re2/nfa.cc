@@ -55,10 +55,7 @@ class NFA {
 
  private:
   struct Thread {
-    union {
-      int id;
-      Thread* next;  // when on free list
-    };
+    Thread* next;  // when on free list
     const char** capture;
   };
 
@@ -239,7 +236,6 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
     case kInstAltMatch:
       // Save state; will pick up at next byte.
       t = AllocThread();
-      t->id = id;
       CopyCapture(t->capture, capture);
       *tp = t;
 
@@ -274,7 +270,6 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
     case kInstByteRange:
       // Save state; will pick up at next byte.
       t = AllocThread();
-      t->id = id;
       CopyCapture(t->capture, capture);
       *tp = t;
       if (Debug)
@@ -322,7 +317,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
       }
     }
 
-    int id = t->id;
+    int id = i->index();
     Prog::Inst* ip = prog_->inst(id);
 
     switch (ip->opcode()) {
@@ -341,7 +336,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
           break;
         // The match is ours if we want it.
         if (ip->greedy(prog_) || longest_) {
-          CopyCapture((const char**)match_, t->capture);
+          CopyCapture(match_, t->capture);
           FreeThread(t);
           for (++i; i != runq->end(); ++i)
             FreeThread(i->second);
@@ -364,11 +359,11 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
           // point but longer than an existing match.
           if (!matched_ || t->capture[0] < match_[0] ||
               (t->capture[0] == match_[0] && t->capture[1] > match_[1]))
-            CopyCapture((const char**)match_, t->capture);
+            CopyCapture(match_, t->capture);
         } else {
           // Leftmost-biased mode: this match is by definition
           // better than what we've already found (see next line).
-          CopyCapture((const char**)match_, t->capture);
+          CopyCapture(match_, t->capture);
 
           // Cut off the threads that can only find matches
           // worse than the one we just found: don't run the
@@ -518,8 +513,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
         Thread* t = i->second;
         if (t == NULL)
           continue;
-        fprintf(stderr, " %d%s", t->id,
-                FormatCapture((const char**)t->capture).c_str());
+        fprintf(stderr, " %d%s", i->index(), FormatCapture(t->capture).c_str());
       }
       fprintf(stderr, "\n");
     }
