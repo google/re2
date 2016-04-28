@@ -580,11 +580,8 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
         flag = Prog::EmptyFlags(context, p);
       }
 
-      // Steal match storage (cleared but unused as of yet)
-      // temporarily to hold match boundaries for new thread.
       match_[0] = p;
       AddToThreadq(runq, start_, flag, p, match_);
-      match_[0] = NULL;
     }
 
     // If all the threads have died, stop early.
