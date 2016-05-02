@@ -377,12 +377,12 @@ void Prog::Flatten() {
   for (SparseArray<int>::const_iterator i = rootmap.begin();
        i != rootmap.end();
        ++i) {
-    flatmap[i->value()] = flat.size();
+    flatmap[i->value()] = static_cast<int>(flat.size());
     EmitList(i->index(), &rootmap, &flat, &q, &stk);
     flat.back().set_last();
   }
 
-  list_count_ = flatmap.size();
+  list_count_ = static_cast<int>(flatmap.size());
   for (int i = 0; i < kNumInst; i++)
     inst_count_[i] = 0;
 
@@ -412,7 +412,7 @@ void Prog::Flatten() {
   }
 
   // Finally, replace the old instructions with the new instructions.
-  size_ = flat.size();
+  size_ = static_cast<int>(flat.size());
   delete[] inst_;
   inst_ = new Inst[size_];
   memmove(inst_, flat.data(), size_ * sizeof *inst_);
@@ -503,8 +503,8 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat,
       case kInstAltMatch:
         flat->emplace_back();
         flat->back().set_opcode(kInstAltMatch);
-        flat->back().set_out(flat->size());
-        flat->back().out1_ = flat->size()+1;
+        flat->back().set_out(static_cast<int>(flat->size()));
+        flat->back().out1_ = static_cast<uint32>(flat->size())+1;
         // Fall through.
 
       case kInstAlt:
