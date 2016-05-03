@@ -84,17 +84,21 @@ class NFA {
   inline Thread* Incref(Thread* t);
   inline void Decref(Thread* t);
 
-  // Add id0 (or its children, following unlabeled arrows)
-  // to the workqueue q with associated capture info.
-  void AddToThreadq(Threadq* q, int id0, int flag,
+  // Follows all empty arrows from id0 and enqueues all the states reached.
+  // Enqueues only the ByteRange instructions that match byte c.
+  // The bits in flag (Bol, Eol, etc.) specify whether ^, $ and \b match.
+  // p is the current input position, and t0 is the current thread.
+  void AddToThreadq(Threadq* q, int id0, int c, int flag,
                     const char* p, Thread* t0);
 
   // Run runq on byte c, appending new states to nextq.
   // Updates matched_ and match_ as new, better matches are found.
-  // p is position of the next byte (the one after c)
-  // in the input string, used when processing capturing parens.
-  // flag is the bitwise or of Bol, Eol, etc., specifying whether
-  // ^, $ and \b match the current input point (after c).
+  // p is the position of the previous byte (the one before c)
+  // in the input string, used when processing Match instructions.
+  // flag is the bitwise OR of Bol, Eol, etc., specifying whether
+  // ^, $ and \b match the current input position (after c).
+  // Frees all the threads on runq.
+  // If there is a shortcut to the end, returns that shortcut.
   inline int Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p);
 
   // Returns text version of capture information, for debugging.
@@ -195,9 +199,10 @@ void NFA::CopyCapture(const char** dst, const char** src) {
 }
 
 // Follows all empty arrows from id0 and enqueues all the states reached.
+// Enqueues only the ByteRange instructions that match byte c.
 // The bits in flag (Bol, Eol, etc.) specify whether ^, $ and \b match.
 // p is the current input position, and t0 is the current thread.
-void NFA::AddToThreadq(Threadq* q, int id0, int flag,
+void NFA::AddToThreadq(Threadq* q, int id0, int c, int flag,
                        const char* p, Thread* t0) {
   if (id0 == 0)
     return;
@@ -286,14 +291,19 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
       a = AddState(ip->out());
       goto Loop;
 
-    case kInstMatch:
     case kInstByteRange:
+      if (!ip->Matches(c))
+        goto Next;
+      // Fallthrough intended.
+
+    case kInstMatch:
       // Save state; will pick up at next byte.
       t = Incref(t0);
       *tp = t;
       if (Debug)
         fprintf(stderr, " + %d%s\n", id, FormatCapture(t0->capture).c_str());
 
+    Next:
       if (ip->last())
         break;
       a = AddState(id+1);
@@ -313,11 +323,11 @@ void NFA::AddToThreadq(Threadq* q, int id0, int flag,
 }
 
 // Run runq on byte c, appending new states to nextq.
-// Updates match as new, better matches are found.
-// p is position of the byte c in the input string,
-// used when processing capturing parens.
-// flag is the bitwise or of Bol, Eol, etc., specifying whether
-// ^, $ and \b match the current input point (after c).
+// Updates matched_ and match_ as new, better matches are found.
+// p is the position of the previous byte (the one before c)
+// in the input string, used when processing Match instructions.
+// flag is the bitwise OR of Bol, Eol, etc., specifying whether
+// ^, $ and \b match the current input position (after c).
 // Frees all the threads on runq.
 // If there is a shortcut to the end, returns that shortcut.
 int NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
@@ -346,8 +356,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
         break;
 
       case kInstByteRange:
-        if (ip->Matches(c))
-          AddToThreadq(nextq, ip->out(), flag, p+1, t);
+        AddToThreadq(nextq, ip->out(), c, flag, p+1, t);
         break;
 
       case kInstAltMatch:
@@ -492,14 +501,10 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
   runq->clear();
   nextq->clear();
   memset(&match_[0], 0, ncapture_*sizeof match_[0]);
-  const char* bp = context.begin();
-  int c = -1;
   int wasword = 0;
 
-  if (text.begin() > context.begin()) {
-    c = text.begin()[-1] & 0xFF;
-    wasword = Prog::IsWordChar(static_cast<uint8>(c));
-  }
+  if (text.begin() > context.begin())
+    wasword = Prog::IsWordChar(text.begin()[-1] & 0xFF);
 
   // Loop over the text, stepping the machine.
   for (const char* p = text.begin();; p++) {
@@ -529,7 +534,15 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
       flag |= kEmptyNonWordBoundary;
 
     if (Debug) {
-      fprintf(stderr, "%c[%#x/%d/%d]:", p > text.end() ? '$' : p == bp ? '^' : c, flag, isword, wasword);
+      int c = 0;
+      if (p == context.begin())
+        c = '^';
+      else if (p > text.end())
+        c = '$';
+      else if (p < text.end())
+        c = p[0] & 0xFF;
+
+      fprintf(stderr, "%c[%#x/%d/%d]:", c, flag, isword, wasword);
       for (Threadq::iterator i = runq->begin(); i != runq->end(); ++i) {
         Thread* t = i->second;
         if (t == NULL)
@@ -539,11 +552,12 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
       fprintf(stderr, "\n");
     }
 
-    // Process previous character (waited until now to avoid
-    // repeating the flag computation above).
-    // This is a no-op the first time around the loop, because
-    // runq is empty.
-    int id = Step(runq, nextq, c, flag, p-1);
+    // Note that we pass p-1 to Step() because it needs the previous pointer
+    // value in order to handle Match instructions appropriately. It plumbs
+    // c and flag through to AddToThreadq() along with p-1+1, which is p.
+    //
+    // This is a no-op the first time around the loop because runq is empty.
+    int id = Step(runq, nextq, p < text.end() ? p[0] & 0xFF : -1, flag, p-1);
     DCHECK_EQ(runq->size(), 0);
     swap(nextq, runq);
     nextq->clear();
@@ -604,7 +618,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
       Thread* t = AllocThread();
       CopyCapture(t->capture, match_);
       t->capture[0] = p;
-      AddToThreadq(runq, start_, flag, p, t);
+      AddToThreadq(runq, start_, p < text.end() ? p[0] & 0xFF : -1, flag, p, t);
       Decref(t);
     }
 
@@ -615,13 +629,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
       break;
     }
 
-    if (p == text.end())
-      c = 0;
-    else
-      c = *p & 0xFF;
     wasword = isword;
-
-    // Will run step(runq, nextq, c, ...) on next iteration.  See above.
   }
 
   for (Threadq::iterator i = runq->begin(); i != runq->end(); ++i)
