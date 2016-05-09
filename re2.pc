@@ -1,7 +1,7 @@
 prefix=@prefix@
-exec_prefix=${prefix}
-includedir=${prefix}/include
-libdir=${exec_prefix}/lib
+exec_prefix=@exec_prefix@
+includedir=@includedir@
+libdir=@libdir@
 
 Name: re2
 Description: RE2 is a fast, safe, thread-friendly regular expression engine.
