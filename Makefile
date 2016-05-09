@@ -28,11 +28,9 @@ NMFLAGS?=-p
 # http://www.gnu.org/prep/standards/standards.html
 prefix=/usr/local
 exec_prefix=$(prefix)
-bindir=$(exec_prefix)/bin
 includedir=$(prefix)/include
 libdir=$(exec_prefix)/lib
 INSTALL=install
-INSTALL_PROGRAM=$(INSTALL)
 INSTALL_DATA=$(INSTALL) -m 644
 
 # ABI version
@@ -273,7 +271,11 @@ install: obj/libre2.a obj/so/libre2.$(SOEXT)
 	$(INSTALL) obj/so/libre2.$(SOEXT) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER00)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXT)
-	sed -e "s#@prefix@#${prefix}#" re2.pc >$(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(INSTALL_DATA) re2.pc $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	sed -i \
+	  -e "s#@prefix@#${prefix}#" -e "s#@exec_prefix@#${exec_prefix}#" \
+	  -e "s#@includedir@#${includedir}#" -e "s#@libdir@#${libdir}#" \
+	  $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 
 testinstall: static-testinstall shared-testinstall
 	@echo
