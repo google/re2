@@ -398,7 +398,6 @@ class Prog {
   Bitmap<256> byterange_;    // byterange.Get(x) true if x ends a
                              // commonly-treated byte range.
   uint8 bytemap_[256];       // map from input bytes to byte classes
-  uint8 *unbytemap_;         // bytemap_[unbytemap_[x]] == x
 
   uint8* onepass_nodes_;     // data for OnePass nodes
   OneState* onepass_start_;  // start node for OnePass program

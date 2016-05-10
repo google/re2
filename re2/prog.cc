@@ -106,7 +106,6 @@ Prog::Prog()
     dfa_longest_(NULL),
     dfa_mem_(0),
     delete_dfa_(NULL),
-    unbytemap_(NULL),
     onepass_nodes_(NULL),
     onepass_start_(NULL) {
 }
@@ -118,7 +117,6 @@ Prog::~Prog() {
   }
   delete[] onepass_nodes_;
   delete[] inst_;
-  delete[] unbytemap_;
 }
 
 typedef SparseSet Workq;
@@ -156,11 +154,14 @@ static string FlattenedProgToString(Prog* prog, int start) {
 string Prog::Dump() {
   string map;
   if (false) {  // Debugging
-    int lo = 0;
     StringAppendF(&map, "byte map:\n");
-    for (int i = 0; i < bytemap_range_; i++) {
-      StringAppendF(&map, "\t%d. [%02x-%02x]\n", i, lo, unbytemap_[i]);
-      lo = unbytemap_[i] + 1;
+    for (int c = 0; c < 256; c++) {
+      int b = bytemap_[c];
+      int lo = c;
+      while (c < 256-1 && bytemap_[c+1] == b)
+        c++;
+      int hi = c;
+      StringAppendF(&map, "\t[%02x-%02x] -> %d\n", lo, hi, b);
     }
     StringAppendF(&map, "\n");
   }
@@ -339,15 +340,10 @@ void Prog::ComputeByteMap() {
     bits >>= 1;
   }
   bytemap_range_ = bytemap_[255] + 1;
-  unbytemap_ = new uint8[bytemap_range_];
-  for (int i = 0; i < 256; i++)
-    unbytemap_[bytemap_[i]] = static_cast<uint8>(i);
 
   if (0) {  // For debugging: use trivial byte map.
-    for (int i = 0; i < 256; i++) {
+    for (int i = 0; i < 256; i++)
       bytemap_[i] = static_cast<uint8>(i);
-      unbytemap_[i] = static_cast<uint8>(i);
-    }
     bytemap_range_ = 256;
     LOG(INFO) << "Using trivial bytemap.";
   }
