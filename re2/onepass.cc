@@ -470,7 +470,9 @@ bool Prog::IsOnePass() {
             cond |= kMatchWins;
           for (int c = ip->lo(); c <= ip->hi(); c++) {
             int b = bytemap_[c];
-            c = unbytemap_[b];  // last c in byte class
+            // Skip any bytes immediately after c that are also in b.
+            while (c < 256-1 && bytemap_[c+1] == b)
+              c++;
             uint32 act = node->action[b];
             uint32 newact = (nextindex << kIndexShift) | cond;
             if ((act & kImpossible) == kImpossible) {
@@ -490,7 +492,9 @@ bool Prog::IsOnePass() {
             Rune hi = min<Rune>(ip->hi(), 'z') + 'A' - 'a';
             for (int c = lo; c <= hi; c++) {
               int b = bytemap_[c];
-              c = unbytemap_[b];  // last c in class
+              // Skip any bytes immediately after c that are also in b.
+              while (c < 256-1 && bytemap_[c+1] == b)
+                c++;
               uint32 act = node->action[b];
               uint32 newact = (nextindex << kIndexShift) | cond;
               if ((act & kImpossible) == kImpossible) {
