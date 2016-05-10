@@ -1789,23 +1789,6 @@ bool DFA::Search(const StringPiece& text,
   return ret;
 }
 
-// Deletes dfa.
-//
-// This is a separate function so that
-// prog.h can be used without moving the definition of
-// class DFA out of this file.  If you (atomically) set
-//   prog_->dfa_first_ = dfa;
-// or
-//   prog_->dfa_longest_ = dfa;
-// then you also have to set
-//   prog_->delete_dfa_ = DeleteDFA;
-// so that ~Prog can delete the DFA.
-static void DeleteDFA(std::atomic<DFA*>* pdfa) {
-  DFA* dfa = pdfa->load(std::memory_order_relaxed);
-  if (dfa != NULL)
-    delete dfa;
-}
-
 DFA* Prog::GetDFA(MatchKind kind) {
   std::atomic<DFA*>* pdfa;
   if (kind == kFirstMatch || kind == kManyMatch) {
@@ -1837,13 +1820,17 @@ DFA* Prog::GetDFA(MatchKind kind) {
       m = 0;
   }
   dfa = new DFA(this, kind, m);
-  delete_dfa_ = DeleteDFA;
 
   // Synchronize with "quick check" above.
   pdfa->store(dfa, std::memory_order_release);
   return dfa;
 }
 
+void Prog::DeleteDFA(std::atomic<DFA*>* pdfa) {
+  DFA* dfa = pdfa->load(std::memory_order_relaxed);
+  if (dfa != NULL)
+    delete dfa;
+}
 
 // Executes the regexp program to search in text,
 // which itself is inside the larger context.  (As a convenience,
