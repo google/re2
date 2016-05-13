@@ -229,6 +229,9 @@ class Prog {
   int bytemap_range() { return bytemap_range_; }
   const uint8* bytemap() { return bytemap_; }
 
+  // Lazily computed.
+  int first_byte();
+
   // Returns string representation of program for debugging.
   string Dump();
   string DumpUnanchored();
@@ -290,6 +293,10 @@ class Prog {
 
   // Compute byte map.
   void ComputeByteMap();
+
+  // Computes whether all matches must begin with the same first
+  // byte, and if so, returns that byte.  If not, returns -1.
+  int ComputeFirstByte();
 
   // Run peep-hole optimizer on program.
   void Optimize();
@@ -376,6 +383,7 @@ class Prog {
   int start_unanchored_;    // unanchored entry point for program
   int size_;                // number of instructions
   int bytemap_range_;       // bytemap_[x] < bytemap_range_
+  int first_byte_;          // required first byte for match, or -1 if none
   int flags_;               // regexp parse flags
   int onepass_statesize_;   // byte size of each OneState* node
 
@@ -393,6 +401,8 @@ class Prog {
 
   uint8* onepass_nodes_;     // data for OnePass nodes
   OneState* onepass_start_;  // start node for OnePass program
+
+  std::once_flag first_byte_once_;
 
   DISALLOW_COPY_AND_ASSIGN(Prog);
 };

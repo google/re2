@@ -106,10 +106,6 @@ class NFA {
 
   inline void CopyCapture(const char** dst, const char** src);
 
-  // Computes whether all matches must begin with the same first
-  // byte, and if so, returns that byte.  If not, returns -1.
-  int ComputeFirstByte();
-
   Prog* prog_;          // underlying program
   int start_;           // start instruction in program
   int ncapture_;        // number of submatches to track
@@ -122,7 +118,6 @@ class NFA {
   bool matched_;        // any match so far?
   AddState* astack_;    // pre-allocated for AddToThreadq
   int nastack_;
-  int first_byte_;      // required first byte for match, or -1 if none
 
   Thread* free_threads_;  // free list
 
@@ -147,7 +142,6 @@ NFA::NFA(Prog* prog) {
   match_ = NULL;
   matched_ = false;
   free_threads_ = NULL;
-  first_byte_ = ComputeFirstByte();
 }
 
 NFA::~NFA() {
@@ -602,10 +596,10 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
       // If there's a required first byte for an unanchored search
       // and we're not in the middle of any possible matches,
       // use memchr to search for the byte quickly.
-      if (!anchored && first_byte_ >= 0 && runq->size() == 0 &&
-          p < text.end() && (p[0] & 0xFF) != first_byte_) {
-        p = reinterpret_cast<const char*>(memchr(p, first_byte_,
-                                                 text.end() - p));
+      int fb = prog_->first_byte();
+      if (!anchored && runq->size() == 0 &&
+          fb >= 0 && p < text.end() && (p[0] & 0xFF) != fb) {
+        p = reinterpret_cast<const char*>(memchr(p, fb, text.end() - p));
         if (p == NULL) {
           p = text.end();
           isword = 0;
@@ -651,27 +645,19 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
 
 // Computes whether all successful matches have a common first byte,
 // and if so, returns that byte.  If not, returns -1.
-int NFA::ComputeFirstByte() {
-  if (start_ == 0)
-    return -1;
-
-  int b = -1;  // first byte, not yet computed
-
-  typedef SparseSet Workq;
-  Workq q(prog_->size());
-  q.insert(start_);
-  for (Workq::iterator it = q.begin(); it != q.end(); ++it) {
+int Prog::ComputeFirstByte() {
+  int b = -1;
+  SparseSet q(size());
+  q.insert(start());
+  for (SparseSet::iterator it = q.begin(); it != q.end(); ++it) {
     int id = *it;
-    Prog::Inst* ip = prog_->inst(id);
+    Prog::Inst* ip = inst(id);
     switch (ip->opcode()) {
       default:
         LOG(DFATAL) << "unhandled " << ip->opcode() << " in ComputeFirstByte";
         break;
 
       case kInstMatch:
-        if (!ip->last())
-          q.insert(id+1);
-
         // The empty string matches: no first byte.
         return -1;
 
