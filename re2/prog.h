@@ -233,6 +233,7 @@ class Prog {
   // Returns string representation of program for debugging.
   string Dump();
   string DumpUnanchored();
+  string DumpByteMap();
 
   // Record that at some point in the prog, the bytes in the range
   // lo-hi (inclusive) are treated as different from bytes outside the range.
