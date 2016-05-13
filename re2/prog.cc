@@ -355,7 +355,8 @@ void Prog::ComputeByteMap() {
                               Prog::IsWordChar(static_cast<uint8>(j));
                j++)
             ;
-          v.Set(i - 1);
+          if (0 < i)
+            v.Set(i - 1);
           v.Set(j - 1);
         }
         done_word_boundaries = true;
