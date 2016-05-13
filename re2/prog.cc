@@ -99,6 +99,7 @@ Prog::Prog()
     start_unanchored_(0),
     size_(0),
     bytemap_range_(0),
+    first_byte_(-1),
     flags_(0),
     onepass_statesize_(0),
     inst_(NULL),
@@ -177,6 +178,13 @@ string Prog::DumpByteMap() {
     StringAppendF(&map, "[%02x-%02x] -> %d\n", lo, hi, b);
   }
   return map;
+}
+
+int Prog::first_byte() {
+  std::call_once(first_byte_once_, [this]() {
+    first_byte_ = ComputeFirstByte();
+  });
+  return first_byte_;
 }
 
 static bool IsMatch(Prog*, Prog::Inst*);

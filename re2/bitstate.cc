@@ -345,15 +345,6 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
     return TrySearch(prog_->start(), text.begin());
   }
 
-  // Shallow first byte analysis. We could go deeper.
-  int fb = -1;
-  Prog::Inst* ip = prog_->inst(prog_->start());
-  if (ip->opcode() == kInstByteRange &&
-      ip->lo() == ip->hi() &&
-      !(ip->foldcase() && 'a' <= ip->lo() && ip->lo() <= 'z') &&
-      ip->last())
-    fb = ip->lo();
-
   // Unanchored search, starting from each possible text position.
   // Notice that we have to try the empty string at the end of
   // the text, so the loop condition is p <= text.end(), not p < text.end().
@@ -362,6 +353,7 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
   // so no work is duplicated and it ends up still being linear.
   for (const char* p = text.begin(); p <= text.end(); p++) {
     // Try to use memchr to find the first byte quickly.
+    int fb = prog_->first_byte();
     if (fb >= 0 && p < text.end() && (p[0] & 0xFF) != fb) {
       p = reinterpret_cast<const char*>(memchr(p, fb, text.end() - p));
       if (p == NULL)
