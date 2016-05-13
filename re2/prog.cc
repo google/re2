@@ -149,26 +149,12 @@ static string FlattenedProgToString(Prog* prog, int start) {
 }
 
 string Prog::Dump() {
-  string map;
-  if (false) {  // Debugging
-    StringAppendF(&map, "byte map:\n");
-    for (int c = 0; c < 256; c++) {
-      int b = bytemap_[c];
-      int lo = c;
-      while (c < 256-1 && bytemap_[c+1] == b)
-        c++;
-      int hi = c;
-      StringAppendF(&map, "\t[%02x-%02x] -> %d\n", lo, hi, b);
-    }
-    StringAppendF(&map, "\n");
-  }
-
   if (did_flatten_)
-    return map + FlattenedProgToString(this, start_);
+    return FlattenedProgToString(this, start_);
 
   Workq q(size_);
   AddToQueue(&q, start_);
-  return map + ProgToString(this, &q);
+  return ProgToString(this, &q);
 }
 
 string Prog::DumpUnanchored() {
@@ -178,6 +164,19 @@ string Prog::DumpUnanchored() {
   Workq q(size_);
   AddToQueue(&q, start_unanchored_);
   return ProgToString(this, &q);
+}
+
+string Prog::DumpByteMap() {
+  string map;
+  for (int c = 0; c < 256; c++) {
+    int b = bytemap_[c];
+    int lo = c;
+    while (c < 256-1 && bytemap_[c+1] == b)
+      c++;
+    int hi = c;
+    StringAppendF(&map, "[%02x-%02x] -> %d\n", lo, hi, b);
+  }
+  return map;
 }
 
 static bool IsMatch(Prog*, Prog::Inst*);
