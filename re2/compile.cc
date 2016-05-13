@@ -178,9 +178,6 @@ class Compiler : public Regexp::Walker<Frag> {
   // Returns -1 if no more instructions are available.
   int AllocInst(int n);
 
-  // Deletes unused instructions.
-  void Trim();
-
   // Rune range compiler.
 
   // Begins a new alternation.
@@ -289,16 +286,6 @@ int Compiler::AllocInst(int n) {
   int id = inst_len_;
   inst_len_ += n;
   return id;
-}
-
-void Compiler::Trim() {
-  if (inst_len_ < inst_cap_) {
-    Prog::Inst* ip = new Prog::Inst[inst_len_];
-    memmove(ip, inst_, inst_len_ * sizeof ip[0]);
-    delete[] inst_;
-    inst_ = ip;
-    inst_cap_ = inst_len_;
-  }
 }
 
 // These routines are somewhat hard to visualize in text --
@@ -1223,8 +1210,7 @@ Prog* Compiler::Finish() {
     inst_len_ = 1;
   }
 
-  // Trim instruction to minimum array and transfer to Prog.
-  Trim();
+  // Hand off the array to Prog.
   prog_->inst_ = inst_;
   prog_->size_ = inst_len_;
   inst_ = NULL;
