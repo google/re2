@@ -396,15 +396,6 @@ Frag Compiler::ByteRange(int lo, int hi, bool foldcase) {
   if (id < 0)
     return NoMatch();
   inst_[id].InitByteRange(lo, hi, foldcase, 0);
-  prog_->MarkByteRange(lo, hi);
-  if (foldcase && lo <= 'z' && hi >= 'a') {
-    if (lo < 'a')
-      lo = 'a';
-    if (hi > 'z')
-      hi = 'z';
-    if (lo <= hi)
-      prog_->MarkByteRange(lo + 'A' - 'a', hi + 'A' - 'a');
-  }
   return Frag(id, PatchList::Mk(id << 1));
 }
 
@@ -432,19 +423,6 @@ Frag Compiler::EmptyWidth(EmptyOp empty) {
   if (id < 0)
     return NoMatch();
   inst_[id].InitEmptyWidth(empty, 0);
-  if (empty & (kEmptyBeginLine|kEmptyEndLine))
-    prog_->MarkByteRange('\n', '\n');
-  if (empty & (kEmptyWordBoundary|kEmptyNonWordBoundary)) {
-    int j;
-    for (int i = 0; i < 256; i = j) {
-      for (j = i + 1; j < 256 &&
-                      Prog::IsWordChar(static_cast<uint8>(i)) ==
-                          Prog::IsWordChar(static_cast<uint8>(j));
-           j++)
-        ;
-      prog_->MarkByteRange(i, j-1);
-    }
-  }
   return Frag(id, PatchList::Mk(id << 1));
 }
 
@@ -1215,11 +1193,9 @@ Prog* Compiler::Finish() {
   prog_->size_ = inst_len_;
   inst_ = NULL;
 
-  // Compute byte map.
-  prog_->ComputeByteMap();
-
   prog_->Optimize();
   prog_->Flatten();
+  prog_->ComputeByteMap();
 
   // Record remaining memory for DFA.
   if (max_mem_ <= 0) {

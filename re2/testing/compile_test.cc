@@ -147,11 +147,10 @@ TEST(TestRegexpCompileToProg, Simple) {
 static struct Latin1ByteRange {
   int lo;
   int hi;
-  int ec;  // equivalence class
 } latin1ranges[] = {
-  { 0x00, 0x09, 0 },
-  { 0x0A, 0x0A, 1 },
-  { 0x0B, 0xFF, 2 },
+  { 0x00, 0x09 },
+  { 0x0A, 0x0A },
+  { 0x0B, 0xFF },
 };
 
 TEST(TestCompile, Latin1Ranges) {
@@ -162,7 +161,7 @@ TEST(TestCompile, Latin1Ranges) {
   EXPECT_EQ(prog->bytemap_range(), arraysize(latin1ranges));
   for (int i = 0; i < arraysize(latin1ranges); i++)
     for (int j = latin1ranges[i].lo; j <= latin1ranges[i].hi; j++)
-      EXPECT_EQ(prog->bytemap()[j], latin1ranges[i].ec) << " byte " << j;
+      EXPECT_EQ(prog->bytemap()[j], i) << " byte " << j;
   delete prog;
   re->Decref();
 }
@@ -173,22 +172,21 @@ TEST(TestCompile, Latin1Ranges) {
 static struct UTF8ByteRange {
   int lo;
   int hi;
-  int ec;  // equivalence class
 } utf8ranges[] = {
-  { 0x00, 0x09, 0 },
-  { 0x0A, 0x0A, 1 },
-  { 0x0B, 0x7F, 2 },
-  { 0x80, 0x8F, 3 },
-  { 0x90, 0x9F, 4 },
-  { 0xA0, 0xBF, 5 },
-  { 0xC0, 0xC1, 6 },
-  { 0xC2, 0xDF, 7 },
-  { 0xE0, 0xE0, 8 },
-  { 0xE1, 0xEF, 9 },
-  { 0xF0, 0xF0, 10 },
-  { 0xF1, 0xF3, 11 },
-  { 0xF4, 0xF4, 12 },
-  { 0xF5, 0xFF, 13 },
+  { 0x00, 0x09 },
+  { 0x0A, 0x0A },
+  { 0x0B, 0x7F },
+  { 0x80, 0x8F },
+  { 0x90, 0x9F },
+  { 0xA0, 0xBF },
+  { 0xC0, 0xC1 },
+  { 0xC2, 0xDF },
+  { 0xE0, 0xE0 },
+  { 0xE1, 0xEF },
+  { 0xF0, 0xF0 },
+  { 0xF1, 0xF3 },
+  { 0xF4, 0xF4 },
+  { 0xF5, 0xFF },
 };
 
 TEST(TestCompile, UTF8Ranges) {
@@ -199,7 +197,7 @@ TEST(TestCompile, UTF8Ranges) {
   EXPECT_EQ(prog->bytemap_range(), arraysize(utf8ranges));
   for (int i = 0; i < arraysize(utf8ranges); i++)
     for (int j = utf8ranges[i].lo; j <= utf8ranges[i].hi; j++)
-      EXPECT_EQ(prog->bytemap()[j], utf8ranges[i].ec) << " byte " << j;
+      EXPECT_EQ(prog->bytemap()[j], i) << " byte " << j;
   delete prog;
   re->Decref();
 }
