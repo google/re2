@@ -305,31 +305,61 @@ uint32 Prog::EmptyFlags(const StringPiece& text, const char* p) {
   return flags;
 }
 
-void Prog::MarkByteRange(int lo, int hi) {
-  DCHECK_GE(lo, 0);
-  DCHECK_GE(hi, 0);
-  DCHECK_LE(lo, 255);
-  DCHECK_LE(hi, 255);
-  DCHECK_LE(lo, hi);
-  if (0 < lo && lo <= 255)
-    byterange_.Set(lo - 1);
-  if (0 <= hi && hi <= 255)
-    byterange_.Set(hi);
-}
-
 void Prog::ComputeByteMap() {
-  // Fill in bytemap with byte classes for prog_.
-  // Ranges of bytes that are treated as indistinguishable
-  // by the regexp program are mapped to a single byte class.
-  // The vector prog_->byterange() marks the end of each
-  // such range.
-  const Bitmap<256>& v = byterange();
+  // Fill in byte map with byte classes for the program.
+  // Ranges of bytes that are treated indistinguishably
+  // are mapped to a single byte class.
+  Bitmap<256> v;
+
+  // Don't repeat the work for \b and \B.
+  bool done_word_boundaries = false;
+
+  for (int id = 0; id < static_cast<int>(size()); id++) {
+    Inst* ip = inst(id);
+    if (ip->opcode() == kInstByteRange) {
+      int lo = ip->lo();
+      int hi = ip->hi();
+      if (0 < lo)
+        v.Set(lo - 1);
+      v.Set(hi);
+      if (ip->foldcase() && lo <= 'z' && hi >= 'a') {
+        if (lo < 'a')
+          lo = 'a';
+        if (hi > 'z')
+          hi = 'z';
+        if (lo <= hi) {
+          v.Set(lo + 'A' - 'a' - 1);
+          v.Set(hi + 'A' - 'a');
+        }
+      }
+    } else if (ip->opcode() == kInstEmptyWidth) {
+      if (ip->empty() & (kEmptyBeginLine|kEmptyEndLine)) {
+        v.Set('\n' - 1);
+        v.Set('\n');
+      }
+      if (ip->empty() & (kEmptyWordBoundary|kEmptyNonWordBoundary)) {
+        if (done_word_boundaries)
+          continue;
+        int j;
+        for (int i = 0; i < 256; i = j) {
+          for (j = i + 1; j < 256 &&
+                          Prog::IsWordChar(static_cast<uint8>(i)) ==
+                              Prog::IsWordChar(static_cast<uint8>(j));
+               j++)
+            ;
+          v.Set(i - 1);
+          v.Set(j - 1);
+        }
+        done_word_boundaries = true;
+      }
+    }
+  }
 
   COMPILE_ASSERT(8*sizeof(v.Word(0)) == 32, wordsize);
   uint8 n = 0;
   uint32 bits = 0;
   for (int i = 0; i < 256; i++) {
-    if ((i&31) == 0)
+    if ((i & 31) == 0)
       bits = v.Word(i >> 5);
     bytemap_[i] = n;
     n += bits & 1;

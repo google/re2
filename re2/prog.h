@@ -218,7 +218,6 @@ class Prog {
   void set_reversed(bool reversed) { reversed_ = reversed; }
   int list_count() { return list_count_; }
   int inst_count(InstOp op) { return inst_count_[op]; }
-  const Bitmap<256>& byterange() { return byterange_; }
   void set_dfa_mem(int64 dfa_mem) { dfa_mem_ = dfa_mem; }
   int64 dfa_mem() { return dfa_mem_; }
   int flags() { return flags_; }
@@ -234,12 +233,6 @@ class Prog {
   string Dump();
   string DumpUnanchored();
   string DumpByteMap();
-
-  // Record that at some point in the prog, the bytes in the range
-  // lo-hi (inclusive) are treated as different from bytes outside the range.
-  // Tracking this lets the DFA collapse commonly-treated byte ranges
-  // when recording state pointers, greatly reducing its memory footprint.
-  void MarkByteRange(int lo, int hi);
 
   // Returns the set of kEmpty flags that are in effect at
   // position p within context.
@@ -396,8 +389,6 @@ class Prog {
   std::atomic<DFA*> dfa_longest_;   // DFA cached for kLongestMatch and kFullMatch
   int64 dfa_mem_;      // Maximum memory for DFAs.
 
-  Bitmap<256> byterange_;    // byterange.Get(x) true if x ends a
-                             // commonly-treated byte range.
   uint8 bytemap_[256];       // map from input bytes to byte classes
 
   uint8* onepass_nodes_;     // data for OnePass nodes
