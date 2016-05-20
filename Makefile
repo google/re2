@@ -65,6 +65,7 @@ INSTALL_HFILES=\
 	re2/re2.h\
 	re2/set.h\
 	re2/stringpiece.h\
+	re2/variadic_function.h\
 
 HFILES=\
 	util/benchmark.h\
@@ -94,6 +95,7 @@ HFILES=\
 	re2/testing/tester.h\
 	re2/unicode_casefold.h\
 	re2/unicode_groups.h\
+	re2/variadic_function.h\
 	re2/walker-inl.h\
 
 OFILES=\

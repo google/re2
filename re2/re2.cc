@@ -26,6 +26,11 @@ namespace re2 {
 static const int kMaxArgs = 16;
 static const int kVecSize = 1+kMaxArgs;
 
+const VariadicFunction2<bool, const StringPiece&, const RE2&, RE2::Arg, RE2::FullMatchN> RE2::FullMatch = {};
+const VariadicFunction2<bool, const StringPiece&, const RE2&, RE2::Arg, RE2::PartialMatchN> RE2::PartialMatch = {};
+const VariadicFunction2<bool, StringPiece*, const RE2&, RE2::Arg, RE2::ConsumeN> RE2::Consume = {};
+const VariadicFunction2<bool, StringPiece*, const RE2&, RE2::Arg, RE2::FindAndConsumeN> RE2::FindAndConsume = {};
+
 // This will trigger LNK2005 error in MSVC.
 #ifndef _MSC_VER
 const int RE2::Options::kDefaultMaxMem;  // initialized in re2.h
