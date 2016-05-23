@@ -33,6 +33,15 @@ libdir=$(exec_prefix)/lib
 INSTALL=install
 INSTALL_DATA=$(INSTALL) -m 644
 
+# Work around the weirdness of sed(1) on Darwin. :/
+ifeq ($(shell uname),Darwin)
+SED_INPLACE=sed -i ''
+else ifeq ($(shell uname),SunOS)
+SED_INPLACE=sed -i
+else
+SED_INPLACE=sed -i
+endif
+
 # ABI version
 # http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html
 SONAME=0
@@ -273,10 +282,10 @@ install: obj/libre2.a obj/so/libre2.$(SOEXT)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXT)
 	$(INSTALL_DATA) re2.pc $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	sed -i \
-	  -e "s#@prefix@#${prefix}#" -e "s#@exec_prefix@#${exec_prefix}#" \
-	  -e "s#@includedir@#${includedir}#" -e "s#@libdir@#${libdir}#" \
-	  $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(SED_INPLACE) -e "s#@prefix@#${prefix}#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(SED_INPLACE) -e "s#@exec_prefix@#${exec_prefix}#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(SED_INPLACE) -e "s#@includedir@#${includedir}#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(SED_INPLACE) -e "s#@libdir@#${libdir}#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 
 testinstall: static-testinstall shared-testinstall
 	@echo
