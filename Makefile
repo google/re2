@@ -41,6 +41,7 @@ SONAME=0
 # access for Unicode data), uncomment the following line:
 # REBUILD_TABLES=1
 
+# The SunOS linker does not support wildcards. :(
 ifeq ($(shell uname),Darwin)
 SOEXT=dylib
 SOEXTVER=$(SONAME).$(SOEXT)
@@ -50,7 +51,7 @@ else ifeq ($(shell uname),SunOS)
 SOEXT=so
 SOEXTVER=$(SOEXT).$(SONAME)
 SOEXTVER00=$(SOEXT).$(SONAME).0.0
-MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),-M,libre2.symbols $(RE2_LDFLAGS) $(LDFLAGS)
+MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER) $(RE2_LDFLAGS) $(LDFLAGS)
 else
 SOEXT=so
 SOEXTVER=$(SOEXT).$(SONAME)
