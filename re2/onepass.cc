@@ -392,9 +392,12 @@ bool Prog::IsOnePass() {
   // Flood the graph starting at the start state, and check
   // that in each reachable state, each possible byte leads
   // to a unique next state.
-  int size = this->size();
-  InstCond *stack = new InstCond[size];
+  int stacksize = inst_count(kInstCapture) +
+                  inst_count(kInstEmptyWidth) +
+                  inst_count(kInstNop) + 1;  // + 1 for start inst
+  InstCond* stack = new InstCond[stacksize];
 
+  int size = this->size();
   int* nodebyid = new int[size];  // indexed by ip
   memset(nodebyid, 0xFF, size*sizeof nodebyid[0]);
 
@@ -424,8 +427,10 @@ bool Prog::IsOnePass() {
     stack[nstack++].cond = 0;
     while (nstack > 0) {
       int id = stack[--nstack].id;
-      Prog::Inst* ip = inst(id);
       uint32 cond = stack[nstack].cond;
+
+    Loop:
+      Prog::Inst* ip = inst(id);
       switch (ip->opcode()) {
         default:
           LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
@@ -438,26 +443,16 @@ bool Prog::IsOnePass() {
           // If already on work queue, (1) is violated: bail out.
           if (!AddQ(&workq, id+1))
             goto fail;
-          stack[nstack].id = id+1;
-          stack[nstack++].cond = cond;
-          break;
+          id = id+1;
+          goto Loop;
 
         case kInstByteRange: {
-          if (!ip->last()) {
-            // If already on work queue, (1) is violated: bail out.
-            if (!AddQ(&workq, id+1))
-              goto fail;
-            stack[nstack].id = id+1;
-            stack[nstack++].cond = cond;
-          }
-
           int nextindex = nodebyid[ip->out()];
           if (nextindex == -1) {
             if (nalloc >= maxnodes) {
               if (Debug)
-                LOG(ERROR)
-                  << StringPrintf("Not OnePass: hit node limit %d > %d",
-                                  nalloc, maxnodes);
+                LOG(ERROR) << StringPrintf(
+                    "Not OnePass: hit node limit %d > %d", nalloc, maxnodes);
               goto fail;
             }
             nextindex = nalloc;
@@ -466,8 +461,6 @@ bool Prog::IsOnePass() {
             nalloc++;
             AddQ(&tovisit, ip->out());
           }
-          if (matched)
-            cond |= kMatchWins;
           for (int c = ip->lo(); c <= ip->hi(); c++) {
             int b = bytemap_[c];
             // Skip any bytes immediately after c that are also in b.
@@ -475,14 +468,14 @@ bool Prog::IsOnePass() {
               c++;
             uint32 act = node->action[b];
             uint32 newact = (nextindex << kIndexShift) | cond;
+            if (matched)
+              newact |= kMatchWins;
             if ((act & kImpossible) == kImpossible) {
               node->action[b] = newact;
             } else if (act != newact) {
               if (Debug) {
-                LOG(ERROR)
-                  << StringPrintf("Not OnePass: conflict on byte "
-                                  "%#x at state %d",
-                                  c, *it);
+                LOG(ERROR) << StringPrintf(
+                    "Not OnePass: conflict on byte %#x at state %d", c, *it);
               }
               goto fail;
             }
@@ -497,20 +490,27 @@ bool Prog::IsOnePass() {
                 c++;
               uint32 act = node->action[b];
               uint32 newact = (nextindex << kIndexShift) | cond;
+              if (matched)
+                newact |= kMatchWins;
               if ((act & kImpossible) == kImpossible) {
                 node->action[b] = newact;
               } else if (act != newact) {
                 if (Debug) {
-                  LOG(ERROR)
-                    << StringPrintf("Not OnePass: conflict on byte "
-                                    "%#x at state %d",
-                                    c, *it);
+                  LOG(ERROR) << StringPrintf(
+                      "Not OnePass: conflict on byte %#x at state %d", c, *it);
                 }
                 goto fail;
               }
             }
           }
-          break;
+
+          if (ip->last())
+            break;
+          // If already on work queue, (1) is violated: bail out.
+          if (!AddQ(&workq, id+1))
+            goto fail;
+          id = id+1;
+          goto Loop;
         }
 
         case kInstCapture:
@@ -538,36 +538,33 @@ bool Prog::IsOnePass() {
           // If already on work queue, (1) is violated: bail out.
           if (!AddQ(&workq, ip->out())) {
             if (Debug) {
-              LOG(ERROR) << StringPrintf("Not OnePass: multiple paths"
-                                         " %d -> %d\n",
-                                         *it, ip->out());
+              LOG(ERROR) << StringPrintf(
+                  "Not OnePass: multiple paths %d -> %d\n", *it, ip->out());
             }
             goto fail;
           }
-          stack[nstack].id = ip->out();
-          stack[nstack++].cond = cond;
-          break;
+          id = ip->out();
+          goto Loop;
 
         case kInstMatch:
-          if (!ip->last()) {
-            // If already on work queue, (1) is violated: bail out.
-            if (!AddQ(&workq, id+1))
-              goto fail;
-            stack[nstack].id = id+1;
-            stack[nstack++].cond = cond;
-          }
-
           if (matched) {
             // (3) is violated
             if (Debug) {
-              LOG(ERROR) << StringPrintf("Not OnePass: multiple matches"
-                                         " from %d\n", *it);
+              LOG(ERROR) << StringPrintf(
+                  "Not OnePass: multiple matches from %d\n", *it);
             }
             goto fail;
           }
           matched = true;
           node->matchcond = cond;
-          break;
+
+          if (ip->last())
+            break;
+          // If already on work queue, (1) is violated: bail out.
+          if (!AddQ(&workq, id+1))
+            goto fail;
+          id = id+1;
+          goto Loop;
 
         case kInstFail:
           break;
@@ -576,28 +573,21 @@ bool Prog::IsOnePass() {
   }
 
   if (Debug) {  // For debugging, dump one-pass NFA to LOG(ERROR).
-    string dump = "prog dump:\n" + Dump() + "node dump\n";
+    LOG(ERROR) << "bytemap:\n" << DumpByteMap();
+    LOG(ERROR) << "prog:\n" << Dump();
+
     map<int, int> idmap;
     for (int i = 0; i < size; i++)
       if (nodebyid[i] != -1)
         idmap[nodebyid[i]] = i;
 
-    StringAppendF(&dump, "byte ranges:\n");
-    int i = 0;
-    for (int b = 0; b < bytemap_range_; b++) {
-      int lo = i;
-      while (bytemap_[i] == b)
-        i++;
-      StringAppendF(&dump, "\t%d: %#x-%#x\n", b, lo, i - 1);
-    }
-
+    string dump;
     for (Instq::iterator it = tovisit.begin(); it != tovisit.end(); ++it) {
       int id = *it;
       int nodeindex = nodebyid[id];
       if (nodeindex == -1)
-      	continue;
+        continue;
       OneState* node = IndexToNode(nodes, statesize, nodeindex);
-      string s;
       StringAppendF(&dump, "node %d id=%d: matchcond=%#x\n",
                     nodeindex, id, node->matchcond);
       for (int i = 0; i < bytemap_range_; i++) {
@@ -609,7 +599,7 @@ bool Prog::IsOnePass() {
                       idmap[node->action[i] >> kIndexShift]);
       }
     }
-    LOG(ERROR) << dump;
+    LOG(ERROR) << "nodes:\n" << dump;
   }
 
   // Overallocated earlier; cut down to actual size.
