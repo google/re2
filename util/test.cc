@@ -23,7 +23,7 @@ void RegisterTest(void (*fn)(void), const char *name) {
   tests[ntests++].name = name;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   for (int i = 0; i < ntests; i++) {
     printf("%s\n", tests[i].name);
     tests[i].fn();
