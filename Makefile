@@ -224,6 +224,14 @@ obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TES
 	@mkdir -p obj/test
 	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
 
+# re2_fuzzer is a target for fuzzers like libFuzzer and AFL. This fake fuzzing
+# is simply a way to check that the target builds and then to run it against a
+# fixed set of inputs. To perform real fuzzing, refer to the documentation for
+# libFuzzer (llvm.org/docs/LibFuzzer.html) and AFL (lcamtuf.coredump.cx/afl/).
+obj/test/re2_fuzzer: obj/libre2.a obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o
+	@mkdir -p obj/test
+	$(CXX) -o $@ obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+
 ifdef REBUILD_TABLES
 re2/perl_groups.cc: re2/make_perl_groups.pl
 	perl $< > $@
@@ -273,6 +281,8 @@ shared-bigtest: $(STESTS) $(SBIGTESTS)
 	@LD_LIBRARY_PATH=obj/so:$(LD_LIBRARY_PATH) ./runtests $(STESTS) $(SBIGTESTS)
 
 benchmark: obj/test/regexp_benchmark
+
+fuzz: obj/test/re2_fuzzer
 
 install: obj/libre2.a obj/so/libre2.$(SOEXT)
 	mkdir -p $(DESTDIR)$(includedir)/re2 $(DESTDIR)$(libdir)/pkgconfig
