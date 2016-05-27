@@ -58,7 +58,6 @@ cc_library(
         "re2/re2.h",
         "re2/set.h",
         "re2/stringpiece.h",
-        "re2/variadic_function.h",
     ],
     copts = ["-pthread"],
     linkopts = ["-pthread"],
