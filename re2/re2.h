@@ -650,19 +650,7 @@ class RE2 {
     void set_one_line(bool b) { one_line_ = b; }
 
     void Copy(const Options& src) {
-      encoding_ = src.encoding_;
-      posix_syntax_ = src.posix_syntax_;
-      longest_match_ = src.longest_match_;
-      log_errors_ = src.log_errors_;
-      max_mem_ = src.max_mem_;
-      literal_ = src.literal_;
-      never_nl_ = src.never_nl_;
-      dot_nl_ = src.dot_nl_;
-      never_capture_ = src.never_capture_;
-      case_sensitive_ = src.case_sensitive_;
-      perl_classes_ = src.perl_classes_;
-      word_boundary_ = src.word_boundary_;
-      one_line_ = src.one_line_;
+      *this = src;
     }
 
     int ParseFlags() const;
@@ -681,10 +669,6 @@ class RE2 {
     bool perl_classes_;
     bool word_boundary_;
     bool one_line_;
-
-    //DISALLOW_COPY_AND_ASSIGN(Options);
-    Options(const Options&);
-    void operator=(const Options&);
   };
 
   // Returns the options set in the constructor.
