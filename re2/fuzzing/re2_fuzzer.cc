@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <map>
 #include <string>
 
 #include "re2/re2.h"
@@ -20,6 +21,12 @@ uint8_t dummy = 0;
 void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
   RE2 re(pattern, options);
   if (!re.ok())
+    return;
+
+  // Don't waste time fuzzing high-fanout programs.
+  map<int, int> histogram;
+  int fanout = re.ProgramFanout(&histogram);
+  if (fanout > 10)
     return;
 
   StringPiece sp1, sp2, sp3, sp4;
