@@ -250,7 +250,7 @@ class RE2 {
   RE2(const string& pattern);
 #endif
   RE2(const StringPiece& pattern);
-  RE2(const StringPiece& pattern, const Options& option);
+  RE2(const StringPiece& pattern, const Options& options);
   ~RE2();
 
   // Returns whether RE2 was created properly.
@@ -343,7 +343,7 @@ class RE2 {
   template <typename F, typename SP, typename... A>
   static inline bool Apply(F f, SP sp, const RE2& re, const A&... a) {
     const Arg* const args[] = {&a...};
-    constexpr int argc = sizeof...(a);
+    const int argc = sizeof...(a);
     return f(sp, re, args, argc);
   }
 
