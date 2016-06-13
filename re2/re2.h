@@ -340,6 +340,11 @@ class RE2 {
 
 #ifndef SWIG
  private:
+  template <typename F, typename SP>
+  static inline bool Apply(F f, SP sp, const RE2& re) {
+    return f(sp, re, NULL, 0);
+  }
+
   template <typename F, typename SP, typename... A>
   static inline bool Apply(F f, SP sp, const RE2& re, const A&... a) {
     const Arg* const args[] = {&a...};
