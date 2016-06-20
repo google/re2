@@ -101,7 +101,7 @@ class DFA {
     uint flag_;         // Empty string bitfield flags in effect on the way
                         // into this state, along with kFlagMatch if this
                         // is a matching state.
-    std::atomic<State*> next_[1];    // Outgoing arrows from State,
+    std::atomic<State*> next_[];    // Outgoing arrows from State,
                         // one per input byte class
   };
 
@@ -469,7 +469,7 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64 max_mem)
   // Note that a state stores list heads only, so we use the program
   // list count for the upper bound, not the program size.
   int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
-  int64 one_state = sizeof(State) + (nnext-1)*sizeof(std::atomic<State*>) +
+  int64 one_state = sizeof(State) + nnext*sizeof(std::atomic<State*>) +
                     (prog_->list_count()+nmark)*sizeof(int);
   if (state_budget_ < 20*one_state) {
     LOG(INFO) << StringPrintf("DFA out of memory: prog size %d mem %lld",
@@ -740,7 +740,7 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint flag) {
   // State*, empirically.
   const int kStateCacheOverhead = 32;
   int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
-  int mem = sizeof(State) + (nnext-1)*sizeof(std::atomic<State*>) +
+  int mem = sizeof(State) + nnext*sizeof(std::atomic<State*>) +
             ninst*sizeof(int);
   if (mem_budget_ < mem + kStateCacheOverhead) {
     mem_budget_ = -1;
