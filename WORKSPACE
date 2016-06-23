@@ -3,3 +3,4 @@
 # license that can be found in the LICENSE file.
 
 # Bazel (http://bazel.io/) WORKSPACE file for RE2.
+workspace(name = "com_googlesource_code_re2")
