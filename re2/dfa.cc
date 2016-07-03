@@ -1809,15 +1809,19 @@ DFA* Prog::GetDFA(MatchKind kind) {
     return dfa;
 
   // For a forward DFA, half the memory goes to each DFA.
+  // However, if it is a "many match" DFA, then there is
+  // no counterpart with which the memory must be shared.
+  //
   // For a reverse DFA, all the memory goes to the
   // "longest match" DFA, because RE2 never does reverse
   // "first match" searches.
-  int64 m = dfa_mem_/2;
+  int64 m = dfa_mem_;
   if (reversed_) {
-    if (kind == kLongestMatch || kind == kManyMatch)
-      m = dfa_mem_;
-    else
-      m = 0;
+    DCHECK_EQ(kind, kLongestMatch);
+  } else if (kind == kFirstMatch || kind == kLongestMatch) {
+    m /= 2;
+  } else {
+    DCHECK_EQ(kind, kManyMatch);
   }
   dfa = new DFA(this, kind, m);
 
