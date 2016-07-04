@@ -726,7 +726,12 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint flag) {
     mutex_.AssertHeld();
 
   // Look in the cache for a pre-existing state.
-  State state = {inst, ninst, flag};
+  // We have to initialise the struct like this because otherwise
+  // MSVC will complain about the flexible array member. :(
+  State state;
+  state.inst_ = inst;
+  state.ninst_ = ninst;
+  state.flag_ = flag;
   StateSet::iterator it = state_cache_.find(&state);
   if (it != state_cache_.end()) {
     if (DebugDFA)
