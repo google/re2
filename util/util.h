@@ -58,6 +58,8 @@ using std::unordered_set;
 #define strtoull _strtoui64
 #define vsnprintf vsnprintf_s
 
+#pragma warning(disable: 4200) // zero-sized array
+
 #endif
 
 namespace re2 {
