@@ -16,38 +16,6 @@
 
 namespace re2 {
 
-// Simple fixed-size bitmap.
-template<int Bits>
-class Bitmap {
- public:
-  Bitmap() { Reset(); }
-  int Size() { return Bits; }
-
-  void Reset() {
-    for (int i = 0; i < Words; i++)
-      w_[i] = 0;
-  }
-  bool Get(int k) const {
-    return w_[k >> WordLog] & (1<<(k & 31));
-  }
-  void Set(int k) {
-    w_[k >> WordLog] |= 1<<(k & 31);
-  }
-  void Clear(int k) {
-    w_[k >> WordLog] &= ~(1<<(k & 31));
-  }
-  uint32 Word(int i) const {
-    return w_[i];
-  }
-
- private:
-  static const int WordLog = 5;
-  static const int Words = (Bits+31)/32;
-  uint32 w_[Words];
-  DISALLOW_COPY_AND_ASSIGN(Bitmap);
-};
-
-
 // Opcodes for Inst
 enum InstOp {
   kInstAlt = 0,      // choose between out_ and out1_
