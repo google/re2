@@ -313,72 +313,87 @@ uint32 Prog::EmptyFlags(const StringPiece& text, const char* p) {
   return flags;
 }
 
-// Simple fixed-size bitmap.
-template<int Bits>
-class Bitmap {
+class ByteMapBuilder {
  public:
-  Bitmap() { Reset(); }
-  int Size() { return Bits; }
+  ByteMapBuilder() {
+    for (int i = 0; i < arraysize(words_); i++)
+      words_[i] = 0;
+  }
 
-  void Reset() {
-    for (int i = 0; i < Words; i++)
-      w_[i] = 0;
+  void Mark(int lo, int hi) {
+    DCHECK_GE(lo, 0);
+    DCHECK_GE(hi, 0);
+    DCHECK_LE(lo, 255);
+    DCHECK_LE(hi, 255);
+    DCHECK_LE(lo, hi);
+
+    lo--;
+
+    if (0 <= lo)
+      Set(lo);
+    Set(hi);
   }
-  bool Get(int k) const {
-    return w_[k >> WordLog] & (1<<(k & 31));
-  }
-  void Set(int k) {
-    w_[k >> WordLog] |= 1<<(k & 31);
-  }
-  void Clear(int k) {
-    w_[k >> WordLog] &= ~(1<<(k & 31));
-  }
-  uint32 Word(int i) const {
-    return w_[i];
+
+  int Build(uint8* bytemap) {
+    uint8 b = 0;
+    uint64 word = 0;
+    for (int c = 0; c < 256; c++) {
+      if ((c & 63) == 0)
+        word = words_[c >> 6];
+      bytemap[c] = b;
+      b += word & 1;
+      word >>= 1;
+    }
+    return bytemap[255] + 1;
   }
 
  private:
-  static const int WordLog = 5;
-  static const int Words = (Bits+31)/32;
-  uint32 w_[Words];
-  DISALLOW_COPY_AND_ASSIGN(Bitmap);
+  bool Get(int c) const {
+    return words_[c >> 6] & (1ULL << (c & 63));
+  }
+
+  void Set(int c) {
+    words_[c >> 6] |= 1ULL << (c & 63);
+  }
+
+  uint64 words_[4];
+
+  DISALLOW_COPY_AND_ASSIGN(ByteMapBuilder);
 };
 
 void Prog::ComputeByteMap() {
   // Fill in byte map with byte classes for the program.
   // Ranges of bytes that are treated indistinguishably
   // are mapped to a single byte class.
-  Bitmap<256> v;
+  ByteMapBuilder builder;
 
+  // Don't repeat the work for ^ and $.
+  bool marked_line_boundaries = false;
   // Don't repeat the work for \b and \B.
-  bool done_word_boundaries = false;
+  bool marked_word_boundaries = false;
 
   for (int id = 0; id < static_cast<int>(size()); id++) {
     Inst* ip = inst(id);
     if (ip->opcode() == kInstByteRange) {
       int lo = ip->lo();
       int hi = ip->hi();
-      if (0 < lo)
-        v.Set(lo - 1);
-      v.Set(hi);
+      builder.Mark(lo, hi);
       if (ip->foldcase() && lo <= 'z' && hi >= 'a') {
         if (lo < 'a')
           lo = 'a';
         if (hi > 'z')
           hi = 'z';
-        if (lo <= hi) {
-          v.Set(lo + 'A' - 'a' - 1);
-          v.Set(hi + 'A' - 'a');
-        }
+        if (lo <= hi)
+          builder.Mark(lo + 'A' - 'a', hi + 'A' - 'a');
       }
     } else if (ip->opcode() == kInstEmptyWidth) {
-      if (ip->empty() & (kEmptyBeginLine|kEmptyEndLine)) {
-        v.Set('\n' - 1);
-        v.Set('\n');
+      if (ip->empty() & (kEmptyBeginLine|kEmptyEndLine) &&
+          !marked_line_boundaries) {
+        builder.Mark('\n', '\n');
+        marked_line_boundaries = true;
       }
-      if (ip->empty() & (kEmptyWordBoundary|kEmptyNonWordBoundary)) {
-        if (done_word_boundaries)
-          continue;
+      if (ip->empty() & (kEmptyWordBoundary|kEmptyNonWordBoundary) &&
+          !marked_word_boundaries) {
         int j;
         for (int i = 0; i < 256; i = j) {
           for (j = i + 1; j < 256 &&
@@ -386,26 +401,14 @@ void Prog::ComputeByteMap() {
                               Prog::IsWordChar(static_cast<uint8>(j));
                j++)
             ;
-          if (0 < i)
-            v.Set(i - 1);
-          v.Set(j - 1);
+          builder.Mark(i, j - 1);
         }
-        done_word_boundaries = true;
+        marked_word_boundaries = true;
       }
     }
   }
 
-  COMPILE_ASSERT(8*sizeof(v.Word(0)) == 32, wordsize);
-  uint8 n = 0;
-  uint32 bits = 0;
-  for (int i = 0; i < 256; i++) {
-    if ((i & 31) == 0)
-      bits = v.Word(i >> 5);
-    bytemap_[i] = n;
-    n += bits & 1;
-    bits >>= 1;
-  }
-  bytemap_range_ = bytemap_[255] + 1;
+  bytemap_range_ = builder.Build(bytemap_);
 
   if (0) {  // For debugging: use trivial byte map.
     for (int i = 0; i < 256; i++)
