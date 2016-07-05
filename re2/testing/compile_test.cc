@@ -143,63 +143,54 @@ TEST(TestRegexpCompileToProg, Simple) {
   EXPECT_EQ(failed, 0);
 }
 
-// The distinct byte ranges involved in the Latin-1 dot ([^\n]).
-static struct Latin1ByteRange {
-  int lo;
-  int hi;
-} latin1ranges[] = {
-  { 0x00, 0x09 },
-  { 0x0A, 0x0A },
-  { 0x0B, 0xFF },
-};
-
-TEST(TestCompile, Latin1Ranges) {
-  Regexp* re = Regexp::Parse(".", Regexp::PerlX|Regexp::Latin1, NULL);
+static void DumpByteMap(StringPiece pattern, Regexp::ParseFlags flags,
+                        string* bytemap) {
+  Regexp* re = Regexp::Parse(pattern, flags, NULL);
   EXPECT_TRUE(re != NULL);
+
   Prog* prog = re->CompileToProg(0);
   EXPECT_TRUE(prog != NULL);
-  EXPECT_EQ(prog->bytemap_range(), arraysize(latin1ranges));
-  for (int i = 0; i < arraysize(latin1ranges); i++)
-    for (int j = latin1ranges[i].lo; j <= latin1ranges[i].hi; j++)
-      EXPECT_EQ(prog->bytemap()[j], i) << " byte " << j;
+  *bytemap = prog->DumpByteMap();
   delete prog;
+
   re->Decref();
 }
 
-// The distinct byte ranges involved in the UTF-8 dot ([^\n]).
-// Once, erroneously split between 0x3f and 0x40 because it is
-// a 6-bit boundary.
-static struct UTF8ByteRange {
-  int lo;
-  int hi;
-} utf8ranges[] = {
-  { 0x00, 0x09 },
-  { 0x0A, 0x0A },
-  { 0x0B, 0x7F },
-  { 0x80, 0x8F },
-  { 0x90, 0x9F },
-  { 0xA0, 0xBF },
-  { 0xC0, 0xC1 },
-  { 0xC2, 0xDF },
-  { 0xE0, 0xE0 },
-  { 0xE1, 0xEF },
-  { 0xF0, 0xF0 },
-  { 0xF1, 0xF3 },
-  { 0xF4, 0xF4 },
-  { 0xF5, 0xFF },
-};
+TEST(TestCompile, Latin1Ranges) {
+  // The distinct byte ranges involved in the Latin-1 dot ([^\n]).
+
+  string bytemap;
+
+  DumpByteMap(".", Regexp::PerlX|Regexp::Latin1, &bytemap);
+  EXPECT_EQ("[00-09] -> 0\n"
+            "[0a-0a] -> 1\n"
+            "[0b-ff] -> 2\n",
+            bytemap);
+}
 
 TEST(TestCompile, UTF8Ranges) {
-  Regexp* re = Regexp::Parse(".", Regexp::PerlX, NULL);
-  EXPECT_TRUE(re != NULL);
-  Prog* prog = re->CompileToProg(0);
-  EXPECT_TRUE(prog != NULL);
-  EXPECT_EQ(prog->bytemap_range(), arraysize(utf8ranges));
-  for (int i = 0; i < arraysize(utf8ranges); i++)
-    for (int j = utf8ranges[i].lo; j <= utf8ranges[i].hi; j++)
-      EXPECT_EQ(prog->bytemap()[j], i) << " byte " << j;
-  delete prog;
-  re->Decref();
+  // The distinct byte ranges involved in the UTF-8 dot ([^\n]).
+  // Once, erroneously split between 0x3f and 0x40 because it is
+  // a 6-bit boundary.
+
+  string bytemap;
+
+  DumpByteMap(".", Regexp::PerlX, &bytemap);
+  EXPECT_EQ("[00-09] -> 0\n"
+            "[0a-0a] -> 1\n"
+            "[0b-7f] -> 2\n"
+            "[80-8f] -> 3\n"
+            "[90-9f] -> 4\n"
+            "[a0-bf] -> 5\n"
+            "[c0-c1] -> 6\n"
+            "[c2-df] -> 7\n"
+            "[e0-e0] -> 8\n"
+            "[e1-ef] -> 9\n"
+            "[f0-f0] -> 10\n"
+            "[f1-f3] -> 11\n"
+            "[f4-f4] -> 12\n"
+            "[f5-ff] -> 13\n",
+            bytemap);
 }
 
 TEST(TestCompile, InsufficientMemory) {
