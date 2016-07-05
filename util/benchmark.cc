@@ -44,7 +44,11 @@ static int64 nsec() {
 	return ticks.QuadPart;
 #else
 	struct timespec tp;
+#ifdef CLOCK_PROCESS_CPUTIME_ID
+	if(clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tp) < 0)
+#else
 	if(clock_gettime(CLOCK_REALTIME, &tp) < 0)
+#endif
 		return -1;
 	return (int64)tp.tv_sec*1000*1000*1000 + tp.tv_nsec;
 #endif
