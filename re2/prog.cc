@@ -349,7 +349,7 @@ class ByteMapBuilder {
 
  private:
   bool Get(int c) const {
-    return words_[c >> 6] & (1ULL << (c & 63));
+    return (words_[c >> 6] & (1ULL << (c & 63))) != 0;
   }
 
   void Set(int c) {
