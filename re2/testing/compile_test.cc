@@ -166,7 +166,12 @@ TEST(TestCompile, Latin1Ranges) {
             "[0a-0a] -> 1\n"
             "[0b-ff] -> 2\n",
             bytemap);
+}
 
+TEST(TestCompile, OtherByteMapTests) {
+  string bytemap;
+
+  // Test that "absent" ranges are mapped to the same byte class.
   DumpByteMap("[0-9A-Fa-f]+", Regexp::PerlX|Regexp::Latin1, &bytemap);
   EXPECT_EQ("[00-2f] -> 0\n"
             "[30-39] -> 1\n"
@@ -175,6 +180,15 @@ TEST(TestCompile, Latin1Ranges) {
             "[47-60] -> 0\n"
             "[61-66] -> 3\n"
             "[67-ff] -> 0\n",
+            bytemap);
+
+  // FIXME: The ASCII case-folding optimization creates too many byte classes!
+  DumpByteMap("[^_]", Regexp::LikePerl|Regexp::Latin1, &bytemap);
+  EXPECT_EQ("[00-40] -> 0\n"
+            "[41-5a] -> 1\n"
+            "[5b-5e] -> 2\n"
+            "[5f-5f] -> 3\n"
+            "[60-ff] -> 4\n",
             bytemap);
 }
 

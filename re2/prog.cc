@@ -317,18 +317,18 @@ uint32 Prog::EmptyFlags(const StringPiece& text, const char* p) {
 class ByteMapBuilder {
  public:
   ByteMapBuilder() {
-    subranges_.Set(255);
+    ranges_.Set(255);
   }
 
-  // Marks the [lo, hi] subrange.
+  // Marks the [lo, hi] range.
   void Mark(int lo, int hi);
 
-  // Builds the bytemap from the subranges.
+  // Builds the bytemap from the ranges.
   // Returns the number of byte classes.
   int Build(uint8* bytemap);
 
  private:
-  Bitmap256 subranges_;
+  Bitmap256 ranges_;
   Bitmap256 present_;
 
   DISALLOW_COPY_AND_ASSIGN(ByteMapBuilder);
@@ -344,23 +344,23 @@ void ByteMapBuilder::Mark(int lo, int hi) {
   if (lo == 0 && hi == 255)
     return;
 
-  // We track the end of each subrange. We also track which subranges
+  // We track the end of each range. We also track which ranges
   // are "present" (i.e. were marked) so that the remaining, "absent"
-  // subranges can subsequently be made to share a single byte class.
+  // ranges can subsequently be made to share a single byte class.
   lo--;
-  if (0 <= lo && !subranges_.Test(lo)) {
-    subranges_.Set(lo);
-    int next = subranges_.FindNextSetBit(lo+1);
+  if (0 <= lo && !ranges_.Test(lo)) {
+    ranges_.Set(lo);
+    int next = ranges_.FindNextSetBit(lo+1);
     if (present_.Test(next))
       present_.Set(lo);
   }
-  if (!subranges_.Test(hi))
-    subranges_.Set(hi);
-  // Flag as "present" the subranges above lo up to and including the
-  // subrange ending at hi.
+  if (!ranges_.Test(hi))
+    ranges_.Set(hi);
+  // Flag as "present" the ranges above lo up to and including the
+  // range ending at hi.
   int c = lo+1;
   while (c < 256) {
-    int next = subranges_.FindNextSetBit(c);
+    int next = ranges_.FindNextSetBit(c);
     if (!present_.Test(next))
       present_.Set(next);
     if (next == hi)
@@ -374,7 +374,7 @@ int ByteMapBuilder::Build(uint8* bytemap) {
   int absent = -1;
   int c = 0;
   while (c < 256) {
-    int next = subranges_.FindNextSetBit(c);
+    int next = ranges_.FindNextSetBit(c);
     uint8 b = 0;
     if (present_.Test(next)) {
       b = static_cast<uint8>(present);
