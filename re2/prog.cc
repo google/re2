@@ -6,6 +6,7 @@
 // Tested by compile_test.cc
 
 #include "util/util.h"
+#include "util/bitmap.h"
 #include "re2/prog.h"
 #include "re2/stringpiece.h"
 
@@ -316,10 +317,11 @@ uint32 Prog::EmptyFlags(const StringPiece& text, const char* p) {
 class ByteMapBuilder {
  public:
   ByteMapBuilder() {
-    for (int i = 0; i < arraysize(words_); i++)
-      words_[i] = 0;
+    // This allows the outer loop in Build() to be simple.
+    bitmap.Set(255);
   }
 
+  // Marks the [lo, hi] subrange in the bitmap.
   void Mark(int lo, int hi) {
     DCHECK_GE(lo, 0);
     DCHECK_GE(hi, 0);
@@ -327,36 +329,35 @@ class ByteMapBuilder {
     DCHECK_LE(hi, 255);
     DCHECK_LE(lo, hi);
 
+    // We just track the end of each subrange. :)
     lo--;
-
     if (0 <= lo)
-      Set(lo);
-    Set(hi);
+      bitmap.Set(lo);
+    bitmap.Set(hi);
   }
 
+  // Builds the bytemap from the subranges.
+  // Returns the number of subranges.
   int Build(uint8* bytemap) {
     uint8 b = 0;
-    uint64 word = 0;
-    for (int c = 0; c < 256; c++) {
-      if ((c & 63) == 0)
-        word = words_[c >> 6];
-      bytemap[c] = b;
-      b += word & 1;
-      word >>= 1;
+    int c = 0;
+    while (c < 256) {
+      // Find the end of this subrange.
+      int next = bitmap.FindNextSetBit(c);
+      DCHECK_GE(next, 0);
+      DCHECK_LE(next, 255);
+
+      while (c <= next) {
+        bytemap[c] = b;
+        c++;
+      }
+      b++;
     }
-    return bytemap[255] + 1;
+    return b;
   }
 
  private:
-  bool Get(int c) const {
-    return (words_[c >> 6] & (1ULL << (c & 63))) != 0;
-  }
-
-  void Set(int c) {
-    words_[c >> 6] |= 1ULL << (c & 63);
-  }
-
-  uint64 words_[4];
+  Bitmap256 bitmap;
 
   DISALLOW_COPY_AND_ASSIGN(ByteMapBuilder);
 };
