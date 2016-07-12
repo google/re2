@@ -5,10 +5,10 @@
 #ifndef RE2_UTIL_BITMAP_H__
 #define RE2_UTIL_BITMAP_H__
 
-#include "util/util.h"
 #ifdef _MSC_VER
 #include <intrin.h>
 #endif
+#include "util/util.h"
 
 namespace re2 {
 
