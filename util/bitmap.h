@@ -36,33 +36,7 @@ class Bitmap256 {
 
   // Finds the next non-zero bit with index >= c.
   // Returns -1 if no such bit exists.
-  int FindNextSetBit(int c) const {
-    DCHECK_GE(c, 0);
-    DCHECK_LE(c, 255);
-
-    // Mask out any lower bits.
-    int i = c / 64;
-    uint64 word = words_[i] & (~0ULL << (c % 64));
-    if (word != 0)
-      return (i * 64) + FindLSBSet(word);
-    i++;
-    switch (i) {
-      case 1:
-        if (words_[1] != 0)
-          return (1 * 64) + FindLSBSet(words_[1]);
-        // Fall through.
-      case 2:
-        if (words_[2] != 0)
-          return (2 * 64) + FindLSBSet(words_[2]);
-        // Fall through.
-      case 3:
-        if (words_[3] != 0)
-          return (3 * 64) + FindLSBSet(words_[3]);
-        // Fall through.
-      default:
-        return -1;
-    }
-  }
+  int FindNextSetBit(int c) const;
 
  private:
   // Finds the least significant non-zero bit in n.
@@ -82,6 +56,36 @@ class Bitmap256 {
 
   uint64 words_[4];
 };
+
+int Bitmap256::FindNextSetBit(int c) const {
+  DCHECK_GE(c, 0);
+  DCHECK_LE(c, 255);
+
+  // Check the word that contains the bit. Mask out any lower bits.
+  int i = c / 64;
+  uint64 word = words_[i] & (~0ULL << (c % 64));
+  if (word != 0)
+    return (i * 64) + FindLSBSet(word);
+
+  // Check any following words.
+  i++;
+  switch (i) {
+    case 1:
+      if (words_[1] != 0)
+        return (1 * 64) + FindLSBSet(words_[1]);
+      // Fall through.
+    case 2:
+      if (words_[2] != 0)
+        return (2 * 64) + FindLSBSet(words_[2]);
+      // Fall through.
+    case 3:
+      if (words_[3] != 0)
+        return (3 * 64) + FindLSBSet(words_[3]);
+      // Fall through.
+    default:
+      return -1;
+  }
+}
 
 }  // namespace re2
 

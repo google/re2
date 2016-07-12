@@ -317,72 +317,15 @@ uint32 Prog::EmptyFlags(const StringPiece& text, const char* p) {
 class ByteMapBuilder {
  public:
   ByteMapBuilder() {
-    // This allows the outer loop in Build() to be simple.
     subranges_.Set(255);
   }
 
   // Marks the [lo, hi] subrange.
-  void Mark(int lo, int hi) {
-    DCHECK_GE(lo, 0);
-    DCHECK_GE(hi, 0);
-    DCHECK_LE(lo, 255);
-    DCHECK_LE(hi, 255);
-    DCHECK_LE(lo, hi);
-
-    if (lo == 0 && hi == 255)
-      return;
-
-    // We track the end of each subrange. We also track which subranges
-    // are "present" (i.e. were marked) so that the remaining, "absent"
-    // subranges can subsequently be made to share a single byte class.
-    lo--;
-    if (0 <= lo && !subranges_.Test(lo)) {
-      subranges_.Set(lo);
-      int next = subranges_.FindNextSetBit(lo+1);
-      if (present_.Test(next))
-        present_.Set(lo);
-    }
-    if (!subranges_.Test(hi))
-      subranges_.Set(hi);
-    // Flag as "present" the subranges above lo up to and including the
-    // subrange ending at hi.
-    int c = lo+1;
-    while (c < 256) {
-      int next = subranges_.FindNextSetBit(c);
-      if (!present_.Test(next))
-        present_.Set(next);
-      if (next == hi)
-        break;
-      c = next+1;
-    }
-  }
+  void Mark(int lo, int hi);
 
   // Builds the bytemap from the subranges.
   // Returns the number of byte classes.
-  int Build(uint8* bytemap) {
-    int present = 0;
-    int absent = -1;
-    int c = 0;
-    while (c < 256) {
-      int next = subranges_.FindNextSetBit(c);
-      uint8 b = 0;
-      if (present_.Test(next)) {
-        b = static_cast<uint8>(present);
-        present++;
-      } else {
-        if (absent == -1) {
-          absent = present;
-          present++;
-        }
-        b = static_cast<uint8>(absent);
-      }
-      while (c <= next) {
-        bytemap[c] = b;
-        c++;
-      }
-    }
-    return present;
-  }
+  int Build(uint8* bytemap);
 
  private:
   Bitmap256 subranges_;
@@ -391,10 +334,70 @@ class ByteMapBuilder {
   DISALLOW_COPY_AND_ASSIGN(ByteMapBuilder);
 };
 
+void ByteMapBuilder::Mark(int lo, int hi) {
+  DCHECK_GE(lo, 0);
+  DCHECK_GE(hi, 0);
+  DCHECK_LE(lo, 255);
+  DCHECK_LE(hi, 255);
+  DCHECK_LE(lo, hi);
+
+  if (lo == 0 && hi == 255)
+    return;
+
+  // We track the end of each subrange. We also track which subranges
+  // are "present" (i.e. were marked) so that the remaining, "absent"
+  // subranges can subsequently be made to share a single byte class.
+  lo--;
+  if (0 <= lo && !subranges_.Test(lo)) {
+    subranges_.Set(lo);
+    int next = subranges_.FindNextSetBit(lo+1);
+    if (present_.Test(next))
+      present_.Set(lo);
+  }
+  if (!subranges_.Test(hi))
+    subranges_.Set(hi);
+  // Flag as "present" the subranges above lo up to and including the
+  // subrange ending at hi.
+  int c = lo+1;
+  while (c < 256) {
+    int next = subranges_.FindNextSetBit(c);
+    if (!present_.Test(next))
+      present_.Set(next);
+    if (next == hi)
+      break;
+    c = next+1;
+  }
+}
+
+int ByteMapBuilder::Build(uint8* bytemap) {
+  int present = 0;
+  int absent = -1;
+  int c = 0;
+  while (c < 256) {
+    int next = subranges_.FindNextSetBit(c);
+    uint8 b = 0;
+    if (present_.Test(next)) {
+      b = static_cast<uint8>(present);
+      present++;
+    } else {
+      if (absent == -1) {
+        absent = present;
+        present++;
+      }
+      b = static_cast<uint8>(absent);
+    }
+    while (c <= next) {
+      bytemap[c] = b;
+      c++;
+    }
+  }
+  return present;
+}
+
 void Prog::ComputeByteMap() {
   // Fill in byte map with byte classes for the program.
   // Ranges of bytes that are treated indistinguishably
-  // are mapped to a single byte class.
+  // will be mapped to a single byte class.
   ByteMapBuilder builder;
 
   // Don't repeat the work for ^ and $.
