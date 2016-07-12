@@ -23,7 +23,7 @@ class Bitmap256 {
     DCHECK_GE(c, 0);
     DCHECK_LE(c, 255);
 
-    return (words_[c >> 6] & (1ULL << (c & 63))) != 0;
+    return (words_[c / 64] & (1ULL << (c % 64))) != 0;
   }
 
   // Sets the bit with index c.
@@ -31,7 +31,7 @@ class Bitmap256 {
     DCHECK_GE(c, 0);
     DCHECK_LE(c, 255);
 
-    words_[c >> 6] |= (1ULL << (c & 63));
+    words_[c / 64] |= (1ULL << (c % 64));
   }
 
   // Finds the next non-zero bit with index >= c.
@@ -41,53 +41,23 @@ class Bitmap256 {
     DCHECK_LE(c, 255);
 
     // Mask out any lower bits.
-    int i = c >> 6;
-    uint64 word = words_[i] & (~0ULL << (c & 63));
+    int i = c / 64;
+    uint64 word = words_[i] & (~0ULL << (c % 64));
     if (word != 0)
-      return (i << 6) + FindLSBSet(word);
+      return (i * 64) + FindLSBSet(word);
     i++;
     switch (i) {
       case 1:
         if (words_[1] != 0)
-          return (1 << 6) + FindLSBSet(words_[1]);
+          return (1 * 64) + FindLSBSet(words_[1]);
         // Fall through.
       case 2:
         if (words_[2] != 0)
-          return (2 << 6) + FindLSBSet(words_[2]);
+          return (2 * 64) + FindLSBSet(words_[2]);
         // Fall through.
       case 3:
         if (words_[3] != 0)
-          return (3 << 6) + FindLSBSet(words_[3]);
-        // Fall through.
-      default:
-        return -1;
-    }
-  }
-
-  // Finds the previous non-zero bit with index <= c.
-  // Returns -1 if no such bit exists.
-  int FindPrevSetBit(int c) const {
-    DCHECK_GE(c, 0);
-    DCHECK_LE(c, 255);
-
-    // Mask out any higher bits.
-    int i = c >> 6;
-    uint64 word = words_[i] & ~((~0ULL - 1) << (c & 63));
-    if (word != 0)
-      return (i << 6) + FindMSBSet(word);
-    i--;
-    switch (i) {
-      case 2:
-        if (words_[2] != 0)
-          return (2 << 6) + FindMSBSet(words_[2]);
-        // Fall through.
-      case 1:
-        if (words_[1] != 0)
-          return (1 << 6) + FindMSBSet(words_[1]);
-        // Fall through.
-      case 0:
-        if (words_[0] != 0)
-          return (0 << 6) + FindMSBSet(words_[0]);
+          return (3 * 64) + FindLSBSet(words_[3]);
         // Fall through.
       default:
         return -1;
@@ -107,21 +77,6 @@ class Bitmap256 {
     return c;
 #else
 #error "bit scan forward not implemented"
-#endif
-  }
-
-  // Finds the most significant non-zero bit in n.
-  static int FindMSBSet(uint64 n) {
-    DCHECK_NE(n, 0);
-
-#if defined(__GNUC__)
-    return 63 - __builtin_clzll(n);
-#elif defined(_MSC_VER)
-    int c;
-    _BitScanReverse64(&c, n);
-    return c;
-#else
-#error "bit scan reverse not implemented"
 #endif
   }
 

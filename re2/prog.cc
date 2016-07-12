@@ -318,7 +318,7 @@ class ByteMapBuilder {
  public:
   ByteMapBuilder() {
     // This allows the outer loop in Build() to be simple.
-    bitmap_.Set(255);
+    subranges_.Set(255);
   }
 
   // Marks the [lo, hi] subrange.
@@ -329,35 +329,64 @@ class ByteMapBuilder {
     DCHECK_LE(hi, 255);
     DCHECK_LE(lo, hi);
 
-    // We just track the end of each subrange. :)
+    if (lo == 0 && hi == 255)
+      return;
+
+    // We track the end of each subrange. We also track which subranges
+    // are "present" (i.e. were marked) so that the remaining, "absent"
+    // subranges can subsequently be made to share a single byte class.
     lo--;
-    if (0 <= lo)
-      bitmap_.Set(lo);
-    bitmap_.Set(hi);
+    if (0 <= lo && !subranges_.Test(lo)) {
+      subranges_.Set(lo);
+      int next = subranges_.FindNextSetBit(lo+1);
+      if (present_.Test(next))
+        present_.Set(lo);
+    }
+    if (!subranges_.Test(hi))
+      subranges_.Set(hi);
+    // Flag as "present" the subranges above lo up to and including the
+    // subrange ending at hi.
+    int c = lo+1;
+    while (c < 256) {
+      int next = subranges_.FindNextSetBit(c);
+      if (!present_.Test(next))
+        present_.Set(next);
+      if (next == hi)
+        break;
+      c = next+1;
+    }
   }
 
   // Builds the bytemap from the subranges.
-  // Returns the number of subranges.
+  // Returns the number of byte classes.
   int Build(uint8* bytemap) {
-    uint8 b = 0;
+    int present = 0;
+    int absent = -1;
     int c = 0;
     while (c < 256) {
-      // Find the end of this subrange.
-      int next = bitmap_.FindNextSetBit(c);
-      DCHECK_GE(next, 0);
-      DCHECK_LE(next, 255);
-
+      int next = subranges_.FindNextSetBit(c);
+      uint8 b = 0;
+      if (present_.Test(next)) {
+        b = static_cast<uint8>(present);
+        present++;
+      } else {
+        if (absent == -1) {
+          absent = present;
+          present++;
+        }
+        b = static_cast<uint8>(absent);
+      }
       while (c <= next) {
         bytemap[c] = b;
         c++;
       }
-      b++;
     }
-    return b;
+    return present;
   }
 
  private:
-  Bitmap256 bitmap_;
+  Bitmap256 subranges_;
+  Bitmap256 present_;
 
   DISALLOW_COPY_AND_ASSIGN(ByteMapBuilder);
 };
