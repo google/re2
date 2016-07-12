@@ -318,10 +318,10 @@ class ByteMapBuilder {
  public:
   ByteMapBuilder() {
     // This allows the outer loop in Build() to be simple.
-    bitmap.Set(255);
+    bitmap_.Set(255);
   }
 
-  // Marks the [lo, hi] subrange in the bitmap.
+  // Marks the [lo, hi] subrange.
   void Mark(int lo, int hi) {
     DCHECK_GE(lo, 0);
     DCHECK_GE(hi, 0);
@@ -332,8 +332,8 @@ class ByteMapBuilder {
     // We just track the end of each subrange. :)
     lo--;
     if (0 <= lo)
-      bitmap.Set(lo);
-    bitmap.Set(hi);
+      bitmap_.Set(lo);
+    bitmap_.Set(hi);
   }
 
   // Builds the bytemap from the subranges.
@@ -343,7 +343,7 @@ class ByteMapBuilder {
     int c = 0;
     while (c < 256) {
       // Find the end of this subrange.
-      int next = bitmap.FindNextSetBit(c);
+      int next = bitmap_.FindNextSetBit(c);
       DCHECK_GE(next, 0);
       DCHECK_LE(next, 255);
 
@@ -357,7 +357,7 @@ class ByteMapBuilder {
   }
 
  private:
-  Bitmap256 bitmap;
+  Bitmap256 bitmap_;
 
   DISALLOW_COPY_AND_ASSIGN(ByteMapBuilder);
 };
