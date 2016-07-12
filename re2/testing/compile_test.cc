@@ -166,6 +166,16 @@ TEST(TestCompile, Latin1Ranges) {
             "[0a-0a] -> 1\n"
             "[0b-ff] -> 2\n",
             bytemap);
+
+  DumpByteMap("[0-9A-Fa-f]+", Regexp::PerlX|Regexp::Latin1, &bytemap);
+  EXPECT_EQ("[00-2f] -> 0\n"
+            "[30-39] -> 1\n"
+            "[3a-40] -> 2\n"
+            "[41-46] -> 3\n"
+            "[47-60] -> 4\n"
+            "[61-66] -> 5\n"
+            "[67-ff] -> 6\n",
+            bytemap);
 }
 
 TEST(TestCompile, UTF8Ranges) {
