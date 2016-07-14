@@ -46,9 +46,9 @@ class Bitmap256 {
 #if defined(__GNUC__)
     return __builtin_ctzll(n);
 #elif defined(_MSC_VER)
-    int c;
+    unsigned long c;
     _BitScanForward64(&c, n);
-    return c;
+    return static_cast<int>(c);
 #else
 #error "bit scan forward not implemented"
 #endif
