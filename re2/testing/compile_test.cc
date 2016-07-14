@@ -182,6 +182,19 @@ TEST(TestCompile, OtherByteMapTests) {
             "[67-ff] -> 0\n",
             bytemap);
 
+  // Test the byte classes for \b.
+  DumpByteMap("\\b", Regexp::LikePerl|Regexp::Latin1, &bytemap);
+  EXPECT_EQ("[00-2f] -> 0\n"
+            "[30-39] -> 1\n"
+            "[3a-40] -> 2\n"
+            "[41-5a] -> 3\n"
+            "[5b-5e] -> 4\n"
+            "[5f-5f] -> 5\n"
+            "[60-60] -> 6\n"
+            "[61-7a] -> 7\n"
+            "[7b-ff] -> 8\n",
+            bytemap);
+
   // FIXME: The ASCII case-folding optimization creates too many byte classes!
   DumpByteMap("[^_]", Regexp::LikePerl|Regexp::Latin1, &bytemap);
   EXPECT_EQ("[00-40] -> 0\n"
