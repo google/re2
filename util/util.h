@@ -33,6 +33,7 @@
 #include <atomic>
 #include <mutex>        // For std::call_once
 #include <unordered_set>
+#include <initializer_list>
 
 // Use std names.
 using std::set;

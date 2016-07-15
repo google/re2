@@ -259,7 +259,7 @@ class Prog {
   // for testing purposes.  Returns number of states.
   int BuildEntireDFA(MatchKind kind);
 
-  // Compute byte map.
+  // Compute bytemap.
   void ComputeByteMap();
 
   // Computes whether all matches must begin with the same first

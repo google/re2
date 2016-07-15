@@ -314,22 +314,43 @@ uint32 Prog::EmptyFlags(const StringPiece& text, const char* p) {
   return flags;
 }
 
+// ByteMapBuilder implements a coloring algorithm.
+//
+// The first phase is a series of "mark and merge" batches: we mark one or more
+// [lo-hi] ranges, then merge them into our internal state. Batching is not for
+// performance; rather, it means that the ranges are treated indistinguishably.
+//
+// Internally, the ranges are represented using a bitmap that stores the splits
+// and a vector that stores the colors; both of them are indexed by the ranges'
+// last bytes. Thus, in order to merge a [lo-hi] range, we split at lo-1 and at
+// hi (if not already split), then recolor each range in between. The color map
+// (i.e. from the old color to the new color) is maintained for the lifetime of
+// the batch and so underpins this somewhat obscure approach to set operations.
+//
+// The second phase builds the bytemap from our internal state: we recolor each
+// range, then store the new color (which is now the byte class) in each of the
+// corresponding array elements. Finally, we output the number of byte classes.
 class ByteMapBuilder {
  public:
   ByteMapBuilder() {
-    ranges_.Set(255);
+    // Initial state: the [0-255] range has color 0.
+    splits_.Set(255);
+    colors_.resize(256);
+    nextcolor_ = 1;
   }
 
-  // Marks the [lo, hi] range.
   void Mark(int lo, int hi);
-
-  // Builds the bytemap from the ranges.
-  // Returns the number of byte classes.
-  int Build(uint8* bytemap);
+  void Merge();
+  void Build(uint8* bytemap, int* bytemap_range);
 
  private:
-  Bitmap256 ranges_;
-  Bitmap256 present_;
+  int Recolor(int oldcolor);
+
+  Bitmap256 splits_;
+  vector<int> colors_;
+  int nextcolor_;
+  vector<pair<int, int>> colormap_;
+  vector<pair<int, int>> batch_;
 
   DISALLOW_COPY_AND_ASSIGN(ByteMapBuilder);
 };
@@ -341,61 +362,78 @@ void ByteMapBuilder::Mark(int lo, int hi) {
   DCHECK_LE(hi, 255);
   DCHECK_LE(lo, hi);
 
+  // Ignore any [0-255] ranges. They cause us to recolor every range, which
+  // has no effect on the eventual result and is therefore a waste of time.
   if (lo == 0 && hi == 255)
     return;
 
-  // We track the end of each range. We also track which ranges
-  // are "present" (i.e. were marked) so that the remaining, "absent"
-  // ranges can subsequently be made to share a single byte class.
-  lo--;
-  if (0 <= lo && !ranges_.Test(lo)) {
-    ranges_.Set(lo);
-    int next = ranges_.FindNextSetBit(lo+1);
-    if (present_.Test(next))
-      present_.Set(lo);
-  }
-  if (!ranges_.Test(hi))
-    ranges_.Set(hi);
-  // Flag as "present" the ranges above lo up to and including the
-  // range ending at hi.
-  int c = lo+1;
-  while (c < 256) {
-    int next = ranges_.FindNextSetBit(c);
-    if (!present_.Test(next))
-      present_.Set(next);
-    if (next == hi)
-      break;
-    c = next+1;
-  }
+  batch_.emplace_back(lo, hi);
 }
 
-int ByteMapBuilder::Build(uint8* bytemap) {
-  int present = 0;
-  int absent = -1;
+void ByteMapBuilder::Merge() {
+  for (vector<pair<int, int>>::const_iterator it = batch_.begin();
+       it != batch_.end();
+       ++it) {
+    int lo = it->first-1;
+    int hi = it->second;
+
+    if (0 <= lo && !splits_.Test(lo)) {
+      splits_.Set(lo);
+      int next = splits_.FindNextSetBit(lo+1);
+      colors_[lo] = colors_[next];
+    }
+    if (!splits_.Test(hi)) {
+      splits_.Set(hi);
+      int next = splits_.FindNextSetBit(hi+1);
+      colors_[hi] = colors_[next];
+    }
+
+    int c = lo+1;
+    while (c < 256) {
+      int next = splits_.FindNextSetBit(c);
+      colors_[next] = Recolor(colors_[next]);
+      if (next == hi)
+        break;
+      c = next+1;
+    }
+  }
+  colormap_.clear();
+  batch_.clear();
+}
+
+void ByteMapBuilder::Build(uint8* bytemap, int* bytemap_range) {
+  // Reset in order to obtain byte classes numbered from 0.
+  nextcolor_ = 0;
+
   int c = 0;
   while (c < 256) {
-    int next = ranges_.FindNextSetBit(c);
-    uint8 b = 0;
-    if (present_.Test(next)) {
-      b = static_cast<uint8>(present);
-      present++;
-    } else {
-      if (absent == -1) {
-        absent = present;
-        present++;
-      }
-      b = static_cast<uint8>(absent);
-    }
+    int next = splits_.FindNextSetBit(c);
+    uint8 b = static_cast<uint8>(Recolor(colors_[next]));
     while (c <= next) {
       bytemap[c] = b;
       c++;
     }
   }
-  return present;
+
+  *bytemap_range = nextcolor_;
+}
+
+int ByteMapBuilder::Recolor(int oldcolor) {
+  // Yes, this is a linear search. There can be at most 256
+  // colors and there will typically be far fewer than that.
+  vector<pair<int, int>>::const_iterator it = std::find_if(
+      colormap_.begin(), colormap_.end(),
+      [&](const pair<int, int>& kv) -> bool { return kv.first == oldcolor; });
+  if (it != colormap_.end())
+    return it->second;
+  int newcolor = nextcolor_;
+  nextcolor_++;
+  colormap_.emplace_back(oldcolor, newcolor);
+  return newcolor;
 }
 
 void Prog::ComputeByteMap() {
-  // Fill in byte map with byte classes for the program.
+  // Fill in bytemap with byte classes for the program.
   // Ranges of bytes that are treated indistinguishably
   // will be mapped to a single byte class.
   ByteMapBuilder builder;
@@ -412,38 +450,48 @@ void Prog::ComputeByteMap() {
       int hi = ip->hi();
       builder.Mark(lo, hi);
       if (ip->foldcase() && lo <= 'z' && hi >= 'a') {
-        if (lo < 'a')
-          lo = 'a';
-        if (hi > 'z')
-          hi = 'z';
-        if (lo <= hi)
-          builder.Mark(lo + 'A' - 'a', hi + 'A' - 'a');
+        int foldlo = lo;
+        int foldhi = hi;
+        if (foldlo < 'a')
+          foldlo = 'a';
+        if (foldhi > 'z')
+          foldhi = 'z';
+        if (foldlo <= foldhi)
+          builder.Mark(foldlo + 'A' - 'a', foldhi + 'A' - 'a');
       }
+      builder.Merge();
     } else if (ip->opcode() == kInstEmptyWidth) {
       if (ip->empty() & (kEmptyBeginLine|kEmptyEndLine) &&
           !marked_line_boundaries) {
         builder.Mark('\n', '\n');
+        builder.Merge();
         marked_line_boundaries = true;
       }
       if (ip->empty() & (kEmptyWordBoundary|kEmptyNonWordBoundary) &&
           !marked_word_boundaries) {
-        int j;
-        for (int i = 0; i < 256; i = j) {
-          for (j = i + 1; j < 256 &&
-                          Prog::IsWordChar(static_cast<uint8>(i)) ==
-                              Prog::IsWordChar(static_cast<uint8>(j));
-               j++)
-            ;
-          builder.Mark(i, j - 1);
+        // We require two batches here: the first for ranges that are word
+        // characters, the second for ranges that are not word characters.
+        for (bool isword : {true, false}) {
+          int j;
+          for (int i = 0; i < 256; i = j) {
+            for (j = i + 1; j < 256 &&
+                            Prog::IsWordChar(static_cast<uint8>(i)) ==
+                                Prog::IsWordChar(static_cast<uint8>(j));
+                 j++)
+              ;
+            if (Prog::IsWordChar(static_cast<uint8>(i)) == isword)
+              builder.Mark(i, j - 1);
+          }
+          builder.Merge();
         }
         marked_word_boundaries = true;
       }
     }
   }
 
-  bytemap_range_ = builder.Build(bytemap_);
+  builder.Build(bytemap_, &bytemap_range_);
 
-  if (0) {  // For debugging: use trivial byte map.
+  if (0) {  // For debugging: use trivial bytemap.
     for (int i = 0; i < 256; i++)
       bytemap_[i] = static_cast<uint8>(i);
     bytemap_range_ = 256;
