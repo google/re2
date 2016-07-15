@@ -178,7 +178,7 @@ TEST(TestCompile, OtherByteMapTests) {
             "[3a-40] -> 0\n"
             "[41-46] -> 2\n"
             "[47-60] -> 0\n"
-            "[61-66] -> 3\n"
+            "[61-66] -> 2\n"
             "[67-ff] -> 0\n",
             bytemap);
 
@@ -186,22 +186,22 @@ TEST(TestCompile, OtherByteMapTests) {
   DumpByteMap("\\b", Regexp::LikePerl|Regexp::Latin1, &bytemap);
   EXPECT_EQ("[00-2f] -> 0\n"
             "[30-39] -> 1\n"
-            "[3a-40] -> 2\n"
-            "[41-5a] -> 3\n"
-            "[5b-5e] -> 4\n"
-            "[5f-5f] -> 5\n"
-            "[60-60] -> 6\n"
-            "[61-7a] -> 7\n"
-            "[7b-ff] -> 8\n",
+            "[3a-40] -> 0\n"
+            "[41-5a] -> 1\n"
+            "[5b-5e] -> 0\n"
+            "[5f-5f] -> 1\n"
+            "[60-60] -> 0\n"
+            "[61-7a] -> 1\n"
+            "[7b-ff] -> 0\n",
             bytemap);
 
   // FIXME: The ASCII case-folding optimization creates too many byte classes!
   DumpByteMap("[^_]", Regexp::LikePerl|Regexp::Latin1, &bytemap);
   EXPECT_EQ("[00-40] -> 0\n"
             "[41-5a] -> 1\n"
-            "[5b-5e] -> 2\n"
-            "[5f-5f] -> 3\n"
-            "[60-ff] -> 4\n",
+            "[5b-5e] -> 0\n"
+            "[5f-5f] -> 2\n"
+            "[60-ff] -> 3\n",
             bytemap);
 }
 
