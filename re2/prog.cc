@@ -353,7 +353,7 @@ class ByteMapBuilder {
   vector<int> colors_;
   int nextcolor_;
   vector<pair<int, int>> colormap_;
-  vector<pair<int, int>> batch_;
+  vector<pair<int, int>> ranges_;
 
   DISALLOW_COPY_AND_ASSIGN(ByteMapBuilder);
 };
@@ -370,12 +370,12 @@ void ByteMapBuilder::Mark(int lo, int hi) {
   if (lo == 0 && hi == 255)
     return;
 
-  batch_.emplace_back(lo, hi);
+  ranges_.emplace_back(lo, hi);
 }
 
 void ByteMapBuilder::Merge() {
-  for (vector<pair<int, int>>::const_iterator it = batch_.begin();
-       it != batch_.end();
+  for (vector<pair<int, int>>::const_iterator it = ranges_.begin();
+       it != ranges_.end();
        ++it) {
     int lo = it->first-1;
     int hi = it->second;
@@ -401,7 +401,7 @@ void ByteMapBuilder::Merge() {
     }
   }
   colormap_.clear();
-  batch_.clear();
+  ranges_.clear();
 }
 
 void ByteMapBuilder::Build(uint8* bytemap, int* bytemap_range) {
@@ -466,6 +466,12 @@ void Prog::ComputeByteMap() {
         if (foldlo <= foldhi)
           builder.Mark(foldlo + 'A' - 'a', foldhi + 'A' - 'a');
       }
+      // If this Inst is not the last Inst in its list AND the next Inst is
+      // also a ByteRange AND the Insts have the same out, defer the merge.
+      if (!ip->last() &&
+          inst(id+1)->opcode() == kInstByteRange &&
+          ip->out() == inst(id+1)->out())
+        continue;
       builder.Merge();
     } else if (ip->opcode() == kInstEmptyWidth) {
       if (ip->empty() & (kEmptyBeginLine|kEmptyEndLine) &&
