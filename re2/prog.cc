@@ -333,10 +333,13 @@ uint32 Prog::EmptyFlags(const StringPiece& text, const char* p) {
 class ByteMapBuilder {
  public:
   ByteMapBuilder() {
-    // Initial state: the [0-255] range has color 0.
+    // Initial state: the [0-255] range has color 256.
+    // This will avoid problems during the second phase,
+    // in which we assign byte classes numbered from 0.
     splits_.Set(255);
     colors_.resize(256);
-    nextcolor_ = 1;
+    colors_[255] = 256;
+    nextcolor_ = 257;
   }
 
   void Mark(int lo, int hi);
@@ -402,7 +405,7 @@ void ByteMapBuilder::Merge() {
 }
 
 void ByteMapBuilder::Build(uint8* bytemap, int* bytemap_range) {
-  // Reset in order to obtain byte classes numbered from 0.
+  // Assign byte classes numbered from 0.
   nextcolor_ = 0;
 
   int c = 0;
@@ -421,9 +424,13 @@ void ByteMapBuilder::Build(uint8* bytemap, int* bytemap_range) {
 int ByteMapBuilder::Recolor(int oldcolor) {
   // Yes, this is a linear search. There can be at most 256
   // colors and there will typically be far fewer than that.
-  vector<pair<int, int>>::const_iterator it = std::find_if(
-      colormap_.begin(), colormap_.end(),
-      [&](const pair<int, int>& kv) -> bool { return kv.first == oldcolor; });
+  // Also, we need to consider keys *and* values in order to
+  // avoid recoloring a given range more than once per batch.
+  vector<pair<int, int>>::const_iterator it =
+      std::find_if(colormap_.begin(), colormap_.end(),
+                   [&](const pair<int, int>& kv) -> bool {
+                     return kv.first == oldcolor || kv.second == oldcolor;
+                   });
   if (it != colormap_.end())
     return it->second;
   int newcolor = nextcolor_;
