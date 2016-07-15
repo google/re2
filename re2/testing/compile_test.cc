@@ -164,7 +164,7 @@ TEST(TestCompile, Latin1Ranges) {
   DumpByteMap(".", Regexp::PerlX|Regexp::Latin1, &bytemap);
   EXPECT_EQ("[00-09] -> 0\n"
             "[0a-0a] -> 1\n"
-            "[0b-ff] -> 2\n",
+            "[0b-ff] -> 0\n",
             bytemap);
 }
 
@@ -176,9 +176,9 @@ TEST(TestCompile, OtherByteMapTests) {
   EXPECT_EQ("[00-2f] -> 0\n"
             "[30-39] -> 1\n"
             "[3a-40] -> 0\n"
-            "[41-46] -> 2\n"
+            "[41-46] -> 1\n"
             "[47-60] -> 0\n"
-            "[61-66] -> 2\n"
+            "[61-66] -> 1\n"
             "[67-ff] -> 0\n",
             bytemap);
 
@@ -195,13 +195,11 @@ TEST(TestCompile, OtherByteMapTests) {
             "[7b-ff] -> 0\n",
             bytemap);
 
-  // FIXME: The ASCII case-folding optimization creates too many byte classes!
+  // Bug in the ASCII case-folding optimization created too many byte classes.
   DumpByteMap("[^_]", Regexp::LikePerl|Regexp::Latin1, &bytemap);
-  EXPECT_EQ("[00-40] -> 0\n"
-            "[41-5a] -> 1\n"
-            "[5b-5e] -> 0\n"
-            "[5f-5f] -> 2\n"
-            "[60-ff] -> 3\n",
+  EXPECT_EQ("[00-5e] -> 0\n"
+            "[5f-5f] -> 1\n"
+            "[60-ff] -> 0\n",
             bytemap);
 }
 
@@ -215,17 +213,17 @@ TEST(TestCompile, UTF8Ranges) {
   DumpByteMap(".", Regexp::PerlX, &bytemap);
   EXPECT_EQ("[00-09] -> 0\n"
             "[0a-0a] -> 1\n"
-            "[0b-7f] -> 2\n"
-            "[80-8f] -> 3\n"
-            "[90-9f] -> 4\n"
-            "[a0-bf] -> 5\n"
+            "[0b-7f] -> 0\n"
+            "[80-8f] -> 2\n"
+            "[90-9f] -> 3\n"
+            "[a0-bf] -> 4\n"
             "[c0-c1] -> 1\n"
-            "[c2-df] -> 6\n"
-            "[e0-e0] -> 7\n"
-            "[e1-ef] -> 8\n"
-            "[f0-f0] -> 9\n"
-            "[f1-f3] -> 10\n"
-            "[f4-f4] -> 11\n"
+            "[c2-df] -> 5\n"
+            "[e0-e0] -> 6\n"
+            "[e1-ef] -> 7\n"
+            "[f0-f0] -> 8\n"
+            "[f1-f3] -> 9\n"
+            "[f4-f4] -> 10\n"
             "[f5-ff] -> 1\n",
             bytemap);
 }
