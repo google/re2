@@ -114,8 +114,19 @@ class DFA {
     kFlagNeedShift = 16,        // needed kEmpty bits are or'ed in shifted left
   };
 
-#ifndef STL_MSVC
-  // STL function structures for use with unordered_set.
+  struct StateHash {
+    size_t operator()(const State* a) const {
+      if (a == NULL)
+        return 0;
+      const char* s = reinterpret_cast<const char*>(a->inst_);
+      int len = a->ninst_ * sizeof a->inst_[0];
+      if (sizeof(size_t) == sizeof(uint32))
+        return static_cast<size_t>(Hash32StringWithSeed(s, len, a->flag_));
+      else
+        return static_cast<size_t>(Hash64StringWithSeed(s, len, a->flag_));
+    }
+  };
+
   struct StateEqual {
     bool operator()(const State* a, const State* b) const {
       if (a == b)
@@ -132,47 +143,8 @@ class DFA {
       return true;  // they're equal
     }
   };
-#endif  // STL_MSVC
-  struct StateHash {
-    size_t operator()(const State* a) const {
-      if (a == NULL)
-        return 0;
-      const char* s = reinterpret_cast<const char*>(a->inst_);
-      int len = a->ninst_ * sizeof a->inst_[0];
-      if (sizeof(size_t) == sizeof(uint32))
-        return Hash32StringWithSeed(s, len, a->flag_);
-      else
-        return static_cast<size_t>(Hash64StringWithSeed(s, len, a->flag_));
-    }
-#ifdef STL_MSVC
-    // Less than operator.
-    bool operator()(const State* a, const State* b) const {
-      if (a == b)
-        return false;
-      if (a == NULL || b == NULL)
-        return a == NULL;
-      if (a->ninst_ != b->ninst_)
-        return a->ninst_ < b->ninst_;
-      if (a->flag_ != b->flag_)
-        return a->flag_ < b->flag_;
-      for (int i = 0; i < a->ninst_; ++i)
-        if (a->inst_[i] != b->inst_[i])
-          return a->inst_[i] < b->inst_[i];
-      return false;  // they're equal
-    }
-    // The two public members are required by msvc. 4 and 8 are default values.
-    // Reference: http://msdn.microsoft.com/en-us/library/1s1byw77.aspx
-    static const size_t bucket_size = 4;
-    static const size_t min_buckets = 8;
-#endif  // STL_MSVC
-  };
 
-#ifdef STL_MSVC
-  typedef unordered_set<State*, StateHash> StateSet;
-#else  // !STL_MSVC
   typedef unordered_set<State*, StateHash, StateEqual> StateSet;
-#endif  // STL_MSVC
-
 
  private:
   // Special "firstbyte" values for a state.  (Values >= 0 denote actual bytes.)
@@ -775,16 +747,14 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint flag) {
 
 // Clear the cache.  Must hold cache_mutex_.w or be in destructor.
 void DFA::ClearCache() {
-  // In case state_cache_ doesn't support deleting entries
-  // during iteration, copy into a vector and then delete.
-  vector<State*> v;
-  v.reserve(state_cache_.size());
-  for (StateSet::iterator it = state_cache_.begin();
-       it != state_cache_.end(); ++it)
-    v.push_back(*it);
+  StateSet::iterator begin = state_cache_.begin();
+  StateSet::iterator end = state_cache_.end();
+  while (begin != end) {
+    StateSet::iterator tmp = begin;
+    ++begin;
+    delete *tmp;
+  }
   state_cache_.clear();
-  for (size_t i = 0; i < v.size(); i++)
-    delete[] reinterpret_cast<const char*>(v[i]);
 }
 
 // Copies insts in state s to the work queue q.
