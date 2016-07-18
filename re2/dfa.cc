@@ -752,7 +752,8 @@ void DFA::ClearCache() {
   while (begin != end) {
     StateSet::iterator tmp = begin;
     ++begin;
-    delete *tmp;
+    // Deallocate the blob of memory that we allocated in DFA::CachedState().
+    delete[] reinterpret_cast<const char*>(*tmp);
   }
   state_cache_.clear();
 }
