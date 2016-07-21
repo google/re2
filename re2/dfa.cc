@@ -1692,7 +1692,7 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
     State* s = RunStateOnByte(info->start, i);
     if (s == NULL) {
       // Synchronize with "quick check" above.
-      info->firstbyte.store(firstbyte, std::memory_order_release);
+      info->firstbyte.store(kFbUnknown, std::memory_order_release);
       return false;
     }
     if (s == info->start)
