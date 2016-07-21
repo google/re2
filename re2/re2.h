@@ -789,7 +789,7 @@ class RE2::Arg {
 
 
   MAKE_PARSER(char,               parse_char);
-  MAKE_PARSER(signed char,        parse_char);
+  MAKE_PARSER(signed char,        parse_schar);
   MAKE_PARSER(unsigned char,      parse_uchar);
   MAKE_PARSER(short,              parse_short);
   MAKE_PARSER(unsigned short,     parse_ushort);
@@ -823,6 +823,7 @@ class RE2::Arg {
 
   static bool parse_null          (const char* str, int n, void* dest);
   static bool parse_char          (const char* str, int n, void* dest);
+  static bool parse_schar         (const char* str, int n, void* dest);
   static bool parse_uchar         (const char* str, int n, void* dest);
   static bool parse_float         (const char* str, int n, void* dest);
   static bool parse_double        (const char* str, int n, void* dest);

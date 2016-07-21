@@ -962,6 +962,13 @@ bool RE2::Arg::parse_char(const char* str, int n, void* dest) {
   return true;
 }
 
+bool RE2::Arg::parse_schar(const char* str, int n, void* dest) {
+  if (n != 1) return false;
+  if (dest == NULL) return true;
+  *(reinterpret_cast<signed char*>(dest)) = str[0];
+  return true;
+}
+
 bool RE2::Arg::parse_uchar(const char* str, int n, void* dest) {
   if (n != 1) return false;
   if (dest == NULL) return true;
