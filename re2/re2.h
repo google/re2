@@ -882,8 +882,58 @@ MAKE_INTEGER_PARSER(unsigned long long, ulonglong)
 
 #undef MAKE_INTEGER_PARSER
 
+
+#ifndef SWIG
+// Helper for writing global or static RE2s safely.
+// Write
+//     static LazyRE2 re = {".*"};
+// and then use *re instead of writing
+//     static RE2 re(".*");
+// The former is more careful about multithreaded
+// situations than the latter.
+//
+// N.B. This class never deletes the RE2 object that
+// it constructs: that's a feature, so that it can be used
+// for global and function static variables.
+class LazyRE2 {
+ private:
+  struct NoArg {};
+
+ public:
+  typedef RE2 element_type;  // support std::pointer_traits
+
+  // Constructor omitted to preserve braced initialization in C++98.
+
+  // Pretend to be a pointer to Type (never NULL due to on-demand creation):
+  RE2& operator*() const { return *get(); }
+  RE2* operator->() const { return get(); }
+
+  // Named accessor/initializer:
+  RE2* get() const {
+    std::call_once(once_, [this]() { LazyRE2::Init(this); });
+    return ptr_;
+  }
+
+  // All data fields must be public to support {"foo"} initialization.
+  const char* pattern_;
+  RE2::CannedOptions options_;
+  NoArg barrier_against_excess_initializers_;
+
+  mutable RE2* ptr_;
+  mutable std::once_flag once_;
+
+ private:
+  static void Init(const LazyRE2* lazy_re2) {
+    lazy_re2->ptr_ = new RE2(lazy_re2->pattern_, lazy_re2->options_);
+  }
+
+  void operator=(const LazyRE2&);  // disallowed
+};
+#endif  // SWIG
+
 }  // namespace re2
 
 using re2::RE2;
+using re2::LazyRE2;
 
 #endif /* RE2_RE2_H */

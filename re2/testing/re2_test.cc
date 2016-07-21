@@ -1411,6 +1411,18 @@ TEST(RE2, UnicodeClasses) {
   EXPECT_EQ("鋒", c);
 }
 
+TEST(RE2, LazyRE2) {
+  // Test with and without options.
+  static LazyRE2 a = {"a"};
+  static LazyRE2 b = {"b", RE2::Latin1};
+
+  EXPECT_EQ("a", a->pattern());
+  EXPECT_EQ(RE2::Options::EncodingUTF8, a->options().encoding());
+
+  EXPECT_EQ("b", b->pattern());
+  EXPECT_EQ(RE2::Options::EncodingLatin1, b->options().encoding());
+}
+
 // Bug reported by saito. 2009/02/17
 TEST(RE2, NullVsEmptyString) {
   RE2 re(".*");
