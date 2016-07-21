@@ -288,7 +288,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, int flag,
     case kInstByteRange:
       if (!ip->Matches(c))
         goto Next;
-      // Fallthrough intended.
+      FALLTHROUGH_INTENDED;
 
     case kInstMatch:
       // Save state; will pick up at next byte.

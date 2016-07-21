@@ -617,7 +617,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
             fprintf(stderr, " -> FullMatchState\n");
           return FullMatchState;
         }
-        // Fall through.
+        FALLTHROUGH_INTENDED;
       default:
         // Record iff id is the head of its list, which must
         // be the case if id-1 is the last of *its* list. :)
