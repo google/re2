@@ -106,27 +106,27 @@ const int kNumStrings = arraysize(kSuccessTable);
   }                                                                      \
 }
 
-TEST(REArgTest, Int16Test) {
+TEST(RE2ArgTest, Int16Test) {
   PARSE_FOR_TYPE(int16, 0);
 }
 
-TEST(REArgTest, Uint16Test) {
+TEST(RE2ArgTest, Uint16Test) {
   PARSE_FOR_TYPE(uint16, 1);
 }
 
-TEST(REArgTest, IntTest) {
+TEST(RE2ArgTest, IntTest) {
   PARSE_FOR_TYPE(int, 2);
 }
 
-TEST(REArgTest, UInt32Test) {
+TEST(RE2ArgTest, Uint32Test) {
   PARSE_FOR_TYPE(uint32, 3);
 }
 
-TEST(REArgTest, Iint64Test) {
+TEST(RE2ArgTest, Int64Test) {
   PARSE_FOR_TYPE(int64, 4);
 }
 
-TEST(REArgTest, Uint64Test) {
+TEST(RE2ArgTest, Uint64Test) {
   PARSE_FOR_TYPE(uint64, 5);
 }
 
