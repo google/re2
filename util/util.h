@@ -104,6 +104,10 @@ template<bool> struct CompileAssert {};
 
 #define arraysize(array) (int)(sizeof(array)/sizeof((array)[0]))
 
+#ifndef FALLTHROUGH_INTENDED
+#define FALLTHROUGH_INTENDED do { } while (0)
+#endif
+
 #ifndef NO_THREAD_SAFETY_ANALYSIS
 #define NO_THREAD_SAFETY_ANALYSIS
 #endif

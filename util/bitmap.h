@@ -73,15 +73,15 @@ int Bitmap256::FindNextSetBit(int c) const {
     case 1:
       if (words_[1] != 0)
         return (1 * 64) + FindLSBSet(words_[1]);
-      // Fall through.
+      FALLTHROUGH_INTENDED;
     case 2:
       if (words_[2] != 0)
         return (2 * 64) + FindLSBSet(words_[2]);
-      // Fall through.
+      FALLTHROUGH_INTENDED;
     case 3:
       if (words_[3] != 0)
         return (3 * 64) + FindLSBSet(words_[3]);
-      // Fall through.
+      FALLTHROUGH_INTENDED;
     default:
       return -1;
   }

@@ -284,7 +284,7 @@ Rune ApplyFold(const CaseFold *f, Rune r) {
     case EvenOddSkip:  // even <-> odd but only applies to every other
       if ((r - f->lo) % 2)
         return r;
-      // fall through
+      FALLTHROUGH_INTENDED;
     case EvenOdd:  // even <-> odd
       if (r%2 == 0)
         return r + 1;
@@ -293,7 +293,7 @@ Rune ApplyFold(const CaseFold *f, Rune r) {
     case OddEvenSkip:  // odd <-> even but only applies to every other
       if ((r - f->lo) % 2)
         return r;
-      // fall through
+      FALLTHROUGH_INTENDED;
     case OddEven:  // odd <-> even
       if (r%2 == 1)
         return r + 1;
@@ -1354,7 +1354,7 @@ static bool ParseEscape(StringPiece* s, Rune* rp,
       // Single non-zero octal digit is a backreference; not supported.
       if (s->size() == 0 || (*s)[0] < '0' || (*s)[0] > '7')
         goto BadEscape;
-      // fall through
+      FALLTHROUGH_INTENDED;
     case '0':
       // consume up to three octal digits; already have one.
       code = c - '0';
