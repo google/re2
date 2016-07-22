@@ -401,18 +401,20 @@ bool Prog::IsOnePass() {
   int* nodebyid = new int[size];  // indexed by ip
   memset(nodebyid, 0xFF, size*sizeof nodebyid[0]);
 
-  uint8* nodes = new uint8[maxnodes*statesize];
-  uint8* nodep = nodes;
+  // Originally, nodes was a uint8[maxnodes*statesize], but that was
+  // unnecessarily optimistic: why allocate a large amount of memory
+  // upfront for a large program when it is unlikely to be one-pass?
+  vector<uint8> nodes;
 
   Instq tovisit(size), workq(size);
   AddQ(&tovisit, start());
   nodebyid[start()] = 0;
-  nodep += statesize;
   int nalloc = 1;
+  nodes.insert(nodes.end(), statesize, 0);
   for (Instq::iterator it = tovisit.begin(); it != tovisit.end(); ++it) {
     int id = *it;
     int nodeindex = nodebyid[id];
-    OneState* node = IndexToNode(nodes, statesize, nodeindex);
+    OneState* node = IndexToNode(nodes.data(), statesize, nodeindex);
 
     // Flood graph using manual stack, filling in actions as found.
     // Default is none.
@@ -452,14 +454,16 @@ bool Prog::IsOnePass() {
             if (nalloc >= maxnodes) {
               if (Debug)
                 LOG(ERROR) << StringPrintf(
-                    "Not OnePass: hit node limit %d > %d", nalloc, maxnodes);
+                    "Not OnePass: hit node limit %d >= %d", nalloc, maxnodes);
               goto fail;
             }
             nextindex = nalloc;
-            nodep += statesize;
-            nodebyid[ip->out()] = nextindex;
-            nalloc++;
             AddQ(&tovisit, ip->out());
+            nodebyid[ip->out()] = nalloc;
+            nalloc++;
+            nodes.insert(nodes.end(), statesize, 0);
+            // Update node because it might have been invalidated.
+            node = IndexToNode(nodes.data(), statesize, nodeindex);
           }
           for (int c = ip->lo(); c <= ip->hi(); c++) {
             int b = bytemap_[c];
@@ -587,7 +591,7 @@ bool Prog::IsOnePass() {
       int nodeindex = nodebyid[id];
       if (nodeindex == -1)
         continue;
-      OneState* node = IndexToNode(nodes, statesize, nodeindex);
+      OneState* node = IndexToNode(nodes.data(), statesize, nodeindex);
       StringAppendF(&dump, "node %d id=%d: matchcond=%#x\n",
                     nodeindex, id, node->matchcond);
       for (int i = 0; i < bytemap_range_; i++) {
@@ -602,16 +606,11 @@ bool Prog::IsOnePass() {
     LOG(ERROR) << "nodes:\n" << dump;
   }
 
-  // Overallocated earlier; cut down to actual size.
-  nodep = new uint8[nalloc*statesize];
-  memmove(nodep, nodes, nalloc*statesize);
-  delete[] nodes;
-  nodes = nodep;
-
-  onepass_start_ = IndexToNode(nodes, statesize, nodebyid[start()]);
-  onepass_nodes_ = nodes;
-  onepass_statesize_ = statesize;
   dfa_mem_ -= nalloc*statesize;
+  onepass_nodes_ = new uint8[nalloc*statesize];
+  memmove(onepass_nodes_, nodes.data(), nalloc*statesize);
+  onepass_statesize_ = statesize;
+  onepass_start_ = IndexToNode(onepass_nodes_, onepass_statesize_, 0);
 
   delete[] stack;
   delete[] nodebyid;
@@ -620,7 +619,6 @@ bool Prog::IsOnePass() {
 fail:
   delete[] stack;
   delete[] nodebyid;
-  delete[] nodes;
   return false;
 }
 
