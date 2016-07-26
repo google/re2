@@ -191,13 +191,10 @@ static void ApplyCaptures(uint32 cond, const char* p,
       cap[i] = p;
 }
 
-// Compute a node pointer.
-// Basically (OneState*)(nodes + statesize*nodeindex)
-// but the version with the C++ casts overflows 80 characters (and is ugly).
-static inline OneState* IndexToNode(volatile uint8* nodes, int statesize,
+// Computes the OneState* for the given nodeindex.
+static inline OneState* IndexToNode(uint8* nodes, int statesize,
                                     int nodeindex) {
-  return reinterpret_cast<OneState*>(
-    const_cast<uint8*>(nodes + statesize*nodeindex));
+  return reinterpret_cast<OneState*>(nodes + statesize*nodeindex);
 }
 
 bool Prog::SearchOnePass(const StringPiece& text,
@@ -233,13 +230,10 @@ bool Prog::SearchOnePass(const StringPiece& text,
   if (anchor_end())
     kind = kFullMatch;
 
-  // State and act are marked volatile to
-  // keep the compiler from re-ordering the
-  // memory accesses walking over the NFA.
-  // This is worth about 5%.
-  volatile OneState* state = onepass_start_;
-  volatile uint8* nodes = onepass_nodes_;
-  volatile uint32 statesize = onepass_statesize_;
+  uint8* nodes = onepass_nodes_;
+  int statesize = sizeof(OneState) + bytemap_range()*sizeof(uint32);
+  // start() is always mapped to the zeroth OneState.
+  OneState* state = IndexToNode(nodes, statesize, 0);
   uint8* bytemap = bytemap_;
   const char* bp = text.begin();
   const char* ep = text.end();
@@ -374,7 +368,7 @@ struct InstCond {
 // Constructs and saves corresponding one-pass NFA on success.
 bool Prog::IsOnePass() {
   if (did_onepass_)
-    return onepass_start_ != NULL;
+    return onepass_nodes_ != NULL;
   did_onepass_ = true;
 
   if (start() == 0)  // no match
@@ -385,7 +379,7 @@ bool Prog::IsOnePass() {
   // Limit max node count to 65000 as a conservative estimate to
   // avoid overflowing 16-bit node index in encoding.
   int maxnodes = 2 + inst_count(kInstByteRange);
-  int statesize = sizeof(OneState) + bytemap_range_*sizeof(uint32);
+  int statesize = sizeof(OneState) + bytemap_range()*sizeof(uint32);
   if (maxnodes >= 65000 || dfa_mem_ / 4 / statesize < maxnodes)
     return false;
 
@@ -609,8 +603,6 @@ bool Prog::IsOnePass() {
   dfa_mem_ -= nalloc*statesize;
   onepass_nodes_ = new uint8[nalloc*statesize];
   memmove(onepass_nodes_, nodes.data(), nalloc*statesize);
-  onepass_statesize_ = statesize;
-  onepass_start_ = IndexToNode(onepass_nodes_, onepass_statesize_, 0);
 
   delete[] stack;
   delete[] nodebyid;

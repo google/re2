@@ -353,22 +353,19 @@ class Prog {
   int bytemap_range_;       // bytemap_[x] < bytemap_range_
   int first_byte_;          // required first byte for match, or -1 if none
   int flags_;               // regexp parse flags
-  int onepass_statesize_;   // byte size of each OneState* node
 
   int list_count_;            // count of lists (see above)
   int inst_count_[kNumInst];  // count of instructions by opcode
 
   Inst* inst_;              // pointer to instruction array
+  uint8* onepass_nodes_;    // data for OnePass nodes
 
   Mutex dfa_mutex_;    // Protects dfa_first_, dfa_longest_
   std::atomic<DFA*> dfa_first_;     // DFA cached for kFirstMatch
   std::atomic<DFA*> dfa_longest_;   // DFA cached for kLongestMatch and kFullMatch
   int64 dfa_mem_;      // Maximum memory for DFAs.
 
-  uint8 bytemap_[256];       // map from input bytes to byte classes
-
-  uint8* onepass_nodes_;     // data for OnePass nodes
-  OneState* onepass_start_;  // start node for OnePass program
+  uint8 bytemap_[256];      // map from input bytes to byte classes
 
   std::once_flag first_byte_once_;
 
