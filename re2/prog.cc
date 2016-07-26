@@ -102,13 +102,12 @@ Prog::Prog()
     bytemap_range_(0),
     first_byte_(-1),
     flags_(0),
-    onepass_statesize_(0),
+    list_count_(0),
     inst_(NULL),
+    onepass_nodes_(NULL),
     dfa_first_(NULL),
     dfa_longest_(NULL),
-    dfa_mem_(0),
-    onepass_nodes_(NULL),
-    onepass_start_(NULL) {
+    dfa_mem_(0) {
 }
 
 Prog::~Prog() {
