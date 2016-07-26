@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef RE2_REGEXP_H_
+#define RE2_REGEXP_H_
+
 // --- SPONSORED LINK --------------------------------------------------
 // If you want to use this library for regular expression matching,
 // you should use re2/re2.h, which provides a class RE2 that
@@ -82,9 +85,6 @@
 // Unlike other regular expression libraries, Regexp makes its parsed
 // form accessible to clients, so that client code can analyze the
 // parsed regular expressions.
-
-#ifndef RE2_REGEXP_H__
-#define RE2_REGEXP_H__
 
 #include "util/util.h"
 #include "re2/stringpiece.h"
@@ -630,4 +630,4 @@ inline Regexp::ParseFlags operator~(Regexp::ParseFlags a)
 
 }  // namespace re2
 
-#endif  // RE2_REGEXP_H__
+#endif  // RE2_REGEXP_H_

@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Modified from Google perftools's tcmalloc_unittest.cc.
+#ifndef UTIL_RANDOM_H_
+#define UTIL_RANDOM_H_
 
-#ifndef RE2_UTIL_RANDOM_H__
-#define RE2_UTIL_RANDOM_H__
+// Modified from Google perftools's tcmalloc_unittest.cc.
 
 #include "util/util.h"
 
@@ -26,4 +26,4 @@ class ACMRandom {
 
 }  // namespace re2
 
-#endif  // RE2_UTIL_RANDOM_H__
+#endif  // UTIL_RANDOM_H_

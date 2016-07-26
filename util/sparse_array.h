@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef UTIL_SPARSE_ARRAY_H_
+#define UTIL_SPARSE_ARRAY_H_
+
 // DESCRIPTION
 // 
 // SparseArray<T>(m) is a map from integers in [0, m) to T values.
@@ -88,9 +91,6 @@
 // array through a call to erase(), erase_existing() or resize(). They
 // immediately become inaccessible, but they are only guaranteed to be
 // destroyed when the SparseArray destructor is called.
-
-#ifndef RE2_UTIL_SPARSE_ARRAY_H__
-#define RE2_UTIL_SPARSE_ARRAY_H__
 
 #include "util/util.h"
 
@@ -462,4 +462,4 @@ template<typename Value> bool SparseArray<Value>::less(const IndexValue& a,
 
 }  // namespace re2
 
-#endif  // RE2_UTIL_SPARSE_ARRAY_H__
+#endif  // UTIL_SPARSE_ARRAY_H_

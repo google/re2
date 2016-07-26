@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef UTIL_SPARSE_SET_H_
+#define UTIL_SPARSE_SET_H_
+
 // DESCRIPTION
 // 
 // SparseSet<T>(m) is a set of integers in [0, m).
@@ -43,9 +46,6 @@
 // IMPLEMENTATION
 //
 // See sparse_array.h for implementation details
-
-#ifndef RE2_UTIL_SPARSE_SET_H__
-#define RE2_UTIL_SPARSE_SET_H__
 
 #include "util/util.h"
 
@@ -182,4 +182,4 @@ class SparseSet {
 
 }  // namespace re2
 
-#endif  // RE2_UTIL_SPARSE_SET_H__
+#endif  // UTIL_SPARSE_SET_H_

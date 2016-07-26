@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef RE2_TESTING_TESTER_H_
+#define RE2_TESTING_TESTER_H_
+
 // Comparative tester for regular expression matching.
 // Checks all implementations against each other.
-
-#ifndef RE2_TESTING_TESTER_H__
-#define RE2_TESTING_TESTER_H__
 
 #include "re2/stringpiece.h"
 #include "re2/prog.h"
@@ -118,4 +118,4 @@ bool TestRegexpOnText(const StringPiece& regexp, const StringPiece& text);
 
 }  // namespace re2
 
-#endif  // RE2_TESTING_TESTER_H__
+#endif  // RE2_TESTING_TESTER_H_

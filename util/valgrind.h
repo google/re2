@@ -55,6 +55,8 @@
    ---------------------------------------------------------------- 
 */
 
+#ifndef UTIL_VALGRIND_H_
+#define UTIL_VALGRIND_H_
 
 /* This file is for inclusion into client (your!) code.
 
@@ -69,9 +71,6 @@
    millions of times per second.  Nevertheless, if that is still a
    problem, you can compile with the NVALGRIND symbol defined (gcc
    -DNVALGRIND) so that client requests are not even compiled in.  */
-
-#ifndef __VALGRIND_H
-#define __VALGRIND_H
 
 #include <stdarg.h>
 
@@ -4514,4 +4513,4 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
 #undef PLAT_ppc32_aix5
 #undef PLAT_ppc64_aix5
 
-#endif   /* __VALGRIND_H */
+#endif  // UTIL_VALGRIND_H_

@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef RE2_TESTING_STRING_GENERATOR_H_
+#define RE2_TESTING_STRING_GENERATOR_H_
+
 // String generator: generates all possible strings of up to
 // maxlen letters using the set of letters in alpha.
 // Fetch strings using a Java-like Next()/HasNext() interface.
-
-#ifndef RE2_TESTING_STRING_GENERATOR_H__
-#define RE2_TESTING_STRING_GENERATOR_H__
 
 #include <string>
 #include <vector>
@@ -55,4 +55,4 @@ class StringGenerator {
 
 }  // namespace re2
 
-#endif  // RE2_TESTING_STRING_GENERATOR_H__
+#endif  // RE2_TESTING_STRING_GENERATOR_H_

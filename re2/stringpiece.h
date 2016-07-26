@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef RE2_STRINGPIECE_H_
+#define RE2_STRINGPIECE_H_
+
 // A string-like object that points to a sized piece of memory.
 //
 // Functions or methods may use const StringPiece& parameters to accept either
@@ -15,9 +18,6 @@
 //
 //
 // Arghh!  I wish C++ literals were "string".
-
-#ifndef STRINGS_STRINGPIECE_H__
-#define STRINGS_STRINGPIECE_H__
 
 #include <string.h>
 #include <algorithm>
@@ -182,4 +182,4 @@ inline bool operator>=(const StringPiece& x, const StringPiece& y) {
 // allow StringPiece to be logged
 extern std::ostream& operator<<(std::ostream& o, const re2::StringPiece& piece);
 
-#endif  // STRINGS_STRINGPIECE_H__
+#endif  // RE2_STRINGPIECE_H_

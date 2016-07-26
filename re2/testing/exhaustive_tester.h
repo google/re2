@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef RE2_TESTING_EXHAUSTIVE_TESTER_H__
-#define RE2_TESTING_EXHAUSTIVE_TESTER_H__
+#ifndef RE2_TESTING_EXHAUSTIVE_TESTER_H_
+#define RE2_TESTING_EXHAUSTIVE_TESTER_H_
 
 #include <string>
 #include <vector>
@@ -92,4 +92,4 @@ void EgrepTest(int maxatoms, int maxops, const string& alphabet,
 
 }  // namespace re2
 
-#endif  // RE2_TESTING_EXHAUSTIVE_TESTER_H__
+#endif  // RE2_TESTING_EXHAUSTIVE_TESTER_H_

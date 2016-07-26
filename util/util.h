@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef RE2_UTIL_UTIL_H__
-#define RE2_UTIL_UTIL_H__
+#ifndef UTIL_UTIL_H_
+#define UTIL_UTIL_H_
 
 // C
 #include <stdio.h>
@@ -145,4 +145,4 @@ bool RunningOnValgrind();
 #include "util/mutex.h"
 #include "util/utf.h"
 
-#endif // RE2_UTIL_UTIL_H__
+#endif  // UTIL_UTIL_H_

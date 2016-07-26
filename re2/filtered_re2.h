@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef RE2_FILTERED_RE2_H_
+#define RE2_FILTERED_RE2_H_
+
 // The class FilteredRE2 is used as a wrapper to multiple RE2 regexps.
 // It provides a prefilter mechanism that helps in cutting down the
 // number of regexps that need to be actually searched.
@@ -17,9 +20,6 @@
 // search text. Then call FirstMatch or AllMatches with a vector of
 // indices of strings that were found in the text to get the actual
 // regexp matches.
-
-#ifndef RE2_FILTERED_RE2_H_
-#define RE2_FILTERED_RE2_H_
 
 #include <vector>
 #include "re2/re2.h"
