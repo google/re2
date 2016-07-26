@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef UTIL_PCRE_H_
+#define UTIL_PCRE_H_
+
 // This is a variant of PCRE's pcrecpp.h, originally written at Google.
 // The main changes are the addition of the HitLimit method and
 // compilation as PCRE in namespace re2.
@@ -664,3 +667,5 @@ MAKE_INTEGER_PARSER(unsigned long long, ulonglong);
 #undef MAKE_INTEGER_PARSER
 
 }  // namespace re2
+
+#endif  // UTIL_PCRE_H_

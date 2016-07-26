@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef RE2_WALKER_INL_H_
+#define RE2_WALKER_INL_H_
+
 // Helper class for traversing Regexps without recursion.
 // Clients should declare their own subclasses that override
 // the PreVisit and PostVisit methods, which are called before
@@ -9,9 +12,6 @@
 
 // Not quite the Visitor pattern, because (among other things)
 // the Visitor pattern is recursive.
-
-#ifndef RE2_WALKER_INL_H__
-#define RE2_WALKER_INL_H__
 
 #include "re2/regexp.h"
 
@@ -241,4 +241,4 @@ template<typename T> T Regexp::Walker<T>::WalkExponential(Regexp* re, T top_arg,
 
 }  // namespace re2
 
-#endif  // RE2_WALKER_INL_H__
+#endif  // RE2_WALKER_INL_H_

@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Simplified version of Google's logging.
+#ifndef UTIL_LOGGING_H_
+#define UTIL_LOGGING_H_
 
-#ifndef RE2_UTIL_LOGGING_H__
-#define RE2_UTIL_LOGGING_H__
+// Simplified version of Google's logging.
 
 #include <stdio.h>  /* for fwrite */
 #include <sstream>
@@ -106,4 +106,4 @@ class LogMessageFatal : public LogMessage {
 #pragma warning(pop)
 #endif
 
-#endif  // RE2_UTIL_LOGGING_H__
+#endif  // UTIL_LOGGING_H_

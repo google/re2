@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef RE2_UTIL_TEST_H__
-#define RE2_UTIL_TEST_H__
+#ifndef UTIL_TEST_H_
+#define UTIL_TEST_H_
 
 #include "util/util.h"
 #include "util/flags.h"
@@ -42,4 +42,4 @@ class MallocCounter {
 };
 }  // namespace testing
 
-#endif  // RE2_UTIL_TEST_H__
+#endif  // UTIL_TEST_H_

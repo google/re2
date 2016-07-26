@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef RE2_PREFILTER_TREE_H_
+#define RE2_PREFILTER_TREE_H_
+
 // The PrefilterTree class is used to form an AND-OR tree of strings
 // that would trigger each regexp. The 'prefilter' of each regexp is
 // added tp PrefilterTree, and then PrefilterTree is used to find all
@@ -12,9 +15,6 @@
 // favorite engine. PrefilterTree provides a set of strings (called
 // atoms) that the user of this class should use to do the string
 // matching.
-//
-#ifndef RE2_PREFILTER_TREE_H_
-#define RE2_PREFILTER_TREE_H_
 
 #include "util/util.h"
 #include "util/sparse_array.h"

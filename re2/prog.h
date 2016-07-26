@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef RE2_PROG_H_
+#define RE2_PROG_H_
+
 // Compiled representation of regular expressions.
 // See regexp.h for the Regexp class, which represents a regular
 // expression symbolically.
-
-#ifndef RE2_PROG_H__
-#define RE2_PROG_H__
 
 #include "util/util.h"
 #include "util/sparse_array.h"
@@ -374,4 +374,4 @@ class Prog {
 
 }  // namespace re2
 
-#endif  // RE2_PROG_H__
+#endif  // RE2_PROG_H_

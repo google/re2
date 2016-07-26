@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef RE2_TESTING_REGEXP_GENERATOR_H_
+#define RE2_TESTING_REGEXP_GENERATOR_H_
+
 // Regular expression generator: generates all possible
 // regular expressions within given parameters (see below for details).
-
-#ifndef RE2_TESTING_REGEXP_GENERATOR_H__
-#define RE2_TESTING_REGEXP_GENERATOR_H__
 
 #include <string>
 #include <vector>
@@ -67,4 +67,4 @@ vector<string> Split(const StringPiece& sep, const StringPiece& s);
 
 }  // namespace re2
 
-#endif  // RE2_TESTING_REGEXP_GENERATOR_H__
+#endif  // RE2_TESTING_REGEXP_GENERATOR_H_

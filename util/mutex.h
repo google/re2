@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#ifndef UTIL_MUTEX_H_
+#define UTIL_MUTEX_H_
+
 /*
  * A simple mutex wrapper, supporting locks and read-write locks.
  * You should assume the locks are *not* re-entrant.
  */
-
-#ifndef RE2_UTIL_MUTEX_H_
-#define RE2_UTIL_MUTEX_H_
 
 #include <stdlib.h>
 
@@ -210,4 +210,4 @@ class WriterMutexLock {
 
 }  // namespace re2
 
-#endif  /* #define RE2_UTIL_MUTEX_H_ */
+#endif  // UTIL_MUTEX_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef RE2_UTIL_THREAD_H__
-#define RE2_UTIL_THREAD_H__
+#ifndef UTIL_THREAD_H_
+#define UTIL_THREAD_H_
 
 #ifdef _WIN32
 #include <windows.h>
@@ -30,4 +30,4 @@ class Thread {
   bool joinable_;
 };
 
-#endif  // RE2_UTIL_THREAD_H__
+#endif  // UTIL_THREAD_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef RE2_SET_H
-#define RE2_SET_H
+#ifndef RE2_SET_H_
+#define RE2_SET_H_
 
 #include <utility>
 #include <vector>
@@ -52,4 +52,4 @@ class RE2::Set {
 
 }  // namespace re2
 
-#endif  // RE2_SET_H
+#endif  // RE2_SET_H_
