@@ -74,9 +74,7 @@ typedef uint32_t uint32;
 typedef int64_t int64;
 typedef uint64_t uint64;
 
-typedef unsigned long ulong;
 typedef unsigned int uint;
-typedef unsigned short ushort;
 
 // Prevent the compiler from complaining about or optimizing away variables
 // that appear unused.
