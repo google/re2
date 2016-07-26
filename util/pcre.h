@@ -573,13 +573,18 @@ class PCRE::Arg {
   typedef bool (*Parser)(const char* str, int n, void* dest);
 
 // Type-specific parsers
-#define MAKE_PARSER(type,name) \
-  Arg(type* p) : arg_(p), parser_(name) { } \
-  Arg(type* p, Parser parser) : arg_(p), parser_(parser) { } \
-
+#define MAKE_PARSER(type, name)            \
+  Arg(type* p) : arg_(p), parser_(name) {} \
+  Arg(type* p, Parser parser) : arg_(p), parser_(parser) {}
 
   MAKE_PARSER(char,               parse_char);
+  MAKE_PARSER(signed char,        parse_schar);
   MAKE_PARSER(unsigned char,      parse_uchar);
+  MAKE_PARSER(float,              parse_float);
+  MAKE_PARSER(double,             parse_double);
+  MAKE_PARSER(string,             parse_string);
+  MAKE_PARSER(StringPiece,        parse_stringpiece);
+
   MAKE_PARSER(short,              parse_short);
   MAKE_PARSER(unsigned short,     parse_ushort);
   MAKE_PARSER(int,                parse_int);
@@ -588,10 +593,6 @@ class PCRE::Arg {
   MAKE_PARSER(unsigned long,      parse_ulong);
   MAKE_PARSER(long long,          parse_longlong);
   MAKE_PARSER(unsigned long long, parse_ulonglong);
-  MAKE_PARSER(float,              parse_float);
-  MAKE_PARSER(double,             parse_double);
-  MAKE_PARSER(string,             parse_string);
-  MAKE_PARSER(StringPiece,        parse_stringpiece);
 
 #undef MAKE_PARSER
 
@@ -611,21 +612,23 @@ class PCRE::Arg {
 
   static bool parse_null          (const char* str, int n, void* dest);
   static bool parse_char          (const char* str, int n, void* dest);
+  static bool parse_schar         (const char* str, int n, void* dest);
   static bool parse_uchar         (const char* str, int n, void* dest);
   static bool parse_float         (const char* str, int n, void* dest);
   static bool parse_double        (const char* str, int n, void* dest);
   static bool parse_string        (const char* str, int n, void* dest);
   static bool parse_stringpiece   (const char* str, int n, void* dest);
 
-#define DECLARE_INTEGER_PARSER(name)                                        \
- private:                                                                   \
-  static bool parse_ ## name(const char* str, int n, void* dest);           \
-  static bool parse_ ## name ## _radix(                                     \
-    const char* str, int n, void* dest, int radix);                         \
- public:                                                                    \
-  static bool parse_ ## name ## _hex(const char* str, int n, void* dest);   \
-  static bool parse_ ## name ## _octal(const char* str, int n, void* dest); \
-  static bool parse_ ## name ## _cradix(const char* str, int n, void* dest)
+#define DECLARE_INTEGER_PARSER(name)                                    \
+ private:                                                               \
+  static bool parse_##name(const char* str, int n, void* dest);         \
+  static bool parse_##name##_radix(const char* str, int n, void* dest,  \
+                                   int radix);                          \
+                                                                        \
+ public:                                                                \
+  static bool parse_##name##_hex(const char* str, int n, void* dest);   \
+  static bool parse_##name##_octal(const char* str, int n, void* dest); \
+  static bool parse_##name##_cradix(const char* str, int n, void* dest)
 
   DECLARE_INTEGER_PARSER(short);
   DECLARE_INTEGER_PARSER(ushort);
@@ -637,6 +640,7 @@ class PCRE::Arg {
   DECLARE_INTEGER_PARSER(ulonglong);
 
 #undef DECLARE_INTEGER_PARSER
+
 };
 
 inline PCRE::Arg::Arg() : arg_(NULL), parser_(parse_null) { }
@@ -647,13 +651,16 @@ inline bool PCRE::Arg::Parse(const char* str, int n) const {
 }
 
 // This part of the parser, appropriate only for ints, deals with bases
-#define MAKE_INTEGER_PARSER(type, name) \
-  inline PCRE::Arg Hex(type* ptr) { \
-    return PCRE::Arg(ptr, PCRE::Arg::parse_ ## name ## _hex); } \
-  inline PCRE::Arg Octal(type* ptr) { \
-    return PCRE::Arg(ptr, PCRE::Arg::parse_ ## name ## _octal); } \
-  inline PCRE::Arg CRadix(type* ptr) { \
-    return PCRE::Arg(ptr, PCRE::Arg::parse_ ## name ## _cradix); }
+#define MAKE_INTEGER_PARSER(type, name)                      \
+  inline PCRE::Arg Hex(type* ptr) {                          \
+    return PCRE::Arg(ptr, PCRE::Arg::parse_##name##_hex);    \
+  }                                                          \
+  inline PCRE::Arg Octal(type* ptr) {                        \
+    return PCRE::Arg(ptr, PCRE::Arg::parse_##name##_octal);  \
+  }                                                          \
+  inline PCRE::Arg CRadix(type* ptr) {                       \
+    return PCRE::Arg(ptr, PCRE::Arg::parse_##name##_cradix); \
+  }
 
 MAKE_INTEGER_PARSER(short,              short);
 MAKE_INTEGER_PARSER(unsigned short,     ushort);
