@@ -5,7 +5,7 @@
 #ifndef RE2_SET_H_
 #define RE2_SET_H_
 
-#include <utility>
+#include <string>
 #include <vector>
 
 #include "re2/re2.h"

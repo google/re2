@@ -9,6 +9,11 @@
 // See regexp.h for the Regexp class, which represents a regular
 // expression symbolically.
 
+#include <atomic>
+#include <mutex>
+#include <string>
+#include <vector>
+
 #include "util/util.h"
 #include "util/sparse_array.h"
 #include "util/sparse_set.h"

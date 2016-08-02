@@ -7,6 +7,7 @@
 
 // Simplified version of Google's logging.
 
+#include <assert.h>
 #include <stdio.h>  /* for fwrite */
 #include <sstream>
 

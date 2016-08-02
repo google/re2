@@ -9,9 +9,17 @@
 
 #include "re2/re2.h"
 
-#include <stdio.h>
-#include <string>
+#include <assert.h>
+#include <ctype.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <iterator>
+#include <mutex>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "util/util.h"
 #include "util/flags.h"
 #include "util/sparse_array.h"

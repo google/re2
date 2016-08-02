@@ -5,20 +5,6 @@
 #ifndef UTIL_UTIL_H_
 #define UTIL_UTIL_H_
 
-// C
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <stddef.h>     // For size_t
-#include <assert.h>
-#include <stdarg.h>
-#include <time.h>       // For clock_gettime, CLOCK_REALTIME
-#include <ctype.h>      // For isdigit, isalpha
-
-#if !defined(_WIN32)
-#include <sys/time.h>   // For gettimeofday
-#endif
-
 // C++
 #include <ctime>
 #include <vector>

@@ -8,6 +8,11 @@
 // This file's external interface is just Regexp::CompileToProg.
 // The Compiler class defined in this file is private.
 
+#include <string.h>
+#include <sys/types.h>
+#include <map>
+#include <utility>
+
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"

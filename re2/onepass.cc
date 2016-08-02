@@ -51,7 +51,11 @@
 // "One-unambiguous regular languages", Information and Computation 142(2).
 
 #include <string.h>
+#include <algorithm>
 #include <map>
+#include <string>
+#include <vector>
+
 #include "util/util.h"
 #include "util/sparse_set.h"
 #include "re2/prog.h"

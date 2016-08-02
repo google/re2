@@ -8,6 +8,8 @@
 // Comparative tester for regular expression matching.
 // Checks all implementations against each other.
 
+#include <vector>
+
 #include "re2/stringpiece.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"

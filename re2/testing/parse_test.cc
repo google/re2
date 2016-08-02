@@ -5,7 +5,7 @@
 // Test parse.cc, dump.cc, and tostring.cc.
 
 #include <string>
-#include <vector>
+
 #include "util/test.h"
 #include "re2/regexp.h"
 

@@ -92,6 +92,8 @@
 // immediately become inaccessible, but they are only guaranteed to be
 // destroyed when the SparseArray destructor is called.
 
+#include <string.h>
+
 #include "util/util.h"
 
 namespace re2 {

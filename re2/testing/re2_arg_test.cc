@@ -7,6 +7,8 @@
 // Todo: Expand the test to validate strings parsed to the other types
 // supported by RE2::Arg class
 
+#include <string.h>
+
 #include "util/test.h"
 #include "re2/re2.h"
 

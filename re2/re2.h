@@ -179,10 +179,14 @@
 //         RE2::Octal(&a), RE2::Hex(&b), RE2::CRadix(&c), RE2::CRadix(&d));
 // will leave 64 in a, b, c, and d.
 
+#include <stddef.h>
 #include <stdint.h>
+#include <sys/types.h>
+#include <algorithm>
 #include <map>
 #include <mutex>
 #include <string>
+
 #include "re2/stringpiece.h"
 
 namespace re2 {

@@ -5,14 +5,19 @@
 
 // TODO: Test extractions for PartialMatch/Consume
 
+#include <assert.h>
 #include <errno.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <map>
+#include <string>
+#include <utility>
 #if !defined(_MSC_VER) && !defined(__MINGW32__)
-#include <unistd.h>  /* for sysconf */
 #include <sys/mman.h>
+#include <unistd.h>  /* for sysconf */
 #endif
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <vector>
+
 #include "util/test.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"

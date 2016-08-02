@@ -4,6 +4,8 @@
 
 #include "re2/set.h"
 
+#include <stddef.h>
+
 #include "util/util.h"
 #include "re2/stringpiece.h"
 #include "re2/prog.h"

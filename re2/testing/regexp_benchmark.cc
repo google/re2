@@ -4,6 +4,10 @@
 
 // Benchmarks for regular expression implementations.
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+
 #include "util/test.h"
 #include "re2/prog.h"
 #include "re2/re2.h"

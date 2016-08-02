@@ -20,10 +20,14 @@
 // Then RunPostfix turns each sequence into a regular expression
 // and passes the regexp to HandleRegexp.
 
+#include <stddef.h>
+#include <stdio.h>
 #include <string.h>
-#include <string>
+#include <memory>
 #include <stack>
+#include <string>
 #include <vector>
+
 #include "util/test.h"
 #include "re2/testing/regexp_generator.h"
 

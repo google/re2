@@ -4,8 +4,11 @@
 
 // Test parse.cc, dump.cc, and tostring.cc.
 
+#include <stddef.h>
+#include <map>
 #include <string>
 #include <vector>
+
 #include "util/test.h"
 #include "re2/regexp.h"
 
