@@ -211,10 +211,6 @@ class RegexpStatus {
   DISALLOW_COPY_AND_ASSIGN(RegexpStatus);
 };
 
-// Walkers to implement Simplify.
-class CoalesceWalker;
-class SimplifyWalker;
-
 // Compiled form; see prog.h
 class Prog;
 
@@ -443,6 +439,7 @@ class Regexp {
 
   // Helpers for Parse.  Listed here so they can edit Regexps.
   class ParseState;
+
   friend class ParseState;
   friend bool ParseCharClass(StringPiece* s, Regexp** out_re,
                              RegexpStatus* status);

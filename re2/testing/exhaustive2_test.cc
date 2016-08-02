@@ -8,8 +8,6 @@
 #include "re2/re2.h"
 #include "re2/testing/exhaustive_tester.h"
 
-DECLARE_string(regexp_engines);
-
 namespace re2 {
 
 // Test empty string matches (aka "(?:)")

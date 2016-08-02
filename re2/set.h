@@ -11,6 +11,11 @@
 #include "re2/re2.h"
 
 namespace re2 {
+class Prog;
+class Regexp;
+}  // namespace re2
+
+namespace re2 {
 using std::vector;
 
 // An RE2::Set represents a collection of regexps that can

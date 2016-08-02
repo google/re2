@@ -40,10 +40,8 @@ enum EmptyOp {
   kEmptyAllFlags         = (1<<6)-1,
 };
 
-class Regexp;
-
 class DFA;
-struct OneState;
+class Regexp;
 
 // Compiled form of regexp program.
 class Prog {
