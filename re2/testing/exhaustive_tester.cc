@@ -14,13 +14,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifndef LOGGING
-#define LOGGING 0
-#endif
-
 #include "util/test.h"
 #include "re2/testing/exhaustive_tester.h"
 #include "re2/testing/tester.h"
+
+// For target `log' in the Makefile.
+#ifndef LOGGING
+#define LOGGING 0
+#endif
 
 DEFINE_bool(show_regexps, false, "show regexps during testing");
 
