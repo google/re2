@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <utility>
 
 #include "util/test.h"
 #include "re2/prog.h"
@@ -802,7 +803,7 @@ static string DeBruijnString(int n) {
   CHECK_LT(n, 8*sizeof(int));
   CHECK_GT(n, 0);
 
-  vector<bool> did(1<<n);
+  std::vector<bool> did(1<<n);
   for (int i = 0; i < 1<<n; i++)
     did[i] = false;
 
@@ -831,6 +832,7 @@ void CacheFill(int iters, int n, SearchImpl *srch) {
   string t;
   for (int i = n+1; i < 20; i++) {
     t = s + s;
+    using std::swap;
     swap(s, t);
   }
   srch(iters, StringPrintf("0[01]{%d}$", n).c_str(), s,

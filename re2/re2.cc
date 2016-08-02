@@ -58,8 +58,8 @@ RE2::Options::Options(RE2::CannedOptions opt)
 // static empty objects for use as const references.
 // To avoid global constructors, allocated in RE2::Init().
 static const string* empty_string;
-static const map<string, int>* empty_named_groups;
-static const map<int, string>* empty_group_names;
+static const std::map<string, int>* empty_named_groups;
+static const std::map<int, string>* empty_group_names;
 
 // Converts from Regexp error code to RE2 error code.
 // Maybe some day they will diverge.  In any event, this
@@ -169,8 +169,8 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
   static std::once_flag empty_once;
   std::call_once(empty_once, []() {
     empty_string = new string;
-    empty_named_groups = new map<string, int>;
-    empty_group_names = new map<int, string>;
+    empty_named_groups = new std::map<string, int>;
+    empty_group_names = new std::map<int, string>;
   });
 
   pattern_ = pattern.as_string();
@@ -264,7 +264,7 @@ int RE2::ProgramSize() const {
   return prog_->size();
 }
 
-int RE2::ProgramFanout(map<int, int>* histogram) const {
+int RE2::ProgramFanout(std::map<int, int>* histogram) const {
   if (prog_ == NULL)
     return -1;
   SparseArray<int> fanout(prog_->size());
@@ -292,7 +292,7 @@ int RE2::NumberOfCapturingGroups() const {
 }
 
 // Returns named_groups_, computing it if needed.
-const map<string, int>& RE2::NamedCapturingGroups() const {
+const std::map<string, int>& RE2::NamedCapturingGroups() const {
   std::call_once(named_groups_once_, [this]() {
     if (suffix_regexp_ != NULL)
       named_groups_ = suffix_regexp_->NamedCaptures();
@@ -303,7 +303,7 @@ const map<string, int>& RE2::NamedCapturingGroups() const {
 }
 
 // Returns group_names_, computing it if needed.
-const map<int, string>& RE2::CapturingGroupNames() const {
+const std::map<int, string>& RE2::CapturingGroupNames() const {
   std::call_once(group_names_once_, [this]() {
     if (suffix_regexp_ != NULL)
       group_names_ = suffix_regexp_->CaptureNames();
@@ -423,6 +423,7 @@ int RE2::GlobalReplace(string *str,
 
   if (p < ep)
     out.append(p, ep - p);
+  using std::swap;
   swap(out, *str);
   return count;
 }

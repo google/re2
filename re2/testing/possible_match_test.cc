@@ -170,10 +170,10 @@ class PossibleMatchTester : public RegexpGenerator {
  public:
   PossibleMatchTester(int maxatoms,
                       int maxops,
-                      const vector<string>& alphabet,
-                      const vector<string>& ops,
+                      const std::vector<string>& alphabet,
+                      const std::vector<string>& ops,
                       int maxstrlen,
-                      const vector<string>& stralphabet)
+                      const std::vector<string>& stralphabet)
     : RegexpGenerator(maxatoms, maxops, alphabet, ops),
       strgen_(maxstrlen, stralphabet),
       regexps_(0), tests_(0) { }

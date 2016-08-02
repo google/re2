@@ -355,10 +355,10 @@ class ByteMapBuilder {
   int Recolor(int oldcolor);
 
   Bitmap256 splits_;
-  vector<int> colors_;
+  std::vector<int> colors_;
   int nextcolor_;
-  vector<pair<int, int>> colormap_;
-  vector<pair<int, int>> ranges_;
+  std::vector<std::pair<int, int>> colormap_;
+  std::vector<std::pair<int, int>> ranges_;
 
   DISALLOW_COPY_AND_ASSIGN(ByteMapBuilder);
 };
@@ -379,7 +379,7 @@ void ByteMapBuilder::Mark(int lo, int hi) {
 }
 
 void ByteMapBuilder::Merge() {
-  for (vector<pair<int, int>>::const_iterator it = ranges_.begin();
+  for (std::vector<std::pair<int, int>>::const_iterator it = ranges_.begin();
        it != ranges_.end();
        ++it) {
     int lo = it->first-1;
@@ -431,9 +431,9 @@ int ByteMapBuilder::Recolor(int oldcolor) {
   // colors and there will typically be far fewer than that.
   // Also, we need to consider keys *and* values in order to
   // avoid recoloring a given range more than once per batch.
-  vector<pair<int, int>>::const_iterator it =
+  std::vector<std::pair<int, int>>::const_iterator it =
       std::find_if(colormap_.begin(), colormap_.end(),
-                   [&](const pair<int, int>& kv) -> bool {
+                   [&](const std::pair<int, int>& kv) -> bool {
                      return kv.first == oldcolor || kv.second == oldcolor;
                    });
   if (it != colormap_.end())
@@ -525,7 +525,7 @@ void Prog::Flatten() {
   // Scratch structures. It's important that these are reused by EmitList()
   // because we call it in a loop and it would thrash the heap otherwise.
   SparseSet q(size());
-  vector<int> stk;
+  std::vector<int> stk;
   stk.reserve(size());
 
   // First pass: Marks "roots".
@@ -535,8 +535,8 @@ void Prog::Flatten() {
 
   // Second pass: Emits "lists". Remaps outs to root-ids.
   // Builds the mapping from root-ids to flat-ids.
-  vector<int> flatmap(rootmap.size());
-  vector<Inst> flat;
+  std::vector<int> flatmap(rootmap.size());
+  std::vector<Inst> flat;
   flat.reserve(size());
   for (SparseArray<int>::const_iterator i = rootmap.begin();
        i != rootmap.end();
@@ -582,8 +582,8 @@ void Prog::Flatten() {
   memmove(inst_, flat.data(), size_ * sizeof *inst_);
 }
 
-void Prog::MarkRoots(SparseArray<int>* rootmap,
-                     SparseSet* q, vector<int>* stk) {
+void Prog::MarkRoots(SparseArray<int>* rootmap, SparseSet* q,
+                     std::vector<int>* stk) {
   // Mark the kInstFail instruction.
   rootmap->set_new(0, rootmap->size());
 
@@ -636,8 +636,9 @@ void Prog::MarkRoots(SparseArray<int>* rootmap,
   }
 }
 
-void Prog::EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat,
-                    SparseSet* q, vector<int>* stk) {
+void Prog::EmitList(int root, SparseArray<int>* rootmap,
+                    std::vector<Inst>* flat, SparseSet* q,
+                    std::vector<int>* stk) {
   q->clear();
   stk->clear();
   stk->push_back(root);

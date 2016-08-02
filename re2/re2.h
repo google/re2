@@ -190,11 +190,14 @@
 #include "re2/stringpiece.h"
 
 namespace re2 {
-
-using std::string;
-using std::map;
 class Prog;
 class Regexp;
+}  // namespace re2
+
+namespace re2 {
+
+// TODO(junyer): Get rid of this.
+using std::string;
 
 // Interface for regular expression matching.  Also corresponds to a
 // pre-compiled regular expression.  An "RE2" object is safe for
@@ -280,7 +283,7 @@ class RE2 {
   // EXPERIMENTAL! SUBJECT TO CHANGE!
   // Outputs the program fanout as a histogram bucketed by powers of 2.
   // Returns the number of the largest non-empty bucket.
-  int ProgramFanout(map<int, int>* histogram) const;
+  int ProgramFanout(std::map<int, int>* histogram) const;
 
   // Returns the underlying Regexp; not for general use.
   // Returns entire_regexp_ so that callers don't need
@@ -468,12 +471,12 @@ class RE2 {
   // The map records the index of the leftmost group
   // with the given name.
   // Only valid until the re is deleted.
-  const map<string, int>& NamedCapturingGroups() const;
+  const std::map<string, int>& NamedCapturingGroups() const;
 
   // Return a map from capturing indices to names.
   // The map has no entries for unnamed groups.
   // Only valid until the re is deleted.
-  const map<int, string>& CapturingGroupNames() const;
+  const std::map<int, string>& CapturingGroupNames() const;
 
   // General matching routine.
   // Match against text starting at offset startpos
@@ -735,10 +738,10 @@ class RE2 {
   mutable int            num_captures_;  // Number of capturing groups
 
   // Map from capture names to indices
-  mutable const map<string, int>* named_groups_;
+  mutable const std::map<string, int>* named_groups_;
 
   // Map from capture indices to names
-  mutable const map<int, string>* group_names_;
+  mutable const std::map<int, string>* group_names_;
 
   // Onces for lazy computations.
   mutable std::once_flag rprog_once_;

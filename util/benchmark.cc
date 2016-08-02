@@ -9,6 +9,7 @@
 #else
 #include <time.h>
 #endif
+#include <algorithm>
 
 #include "util/util.h"
 #include "util/flags.h"
@@ -140,7 +141,7 @@ void RunBench(Benchmark* b, int nthread, int siz) {
 		else
 			n = (int)1e9 / static_cast<int>(ns/n);
 		
-		n = max(last+1, min(n+n/2, 100*last));
+		n = std::max(last+1, std::min(n+n/2, 100*last));
 		n = round(n);
 		runN(b, n, siz);
 	}
@@ -177,7 +178,7 @@ int main(int argc, const char** argv) {
 		Benchmark* b = benchmarks[i];
 		if(match(b->name, argc, argv))
 			for(int j = b->threadlo; j <= b->threadhi; j++)
-				for(int k = max(b->lo, 1); k <= max(b->hi, 1); k<<=1)
+				for(int k = std::max(b->lo, 1); k <= std::max(b->hi, 1); k<<=1)
 					RunBench(b, j, k);
 	}
 }

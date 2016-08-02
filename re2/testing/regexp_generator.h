@@ -28,8 +28,8 @@ namespace re2 {
 //
 class RegexpGenerator {
  public:
-  RegexpGenerator(int maxatoms, int maxops, const vector<string>& atoms,
-                  const vector<string>& ops);
+  RegexpGenerator(int maxatoms, int maxops, const std::vector<string>& atoms,
+                  const std::vector<string>& ops);
   virtual ~RegexpGenerator() {}
 
   // Generates all the regular expressions, calling HandleRegexp(re) for each.
@@ -42,29 +42,30 @@ class RegexpGenerator {
   virtual void HandleRegexp(const string& regexp) = 0;
 
   // The egrep regexp operators: * + ? | and concatenation.
-  static const vector<string>& EgrepOps();
+  static const std::vector<string>& EgrepOps();
 
  private:
-  void RunPostfix(const vector<string>& post);
-  void GeneratePostfix(vector<string>* post, int nstk, int ops, int lits);
-  bool GenerateRandomPostfix(vector<string>* post, int nstk, int ops, int lits);
+  void RunPostfix(const std::vector<string>& post);
+  void GeneratePostfix(std::vector<string>* post, int nstk, int ops, int lits);
+  bool GenerateRandomPostfix(std::vector<string>* post, int nstk, int ops,
+                             int lits);
 
-  int maxatoms_;           // Maximum number of atoms allowed in expr.
-  int maxops_;             // Maximum number of ops allowed in expr.
-  vector<string> atoms_;   // Possible atoms.
-  vector<string> ops_;     // Possible ops.
-  ACMRandom* acm_;         // Random generator.
+  int maxatoms_;               // Maximum number of atoms allowed in expr.
+  int maxops_;                 // Maximum number of ops allowed in expr.
+  std::vector<string> atoms_;  // Possible atoms.
+  std::vector<string> ops_;    // Possible ops.
+  ACMRandom* acm_;             // Random generator.
   DISALLOW_COPY_AND_ASSIGN(RegexpGenerator);
 };
 
 // Helpers for preparing arguments to RegexpGenerator constructor.
 
 // Returns one string for each character in s.
-vector<string> Explode(const StringPiece& s);
+std::vector<string> Explode(const StringPiece& s);
 
 // Splits string everywhere sep is found, returning
 // vector of pieces.
-vector<string> Split(const StringPiece& sep, const StringPiece& s);
+std::vector<string> Split(const StringPiece& sep, const StringPiece& s);
 
 }  // namespace re2
 

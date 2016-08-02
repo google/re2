@@ -93,7 +93,7 @@ bool RE2::Set::Compile() {
   return prog_ != NULL;
 }
 
-bool RE2::Set::Match(const StringPiece& text, vector<int>* v) const {
+bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
   if (!compiled_) {
     LOG(DFATAL) << "RE2::Set::Match without Compile";
     return false;
