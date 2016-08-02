@@ -9,8 +9,6 @@
 
 namespace re2 {
 
-DECLARE_string(regexp_engines);
-
 // Test very simple expressions.
 TEST(EgrepLiterals, Lowercase) {
   EgrepTest(3, 2, "abc.", 3, "abc", "");

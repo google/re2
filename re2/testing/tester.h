@@ -16,8 +16,6 @@
 
 namespace re2 {
 
-class Regexp;
-
 // All the supported regexp engines.
 enum Engine {
   kEngineBacktrack = 0,    // Prog::UnsafeSearchBacktrack

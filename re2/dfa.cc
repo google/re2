@@ -85,9 +85,9 @@ class DFA {
 
   // These data structures are logically private, but C++ makes it too
   // difficult to mark them as such.
-  class Workq;
   class RWLocker;
   class StateSaver;
+  class Workq;
 
   // A single DFA state.  The DFA is represented as a graph of these
   // States, linked by the next_ pointers.  If in state s and reading
