@@ -10,6 +10,11 @@
 #include "re2/testing/tester.h"
 #include "re2/testing/exhaustive_tester.h"
 
+// For target `log' in the Makefile.
+#ifndef LOGGING
+#define LOGGING 0
+#endif
+
 namespace re2 {
 
 struct RegexpTest {
@@ -314,15 +319,14 @@ TEST(Regexp, SearchTests) {
     if (!TestRegexpOnText(t.regexp, t.text))
       failures++;
 
-#ifdef LOGGING
-    // Build a dummy ExhaustiveTest call that will trigger just
-    // this one test, so that we log the test case.
-    vector<string> atom, alpha, ops;
-    atom.push_back(StringPiece(t.regexp).as_string());
-    alpha.push_back(StringPiece(t.text).as_string());
-    ExhaustiveTest(1, 0, atom, ops, 1, alpha, "", "");
-#endif
-
+    if (LOGGING) {
+      // Build a dummy ExhaustiveTest call that will trigger just
+      // this one test, so that we log the test case.
+      vector<string> atom, alpha, ops;
+      atom.push_back(StringPiece(t.regexp).as_string());
+      alpha.push_back(StringPiece(t.text).as_string());
+      ExhaustiveTest(1, 0, atom, ops, 1, alpha, "", "");
+    }
   }
   EXPECT_EQ(failures, 0);
 }
