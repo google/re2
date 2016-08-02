@@ -67,7 +67,7 @@ TEST(Multithreaded, BuildEntireDFA) {
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
 
-    vector<BuildThread*> threads;
+    std::vector<BuildThread*> threads;
     for (int j = 0; j < FLAGS_threads; j++) {
       BuildThread *t = new BuildThread(prog);
       t->SetJoinable(true);
@@ -142,7 +142,7 @@ static string DeBruijnString(int n) {
   CHECK_LT(n, static_cast<int>(8*sizeof(int)));
   CHECK_GT(n, 0);
 
-  vector<bool> did(1<<n);
+  std::vector<bool> did(1<<n);
   for (int i = 0; i < 1<<n; i++)
     did[i] = false;
 
@@ -296,7 +296,7 @@ TEST(Multithreaded, SearchDFA) {
     Prog* prog = re->CompileToProg(1<<n);
     CHECK(prog);
 
-    vector<SearchThread*> threads;
+    std::vector<SearchThread*> threads;
     for (int j = 0; j < FLAGS_threads; j++) {
       SearchThread *t = new SearchThread(prog, match, no_match);
       t->SetJoinable(true);

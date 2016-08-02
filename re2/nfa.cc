@@ -28,6 +28,7 @@
 #include <string.h>
 #include <algorithm>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "re2/prog.h"
@@ -559,6 +560,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
     // This is a no-op the first time around the loop because runq is empty.
     int id = Step(runq, nextq, p < text.end() ? p[0] & 0xFF : -1, flag, p-1);
     DCHECK_EQ(runq->size(), 0);
+    using std::swap;
     swap(nextq, runq);
     nextq->clear();
     if (id != 0) {

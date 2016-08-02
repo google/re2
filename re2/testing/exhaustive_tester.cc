@@ -143,9 +143,10 @@ void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
 
 // Runs an exhaustive test on the given parameters.
 void ExhaustiveTest(int maxatoms, int maxops,
-                    const vector<string>& alphabet,
-                    const vector<string>& ops,
-                    int maxstrlen, const vector<string>& stralphabet,
+                    const std::vector<string>& alphabet,
+                    const std::vector<string>& ops,
+                    int maxstrlen,
+                    const std::vector<string>& stralphabet,
                     const string& wrapper,
                     const string& topwrapper) {
   if (RE2_DEBUG_MODE && FLAGS_quick_debug_mode) {

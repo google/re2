@@ -252,9 +252,8 @@ class Prog {
   // If matches != NULL and kind == kManyMatch and there is a match,
   // SearchDFA fills matches with the match IDs of the final matching state.
   bool SearchDFA(const StringPiece& text, const StringPiece& context,
-                 Anchor anchor, MatchKind kind,
-                 StringPiece* match0, bool* failed,
-                 vector<int>* matches);
+                 Anchor anchor, MatchKind kind, StringPiece* match0,
+                 bool* failed, std::vector<int>* matches);
 
   // Build the entire DFA for the given match kind.  FOR TESTING ONLY.
   // Usually the DFA is built out incrementally, as needed, which
@@ -330,13 +329,14 @@ class Prog {
 
   // Marks the "roots" in the Prog: the outs of kInstByteRange, kInstCapture
   // and kInstEmptyWidth instructions.
-  void MarkRoots(SparseArray<int>* rootmap,
-                 SparseSet* q, vector<int>* stk);
+  void MarkRoots(SparseArray<int>* rootmap, SparseSet* q,
+                 std::vector<int>* stk);
 
   // Emits one "list" via "tree" traversal from the given "root" instruction.
   // The new instructions are appended to the given vector.
-  void EmitList(int root, SparseArray<int>* rootmap, vector<Inst>* flat,
-                SparseSet* q, vector<int>* stk);
+  void EmitList(int root, SparseArray<int>* rootmap,
+                std::vector<Inst>* flat, SparseSet* q,
+                std::vector<int>* stk);
 
  private:
   friend class Compiler;

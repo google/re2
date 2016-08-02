@@ -16,7 +16,7 @@ namespace re2 {
 
 // Test simple repetition operators
 TEST(Repetition, Simple) {
-  vector<string> ops = Split(" ",
+  std::vector<string> ops = Split(" ",
     "%s{0} %s{0,} %s{1} %s{1,} %s{0,1} %s{0,2} "
     "%s{1,2} %s{2} %s{2,} %s{3,4} %s{4,5} "
     "%s* %s+ %s? %s*? %s+? %s??");
@@ -28,7 +28,7 @@ TEST(Repetition, Simple) {
 
 // Test capturing parens -- (a) -- inside repetition operators
 TEST(Repetition, Capturing) {
-  vector<string> ops = Split(" ",
+  std::vector<string> ops = Split(" ",
     "%s{0} %s{0,} %s{1} %s{1,} %s{0,1} %s{0,2} "
     "%s{1,2} %s{2} %s{2,} %s{3,4} %s{4,5} "
     "%s* %s+ %s? %s*? %s+? %s??");

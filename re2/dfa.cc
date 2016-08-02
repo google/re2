@@ -31,6 +31,7 @@
 #include <new>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "util/flags.h"
@@ -85,7 +86,7 @@ class DFA {
   //   memory), it sets *failed and returns false.
   bool Search(const StringPiece& text, const StringPiece& context,
               bool anchored, bool want_earliest_match, bool run_forward,
-              bool* failed, const char** ep, vector<int>* matches);
+              bool* failed, const char** ep, std::vector<int>* matches);
 
   // Builds out all states for the entire DFA.  FOR TESTING ONLY
   // Returns number of states.
@@ -106,7 +107,7 @@ class DFA {
   // byte c, the next state should be s->next_[c].
   struct State {
     inline bool IsMatch() const { return (flag_ & kFlagMatch) != 0; }
-    void SaveMatch(vector<int>* v);
+    void SaveMatch(std::vector<int>* v);
 
     int* inst_;         // Instruction pointers in the state.
     int ninst_;         // # of inst_ pointers.
@@ -156,7 +157,7 @@ class DFA {
     }
   };
 
-  typedef unordered_set<State*, StateHash, StateEqual> StateSet;
+  typedef std::unordered_set<State*, StateHash, StateEqual> StateSet;
 
  private:
   // Special "firstbyte" values for a state.  (Values >= 0 denote actual bytes.)
@@ -254,7 +255,7 @@ class DFA {
     RWLocker *cache_lock;
     bool failed;     // "out" parameter: whether search gave up
     const char* ep;  // "out" parameter: end pointer for match
-    vector<int>* matches;
+    std::vector<int>* matches;
 
    private:
     DISALLOW_COPY_AND_ASSIGN(SearchParams);
@@ -687,7 +688,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint flag) {
       int* markp = ip;
       while (markp < ep && *markp != Mark)
         markp++;
-      sort(ip, markp);
+      std::sort(ip, markp);
       if (markp < ep)
         markp++;
       ip = markp;
@@ -1022,6 +1023,7 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   // Only useful to rerun on empty string if there are new, useful flags.
   if (beforeflag & ~oldbeforeflag & needflag) {
     RunWorkqOnEmptyString(q0_, q1_, beforeflag);
+    using std::swap;
     swap(q0_, q1_);
   }
   bool ismatch = false;
@@ -1035,8 +1037,10 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   // of the string, but we're at the end of the text so that's okay.
   // Leaving q0_ alone preseves the match instructions that led to
   // the current setting of ismatch.
-  if (c != kByteEndText || kind_ != Prog::kManyMatch)
+  if (c != kByteEndText || kind_ != Prog::kManyMatch) {
+    using std::swap;
     swap(q0_, q1_);
+  }
 
   // Save afterflag along with ismatch and isword in new state.
   uint flag = afterflag;
@@ -1308,8 +1312,10 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
   const uint8* p = bp;                              // text scanning point
   const uint8* ep = BytePtr(params->text.end());    // end of text
   const uint8* resetp = NULL;                       // p at last cache reset
-  if (!run_forward)
+  if (!run_forward) {
+    using std::swap;
     swap(p, ep);
+  }
 
   const uint8* bytemap = prog_->bytemap();
   const uint8* lastmatch = NULL;   // most recent matching position in text
@@ -1488,7 +1494,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     matched = true;
     lastmatch = p;
     if (params->matches && kind_ == Prog::kManyMatch) {
-      vector<int>* v = params->matches;
+      std::vector<int>* v = params->matches;
       v->clear();
       for (int i = 0; i < s->ninst_; i++) {
         Prog::Inst* ip = prog_->inst(s->inst_[i]);
@@ -1731,7 +1737,7 @@ bool DFA::Search(const StringPiece& text,
                  bool run_forward,
                  bool* failed,
                  const char** epp,
-                 vector<int>* matches) {
+                 std::vector<int>* matches) {
   *epp = NULL;
   if (!ok()) {
     *failed = true;
@@ -1835,8 +1841,8 @@ void Prog::DeleteDFA(std::atomic<DFA*>* pdfa) {
 // This is the only external interface (class DFA only exists in this file).
 //
 bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
-                     Anchor anchor, MatchKind kind,
-                     StringPiece* match0, bool* failed, vector<int>* matches) {
+                     Anchor anchor, MatchKind kind, StringPiece* match0,
+                     bool* failed, std::vector<int>* matches) {
   *failed = false;
 
   StringPiece context = const_context;
@@ -1913,7 +1919,7 @@ int DFA::BuildAllStates() {
 
   // Add start state to work queue.
   StateSet queued;
-  vector<State*> q;
+  std::vector<State*> q;
   queued.insert(params.start);
   q.push_back(params.start);
 
@@ -1957,7 +1963,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
   // Also note that previously_visited_states[UnseenStatePtr] will, in the STL
   // tradition, implicitly insert a '0' value at first use. We take advantage
   // of that property below.
-  map<State*, int> previously_visited_states;
+  std::map<State*, int> previously_visited_states;
 
   // Pick out start state for anchored search at beginning of text.
   RWLocker l(&cache_mutex_);

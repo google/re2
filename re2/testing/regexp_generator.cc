@@ -34,7 +34,7 @@
 namespace re2 {
 
 // Returns a vector of the egrep regexp operators.
-const vector<string>& RegexpGenerator::EgrepOps() {
+const std::vector<string>& RegexpGenerator::EgrepOps() {
   static const char *ops[] = {
     "%s%s",
     "%s|%s",
@@ -43,13 +43,13 @@ const vector<string>& RegexpGenerator::EgrepOps() {
     "%s?",
     "%s\\C*",
   };
-  static vector<string> v(ops, ops + arraysize(ops));
+  static std::vector<string> v(ops, ops + arraysize(ops));
   return v;
 }
 
 RegexpGenerator::RegexpGenerator(int maxatoms, int maxops,
-                                 const vector<string>& atoms,
-                                 const vector<string>& ops)
+                                 const std::vector<string>& atoms,
+                                 const std::vector<string>& ops)
     : maxatoms_(maxatoms), maxops_(maxops), atoms_(atoms), ops_(ops) {
   // Degenerate case.
   if (atoms_.size() == 0)
@@ -61,7 +61,7 @@ RegexpGenerator::RegexpGenerator(int maxatoms, int maxops,
 // Generates all possible regular expressions (within the parameters),
 // calling HandleRegexp for each one.
 void RegexpGenerator::Generate() {
-  vector<string> postfix;
+  std::vector<string> postfix;
   GeneratePostfix(&postfix, 0, 0, 0);
 }
 
@@ -71,7 +71,7 @@ void RegexpGenerator::GenerateRandom(int32 seed, int n) {
   acm_ = &acm;
 
   for (int i = 0; i < n; i++) {
-    vector<string> postfix;
+    std::vector<string> postfix;
     GenerateRandomPostfix(&postfix, 0, 0, 0);
   }
 
@@ -102,7 +102,7 @@ static int CountArgs(const string& s) {
 //
 // The initial call should be GeneratePostfix([empty vector], 0, 0, 0).
 //
-void RegexpGenerator::GeneratePostfix(vector<string>* post, int nstk,
+void RegexpGenerator::GeneratePostfix(std::vector<string>* post, int nstk,
                                       int ops, int atoms) {
   if (nstk == 1)
     RunPostfix(*post);
@@ -138,7 +138,7 @@ void RegexpGenerator::GeneratePostfix(vector<string>* post, int nstk,
 
 // Generates a random postfix command sequence.
 // Stops and returns true once a single sequence has been generated.
-bool RegexpGenerator::GenerateRandomPostfix(vector<string>* post, int nstk,
+bool RegexpGenerator::GenerateRandomPostfix(std::vector<string>* post, int nstk,
                                             int ops, int atoms) {
   for (;;) {
     // Stop if we get to a single element, but only sometimes.
@@ -181,8 +181,8 @@ bool RegexpGenerator::GenerateRandomPostfix(vector<string>* post, int nstk,
 // Interprets the postfix command sequence to create a regular expression
 // passed to HandleRegexp.  The results of operators like %s|%s are wrapped
 // in (?: ) to avoid needing to maintain a precedence table.
-void RegexpGenerator::RunPostfix(const vector<string>& post) {
-  stack<string> regexps;
+void RegexpGenerator::RunPostfix(const std::vector<string>& post) {
+  std::stack<string> regexps;
   for (size_t i = 0; i < post.size(); i++) {
     switch (CountArgs(post[i])) {
       default:
@@ -230,8 +230,8 @@ void RegexpGenerator::RunPostfix(const vector<string>& post) {
 }
 
 // Split s into an vector of strings, one for each UTF-8 character.
-vector<string> Explode(const StringPiece& s) {
-  vector<string> v;
+std::vector<string> Explode(const StringPiece& s) {
+  std::vector<string> v;
 
   for (const char *q = s.begin(); q < s.end(); ) {
     const char* p = q;
@@ -245,8 +245,8 @@ vector<string> Explode(const StringPiece& s) {
 
 // Split string everywhere a substring is found, returning
 // vector of pieces.
-vector<string> Split(const StringPiece& sep, const StringPiece& s) {
-  vector<string> v;
+std::vector<string> Split(const StringPiece& sep, const StringPiece& s) {
+  std::vector<string> v;
 
   if (sep.size() == 0)
     return Explode(s);

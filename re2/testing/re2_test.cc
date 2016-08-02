@@ -481,7 +481,7 @@ TEST(ProgramFanout, BigProgram) {
   RE2 re100("(?:(?:(?:(?:(?:.)?){100})*)+)");
   RE2 re1000("(?:(?:(?:(?:(?:.)?){1000})*)+)");
 
-  map<int, int> histogram;
+  std::map<int, int> histogram;
 
   // 3 is the largest non-empty bucket and has 1 element.
   CHECK_EQ(3, re1.ProgramFanout(&histogram));
@@ -534,14 +534,14 @@ TEST(Capture, NamedGroups) {
   {
     RE2 re("(hello world)");
     CHECK_EQ(re.NumberOfCapturingGroups(), 1);
-    const map<string, int>& m = re.NamedCapturingGroups();
+    const std::map<string, int>& m = re.NamedCapturingGroups();
     CHECK_EQ(m.size(), 0);
   }
 
   {
     RE2 re("(?P<A>expr(?P<B>expr)(?P<C>expr))((expr)(?P<D>expr))");
     CHECK_EQ(re.NumberOfCapturingGroups(), 6);
-    const map<string, int>& m = re.NamedCapturingGroups();
+    const std::map<string, int>& m = re.NamedCapturingGroups();
     CHECK_EQ(m.size(), 4);
     CHECK_EQ(m.find("A")->second, 1);
     CHECK_EQ(m.find("B")->second, 2);
@@ -563,7 +563,7 @@ TEST(RE2, CapturedGroupTest) {
   const RE2::Arg* const matches[4] = {&arg0, &arg1, &arg2, &arg3};
   EXPECT_TRUE(RE2::FullMatchN("directions from mountain view to san jose",
                               re, matches, num_groups));
-  const map<string, int>& named_groups = re.NamedCapturingGroups();
+  const std::map<string, int>& named_groups = re.NamedCapturingGroups();
   EXPECT_TRUE(named_groups.find("S") != named_groups.end());
   EXPECT_TRUE(named_groups.find("D") != named_groups.end());
 
@@ -1503,8 +1503,8 @@ TEST(RE2, CapturingGroupNames) {
   //      12    3        45   6         7
   RE2 re("((abc)(?P<G2>)|((e+)(?P<G2>.*)(?P<G1>u+)))");
   EXPECT_TRUE(re.ok());
-  const map<int, string>& have = re.CapturingGroupNames();
-  map<int, string> want;
+  const std::map<int, string>& have = re.CapturingGroupNames();
+  std::map<int, string> want;
   want[3] = "G2";
   want[6] = "G2";
   want[7] = "G1";

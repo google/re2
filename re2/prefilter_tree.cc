@@ -58,7 +58,7 @@ static bool KeepPart(Prefilter* prefilter, int level) {
 
     case Prefilter::AND: {
       int j = 0;
-      vector<Prefilter*>* subs = prefilter->subs();
+      std::vector<Prefilter*>* subs = prefilter->subs();
       for (size_t i = 0; i < subs->size(); i++)
         if (KeepPart((*subs)[i], level + 1))
           (*subs)[j++] = (*subs)[i];
@@ -90,7 +90,7 @@ void PrefilterTree::Add(Prefilter *f) {
   prefilter_vec_.push_back(f);
 }
 
-void PrefilterTree::Compile(vector<string>* atom_vec) {
+void PrefilterTree::Compile(std::vector<string>* atom_vec) {
   if (compiled_) {
     LOG(DFATAL) << "Compile after Compile.";
     return;
@@ -141,7 +141,7 @@ void PrefilterTree::Compile(vector<string>* atom_vec) {
 
 Prefilter* PrefilterTree::CanonicalNode(Prefilter* node) {
   string node_string = NodeString(node);
-  map<string, Prefilter*>::iterator iter = node_map_.find(node_string);
+  std::map<string, Prefilter*>::iterator iter = node_map_.find(node_string);
   if (iter == node_map_.end())
     return NULL;
   return (*iter).second;
@@ -168,12 +168,12 @@ string PrefilterTree::NodeString(Prefilter* node) const {
   return s;
 }
 
-void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
+void PrefilterTree::AssignUniqueIds(std::vector<string>* atom_vec) {
   atom_vec->clear();
 
   // Build vector of all filter nodes, sorted topologically
   // from top to bottom in v.
-  vector<Prefilter*> v;
+  std::vector<Prefilter*> v;
 
   // Add the top level nodes of each regexp prefilter.
   for (size_t i = 0; i < prefilter_vec_.size(); i++) {
@@ -192,7 +192,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
     if (f == NULL)
       continue;
     if (f->op() == Prefilter::AND || f->op() == Prefilter::OR) {
-      const vector<Prefilter*>& subs = *f->subs();
+      const std::vector<Prefilter*>& subs = *f->subs();
       for (size_t j = 0; j < subs.size(); j++)
         v.push_back(subs[j]);
     }
@@ -257,7 +257,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
 
       case Prefilter::OR:
       case Prefilter::AND: {
-        set<int> uniq_child;
+        std::set<int> uniq_child;
         for (size_t j = 0; j < prefilter->subs()->size(); j++) {
           Prefilter* child = (*prefilter->subs())[j];
           Prefilter* canonical = CanonicalNode(child);
@@ -296,8 +296,8 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
 
 // Functions for triggering during search.
 void PrefilterTree::RegexpsGivenStrings(
-    const vector<int>& matched_atoms,
-    vector<int>* regexps) const {
+    const std::vector<int>& matched_atoms,
+    std::vector<int>* regexps) const {
   regexps->clear();
   if (!compiled_) {
     LOG(WARNING) << "Compile() not called";
@@ -306,7 +306,7 @@ void PrefilterTree::RegexpsGivenStrings(
   } else {
     if (!prefilter_vec_.empty()) {
       IntMap regexps_map(static_cast<int>(prefilter_vec_.size()));
-      vector<int> matched_atom_ids;
+      std::vector<int> matched_atom_ids;
       for (size_t j = 0; j < matched_atoms.size(); j++) {
         matched_atom_ids.push_back(atom_index_to_id_[matched_atoms[j]]);
         VLOG(10) << "Atom id:" << atom_index_to_id_[matched_atoms[j]];
@@ -320,10 +320,10 @@ void PrefilterTree::RegexpsGivenStrings(
       regexps->insert(regexps->end(), unfiltered_.begin(), unfiltered_.end());
     }
   }
-  sort(regexps->begin(), regexps->end());
+  std::sort(regexps->begin(), regexps->end());
 }
 
-void PrefilterTree::PropagateMatch(const vector<int>& atom_ids,
+void PrefilterTree::PropagateMatch(const std::vector<int>& atom_ids,
                                    IntMap* regexps) const {
   IntMap count(static_cast<int>(entries_.size()));
   IntMap work(static_cast<int>(entries_.size()));
@@ -375,14 +375,14 @@ void PrefilterTree::PrintDebugInfo() {
 
   for (size_t i = 0; i < entries_.size(); ++i) {
     StdIntMap* parents = entries_[i].parents;
-    const vector<int>& regexps = entries_[i].regexps;
+    const std::vector<int>& regexps = entries_[i].regexps;
     VLOG(10) << "EntryId: " << i
             << " N: " << parents->size() << " R: " << regexps.size();
     for (StdIntMap::iterator it = parents->begin(); it != parents->end(); ++it)
       VLOG(10) << it->first;
   }
   VLOG(10) << "Map:";
-  for (map<string, Prefilter*>::const_iterator iter = node_map_.begin();
+  for (std::map<string, Prefilter*>::const_iterator iter = node_map_.begin();
        iter != node_map_.end(); ++iter)
     VLOG(10) << "NodeId: " << (*iter).second->unique_id()
             << " Str: " << (*iter).first;
