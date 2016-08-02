@@ -9,6 +9,10 @@
 // Rather than using Prefilter class directly, use FilteredRE2.
 // See filtered_re2.h
 
+#include <set>
+#include <string>
+#include <vector>
+
 #include "util/util.h"
 
 namespace re2 {

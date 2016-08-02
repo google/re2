@@ -86,6 +86,10 @@
 // form accessible to clients, so that client code can analyze the
 // parsed regular expressions.
 
+#include <map>
+#include <set>
+#include <string>
+
 #include "util/util.h"
 #include "re2/stringpiece.h"
 

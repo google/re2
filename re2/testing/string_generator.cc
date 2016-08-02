@@ -6,8 +6,10 @@
 // maxlen letters using the set of letters in alpha.
 // Fetch strings using a Java-like Next()/HasNext() interface.
 
+#include <stddef.h>
 #include <string>
 #include <vector>
+
 #include "util/test.h"
 #include "re2/testing/string_generator.h"
 

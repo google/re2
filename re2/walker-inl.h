@@ -13,6 +13,8 @@
 // Not quite the Visitor pattern, because (among other things)
 // the Visitor pattern is recursive.
 
+#include <stack>
+
 #include "re2/regexp.h"
 
 namespace re2 {

@@ -11,7 +11,6 @@
 // the NFA, DFA, and a trivial backtracking implementation agree about
 // the location of the match.
 
-#include <stdlib.h>
 #include <stdio.h>
 
 #include "util/test.h"

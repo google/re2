@@ -2,6 +2,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#if defined(__APPLE__)
+#include <sys/time.h>
+#elif defined(_WIN32)
+#include <windows.h>
+#else
+#include <time.h>
+#endif
+
 #include "util/util.h"
 #include "util/flags.h"
 #include "util/benchmark.h"

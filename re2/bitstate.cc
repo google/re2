@@ -17,6 +17,9 @@
 // SearchBitState is a fast replacement for the NFA code on small
 // regexps and texts when SearchOnePass cannot be used.
 
+#include <stddef.h>
+#include <string.h>
+
 #include "re2/prog.h"
 #include "re2/regexp.h"
 

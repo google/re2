@@ -4,6 +4,11 @@
 
 // Regular expression engine tester -- test all the implementations against each other.
 
+#include <stddef.h>
+#include <string.h>
+#include <sys/types.h>
+#include <string>
+
 #include "util/util.h"
 #include "util/flags.h"
 #include "re2/testing/tester.h"

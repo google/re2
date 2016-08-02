@@ -4,6 +4,11 @@
 
 // Exhaustive testing of regular expression matching.
 
+#include <stddef.h>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "util/test.h"
 #include "re2/testing/exhaustive_tester.h"
 

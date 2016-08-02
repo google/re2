@@ -21,7 +21,9 @@
 // indices of strings that were found in the text to get the actual
 // regexp matches.
 
+#include <string>
 #include <vector>
+
 #include "re2/re2.h"
 
 namespace re2 {

@@ -21,6 +21,18 @@
 //
 // See http://swtch.com/~rsc/regexp/ for a very bare-bones equivalent.
 
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <algorithm>
+#include <atomic>
+#include <map>
+#include <new>
+#include <string>
+#include <unordered_set>
+#include <vector>
+
 #include "util/flags.h"
 #include "util/sparse_set.h"
 #include "re2/prog.h"

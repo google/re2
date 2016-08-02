@@ -4,9 +4,8 @@
 
 // Test StringGenerator.
 
-#include <stdlib.h>
 #include <string>
-#include <vector>
+
 #include "util/test.h"
 #include "re2/testing/string_generator.h"
 #include "re2/testing/regexp_generator.h"

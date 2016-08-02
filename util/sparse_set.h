@@ -47,6 +47,8 @@
 //
 // See sparse_array.h for implementation details
 
+#include <string.h>
+
 #include "util/util.h"
 
 namespace re2 {

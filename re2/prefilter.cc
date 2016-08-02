@@ -2,8 +2,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "util/util.h"
 #include "re2/prefilter.h"
+
+#include <stddef.h>
+#include <stdint.h>
+#include <string>
+#include <vector>
+
+#include "util/util.h"
 #include "re2/re2.h"
 #include "re2/unicode_casefold.h"
 #include "re2/walker-inl.h"

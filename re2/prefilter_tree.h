@@ -16,6 +16,10 @@
 // atoms) that the user of this class should use to do the string
 // matching.
 
+#include <map>
+#include <string>
+#include <vector>
+
 #include "util/util.h"
 #include "util/sparse_array.h"
 

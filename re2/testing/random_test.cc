@@ -5,6 +5,9 @@
 // Random testing of regular expression matching.
 
 #include <stdio.h>
+#include <string>
+#include <vector>
+
 #include "util/test.h"
 #include "re2/testing/exhaustive_tester.h"
 

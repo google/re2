@@ -5,8 +5,17 @@
 // Regular expression representation.
 // Tested by parse_test.cc
 
-#include "util/util.h"
 #include "re2/regexp.h"
+
+#include <stddef.h>
+#include <string.h>
+#include <algorithm>
+#include <map>
+#include <mutex>
+#include <string>
+#include <vector>
+
+#include "util/util.h"
 #include "re2/stringpiece.h"
 #include "re2/walker-inl.h"
 

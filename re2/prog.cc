@@ -5,9 +5,15 @@
 // Compiled regular expression representation.
 // Tested by compile_test.cc
 
+#include "re2/prog.h"
+
+#include <string.h>
+#include <algorithm>
+#include <memory>
+#include <utility>
+
 #include "util/util.h"
 #include "util/bitmap.h"
-#include "re2/prog.h"
 #include "re2/stringpiece.h"
 
 namespace re2 {

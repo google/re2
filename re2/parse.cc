@@ -16,6 +16,13 @@
 // and recognizes the Perl escape sequences \d, \s, \w, \D, \S, and \W.
 // See regexp.h for rationale.
 
+#include <ctype.h>
+#include <stddef.h>
+#include <string.h>
+#include <algorithm>
+#include <map>
+#include <string>
+
 #include "util/util.h"
 #include "re2/regexp.h"
 #include "re2/stringpiece.h"

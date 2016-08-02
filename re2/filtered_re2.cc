@@ -2,9 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include <string>
-#include "util/util.h"
 #include "re2/filtered_re2.h"
+
+#include <stddef.h>
+#include <string>
+
+#include "util/util.h"
 #include "re2/prefilter.h"
 #include "re2/prefilter_tree.h"
 
