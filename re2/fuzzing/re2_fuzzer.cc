@@ -12,7 +12,6 @@
 
 using re2::FLAGS_minloglevel;
 using re2::StringPiece;
-using std::map;
 using std::string;
 
 // NOT static, NOT signed.
@@ -24,7 +23,7 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
     return;
 
   // Don't waste time fuzzing high-fanout programs.
-  map<int, int> histogram;
+  std::map<int, int> histogram;
   int fanout = re.ProgramFanout(&histogram);
   if (fanout > 10)
     return;

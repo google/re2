@@ -5,36 +5,9 @@
 #ifndef UTIL_UTIL_H_
 #define UTIL_UTIL_H_
 
-// C++
-#include <ctime>
-#include <vector>
+// TODO(junyer): Get rid of this.
 #include <string>
-#include <algorithm>
-#include <iosfwd>
-#include <map>
-#include <stack>
-#include <ostream>
-#include <utility>
-#include <set>
-#include <atomic>
-#include <mutex>        // For std::call_once
-#include <unordered_set>
-#include <initializer_list>
-
-// Use std names.
-using std::set;
-using std::pair;
-using std::vector;
 using std::string;
-using std::min;
-using std::max;
-using std::ostream;
-using std::map;
-using std::stack;
-using std::sort;
-using std::swap;
-using std::make_pair;
-using std::unordered_set;
 
 #ifdef _WIN32
 

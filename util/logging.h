@@ -77,7 +77,7 @@ class LogMessage {
       Flush();
     }
   }
-  ostream& stream() { return str_; }
+  std::ostream& stream() { return str_; }
 
  private:
   const int severity_;

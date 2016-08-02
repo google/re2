@@ -243,7 +243,7 @@ class Compiler : public Regexp::Walker<Frag> {
 
   int64 max_mem_;      // Total memory budget.
 
-  map<uint64, int> rune_cache_;
+  std::map<uint64, int> rune_cache_;
   Frag rune_range_;
 
   RE2::Anchor anchor_;  // anchor mode for RE2::Set
@@ -491,7 +491,7 @@ static uint64 MakeRuneCacheKey(uint8 lo, uint8 hi, bool foldcase, int next) {
 int Compiler::CachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase,
                                    int next) {
   uint64 key = MakeRuneCacheKey(lo, hi, foldcase, next);
-  map<uint64, int>::const_iterator it = rune_cache_.find(key);
+  std::map<uint64, int>::const_iterator it = rune_cache_.find(key);
   if (it != rune_cache_.end())
     return it->second;
   int id = UncachedRuneByteSuffix(lo, hi, foldcase, next);

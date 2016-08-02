@@ -108,7 +108,7 @@ class Tester {
 
  private:
   bool error_;
-  vector<TestInstance*> v_;
+  std::vector<TestInstance*> v_;
 
   DISALLOW_COPY_AND_ASSIGN(Tester);
 };
