@@ -41,14 +41,14 @@ class Prefilter {
   int unique_id() const { return unique_id_; }
 
   // The children of the Prefilter node.
-  vector<Prefilter*>* subs() {
+  std::vector<Prefilter*>* subs() {
     CHECK(op_ == AND || op_ == OR);
     return subs_;
   }
 
   // Set the children vector. Prefilter takes ownership of subs and
   // subs_ will be deleted when Prefilter is deleted.
-  void set_subs(vector<Prefilter*>* subs) { subs_ = subs; }
+  void set_subs(std::vector<Prefilter*>* subs) { subs_ = subs; }
 
   // Given a RE2, return a Prefilter. The caller takes ownership of
   // the Prefilter and should deallocate it. Returns NULL if Prefilter
@@ -76,7 +76,7 @@ class Prefilter {
 
   static Prefilter* FromString(const string& str);
 
-  static Prefilter* OrStrings(set<string>* ss);
+  static Prefilter* OrStrings(std::set<string>* ss);
 
   static Info* BuildInfo(Regexp* re);
 
@@ -86,7 +86,7 @@ class Prefilter {
   Op op_;
 
   // Sub-matches for AND or OR Prefilter.
-  vector<Prefilter*>* subs_;
+  std::vector<Prefilter*>* subs_;
 
   // Actual string to match in leaf node.
   string atom_;

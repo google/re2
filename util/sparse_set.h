@@ -48,6 +48,7 @@
 // See sparse_array.h for implementation details
 
 #include <string.h>
+#include <algorithm>
 
 #include "util/util.h"
 
@@ -162,7 +163,7 @@ class SparseSet {
   // Comparison function for sorting.
   // Can sort the sparse array so that future iterations
   // will visit indices in increasing order using
-  // sort(arr.begin(), arr.end(), arr.less);
+  // std::sort(arr.begin(), arr.end(), arr.less);
   static bool less(int a, int b) { return a < b; }
 
  private:

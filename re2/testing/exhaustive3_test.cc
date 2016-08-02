@@ -16,7 +16,7 @@ namespace re2 {
 
 // Test simple character classes by themselves.
 TEST(CharacterClasses, Exhaustive) {
-  vector<string> atoms = Split(" ",
+  std::vector<string> atoms = Split(" ",
     "[a] [b] [ab] [^bc] [b-d] [^b-d] []a] [-a] [a-] [^-a] [a-b-c] a b .");
   ExhaustiveTest(2, 1, atoms, RegexpGenerator::EgrepOps(),
                  5, Explode("ab"), "", "");
@@ -24,7 +24,7 @@ TEST(CharacterClasses, Exhaustive) {
 
 // Test simple character classes inside a___b (for example, a[a]b).
 TEST(CharacterClasses, ExhaustiveAB) {
-  vector<string> atoms = Split(" ",
+  std::vector<string> atoms = Split(" ",
     "[a] [b] [ab] [^bc] [b-d] [^b-d] []a] [-a] [a-] [^-a] [a-b-c] a b .");
   ExhaustiveTest(2, 1, atoms, RegexpGenerator::EgrepOps(),
                  5, Explode("ab"), "a%sb", "");
@@ -40,9 +40,9 @@ static string UTF8(Rune r) {
 // Returns a vector of "interesting" UTF8 characters.
 // Unicode is now too big to just return all of them,
 // so UTF8Characters return a set likely to be good test cases.
-static const vector<string>& InterestingUTF8() {
+static const std::vector<string>& InterestingUTF8() {
   static bool init;
-  static vector<string> v;
+  static std::vector<string> v;
 
   if (init)
     return v;
@@ -69,12 +69,12 @@ static const vector<string>& InterestingUTF8() {
 
 // Test interesting UTF-8 characters against character classes.
 TEST(InterestingUTF8, SingleOps) {
-  vector<string> atoms = Split(" ",
+  std::vector<string> atoms = Split(" ",
     ". ^ $ \\a \\f \\n \\r \\t \\v \\d \\D \\s \\S \\w \\W \\b \\B "
     "[[:alnum:]] [[:alpha:]] [[:blank:]] [[:cntrl:]] [[:digit:]] "
     "[[:graph:]] [[:lower:]] [[:print:]] [[:punct:]] [[:space:]] "
     "[[:upper:]] [[:xdigit:]] [\\s\\S] [\\d\\D] [^\\w\\W] [^\\d\\D]");
-  vector<string> ops;  // no ops
+  std::vector<string> ops;  // no ops
   ExhaustiveTest(1, 0, atoms, ops,
                  1, InterestingUTF8(), "", "");
 }
@@ -82,13 +82,13 @@ TEST(InterestingUTF8, SingleOps) {
 // Test interesting UTF-8 characters against character classes,
 // but wrap everything inside AB.
 TEST(InterestingUTF8, AB) {
-  vector<string> atoms = Split(" ",
+  std::vector<string> atoms = Split(" ",
     ". ^ $ \\a \\f \\n \\r \\t \\v \\d \\D \\s \\S \\w \\W \\b \\B "
     "[[:alnum:]] [[:alpha:]] [[:blank:]] [[:cntrl:]] [[:digit:]] "
     "[[:graph:]] [[:lower:]] [[:print:]] [[:punct:]] [[:space:]] "
     "[[:upper:]] [[:xdigit:]] [\\s\\S] [\\d\\D] [^\\w\\W] [^\\d\\D]");
-  vector<string> ops;  // no ops
-  vector<string> alpha = InterestingUTF8();
+  std::vector<string> ops;  // no ops
+  std::vector<string> alpha = InterestingUTF8();
   for (size_t i = 0; i < alpha.size(); i++)
     alpha[i] = "a" + alpha[i] + "b";
   ExhaustiveTest(1, 0, atoms, ops,

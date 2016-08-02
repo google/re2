@@ -17,9 +17,9 @@ DECLARE_int32(filtered_re2_min_atom_len); // From prefilter_tree.cc
 namespace re2 {
 
 struct FilterTestVars {
-  vector<string> atoms;
-  vector<int> atom_indices;
-  vector<int> matches;
+  std::vector<string> atoms;
+  std::vector<int> atom_indices;
+  std::vector<int> matches;
   RE2::Options opts;
   FilteredRE2 f;
 };
@@ -150,14 +150,14 @@ bool CheckExpectedAtoms(const char* atoms[],
                         int n,
                         const char* testname,
                         struct FilterTestVars* v) {
-  vector<string> expected;
+  std::vector<string> expected;
   for (int i = 0; i < n; i++)
     expected.push_back(atoms[i]);
 
   bool pass = expected.size() == v->atoms.size();
 
-  sort(v->atoms.begin(), v->atoms.end());
-  sort(expected.begin(), expected.end());
+  std::sort(v->atoms.begin(), v->atoms.end());
+  std::sort(expected.begin(), expected.end());
   for (int i = 0; pass && i < n; i++)
       pass = pass && expected[i] == v->atoms[i];
 
@@ -195,9 +195,9 @@ TEST(FilteredRE2Test, AtomTests) {
   EXPECT_EQ(0, nfail);
 }
 
-void FindAtomIndices(const vector<string>& atoms,
-                     const vector<string>& matched_atoms,
-                     vector<int>* atom_indices) {
+void FindAtomIndices(const std::vector<string>& atoms,
+                     const std::vector<string>& matched_atoms,
+                     std::vector<int>* atom_indices) {
   atom_indices->clear();
   for (size_t i = 0; i < matched_atoms.size(); i++) {
     for (size_t j = 0; j < atoms.size(); j++) {
@@ -224,8 +224,8 @@ TEST(FilteredRE2Test, MatchEmptyPattern) {
       break;
   AddRegexpsAndCompile(t->regexps, nregexp, &v);
   string text = "0123";
-  vector<int> atom_ids;
-  vector<int> matching_regexps;
+  std::vector<int> atom_ids;
+  std::vector<int> matching_regexps;
   EXPECT_EQ(0, v.f.FirstMatch(text, atom_ids));
 }
 
@@ -245,11 +245,11 @@ TEST(FilteredRE2Test, MatchTests) {
 
   string text = "abc121212xyz";
   // atoms = abc
-  vector<int> atom_ids;
-  vector<string> atoms;
+  std::vector<int> atom_ids;
+  std::vector<string> atoms;
   atoms.push_back("abc");
   FindAtomIndices(v.atoms, atoms, &atom_ids);
-  vector<int> matching_regexps;
+  std::vector<int> matching_regexps;
   v.f.AllMatches(text, atom_ids, &matching_regexps);
   EXPECT_EQ(1, matching_regexps.size());
 
