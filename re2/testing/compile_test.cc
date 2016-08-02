@@ -10,8 +10,6 @@
 #include "re2/regexp.h"
 #include "re2/prog.h"
 
-DEFINE_string(show, "", "regular expression to compile and dump");
-
 namespace re2 {
 
 // Simple input/output tests checking that
