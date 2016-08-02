@@ -402,7 +402,7 @@ bool Prog::IsOnePass() {
   // Originally, nodes was a uint8[maxnodes*statesize], but that was
   // unnecessarily optimistic: why allocate a large amount of memory
   // upfront for a large program when it is unlikely to be one-pass?
-  vector<uint8> nodes;
+  std::vector<uint8> nodes;
 
   Instq tovisit(size), workq(size);
   AddQ(&tovisit, start());
@@ -483,8 +483,8 @@ bool Prog::IsOnePass() {
             }
           }
           if (ip->foldcase()) {
-            Rune lo = max<Rune>(ip->lo(), 'a') + 'A' - 'a';
-            Rune hi = min<Rune>(ip->hi(), 'z') + 'A' - 'a';
+            Rune lo = std::max<Rune>(ip->lo(), 'a') + 'A' - 'a';
+            Rune hi = std::min<Rune>(ip->hi(), 'z') + 'A' - 'a';
             for (int c = lo; c <= hi; c++) {
               int b = bytemap_[c];
               // Skip any bytes immediately after c that are also in b.
@@ -578,7 +578,7 @@ bool Prog::IsOnePass() {
     LOG(ERROR) << "bytemap:\n" << DumpByteMap();
     LOG(ERROR) << "prog:\n" << Dump();
 
-    map<int, int> idmap;
+    std::map<int, int> idmap;
     for (int i = 0; i < size; i++)
       if (nodebyid[i] != -1)
         idmap[nodebyid[i]] = i;

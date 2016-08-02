@@ -88,7 +88,7 @@ template<typename T> class Regexp::Walker {
 
  private:
   // Walk state for the entire traversal.
-  stack<WalkState<T> >* stack_;
+  std::stack<WalkState<T> >* stack_;
   bool stopped_early_;
   int max_visits_;
 
@@ -132,7 +132,7 @@ template<typename T> struct WalkState {
 };
 
 template<typename T> Regexp::Walker<T>::Walker() {
-  stack_ = new stack<WalkState<T> >;
+  stack_ = new std::stack<WalkState<T> >;
   stopped_early_ = false;
 }
 

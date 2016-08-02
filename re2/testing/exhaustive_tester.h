@@ -36,10 +36,10 @@ class ExhaustiveTester : public RegexpGenerator {
  public:
   ExhaustiveTester(int maxatoms,
                    int maxops,
-                   const vector<string>& alphabet,
-                   const vector<string>& ops,
+                   const std::vector<string>& alphabet,
+                   const std::vector<string>& ops,
                    int maxstrlen,
-                   const vector<string>& stralphabet,
+                   const std::vector<string>& stralphabet,
                    const string& wrapper,
                    const string& topwrapper)
     : RegexpGenerator(maxatoms, maxops, alphabet, ops),
@@ -79,9 +79,10 @@ class ExhaustiveTester : public RegexpGenerator {
 
 // Runs an exhaustive test on the given parameters.
 void ExhaustiveTest(int maxatoms, int maxops,
-                    const vector<string>& alphabet,
-                    const vector<string>& ops,
-                    int maxstrlen, const vector<string>& stralphabet,
+                    const std::vector<string>& alphabet,
+                    const std::vector<string>& ops,
+                    int maxstrlen,
+                    const std::vector<string>& stralphabet,
                     const string& wrapper,
                     const string& topwrapper);
 

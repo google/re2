@@ -27,7 +27,6 @@
 #include "re2/re2.h"
 
 namespace re2 {
-using std::vector;
 
 class PrefilterTree;
 
@@ -49,7 +48,7 @@ class FilteredRE2 {
   // the search text should be lowercased first to find matching
   // strings from the set of strings returned by Compile.  Call after
   // all Add calls are done.
-  void Compile(vector<string>* strings_to_match);
+  void Compile(std::vector<string>* strings_to_match);
 
   // Returns the index of the first matching regexp.
   // Returns -1 on no match. Can be called prior to Compile.
@@ -61,21 +60,21 @@ class FilteredRE2 {
   // Returns -1 on no match. Compile has to be called before
   // calling this.
   int FirstMatch(const StringPiece& text,
-                 const vector<int>& atoms) const;
+                 const std::vector<int>& atoms) const;
 
   // Returns the indices of all matching regexps, after first clearing
   // matched_regexps.
   bool AllMatches(const StringPiece& text,
-                  const vector<int>& atoms,
-                  vector<int>* matching_regexps) const;
+                  const std::vector<int>& atoms,
+                  std::vector<int>* matching_regexps) const;
 
   // Returns the indices of all potentially matching regexps after first
   // clearing potential_regexps.
   // A regexp is potentially matching if it passes the filter.
   // If a regexp passes the filter it may still not match.
   // A regexp that does not pass the filter is guaranteed to not match.
-  void AllPotentials(const vector<int>& atoms,
-                     vector<int>* potential_regexps) const;
+  void AllPotentials(const std::vector<int>& atoms,
+                     std::vector<int>* potential_regexps) const;
 
   // The number of regexps added.
   int NumRegexps() const { return static_cast<int>(re2_vec_.size()); }
@@ -89,11 +88,11 @@ class FilteredRE2 {
   void PrintPrefilter(int regexpid);
 
   // Useful for testing and debugging.
-  void RegexpsGivenStrings(const vector<int>& matched_atoms,
-                           vector<int>* passed_regexps);
+  void RegexpsGivenStrings(const std::vector<int>& matched_atoms,
+                           std::vector<int>* passed_regexps);
 
   // All the regexps in the FilteredRE2.
-  vector<RE2*> re2_vec_;
+  std::vector<RE2*> re2_vec_;
 
   // Has the FilteredRE2 been compiled using Compile()
   bool compiled_;

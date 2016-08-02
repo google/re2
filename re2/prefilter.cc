@@ -18,15 +18,15 @@ namespace re2 {
 
 static const int Trace = false;
 
-typedef set<string>::iterator SSIter;
-typedef set<string>::const_iterator ConstSSIter;
+typedef std::set<string>::iterator SSIter;
+typedef std::set<string>::const_iterator ConstSSIter;
 
 // Initializes a Prefilter, allocating subs_ as necessary.
 Prefilter::Prefilter(Op op) {
   op_ = op;
   subs_ = NULL;
   if (op_ == AND || op_ == OR)
-    subs_ = new vector<Prefilter*>;
+    subs_ = new std::vector<Prefilter*>;
 
   VLOG(10) << "constructed: " << reinterpret_cast<intptr_t>(this);
 }
@@ -140,7 +140,7 @@ Prefilter* Prefilter::Or(Prefilter* a, Prefilter* b) {
   return AndOr(OR, a, b);
 }
 
-static void SimplifyStringSet(set<string> *ss) {
+static void SimplifyStringSet(std::set<string> *ss) {
   // Now make sure that the strings aren't redundant.  For example, if
   // we know "ab" is a required string, then it doesn't help at all to
   // know that "abc" is also a required string, so delete "abc". This
@@ -161,7 +161,7 @@ static void SimplifyStringSet(set<string> *ss) {
   }
 }
 
-Prefilter* Prefilter::OrStrings(set<string>* ss) {
+Prefilter* Prefilter::OrStrings(std::set<string>* ss) {
   SimplifyStringSet(ss);
   Prefilter* or_prefilter = NULL;
   if (!ss->empty()) {
@@ -226,14 +226,14 @@ class Prefilter::Info {
   // Caller takes ownership of the Prefilter.
   Prefilter* TakeMatch();
 
-  set<string>& exact() { return exact_; }
+  std::set<string>& exact() { return exact_; }
 
   bool is_exact() const { return is_exact_; }
 
   class Walker;
 
  private:
-  set<string> exact_;
+  std::set<string> exact_;
 
   // When is_exact_ is true, the strings that match
   // are placed in exact_. When it is no longer an exact
@@ -272,7 +272,9 @@ string Prefilter::Info::ToString() {
   if (is_exact_) {
     int n = 0;
     string s;
-    for (set<string>::iterator i = exact_.begin(); i != exact_.end(); ++i) {
+    for (std::set<string>::iterator i = exact_.begin();
+         i != exact_.end();
+         ++i) {
       if (n++ > 0)
         s += ",";
       s += *i;
@@ -287,16 +289,17 @@ string Prefilter::Info::ToString() {
 }
 
 // Add the strings from src to dst.
-static void CopyIn(const set<string>& src, set<string>* dst) {
+static void CopyIn(const std::set<string>& src,
+                   std::set<string>* dst) {
   for (ConstSSIter i = src.begin(); i != src.end(); ++i)
     dst->insert(*i);
 }
 
 // Add the cross-product of a and b to dst.
 // (For each string i in a and j in b, add i+j.)
-static void CrossProduct(const set<string>& a,
-                         const set<string>& b,
-                         set<string>* dst) {
+static void CrossProduct(const std::set<string>& a,
+                         const std::set<string>& b,
+                         std::set<string>* dst) {
   for (ConstSSIter i = a.begin(); i != a.end(); ++i)
     for (ConstSSIter j = b.begin(); j != b.end(); ++j)
       dst->insert(*i + *j);

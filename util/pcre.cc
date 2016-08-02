@@ -8,6 +8,8 @@
 
 #include <errno.h>
 #include <limits>
+#include <utility>
+
 #include "util/util.h"
 #include "util/flags.h"
 #include "util/pcre.h"
@@ -431,6 +433,7 @@ int PCRE::GlobalReplace(string *str,
 
   if (start < static_cast<int>(str->size()))
     out.append(*str, start, static_cast<int>(str->size()) - start);
+  using std::swap;
   swap(out, *str);
   return count;
 }

@@ -11,7 +11,6 @@
  */
 
 #include <stdlib.h>
-
 #if !defined(_WIN32)
 #include <unistd.h>  // For POSIX options
 #endif
