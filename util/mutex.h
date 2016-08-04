@@ -203,9 +203,9 @@ class WriterMutexLock {
 };
 
 // Catch bug where variable name is omitted, e.g. MutexLock (&mu);
-#define MutexLock(x) COMPILE_ASSERT(0, mutex_lock_decl_missing_var_name)
-#define ReaderMutexLock(x) COMPILE_ASSERT(0, rmutex_lock_decl_missing_var_name)
-#define WriterMutexLock(x) COMPILE_ASSERT(0, wmutex_lock_decl_missing_var_name)
+#define MutexLock(x) static_assert(false, "MutexLock declaration missing variable name")
+#define ReaderMutexLock(x) static_assert(false, "ReaderMutexLock declaration missing variable name")
+#define WriterMutexLock(x) static_assert(false, "WriterMutexLock declaration missing variable name")
 
 }  // namespace re2
 
