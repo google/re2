@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "util/util.h"
-#include "util/bitmap.h"
+#include "re2/bitmap256.h"
 #include "re2/stringpiece.h"
 
 namespace re2 {

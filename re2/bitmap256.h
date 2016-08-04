@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_BITMAP_H_
-#define UTIL_BITMAP_H_
+#ifndef RE2_BITMAP256_H_
+#define RE2_BITMAP256_H_
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -91,4 +91,4 @@ int Bitmap256::FindNextSetBit(int c) const {
 
 }  // namespace re2
 
-#endif  // UTIL_BITMAP_H_
+#endif  // RE2_BITMAP256_H_
