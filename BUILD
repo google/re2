@@ -11,6 +11,7 @@ exports_files(["LICENSE"])
 cc_library(
     name = "re2",
     srcs = [
+        "re2/bitmap256.h",
         "re2/bitstate.cc",
         "re2/compile.cc",
         "re2/dfa.cc",
@@ -38,7 +39,6 @@ cc_library(
         "re2/unicode_groups.cc",
         "re2/unicode_groups.h",
         "re2/walker-inl.h",
-        "util/bitmap.h",
         "util/flags.h",
         "util/hash.cc",
         "util/logging.cc",

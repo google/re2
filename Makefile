@@ -78,7 +78,6 @@ INSTALL_HFILES=\
 
 HFILES=\
 	util/benchmark.h\
-	util/bitmap.h\
 	util/flags.h\
 	util/logging.h\
 	util/mutex.h\
@@ -91,6 +90,7 @@ HFILES=\
 	util/utf.h\
 	util/util.h\
 	util/valgrind.h\
+	re2/bitmap256.h\
 	re2/filtered_re2.h\
 	re2/prefilter.h\
 	re2/prefilter_tree.h\
