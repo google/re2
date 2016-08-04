@@ -52,7 +52,15 @@ class Bitmap256 {
     _BitScanForward64(&c, n);
     return static_cast<int>(c);
 #else
-#error "bit scan forward not implemented"
+    int c = 63;
+    for (int shift = 1 << 5; shift != 0; shift >>= 1) {
+      uint64 word = n << shift;
+      if (word != 0) {
+        n = word;
+        c -= shift;
+      }
+    }
+    return c;
 #endif
   }
 
