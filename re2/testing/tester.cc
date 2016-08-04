@@ -159,7 +159,7 @@ static string FormatMode(Regexp::ParseFlags flags) {
   for (int i = 0; i < arraysize(parse_modes); i++)
     if (parse_modes[i].parse_flags == flags)
       return parse_modes[i].desc;
-  return StringPrintf("%#x", static_cast<uint>(flags));
+  return StringPrintf("%#x", static_cast<uint32>(flags));
 }
 
 // Constructs and saves all the matching engines that
