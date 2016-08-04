@@ -736,7 +736,7 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
 
   // Split range into sections that agree on leading bytes.
   for (int i = 1; i < UTFmax; i++) {
-    uint m = (1<<(6*i)) - 1;  // last i bytes of a UTF-8 sequence
+    uint32 m = (1<<(6*i)) - 1;  // last i bytes of a UTF-8 sequence
     if ((lo & ~m) != (hi & ~m)) {
       if ((lo & m) != 0) {
         AddRuneRangeUTF8(lo, lo|m, foldcase);
