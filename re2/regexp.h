@@ -523,7 +523,7 @@ class Regexp {
   // exponential blowup in space requirements.
   // uint16 to control space usage.
   // The standard regexp routines will never generate a
-  // ref greater than the maximum repeat count (100),
+  // ref greater than the maximum repeat count (1000),
   // but even so, Incref and Decref consult an overflow map
   // when ref_ reaches kMaxRef.
   uint16 ref_;
