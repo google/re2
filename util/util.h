@@ -35,28 +35,10 @@ typedef uint64_t uint64;
 
 typedef unsigned int uint;
 
-// Prevent the compiler from complaining about or optimizing away variables
-// that appear unused.
-#undef ATTRIBUTE_UNUSED
-#if defined(__GNUC__)
-#define ATTRIBUTE_UNUSED __attribute__ ((unused))
-#else
-#define ATTRIBUTE_UNUSED
-#endif
-
-// COMPILE_ASSERT causes a compile error about msg if expr is not true.
-#if __cplusplus >= 201103L
-#define COMPILE_ASSERT(expr, msg) static_assert(expr, #msg)
-#else
-template<bool> struct CompileAssert {};
-#define COMPILE_ASSERT(expr, msg) \
-  typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1] ATTRIBUTE_UNUSED
-#endif
-
 // DISALLOW_COPY_AND_ASSIGN disallows the copy and operator= functions.
 // It goes in the private: declarations in a class.
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName&);                 \
+  TypeName(const TypeName&);               \
   void operator=(const TypeName&)
 
 #define arraysize(array) (int)(sizeof(array)/sizeof((array)[0]))
