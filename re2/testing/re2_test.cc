@@ -789,7 +789,7 @@ TEST(RE2, FullMatchTypeTests) {
   }
   {
     int32_t v;
-    static const int32_t max = 0x7fffffff;
+    static const int32_t max = INT32_C(0x7fffffff);
     static const int32_t min = -max - 1;
     CHECK(RE2::FullMatch("100",          "(-?\\d+)", &v)); CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("-100",         "(-?\\d+)", &v)); CHECK_EQ(v, -100);
@@ -810,7 +810,7 @@ TEST(RE2, FullMatchTypeTests) {
   }
   {
     uint32_t v;
-    static const uint32_t max = 0xfffffffful;
+    static const uint32_t max = UINT32_C(0xffffffff);
     CHECK(RE2::FullMatch("100",         "(\\d+)", &v)); CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("4294967295",  "(\\d+)", &v)); CHECK_EQ(v, max);
     CHECK(!RE2::FullMatch("4294967296", "(\\d+)", &v));
@@ -820,25 +820,25 @@ TEST(RE2, FullMatchTypeTests) {
   }
   {
     int64_t v;
-    static const int64_t max = 0x7fffffffffffffffull;
+    static const int64_t max = INT64_C(0x7fffffffffffffff);
     static const int64_t min = -max - 1;
     char buf[32];
 
     CHECK(RE2::FullMatch("100",  "(-?\\d+)", &v)); CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("-100", "(-?\\d+)", &v)); CHECK_EQ(v, -100);
 
-    snprintf(buf, sizeof(buf), "%lld", (long long int)max);
+    snprintf(buf, sizeof(buf), "%lld", (long long)max);
     CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, max);
 
-    snprintf(buf, sizeof(buf), "%lld", (long long int)min);
+    snprintf(buf, sizeof(buf), "%lld", (long long)min);
     CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, min);
 
-    snprintf(buf, sizeof(buf), "%lld", (long long int)max);
+    snprintf(buf, sizeof(buf), "%lld", (long long)max);
     assert(buf[strlen(buf)-1] != '9');
     buf[strlen(buf)-1]++;
     CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
 
-    snprintf(buf, sizeof(buf), "%lld", (long long int)min);
+    snprintf(buf, sizeof(buf), "%lld", (long long)min);
     assert(buf[strlen(buf)-1] != '9');
     buf[strlen(buf)-1]++;
     CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
@@ -846,13 +846,13 @@ TEST(RE2, FullMatchTypeTests) {
   {
     uint64_t v;
     int64_t v2;
-    static const uint64_t max = 0xffffffffffffffffull;
+    static const uint64_t max = UINT64_C(0xffffffffffffffff);
     char buf[32];
 
     CHECK(RE2::FullMatch("100",  "(-?\\d+)", &v));  CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("-100", "(-?\\d+)", &v2)); CHECK_EQ(v2, -100);
 
-    snprintf(buf, sizeof(buf), "%llu", (long long unsigned)max);
+    snprintf(buf, sizeof(buf), "%llu", (unsigned long long)max);
     CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, max);
 
     assert(buf[strlen(buf)-1] != '9');
