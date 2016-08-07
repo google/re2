@@ -4,6 +4,7 @@
 
 // Test StringGenerator.
 
+#include <stdint.h>
 #include <string>
 
 #include "util/test.h"
@@ -13,8 +14,8 @@
 namespace re2 {
 
 // Returns i to the e.
-static int64 IntegerPower(int i, int e) {
-  int64 p = 1;
+static int64_t IntegerPower(int i, int e) {
+  int64_t p = 1;
   while (e-- > 0)
     p *= i;
   return p;
@@ -68,7 +69,7 @@ static void RunTest(int len, string alphabet, bool donull) {
   }
 
   // Check total string count.
-  int64 m = 0;
+  int64_t m = 0;
   int alpha = utflen(alphabet.c_str());
   if (alpha == 0)  // Degenerate case.
     len = 0;

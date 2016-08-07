@@ -47,6 +47,7 @@
 //
 // See sparse_array.h for implementation details
 
+#include <stdint.h>
 #include <string.h>
 
 #include "util/util.h"
@@ -129,11 +130,11 @@ class SparseSet {
   bool contains(int i) const {
     DCHECK_GE(i, 0);
     DCHECK_LT(i, max_size_);
-    if (static_cast<uint32>(i) >= static_cast<uint32>(max_size_)) {
+    if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
       return false;
     }
     // Unsigned comparison avoids checking sparse_to_dense_[i] < 0.
-    return (uint32)sparse_to_dense_[i] < (uint32)size_ &&
+    return (uint32_t)sparse_to_dense_[i] < (uint32_t)size_ &&
            dense_[sparse_to_dense_[i]] == i;
   }
 
@@ -146,7 +147,7 @@ class SparseSet {
   // Set the value at the new index i to v.
   // Fast but unsafe: only use if contains(i) is false.
   void insert_new(int i) {
-    if (static_cast<uint32>(i) >= static_cast<uint32>(max_size_)) {
+    if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
       // Semantically, end() would be better here, but we already know
       // the user did something stupid, so begin() insulates them from
       // dereferencing an invalid pointer.

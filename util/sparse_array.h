@@ -92,6 +92,7 @@
 // immediately become inaccessible, but they are only guaranteed to be
 // destroyed when the SparseArray destructor is called.
 
+#include <stdint.h>
 #include <string.h>
 #include <utility>
 #include <vector>
@@ -311,11 +312,11 @@ template<typename Value>
 bool SparseArray<Value>::has_index(int i) const {
   DCHECK_GE(i, 0);
   DCHECK_LT(i, max_size_);
-  if (static_cast<uint32>(i) >= static_cast<uint32>(max_size_)) {
+  if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
     return false;
   }
   // Unsigned comparison avoids checking sparse_to_dense_[i] < 0.
-  return (uint32)sparse_to_dense_[i] < (uint32)size_ &&
+  return (uint32_t)sparse_to_dense_[i] < (uint32_t)size_ &&
          dense_[sparse_to_dense_[i]].index_ == i;
 }
 
@@ -323,7 +324,7 @@ bool SparseArray<Value>::has_index(int i) const {
 template<typename Value>
 typename SparseArray<Value>::iterator SparseArray<Value>::set(int i, Value v) {
   DebugCheckInvariants();
-  if (static_cast<uint32>(i) >= static_cast<uint32>(max_size_)) {
+  if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
     // Semantically, end() would be better here, but we already know
     // the user did something stupid, so begin() insulates them from
     // dereferencing an invalid pointer.
@@ -387,7 +388,7 @@ template<typename Value>
 typename SparseArray<Value>::iterator
 SparseArray<Value>::set_new(int i, Value v) {
   DebugCheckInvariants();
-  if (static_cast<uint32>(i) >= static_cast<uint32>(max_size_)) {
+  if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
     // Semantically, end() would be better here, but we already know
     // the user did something stupid, so begin() insulates them from
     // dereferencing an invalid pointer.

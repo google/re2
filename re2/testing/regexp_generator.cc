@@ -21,6 +21,7 @@
 // and passes the regexp to HandleRegexp.
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <memory>
@@ -66,7 +67,7 @@ void RegexpGenerator::Generate() {
 }
 
 // Generates random regular expressions, calling HandleRegexp for each one.
-void RegexpGenerator::GenerateRandom(int32 seed, int n) {
+void RegexpGenerator::GenerateRandom(int32_t seed, int n) {
   ACMRandom acm(seed);
   acm_ = &acm;
 
@@ -155,7 +156,8 @@ bool RegexpGenerator::GenerateRandomPostfix(std::vector<string>* post, int nstk,
 
     // Add operators if there are enough arguments.
     if (ops < maxops_ && acm_->Uniform(2) == 0) {
-      const string& fmt = ops_[acm_->Uniform(static_cast<int32>(ops_.size()))];
+      const string& fmt =
+          ops_[acm_->Uniform(static_cast<int32_t>(ops_.size()))];
       int nargs = CountArgs(fmt);
       if (nargs <= nstk) {
         post->push_back(fmt);
@@ -169,7 +171,8 @@ bool RegexpGenerator::GenerateRandomPostfix(std::vector<string>* post, int nstk,
 
     // Add atoms if there is room.
     if (atoms < maxatoms_ && acm_->Uniform(2) == 0) {
-      post->push_back(atoms_[acm_->Uniform(static_cast<int32>(atoms_.size()))]);
+      post->push_back(
+          atoms_[acm_->Uniform(static_cast<int32_t>(atoms_.size()))]);
       bool ret = GenerateRandomPostfix(post, nstk + 1, ops, atoms + 1);
       post->pop_back();
       if (ret)

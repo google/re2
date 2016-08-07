@@ -7,6 +7,7 @@
 // Fetch strings using a Java-like Next()/HasNext() interface.
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -71,7 +72,7 @@ bool StringGenerator::RandomDigits() {
   int len = acm_->Uniform(maxlen_+1);
   digits_.resize(len);
   for (int i = 0; i < len; i++)
-    digits_[i] = acm_->Uniform(static_cast<int32>(alphabet_.size()));
+    digits_[i] = acm_->Uniform(static_cast<int32_t>(alphabet_.size()));
   return true;
 }
 
@@ -96,7 +97,7 @@ const StringPiece& StringGenerator::Next() {
 }
 
 // Sets generator up to return n random strings.
-void StringGenerator::Random(int32 seed, int n) {
+void StringGenerator::Random(int32_t seed, int n) {
   if (acm_ == NULL)
     acm_ = new ACMRandom(seed);
   else

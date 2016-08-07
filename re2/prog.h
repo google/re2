@@ -9,6 +9,7 @@
 // See regexp.h for the Regexp class, which represents a regular
 // expression symbolically.
 
+#include <stdint.h>
 #include <atomic>
 #include <mutex>
 #include <string>
@@ -64,12 +65,12 @@ class Prog {
     Inst& operator=(const Inst&) = default;
 
     // Constructors per opcode
-    void InitAlt(uint32 out, uint32 out1);
-    void InitByteRange(int lo, int hi, int foldcase, uint32 out);
-    void InitCapture(int cap, uint32 out);
-    void InitEmptyWidth(EmptyOp empty, uint32 out);
+    void InitAlt(uint32_t out, uint32_t out1);
+    void InitByteRange(int lo, int hi, int foldcase, uint32_t out);
+    void InitCapture(int cap, uint32_t out);
+    void InitEmptyWidth(EmptyOp empty, uint32_t out);
     void InitMatch(int id);
-    void InitNop(uint32 out);
+    void InitNop(uint32_t out);
     void InitFail();
 
     // Getters
@@ -124,29 +125,29 @@ class Prog {
       out_opcode_ = (out<<4) | (last()<<3) | opcode;
     }
 
-    uint32 out_opcode_;  // 28 bits of out, 1 bit for last, 3 (low) bits opcode
-    union {              // additional instruction arguments:
-      uint32 out1_;      // opcode == kInstAlt
-                         //   alternate next instruction
+    uint32_t out_opcode_;   // 28 bits: out, 1 bit: last, 3 (low) bits: opcode
+    union {                 // additional instruction arguments:
+      uint32_t out1_;       // opcode == kInstAlt
+                            //   alternate next instruction
 
-      int32 cap_;        // opcode == kInstCapture
-                         //   Index of capture register (holds text
-                         //   position recorded by capturing parentheses).
-                         //   For \n (the submatch for the nth parentheses),
-                         //   the left parenthesis captures into register 2*n
-                         //   and the right one captures into register 2*n+1.
+      int32_t cap_;         // opcode == kInstCapture
+                            //   Index of capture register (holds text
+                            //   position recorded by capturing parentheses).
+                            //   For \n (the submatch for the nth parentheses),
+                            //   the left parenthesis captures into register 2*n
+                            //   and the right one captures into register 2*n+1.
 
-      int32 match_id_;   // opcode == kInstMatch
-                         //   Match ID to identify this match (for re2::Set).
+      int32_t match_id_;    // opcode == kInstMatch
+                            //   Match ID to identify this match (for re2::Set).
 
-      struct {           // opcode == kInstByteRange
-        uint8 lo_;       //   byte range is lo_-hi_ inclusive
-        uint8 hi_;       //
-        uint8 foldcase_; //   convert A-Z to a-z before checking range.
+      struct {              // opcode == kInstByteRange
+        uint8_t lo_;        //   byte range is lo_-hi_ inclusive
+        uint8_t hi_;        //
+        uint8_t foldcase_;  //   convert A-Z to a-z before checking range.
       };
 
-      EmptyOp empty_;    // opcode == kInstEmptyWidth
-                         //   empty_ is bitwise OR of kEmpty* flags above.
+      EmptyOp empty_;       // opcode == kInstEmptyWidth
+                            //   empty_ is bitwise OR of kEmpty* flags above.
     };
 
     friend class Compiler;
@@ -189,8 +190,8 @@ class Prog {
   void set_reversed(bool reversed) { reversed_ = reversed; }
   int list_count() { return list_count_; }
   int inst_count(InstOp op) { return inst_count_[op]; }
-  void set_dfa_mem(int64 dfa_mem) { dfa_mem_ = dfa_mem; }
-  int64 dfa_mem() { return dfa_mem_; }
+  void set_dfa_mem(int64_t dfa_mem) { dfa_mem_ = dfa_mem; }
+  int64_t dfa_mem() { return dfa_mem_; }
   int flags() { return flags_; }
   void set_flags(int flags) { flags_ = flags; }
   bool anchor_start() { return anchor_start_; }
@@ -198,7 +199,7 @@ class Prog {
   bool anchor_end() { return anchor_end_; }
   void set_anchor_end(bool b) { anchor_end_ = b; }
   int bytemap_range() { return bytemap_range_; }
-  const uint8* bytemap() { return bytemap_; }
+  const uint8_t* bytemap() { return bytemap_; }
 
   // Lazily computed.
   int first_byte();
@@ -210,7 +211,7 @@ class Prog {
 
   // Returns the set of kEmpty flags that are in effect at
   // position p within context.
-  static uint32 EmptyFlags(const StringPiece& context, const char* p);
+  static uint32_t EmptyFlags(const StringPiece& context, const char* p);
 
   // Returns whether byte c is a word character: ASCII only.
   // Used by the implementation of \b and \B.
@@ -219,7 +220,7 @@ class Prog {
   //     (the DFA has only one-byte lookahead).
   //   - even if the lookahead were possible, the Progs would be huge.
   // This crude approximation is the same one PCRE uses.
-  static bool IsWordChar(uint8 c) {
+  static bool IsWordChar(uint8_t c) {
     return ('A' <= c && c <= 'Z') ||
            ('a' <= c && c <= 'z') ||
            ('0' <= c && c <= '9') ||
@@ -361,14 +362,14 @@ class Prog {
   int inst_count_[kNumInst];  // count of instructions by opcode
 
   Inst* inst_;              // pointer to instruction array
-  uint8* onepass_nodes_;    // data for OnePass nodes
+  uint8_t* onepass_nodes_;  // data for OnePass nodes
 
-  Mutex dfa_mutex_;    // Protects dfa_first_, dfa_longest_
-  std::atomic<DFA*> dfa_first_;     // DFA cached for kFirstMatch
-  std::atomic<DFA*> dfa_longest_;   // DFA cached for kLongestMatch and kFullMatch
-  int64 dfa_mem_;      // Maximum memory for DFAs.
+  Mutex dfa_mutex_;                // Protects dfa_first_, dfa_longest_
+  std::atomic<DFA*> dfa_first_;    // DFA cached for kFirstMatch
+  std::atomic<DFA*> dfa_longest_;  // DFA cached for kLongestMatch/kFullMatch
+  int64_t dfa_mem_;                // Maximum memory for DFAs.
 
-  uint8 bytemap_[256];      // map from input bytes to byte classes
+  uint8_t bytemap_[256];    // map from input bytes to byte classes
 
   std::once_flag first_byte_once_;
 

@@ -8,6 +8,7 @@
 // Regular expression generator: generates all possible
 // regular expressions within given parameters (see below for details).
 
+#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -36,7 +37,7 @@ class RegexpGenerator {
   void Generate();
 
   // Generates n random regular expressions, calling HandleRegexp(re) for each.
-  void GenerateRandom(int32 seed, int n);
+  void GenerateRandom(int32_t seed, int n);
 
   // Handles a regular expression.  Must be provided by subclass.
   virtual void HandleRegexp(const string& regexp) = 0;

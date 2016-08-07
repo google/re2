@@ -18,14 +18,16 @@
 // to 16.5 kB of data but make the data harder to use;
 // we don't bother.
 
+#include <stdint.h>
+
 #include "util/util.h"
 
 namespace re2 {
 
 struct URange16
 {
-  uint16 lo;
-  uint16 hi;
+  uint16_t lo;
+  uint16_t hi;
 };
 
 struct URange32

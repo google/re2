@@ -18,6 +18,7 @@
 
 #include <ctype.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <algorithm>
 #include <map>
@@ -1183,7 +1184,7 @@ bool Regexp::ParseState::MaybeConcatString(int r, ParseFlags flags) {
   if (r >= 0) {
     re1->op_ = kRegexpLiteral;
     re1->rune_ = r;
-    re1->parse_flags_ = static_cast<uint16>(flags);
+    re1->parse_flags_ = static_cast<uint16_t>(flags);
     return true;
   }
 

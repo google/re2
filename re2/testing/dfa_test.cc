@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -101,9 +102,9 @@ TEST(SingleThreaded, BuildEntireDFA) {
   CHECK(re);
   int max = 24;
   for (int i = 17; i < max; i++) {
-    int64 limit = 1<<i;
-    int64 usage;
-    //int64 progusage, dfamem;
+    int64_t limit = 1<<i;
+    int64_t usage;
+    //int64_t progusage, dfamem;
     {
       testing::MallocCounter m(testing::MallocCounter::THIS_THREAD_ONLY);
       Prog* prog = re->CompileToProg(limit);
@@ -205,8 +206,8 @@ TEST(SingleThreaded, SearchDFA) {
   // Tell the DFA to trudge along instead.
   FLAGS_re2_dfa_bail_when_slow = false;
 
-  int64 usage;
-  int64 peak_usage;
+  int64_t usage;
+  int64_t peak_usage;
   {
     testing::MallocCounter m(testing::MallocCounter::THIS_THREAD_ONLY);
     Prog* prog = re->CompileToProg(1<<n);

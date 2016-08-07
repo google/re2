@@ -86,6 +86,7 @@
 // form accessible to clients, so that client code can analyze the
 // parsed regular expressions.
 
+#include <stdint.h>
 #include <map>
 #include <set>
 #include <string>
@@ -412,8 +413,8 @@ class Regexp {
   // Construction and execution of prog will
   // stay within approximately max_mem bytes of memory.
   // If max_mem <= 0, a reasonable default is used.
-  Prog* CompileToProg(int64 max_mem);
-  Prog* CompileToReverseProg(int64 max_mem);
+  Prog* CompileToProg(int64_t max_mem);
+  Prog* CompileToReverseProg(int64_t max_mem);
 
   // Whether to expect this library to find exactly the same answer as PCRE
   // when running this regexp.  Most regexps do mimic PCRE exactly, but a few
@@ -491,7 +492,7 @@ class Regexp {
 
   // Allocate space for n sub-regexps.
   void AllocSub(int n) {
-    if (n < 0 || static_cast<uint16>(n) != n)
+    if (n < 0 || static_cast<uint16_t>(n) != n)
       LOG(FATAL) << "Cannot AllocSub " << n;
     if (n > 1)
       submany_ = new Regexp*[n];
@@ -505,38 +506,38 @@ class Regexp {
   void Swap(Regexp *that);
 
   // Operator.  See description of operators above.
-  // uint8 instead of RegexpOp to control space usage.
-  uint8 op_;
+  // uint8_t instead of RegexpOp to control space usage.
+  uint8_t op_;
 
   // Is this regexp structure already simple
   // (has it been returned by Simplify)?
-  // uint8 instead of bool to control space usage.
-  uint8 simple_;
+  // uint8_t instead of bool to control space usage.
+  uint8_t simple_;
 
   // Flags saved from parsing and used during execution.
   // (Only FoldCase is used.)
-  // uint16 instead of ParseFlags to control space usage.
-  uint16 parse_flags_;
+  // uint16_t instead of ParseFlags to control space usage.
+  uint16_t parse_flags_;
 
   // Reference count.  Exists so that SimplifyRegexp can build
   // regexp structures that are dags rather than trees to avoid
   // exponential blowup in space requirements.
-  // uint16 to control space usage.
+  // uint16_t to control space usage.
   // The standard regexp routines will never generate a
   // ref greater than the maximum repeat count (1000),
   // but even so, Incref and Decref consult an overflow map
   // when ref_ reaches kMaxRef.
-  uint16 ref_;
-  static const uint16 kMaxRef = 0xffff;
+  uint16_t ref_;
+  static const uint16_t kMaxRef = 0xffff;
 
   // Subexpressions.
-  // uint16 to control space usage.
+  // uint16_t to control space usage.
   // Concat and Alternate handle larger numbers of subexpressions
   // by building concatenation or alternation trees.
   // Other routines should call Concat or Alternate instead of
   // filling in sub() by hand.
-  uint16 nsub_;
-  static const uint16 kMaxNsub = 0xffff;
+  uint16_t nsub_;
+  static const uint16_t kMaxNsub = 0xffff;
   union {
     Regexp** submany_;  // if nsub_ > 1
     Regexp* subone_;  // if nsub_ == 1
@@ -600,9 +601,9 @@ class CharClassBuilder {
   void AddRangeFlags(Rune lo, Rune hi, Regexp::ParseFlags parse_flags);
 
  private:
-  static const uint32 AlphaMask = (1<<26) - 1;
-  uint32 upper_;  // bitmap of A-Z
-  uint32 lower_;  // bitmap of a-z
+  static const uint32_t AlphaMask = (1<<26) - 1;
+  uint32_t upper_;  // bitmap of A-Z
+  uint32_t lower_;  // bitmap of a-z
   int nrunes_;
   RuneRangeSet ranges_;
   DISALLOW_COPY_AND_ASSIGN(CharClassBuilder);

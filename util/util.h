@@ -24,15 +24,6 @@ using std::string;
 
 namespace re2 {
 
-typedef int8_t int8;
-typedef uint8_t uint8;
-typedef int16_t int16;
-typedef uint16_t uint16;
-typedef int32_t int32;
-typedef uint32_t uint32;
-typedef int64_t int64;
-typedef uint64_t uint64;
-
 // DISALLOW_COPY_AND_ASSIGN disallows the copy and operator= functions.
 // It goes in the private: declarations in a class.
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
@@ -59,19 +50,21 @@ extern void SStringPrintf(string* dst, const char* format, ...);
 extern void StringAppendF(string* dst, const char* format, ...);
 extern string PrefixSuccessor(const StringPiece& prefix);
 
-uint32 hashword(const uint32*, size_t, uint32);
-void hashword2(const uint32*, size_t, uint32*, uint32*);
+uint32_t hashword(const uint32_t*, size_t, uint32_t);
+void hashword2(const uint32_t*, size_t, uint32_t*, uint32_t*);
 
-static inline uint32 Hash32StringWithSeed(const char* s, int len, uint32 seed) {
-  return hashword((uint32*)s, len/4, seed);
+static inline uint32_t Hash32StringWithSeed(const char* s, int len,
+                                            uint32_t seed) {
+  return hashword((uint32_t*)s, len/4, seed);
 }
 
-static inline uint64 Hash64StringWithSeed(const char* s, int len, uint32 seed) {
-  uint32 x, y;
+static inline uint64_t Hash64StringWithSeed(const char* s, int len,
+                                            uint32_t seed) {
+  uint32_t x, y;
   x = seed;
   y = 0;
-  hashword2((uint32*)s, len/4, &x, &y);
-  return ((uint64)x << 32) | y;
+  hashword2((uint32_t*)s, len/4, &x, &y);
+  return ((uint64_t)x << 32) | y;
 }
 
 bool RunningOnValgrind();

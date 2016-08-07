@@ -8,6 +8,7 @@
 #include "re2/regexp.h"
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <algorithm>
 #include <map>
@@ -23,9 +24,9 @@ namespace re2 {
 
 // Constructor.  Allocates vectors as appropriate for operator.
 Regexp::Regexp(RegexpOp op, ParseFlags parse_flags)
-  : op_(static_cast<uint8>(op)),
+  : op_(static_cast<uint8_t>(op)),
     simple_(false),
-    parse_flags_(static_cast<uint16>(parse_flags)),
+    parse_flags_(static_cast<uint16_t>(parse_flags)),
     ref_(1),
     nsub_(0),
     down_(NULL) {
@@ -114,7 +115,7 @@ void Regexp::Decref() {
     MutexLock l(ref_mutex);
     int r = (*ref_map)[this] - 1;
     if (r < kMaxRef) {
-      ref_ = static_cast<uint16>(r);
+      ref_ = static_cast<uint16_t>(r);
       ref_map->erase(this);
     } else {
       (*ref_map)[this] = r;
@@ -878,7 +879,7 @@ void CharClassBuilder::Negate() {
 
 CharClass* CharClass::New(int maxranges) {
   CharClass* cc;
-  uint8* data = new uint8[sizeof *cc + maxranges*sizeof cc->ranges_[0]];
+  uint8_t* data = new uint8_t[sizeof *cc + maxranges*sizeof cc->ranges_[0]];
   cc = reinterpret_cast<CharClass*>(data);
   cc->ranges_ = reinterpret_cast<RuneRange*>(data + sizeof *cc);
   cc->nranges_ = 0;
@@ -888,7 +889,7 @@ CharClass* CharClass::New(int maxranges) {
 }
 
 void CharClass::Delete() {
-  uint8 *data = reinterpret_cast<uint8*>(this);
+  uint8_t* data = reinterpret_cast<uint8_t*>(this);
   delete[] data;
 }
 
