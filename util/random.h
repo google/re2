@@ -7,6 +7,8 @@
 
 // Modified from Google perftools's tcmalloc_unittest.cc.
 
+#include <stdint.h>
+
 #include "util/util.h"
 
 namespace re2 {
@@ -14,14 +16,14 @@ namespace re2 {
 // ACM minimal standard random number generator.  (re-entrant.)
 class ACMRandom {
  public:
-  ACMRandom(int32 seed) : seed_(seed) {}
-  int32 Next();
-  int32 Uniform(int32);
+  ACMRandom(int32_t seed) : seed_(seed) {}
+  int32_t Next();
+  int32_t Uniform(int32_t);
 
-  void Reset(int32 seed) { seed_ = seed; }
+  void Reset(int32_t seed) { seed_ = seed; }
 
  private:
-  int32 seed_;
+  int32_t seed_;
 };
 
 }  // namespace re2

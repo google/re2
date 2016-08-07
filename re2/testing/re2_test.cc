@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <map>
@@ -771,7 +772,7 @@ TEST(RE2, FullMatchTypeTests) {
     CHECK_EQ(c, static_cast<unsigned char>('H'));
   }
   {
-    int16 v;
+    int16_t v;
     CHECK(RE2::FullMatch("100",     "(-?\\d+)", &v));    CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("-100",    "(-?\\d+)", &v));    CHECK_EQ(v, -100);
     CHECK(RE2::FullMatch("32767",   "(-?\\d+)", &v));    CHECK_EQ(v, 32767);
@@ -780,16 +781,16 @@ TEST(RE2, FullMatchTypeTests) {
     CHECK(!RE2::FullMatch("32768",  "(-?\\d+)", &v));
   }
   {
-    uint16 v;
+    uint16_t v;
     CHECK(RE2::FullMatch("100",     "(\\d+)", &v));    CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("32767",   "(\\d+)", &v));    CHECK_EQ(v, 32767);
     CHECK(RE2::FullMatch("65535",   "(\\d+)", &v));    CHECK_EQ(v, 65535);
     CHECK(!RE2::FullMatch("65536",  "(\\d+)", &v));
   }
   {
-    int32 v;
-    static const int32 max = 0x7fffffff;
-    static const int32 min = -max - 1;
+    int32_t v;
+    static const int32_t max = 0x7fffffff;
+    static const int32_t min = -max - 1;
     CHECK(RE2::FullMatch("100",          "(-?\\d+)", &v)); CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("-100",         "(-?\\d+)", &v)); CHECK_EQ(v, -100);
     CHECK(RE2::FullMatch("2147483647",   "(-?\\d+)", &v)); CHECK_EQ(v, max);
@@ -808,8 +809,8 @@ TEST(RE2, FullMatchTypeTests) {
     CHECK(!RE2::FullMatch("000x7fffffff", "(.*)", RE2::CRadix(&v)));
   }
   {
-    uint32 v;
-    static const uint32 max = 0xfffffffful;
+    uint32_t v;
+    static const uint32_t max = 0xfffffffful;
     CHECK(RE2::FullMatch("100",         "(\\d+)", &v)); CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("4294967295",  "(\\d+)", &v)); CHECK_EQ(v, max);
     CHECK(!RE2::FullMatch("4294967296", "(\\d+)", &v));
@@ -818,9 +819,9 @@ TEST(RE2, FullMatchTypeTests) {
     CHECK(RE2::FullMatch(zeros + "4294967295", "(\\d+)", &v)); CHECK_EQ(v, max);
   }
   {
-    int64 v;
-    static const int64 max = 0x7fffffffffffffffull;
-    static const int64 min = -max - 1;
+    int64_t v;
+    static const int64_t max = 0x7fffffffffffffffull;
+    static const int64_t min = -max - 1;
     char buf[32];
 
     CHECK(RE2::FullMatch("100",  "(-?\\d+)", &v)); CHECK_EQ(v, 100);
@@ -843,9 +844,9 @@ TEST(RE2, FullMatchTypeTests) {
     CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
   }
   {
-    uint64 v;
-    int64 v2;
-    static const uint64 max = 0xffffffffffffffffull;
+    uint64_t v;
+    int64_t v2;
+    static const uint64_t max = 0xffffffffffffffffull;
     char buf[32];
 
     CHECK(RE2::FullMatch("100",  "(-?\\d+)", &v));  CHECK_EQ(v, 100);

@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <iterator>
@@ -531,8 +532,8 @@ static int ascii_strcasecmp(const char* a, const char* b, int len) {
   const char *ae = a + len;
 
   for (; a < ae; a++, b++) {
-    uint8 x = *a;
-    uint8 y = *b;
+    uint8_t x = *a;
+    uint8_t y = *b;
     if ('A' <= y && y <= 'Z')
       y += 'a' - 'A';
     if (x != y)
@@ -1142,11 +1143,11 @@ bool RE2::Arg::parse_longlong_radix(const char* str,
   str = TerminateNumber(buf, sizeof buf, str, &n, false);
   char* end;
   errno = 0;
-  int64 r = strtoll(str, &end, radix);
+  int64_t r = strtoll(str, &end, radix);
   if (end != str + n) return false;   // Leftover junk
   if (errno) return false;
   if (dest == NULL) return true;
-  *(reinterpret_cast<int64*>(dest)) = r;
+  *(reinterpret_cast<int64_t*>(dest)) = r;
   return true;
 }
 
@@ -1164,11 +1165,11 @@ bool RE2::Arg::parse_ulonglong_radix(const char* str,
   }
   char* end;
   errno = 0;
-  uint64 r = strtoull(str, &end, radix);
+  uint64_t r = strtoull(str, &end, radix);
   if (end != str + n) return false;   // Leftover junk
   if (errno) return false;
   if (dest == NULL) return true;
-  *(reinterpret_cast<uint64*>(dest)) = r;
+  *(reinterpret_cast<uint64_t*>(dest)) = r;
   return true;
 }
 

@@ -74,7 +74,7 @@ def PrintGroup(name, codes):
 
   ugroup = "{ \"%s\", +1" % (name,)
   # if len(code16) > 0:
-  #   PrintCodes("uint16", name+"_code16", code16)
+  #   PrintCodes("uint16_t", name+"_code16", code16)
   #   ugroup += ", %s_code16, %d" % (name, len(code16))
   # else:
   #   ugroup += ", 0, 0"

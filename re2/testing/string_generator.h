@@ -9,6 +9,7 @@
 // maxlen letters using the set of letters in alpha.
 // Fetch strings using a Java-like Next()/HasNext() interface.
 
+#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -29,7 +30,7 @@ class StringGenerator {
   void Reset();
 
   // Causes generator to emit random strings for next n calls to Next().
-  void Random(int32 seed, int n);
+  void Random(int32_t seed, int n);
 
   // Causes generator to emit a NULL as the next call.
   void GenerateNULL();

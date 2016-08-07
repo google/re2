@@ -5,6 +5,7 @@
 #ifndef RE2_TESTING_EXHAUSTIVE_TESTER_H_
 #define RE2_TESTING_EXHAUSTIVE_TESTER_H_
 
+#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -57,7 +58,7 @@ class ExhaustiveTester : public RegexpGenerator {
   void HandleRegexp(const string& regexp);
 
   // Causes testing to generate random input strings.
-  void RandomStrings(int32 seed, int32 count) {
+  void RandomStrings(int32_t seed, int32_t count) {
     randomstrings_ = true;
     stringseed_ = seed;
     stringcount_ = count;
@@ -72,7 +73,7 @@ class ExhaustiveTester : public RegexpGenerator {
   int failures_;  // Number of tests failed.
 
   bool randomstrings_;  // Whether to use random strings
-  int32 stringseed_;    // If so, the seed.
+  int32_t stringseed_;  // If so, the seed.
   int stringcount_;     // If so, how many to generate.
   DISALLOW_COPY_AND_ASSIGN(ExhaustiveTester);
 };

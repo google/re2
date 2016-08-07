@@ -8,6 +8,7 @@
 #ifdef _MSC_VER
 #include <intrin.h>
 #endif
+#include <stdint.h>
 #include <string.h>
 
 #include "util/util.h"
@@ -42,7 +43,7 @@ class Bitmap256 {
 
  private:
   // Finds the least significant non-zero bit in n.
-  static int FindLSBSet(uint64 n) {
+  static int FindLSBSet(uint64_t n) {
     DCHECK_NE(n, 0);
 
 #if defined(__GNUC__)
@@ -54,7 +55,7 @@ class Bitmap256 {
 #else
     int c = 63;
     for (int shift = 1 << 5; shift != 0; shift >>= 1) {
-      uint64 word = n << shift;
+      uint64_t word = n << shift;
       if (word != 0) {
         n = word;
         c -= shift;
@@ -64,7 +65,7 @@ class Bitmap256 {
 #endif
   }
 
-  uint64 words_[4];
+  uint64_t words_[4];
 };
 
 int Bitmap256::FindNextSetBit(int c) const {
@@ -73,7 +74,7 @@ int Bitmap256::FindNextSetBit(int c) const {
 
   // Check the word that contains the bit. Mask out any lower bits.
   int i = c / 64;
-  uint64 word = words_[i] & (~0ULL << (c % 64));
+  uint64_t word = words_[i] & (~0ULL << (c % 64));
   if (word != 0)
     return (i * 64) + FindLSBSet(word);
 

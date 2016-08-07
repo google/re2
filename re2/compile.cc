@@ -8,6 +8,7 @@
 // This file's external interface is just Regexp::CompileToProg.
 // The Compiler class defined in this file is private.
 
+#include <stdint.h>
 #include <string.h>
 #include <sys/types.h>
 #include <map>
@@ -33,14 +34,14 @@ namespace re2 {
 // is always the fail instruction, which never appears on a list.
 
 struct PatchList {
-  uint32 p;
+  uint32_t p;
 
   // Returns patch list containing just p.
-  static PatchList Mk(uint32 p);
+  static PatchList Mk(uint32_t p);
 
   // Patches all the entries on l to have value v.
   // Caller must not ever use patch list again.
-  static void Patch(Prog::Inst *inst0, PatchList l, uint32 v);
+  static void Patch(Prog::Inst *inst0, PatchList l, uint32_t v);
 
   // Deref returns the next pointer pointed at by p.
   static PatchList Deref(Prog::Inst *inst0, PatchList l);
@@ -52,7 +53,7 @@ struct PatchList {
 static PatchList nullPatchList = { 0 };
 
 // Returns patch list containing just p.
-PatchList PatchList::Mk(uint32 p) {
+PatchList PatchList::Mk(uint32_t p) {
   PatchList l;
   l.p = p;
   return l;
@@ -69,7 +70,7 @@ PatchList PatchList::Deref(Prog::Inst* inst0, PatchList l) {
 }
 
 // Patches all the entries on l to have value v.
-void PatchList::Patch(Prog::Inst *inst0, PatchList l, uint32 val) {
+void PatchList::Patch(Prog::Inst *inst0, PatchList l, uint32_t val) {
   while (l.p != 0) {
     Prog::Inst* ip = &inst0[l.p>>1];
     if (l.p&1) {
@@ -108,11 +109,11 @@ PatchList PatchList::Append(Prog::Inst* inst0, PatchList l1, PatchList l2) {
 
 // Compiled program fragment.
 struct Frag {
-  uint32 begin;
+  uint32_t begin;
   PatchList end;
 
   Frag() : begin(0) { end.p = 0; }  // needed so Frag can go in vector
-  Frag(uint32 begin, PatchList end) : begin(begin), end(end) {}
+  Frag(uint32_t begin, PatchList end) : begin(begin), end(end) {}
 };
 
 // Input encodings.
@@ -130,7 +131,7 @@ class Compiler : public Regexp::Walker<Frag> {
   // Caller is responsible for deleting Prog when finished with it.
   // If reversed is true, compiles for walking over the input
   // string backward (reverses all concatenations).
-  static Prog *Compile(Regexp* re, bool reversed, int64 max_mem);
+  static Prog *Compile(Regexp* re, bool reversed, int64_t max_mem);
 
   // Compiles alternation of all the re to a new Prog.
   // Each re has a match with an id equal to its index in the vector.
@@ -167,7 +168,7 @@ class Compiler : public Regexp::Walker<Frag> {
   Frag NoMatch();
 
   // Returns a fragment that matches the empty string.
-  Frag Match(int32 id);
+  Frag Match(int32_t id);
 
   // Returns a no-op fragment.
   Frag Nop();
@@ -195,8 +196,8 @@ class Compiler : public Regexp::Walker<Frag> {
   void Add_80_10ffff();
 
   // New suffix that matches the byte range lo-hi, then goes to next.
-  int UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next);
-  int CachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next);
+  int UncachedRuneByteSuffix(uint8_t lo, uint8_t hi, bool foldcase, int next);
+  int CachedRuneByteSuffix(uint8_t lo, uint8_t hi, bool foldcase, int next);
 
   // Returns true iff the suffix is cached.
   bool IsCachedRuneByteSuffix(int id);
@@ -223,7 +224,7 @@ class Compiler : public Regexp::Walker<Frag> {
   // Single rune.
   Frag Literal(Rune r, bool foldcase);
 
-  void Setup(Regexp::ParseFlags, int64, RE2::Anchor);
+  void Setup(Regexp::ParseFlags, int64_t, RE2::Anchor);
   Prog* Finish();
 
   // Returns .* where dot = any byte
@@ -241,9 +242,9 @@ class Compiler : public Regexp::Walker<Frag> {
   int inst_len_;       // Number of instructions used.
   int inst_cap_;       // Number of instructions allocated.
 
-  int64 max_mem_;      // Total memory budget.
+  int64_t max_mem_;    // Total memory budget.
 
-  std::map<uint64, int> rune_cache_;
+  std::map<uint64_t, int> rune_cache_;
   Frag rune_range_;
 
   RE2::Anchor anchor_;  // anchor mode for RE2::Set
@@ -414,7 +415,7 @@ Frag Compiler::Nop() {
 }
 
 // Returns a fragment that signals a match.
-Frag Compiler::Match(int32 match_id) {
+Frag Compiler::Match(int32_t match_id) {
   int id = AllocInst(1);
   if (id < 0)
     return NoMatch();
@@ -470,7 +471,7 @@ void Compiler::BeginRange() {
   rune_range_.end = nullPatchList;
 }
 
-int Compiler::UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase,
+int Compiler::UncachedRuneByteSuffix(uint8_t lo, uint8_t hi, bool foldcase,
                                      int next) {
   Frag f = ByteRange(lo, hi, foldcase);
   if (next != 0) {
@@ -481,17 +482,18 @@ int Compiler::UncachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase,
   return f.begin;
 }
 
-static uint64 MakeRuneCacheKey(uint8 lo, uint8 hi, bool foldcase, int next) {
-  return (uint64)next << 17 |
-         (uint64)lo   <<  9 |
-         (uint64)hi   <<  1 |
-         (uint64)foldcase;
+static uint64_t MakeRuneCacheKey(uint8_t lo, uint8_t hi, bool foldcase,
+                                 int next) {
+  return (uint64_t)next << 17 |
+         (uint64_t)lo   <<  9 |
+         (uint64_t)hi   <<  1 |
+         (uint64_t)foldcase;
 }
 
-int Compiler::CachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase,
+int Compiler::CachedRuneByteSuffix(uint8_t lo, uint8_t hi, bool foldcase,
                                    int next) {
-  uint64 key = MakeRuneCacheKey(lo, hi, foldcase, next);
-  std::map<uint64, int>::const_iterator it = rune_cache_.find(key);
+  uint64_t key = MakeRuneCacheKey(lo, hi, foldcase, next);
+  std::map<uint64_t, int>::const_iterator it = rune_cache_.find(key);
   if (it != rune_cache_.end())
     return it->second;
   int id = UncachedRuneByteSuffix(lo, hi, foldcase, next);
@@ -500,12 +502,12 @@ int Compiler::CachedRuneByteSuffix(uint8 lo, uint8 hi, bool foldcase,
 }
 
 bool Compiler::IsCachedRuneByteSuffix(int id) {
-  uint8 lo = inst_[id].lo_;
-  uint8 hi = inst_[id].hi_;
+  uint8_t lo = inst_[id].lo_;
+  uint8_t hi = inst_[id].hi_;
   bool foldcase = inst_[id].foldcase() != 0;
   int next = inst_[id].out();
 
-  uint64 key = MakeRuneCacheKey(lo, hi, foldcase, next);
+  uint64_t key = MakeRuneCacheKey(lo, hi, foldcase, next);
   return rune_cache_.find(key) != rune_cache_.end();
 }
 
@@ -657,8 +659,8 @@ void Compiler::AddRuneRangeLatin1(Rune lo, Rune hi, bool foldcase) {
     return;
   if (hi > 0xFF)
     hi = 0xFF;
-  AddSuffix(UncachedRuneByteSuffix(static_cast<uint8>(lo),
-                                   static_cast<uint8>(hi), foldcase, 0));
+  AddSuffix(UncachedRuneByteSuffix(static_cast<uint8_t>(lo),
+                                   static_cast<uint8_t>(hi), foldcase, 0));
 }
 
 // Table describing how to make a UTF-8 matching machine
@@ -699,8 +701,8 @@ void Compiler::Add_80_10ffff() {
     int next = 0;
     if (p.next >= 0)
       next = inst[p.next];
-    inst[i] = UncachedRuneByteSuffix(static_cast<uint8>(p.lo),
-                                     static_cast<uint8>(p.hi), false, next);
+    inst[i] = UncachedRuneByteSuffix(static_cast<uint8_t>(p.lo),
+                                     static_cast<uint8_t>(p.hi), false, next);
     if ((p.lo & 0xC0) != 0x80)
       AddSuffix(inst[i]);
   }
@@ -729,14 +731,14 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
 
   // ASCII range is always a special case.
   if (hi < Runeself) {
-    AddSuffix(UncachedRuneByteSuffix(static_cast<uint8>(lo),
-                                     static_cast<uint8>(hi), foldcase, 0));
+    AddSuffix(UncachedRuneByteSuffix(static_cast<uint8_t>(lo),
+                                     static_cast<uint8_t>(hi), foldcase, 0));
     return;
   }
 
   // Split range into sections that agree on leading bytes.
   for (int i = 1; i < UTFmax; i++) {
-    uint32 m = (1<<(6*i)) - 1;  // last i bytes of a UTF-8 sequence
+    uint32_t m = (1<<(6*i)) - 1;  // last i bytes of a UTF-8 sequence
     if ((lo & ~m) != (hi & ~m)) {
       if ((lo & m) != 0) {
         AddRuneRangeUTF8(lo, lo|m, foldcase);
@@ -752,7 +754,7 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
   }
 
   // Finally.  Generate byte matching equivalent for lo-hi.
-  uint8 ulo[UTFmax], uhi[UTFmax];
+  uint8_t ulo[UTFmax], uhi[UTFmax];
   int n = runetochar(reinterpret_cast<char*>(ulo), &lo);
   int m = runetochar(reinterpret_cast<char*>(uhi), &hi);
   (void)m;  // USED(m)
@@ -840,11 +842,11 @@ Frag Compiler::Literal(Rune r, bool foldcase) {
     case kEncodingUTF8: {
       if (r < Runeself)  // Make common case fast.
         return ByteRange(r, r, foldcase);
-      uint8 buf[UTFmax];
+      uint8_t buf[UTFmax];
       int n = runetochar(reinterpret_cast<char*>(buf), &r);
-      Frag f = ByteRange((uint8)buf[0], buf[0], false);
+      Frag f = ByteRange((uint8_t)buf[0], buf[0], false);
       for (int i = 1; i < n; i++)
-        f = Cat(f, ByteRange((uint8)buf[i], buf[i], false));
+        f = Cat(f, ByteRange((uint8_t)buf[i], buf[i], false));
       return f;
     }
   }
@@ -1092,7 +1094,7 @@ static bool IsAnchorEnd(Regexp** pre, int depth) {
   return false;
 }
 
-void Compiler::Setup(Regexp::ParseFlags flags, int64 max_mem,
+void Compiler::Setup(Regexp::ParseFlags flags, int64_t max_mem,
                      RE2::Anchor anchor) {
   prog_->set_flags(flags);
 
@@ -1101,11 +1103,11 @@ void Compiler::Setup(Regexp::ParseFlags flags, int64 max_mem,
   max_mem_ = max_mem;
   if (max_mem <= 0) {
     max_inst_ = 100000;  // more than enough
-  } else if (max_mem <= static_cast<int64>(sizeof(Prog))) {
+  } else if (max_mem <= static_cast<int64_t>(sizeof(Prog))) {
     // No room for anything.
     max_inst_ = 0;
   } else {
-    int64 m = (max_mem - sizeof(Prog)) / sizeof(Prog::Inst);
+    int64_t m = (max_mem - sizeof(Prog)) / sizeof(Prog::Inst);
     // Limit instruction count so that inst->id() fits nicely in an int.
     // SparseArray also assumes that the indices (inst->id()) are ints.
     // The call to WalkExponential uses 2*max_inst_ below,
@@ -1132,7 +1134,7 @@ void Compiler::Setup(Regexp::ParseFlags flags, int64 max_mem,
 // If reversed is true, compiles a program that expects
 // to run over the input string backward (reverses all concatenations).
 // The reversed flag is also recorded in the returned program.
-Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
+Prog* Compiler::Compile(Regexp* re, bool reversed, int64_t max_mem) {
   Compiler c;
 
   c.Setup(re->parse_flags(), max_mem, RE2::ANCHOR_BOTH /* unused */);
@@ -1206,7 +1208,7 @@ Prog* Compiler::Finish() {
   if (max_mem_ <= 0) {
     prog_->set_dfa_mem(1<<20);
   } else {
-    int64 m = max_mem_ - sizeof(Prog) - inst_len_*sizeof(Prog::Inst);
+    int64_t m = max_mem_ - sizeof(Prog) - inst_len_*sizeof(Prog::Inst);
     if (m < 0)
       m = 0;
     prog_->set_dfa_mem(m);
@@ -1218,11 +1220,11 @@ Prog* Compiler::Finish() {
 }
 
 // Converts Regexp to Prog.
-Prog* Regexp::CompileToProg(int64 max_mem) {
+Prog* Regexp::CompileToProg(int64_t max_mem) {
   return Compiler::Compile(this, false, max_mem);
 }
 
-Prog* Regexp::CompileToReverseProg(int64 max_mem) {
+Prog* Regexp::CompileToReverseProg(int64_t max_mem) {
   return Compiler::Compile(this, true, max_mem);
 }
 

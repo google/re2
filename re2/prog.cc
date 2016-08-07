@@ -7,6 +7,7 @@
 
 #include "re2/prog.h"
 
+#include <stdint.h>
 #include <string.h>
 #include <algorithm>
 #include <memory>
@@ -20,13 +21,13 @@ namespace re2 {
 
 // Constructors per Inst opcode
 
-void Prog::Inst::InitAlt(uint32 out, uint32 out1) {
+void Prog::Inst::InitAlt(uint32_t out, uint32_t out1) {
   DCHECK_EQ(out_opcode_, 0);
   set_out_opcode(out, kInstAlt);
   out1_ = out1;
 }
 
-void Prog::Inst::InitByteRange(int lo, int hi, int foldcase, uint32 out) {
+void Prog::Inst::InitByteRange(int lo, int hi, int foldcase, uint32_t out) {
   DCHECK_EQ(out_opcode_, 0);
   set_out_opcode(out, kInstByteRange);
   lo_ = lo & 0xFF;
@@ -34,25 +35,25 @@ void Prog::Inst::InitByteRange(int lo, int hi, int foldcase, uint32 out) {
   foldcase_ = foldcase & 0xFF;
 }
 
-void Prog::Inst::InitCapture(int cap, uint32 out) {
+void Prog::Inst::InitCapture(int cap, uint32_t out) {
   DCHECK_EQ(out_opcode_, 0);
   set_out_opcode(out, kInstCapture);
   cap_ = cap;
 }
 
-void Prog::Inst::InitEmptyWidth(EmptyOp empty, uint32 out) {
+void Prog::Inst::InitEmptyWidth(EmptyOp empty, uint32_t out) {
   DCHECK_EQ(out_opcode_, 0);
   set_out_opcode(out, kInstEmptyWidth);
   empty_ = empty;
 }
 
-void Prog::Inst::InitMatch(int32 id) {
+void Prog::Inst::InitMatch(int32_t id) {
   DCHECK_EQ(out_opcode_, 0);
   set_opcode(kInstMatch);
   match_id_ = id;
 }
 
-void Prog::Inst::InitNop(uint32 out) {
+void Prog::Inst::InitNop(uint32_t out) {
   DCHECK_EQ(out_opcode_, 0);
   set_opcode(kInstNop);
 }
@@ -285,7 +286,7 @@ static bool IsMatch(Prog* prog, Prog::Inst* ip) {
   }
 }
 
-uint32 Prog::EmptyFlags(const StringPiece& text, const char* p) {
+uint32_t Prog::EmptyFlags(const StringPiece& text, const char* p) {
   int flags = 0;
 
   // ^ and \A
@@ -349,7 +350,7 @@ class ByteMapBuilder {
 
   void Mark(int lo, int hi);
   void Merge();
-  void Build(uint8* bytemap, int* bytemap_range);
+  void Build(uint8_t* bytemap, int* bytemap_range);
 
  private:
   int Recolor(int oldcolor);
@@ -409,14 +410,14 @@ void ByteMapBuilder::Merge() {
   ranges_.clear();
 }
 
-void ByteMapBuilder::Build(uint8* bytemap, int* bytemap_range) {
+void ByteMapBuilder::Build(uint8_t* bytemap, int* bytemap_range) {
   // Assign byte classes numbered from 0.
   nextcolor_ = 0;
 
   int c = 0;
   while (c < 256) {
     int next = splits_.FindNextSetBit(c);
-    uint8 b = static_cast<uint8>(Recolor(colors_[next]));
+    uint8_t b = static_cast<uint8_t>(Recolor(colors_[next]));
     while (c <= next) {
       bytemap[c] = b;
       c++;
@@ -493,11 +494,11 @@ void Prog::ComputeByteMap() {
           int j;
           for (int i = 0; i < 256; i = j) {
             for (j = i + 1; j < 256 &&
-                            Prog::IsWordChar(static_cast<uint8>(i)) ==
-                                Prog::IsWordChar(static_cast<uint8>(j));
+                            Prog::IsWordChar(static_cast<uint8_t>(i)) ==
+                                Prog::IsWordChar(static_cast<uint8_t>(j));
                  j++)
               ;
-            if (Prog::IsWordChar(static_cast<uint8>(i)) == isword)
+            if (Prog::IsWordChar(static_cast<uint8_t>(i)) == isword)
               builder.Mark(i, j - 1);
           }
           builder.Merge();
@@ -511,7 +512,7 @@ void Prog::ComputeByteMap() {
 
   if (0) {  // For debugging: use trivial bytemap.
     for (int i = 0; i < 256; i++)
-      bytemap_[i] = static_cast<uint8>(i);
+      bytemap_[i] = static_cast<uint8_t>(i);
     bytemap_range_ = 256;
     LOG(INFO) << "Using trivial bytemap.";
   }
@@ -669,7 +670,7 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap,
         flat->emplace_back();
         flat->back().set_opcode(kInstAltMatch);
         flat->back().set_out(static_cast<int>(flat->size()));
-        flat->back().out1_ = static_cast<uint32>(flat->size())+1;
+        flat->back().out1_ = static_cast<uint32_t>(flat->size())+1;
         FALLTHROUGH_INTENDED;
 
       case kInstAlt:
