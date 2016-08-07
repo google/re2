@@ -7,7 +7,6 @@
 // compilation as PCRE in namespace re2.
 
 #include <errno.h>
-#include <stdint.h>
 #include <limits>
 #include <utility>
 
@@ -901,11 +900,11 @@ bool PCRE::Arg::parse_longlong_radix(const char* str,
   str = TerminateNumber(buf, str, n);
   char* end;
   errno = 0;
-  int64_t r = strtoll(str, &end, radix);
+  long long r = strtoll(str, &end, radix);
   if (end != str + n) return false;   // Leftover junk
   if (errno) return false;
   if (dest == NULL) return true;
-  *(reinterpret_cast<int64_t*>(dest)) = r;
+  *(reinterpret_cast<long long*>(dest)) = r;
   return true;
 }
 
@@ -923,11 +922,11 @@ bool PCRE::Arg::parse_ulonglong_radix(const char* str,
   }
   char* end;
   errno = 0;
-  uint64_t r = strtoull(str, &end, radix);
+  unsigned long long r = strtoull(str, &end, radix);
   if (end != str + n) return false;   // Leftover junk
   if (errno) return false;
   if (dest == NULL) return true;
-  *(reinterpret_cast<uint64_t*>(dest)) = r;
+  *(reinterpret_cast<unsigned long long*>(dest)) = r;
   return true;
 }
 
