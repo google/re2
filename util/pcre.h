@@ -499,7 +499,7 @@ class PCRE {
   bool              report_errors_;  // Silences error logging if false
   int               match_limit_;    // Limit on execution resources
   int               stack_limit_;    // Limit on stack resources (bytes)
-  mutable int32_t  hit_limit_;  // Hit limit during execution (bool)?
+  mutable int32_t   hit_limit_;  // Hit limit during execution (bool)?
   DISALLOW_COPY_AND_ASSIGN(PCRE);
 };
 
