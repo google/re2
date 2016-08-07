@@ -59,9 +59,8 @@ const SuccessTable kSuccessTable[] = {
 
 // -2^15-1 to -2^31
 { "-32769",     -32769,         { false, false, true,  false, true,  false }},
-{ "-2147483648",
-  static_cast<int64_t>(0xFFFFFFFF80000000LL),
-{ false, false, true,  false, true,  false }},
+{ "-2147483648", static_cast<int64_t>(0xFFFFFFFF80000000LL),
+  { false, false, true,  false, true,  false }},
 
 // 2^31 to 2^32-1
 { "2147483648", 2147483648U,    { false, false, false, true,  true,  true  }},

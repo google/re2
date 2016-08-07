@@ -68,7 +68,7 @@ static int64_t ns;
 static int64_t t0;
 static int64_t items;
 
-void SetBenchmarkBytesProcessed(long long x) {
+void SetBenchmarkBytesProcessed(int64_t x) {
 	bytes = x;
 }
 

@@ -5,6 +5,8 @@
 #ifndef UTIL_BENCHMARK_H_
 #define UTIL_BENCHMARK_H_
 
+#include <stdint.h>
+
 namespace testing {
 struct Benchmark {
   const char* name;
@@ -23,7 +25,7 @@ struct Benchmark {
 };
 }  // namespace testing
 
-void SetBenchmarkBytesProcessed(long long);
+void SetBenchmarkBytesProcessed(int64_t);
 void StopBenchmarkTiming();
 void StartBenchmarkTiming();
 void BenchmarkMemoryUsage();
