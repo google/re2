@@ -6,13 +6,11 @@
 #include <re2/filtered_re2.h>
 #include <stdio.h>
 
-using namespace re2;
-
 int main(void) {
-	FilteredRE2 f;
+	re2::FilteredRE2 f;
 	int id;
 	f.Add("a.*b.*c", RE2::DefaultOptions, &id);
-	std::vector<string> v;
+	std::vector<std::string> v;
 	f.Compile(&v);
 	std::vector<int> ids;
 	f.FirstMatch("abbccc", ids);

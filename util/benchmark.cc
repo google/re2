@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <stdint.h>
 #if defined(__APPLE__)
 #include <sys/time.h>
 #elif defined(_WIN32)
@@ -19,7 +20,6 @@
 DEFINE_string(test_tmpdir, "/var/tmp", "temp directory");
 
 using testing::Benchmark;
-using namespace re2;
 
 static Benchmark* benchmarks[10000];
 static int nbenchmarks;
@@ -33,17 +33,17 @@ void Benchmark::Register() {
 	nbenchmarks++;
 }
 
-static int64 nsec() {
+static int64_t nsec() {
 #if defined(__APPLE__)
 	struct timeval tv;
 	if(gettimeofday(&tv, 0) < 0)
 		return -1;
-	return (int64)tv.tv_sec*1000*1000*1000 + tv.tv_usec*1000;
+	return (int64_t)tv.tv_sec*1000*1000*1000 + tv.tv_usec*1000;
 #elif defined(_WIN32)
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/dn553408.aspx
 	// describes how to query ticks and convert to microseconds. Of course,
 	// what we want in this case are nanoseconds. Also, note that .QuadPart
-	// is a signed 64-bit integer, so casting to int64 shouldn't be needed.
+	// is a signed 64-bit integer, so casting to int64_t shouldn't be needed.
 	LARGE_INTEGER freq;
 	QueryPerformanceFrequency(&freq);
 	LARGE_INTEGER ticks;
@@ -59,14 +59,14 @@ static int64 nsec() {
 	if(clock_gettime(CLOCK_REALTIME, &tp) < 0)
 #endif
 		return -1;
-	return (int64)tp.tv_sec*1000*1000*1000 + tp.tv_nsec;
+	return (int64_t)tp.tv_sec*1000*1000*1000 + tp.tv_nsec;
 #endif
 }
 
-static int64 bytes;
-static int64 ns;
-static int64 t0;
-static int64 items;
+static int64_t bytes;
+static int64_t ns;
+static int64_t t0;
+static int64_t items;
 
 void SetBenchmarkBytesProcessed(long long x) {
 	bytes = x;

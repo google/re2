@@ -12,7 +12,7 @@
 #include "re2/re2.h"
 #include "re2/regexp.h"
 
-using namespace re2;
+namespace re2 {
 
 RE2::Set::Set(const RE2::Options& options, RE2::Anchor anchor) {
   options_.Copy(options);
@@ -114,3 +114,5 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
   }
   return true;
 }
+
+}  // namespace re2
