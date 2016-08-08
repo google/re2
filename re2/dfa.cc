@@ -21,7 +21,6 @@
 //
 // See http://swtch.com/~rsc/regexp/ for a very bare-bones equivalent.
 
-#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -442,8 +441,8 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
                  (sizeof(int)+sizeof(int)) * 2;  // q0, q1
   mem_budget_ -= nastack_ * sizeof(int);  // astack
   if (mem_budget_ < 0) {
-    LOG(INFO) << StringPrintf("DFA out of memory: prog size %d mem %" PRId64,
-                              prog_->size(), max_mem);
+    LOG(INFO) << "DFA out of memory: prog size " << prog_->size()
+              << " mem " << max_mem;
     init_failed_ = true;
     return;
   }
@@ -460,8 +459,8 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
   int64_t one_state = sizeof(State) + nnext*sizeof(std::atomic<State*>) +
                       (prog_->list_count()+nmark)*sizeof(int);
   if (state_budget_ < 20*one_state) {
-    LOG(INFO) << StringPrintf("DFA out of memory: prog size %d mem %" PRId64,
-                              prog_->size(), max_mem);
+    LOG(INFO) << "DFA out of memory: prog size " << prog_->size()
+              << " mem " << max_mem;
     init_failed_ = true;
     return;
   }
