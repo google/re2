@@ -728,9 +728,9 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint32_t flag) {
 
   // Must have enough memory for new state.
   // In addition to what we're going to allocate,
-  // the state cache hash table seems to incur about 32 bytes per
+  // the state cache hash table seems to incur about 40 bytes per
   // State*, empirically.
-  const int kStateCacheOverhead = 32;
+  const int kStateCacheOverhead = 40;
   int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
   int mem = sizeof(State) + nnext*sizeof(std::atomic<State*>) +
             ninst*sizeof(int);
