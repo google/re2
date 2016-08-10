@@ -4,9 +4,9 @@
 
 #include <stdint.h>
 #include <string>
+#include <thread>
 #include <vector>
 
-#include "util/thread.h"
 #include "util/test.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
@@ -26,17 +26,10 @@ namespace re2 {
 
 // Check that multithreaded access to DFA class works.
 
-// Helper thread: builds entire DFA for prog.
-class BuildThread : public Thread {
- public:
-  BuildThread(Prog* prog) : prog_(prog) {}
-  virtual void Run() {
-    CHECK(prog_->BuildEntireDFA(Prog::kFirstMatch));
-  }
-
- private:
-  Prog* prog_;
-};
+// Helper function: builds entire DFA for prog.
+static void DoBuild(Prog* prog) {
+  CHECK(prog->BuildEntireDFA(Prog::kFirstMatch));
+}
 
 TEST(Multithreaded, BuildEntireDFA) {
   // Create regexp with 2^FLAGS_size states in DFA.
@@ -44,48 +37,37 @@ TEST(Multithreaded, BuildEntireDFA) {
   for (int i = 0; i < FLAGS_size; i++)
     s += "[ab]";
   s += "b";
+  Regexp* re = Regexp::Parse(s, Regexp::LikePerl, NULL);
+  CHECK(re);
 
   // Check that single-threaded code works.
   {
-    //LOG(INFO) << s;
-    Regexp* re = Regexp::Parse(s, Regexp::LikePerl, NULL);
-    CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
-    BuildThread* t = new BuildThread(prog);
-    t->SetJoinable(true);
-    t->Start();
-    t->Join();
-    delete t;
+
+    std::thread t(DoBuild, prog);
+    t.join();
+
     delete prog;
-    re->Decref();
   }
 
   // Build the DFA simultaneously in a bunch of threads.
   for (int i = 0; i < FLAGS_repeat; i++) {
-    Regexp* re = Regexp::Parse(s, Regexp::LikePerl, NULL);
-    CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
 
-    std::vector<BuildThread*> threads;
-    for (int j = 0; j < FLAGS_threads; j++) {
-      BuildThread *t = new BuildThread(prog);
-      t->SetJoinable(true);
-      threads.push_back(t);
-    }
+    std::vector<std::thread> threads;
     for (int j = 0; j < FLAGS_threads; j++)
-      threads[j]->Start();
-    for (int j = 0; j < FLAGS_threads; j++) {
-      threads[j]->Join();
-      delete threads[j];
-    }
+      threads.emplace_back(DoBuild, prog);
+    for (int j = 0; j < FLAGS_threads; j++)
+      threads[j].join();
 
     // One more compile, to make sure everything is okay.
     prog->BuildEntireDFA(Prog::kFirstMatch);
     delete prog;
-    re->Decref();
   }
+
+  re->Decref();
 }
 
 // Check that DFA size requirements are followed.
@@ -238,35 +220,25 @@ TEST(SingleThreaded, SearchDFA) {
   re->Decref();
 }
 
-// Helper thread: searches for match, which should match,
+// Helper function: searches for match, which should match,
 // and no_match, which should not.
-class SearchThread : public Thread {
- public:
-  SearchThread(Prog* prog, const StringPiece& match,
-               const StringPiece& no_match)
-    : prog_(prog), match_(match), no_match_(no_match) {}
-
-  virtual void Run() {
-    for (int i = 0; i < 2; i++) {
-      bool matched, failed = false;
-      matched = prog_->SearchDFA(match_, NULL,
-                                 Prog::kUnanchored, Prog::kFirstMatch,
-                                 NULL, &failed, NULL);
-      CHECK(!failed);
-      CHECK(matched);
-      matched = prog_->SearchDFA(no_match_, NULL,
-                                 Prog::kUnanchored, Prog::kFirstMatch,
-                                 NULL, &failed, NULL);
-      CHECK(!failed);
-      CHECK(!matched);
-    }
+static void DoSearch(Prog* prog, const StringPiece& match,
+                     const StringPiece& no_match) {
+  for (int i = 0; i < 2; i++) {
+    bool matched = false;
+    bool failed = false;
+    matched = prog->SearchDFA(match, NULL,
+                              Prog::kUnanchored, Prog::kFirstMatch,
+                              NULL, &failed, NULL);
+    CHECK(!failed);
+    CHECK(matched);
+    matched = prog->SearchDFA(no_match, NULL,
+                              Prog::kUnanchored, Prog::kFirstMatch,
+                              NULL, &failed, NULL);
+    CHECK(!failed);
+    CHECK(!matched);
   }
-
- private:
-  Prog* prog_;
-  StringPiece match_;
-  StringPiece no_match_;
-};
+}
 
 TEST(Multithreaded, SearchDFA) {
   // Same as single-threaded test above.
@@ -282,35 +254,28 @@ TEST(Multithreaded, SearchDFA) {
   {
     Prog* prog = re->CompileToProg(1<<n);
     CHECK(prog);
-    SearchThread* t = new SearchThread(prog, match, no_match);
-    t->SetJoinable(true);
-    t->Start();
-    t->Join();
-    delete t;
+
+    std::thread t(DoSearch, prog, match, no_match);
+    t.join();
+
     delete prog;
   }
 
   // Run the search simultaneously in a bunch of threads.
   // Reuse same flags for Multithreaded.BuildDFA above.
   for (int i = 0; i < FLAGS_repeat; i++) {
-    //LOG(INFO) << "Search " << i;
     Prog* prog = re->CompileToProg(1<<n);
     CHECK(prog);
 
-    std::vector<SearchThread*> threads;
-    for (int j = 0; j < FLAGS_threads; j++) {
-      SearchThread *t = new SearchThread(prog, match, no_match);
-      t->SetJoinable(true);
-      threads.push_back(t);
-    }
+    std::vector<std::thread> threads;
     for (int j = 0; j < FLAGS_threads; j++)
-      threads[j]->Start();
-    for (int j = 0; j < FLAGS_threads; j++) {
-      threads[j]->Join();
-      delete threads[j];
-    }
+      threads.emplace_back(DoSearch, prog, match, no_match);
+    for (int j = 0; j < FLAGS_threads; j++)
+      threads[j].join();
+
     delete prog;
   }
+
   re->Decref();
 }
 
