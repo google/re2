@@ -89,7 +89,6 @@ HFILES=\
 	util/thread.h\
 	util/utf.h\
 	util/util.h\
-	util/valgrind.h\
 	re2/bitmap256.h\
 	re2/filtered_re2.h\
 	re2/prefilter.h\
@@ -113,7 +112,6 @@ OFILES=\
 	obj/util/rune.o\
 	obj/util/stringprintf.o\
 	obj/util/strutil.o\
-	obj/util/valgrind.o\
 	obj/re2/bitstate.o\
 	obj/re2/compile.o\
 	obj/re2/dfa.o\
