@@ -86,7 +86,6 @@ HFILES=\
 	util/sparse_array.h\
 	util/sparse_set.h\
 	util/test.h\
-	util/thread.h\
 	util/utf.h\
 	util/util.h\
 	re2/bitmap256.h\
@@ -136,7 +135,6 @@ OFILES=\
 TESTOFILES=\
 	obj/util/pcre.o\
 	obj/util/random.o\
-	obj/util/thread.o\
 	obj/re2/testing/backtrack.o\
 	obj/re2/testing/dump.o\
 	obj/re2/testing/exhaustive_tester.o\
