@@ -64,7 +64,7 @@ class SparseSet {
     sparse_to_dense_ = new int[max_size];
     dense_ = new int[max_size];
     // Don't need to zero the memory, but do so anyway
-    // to appease Valgrind.
+    // to appease MSan.
     if (InitMemory()) {
       for (int i = 0; i < max_size; i++) {
         dense_[i] = 0xababababU;
@@ -171,7 +171,7 @@ class SparseSet {
 #ifdef MEMORY_SANITIZER
     return true;
 #else
-    return RunningOnValgrind();
+    return false;
 #endif
   }
 

@@ -229,7 +229,7 @@ class SparseArray {
 #ifdef MEMORY_SANITIZER
     return true;
 #else
-    return RunningOnValgrind();
+    return false;
 #endif
   }
 
@@ -291,7 +291,7 @@ void SparseArray<Value>::resize(int new_max_size) {
     dense_.resize(new_max_size);
 
     // These don't need to be initialized for correctness,
-    // but Valgrind will warn about use of uninitialized memory,
+    // but MSan will warn about use of uninitialized memory,
     // so initialize the new memory when compiling debug binaries.
     // Initialize it to garbage to detect bugs in the future.
     if (InitMemory()) {
@@ -439,7 +439,7 @@ template<typename Value> SparseArray<Value>::SparseArray(int max_size) {
   max_size_ = max_size;
   sparse_to_dense_ = new int[max_size];
   dense_.resize(max_size);
-  // Don't need to zero the new memory, but appease Valgrind.
+  // Don't need to zero the new memory, but appease MSan.
   if (InitMemory()) {
     for (int i = 0; i < max_size; i++) {
       sparse_to_dense_[i] = 0xababababU;

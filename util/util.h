@@ -67,8 +67,6 @@ static inline uint64_t Hash64StringWithSeed(const char* s, int len,
   return ((uint64_t)x << 32) | y;
 }
 
-bool RunningOnValgrind();
-
 }  // namespace re2
 
 #include "util/logging.h"

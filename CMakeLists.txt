@@ -64,7 +64,6 @@ set(RE2_LIBRARY_SOURCES
     util/rune.cc
     util/stringprintf.cc
     util/strutil.cc
-    util/valgrind.cc
     )
 
 add_library(re2 ${RE2_LIBRARY_SOURCES})
