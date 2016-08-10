@@ -434,7 +434,7 @@ int ByteMapBuilder::Recolor(int oldcolor) {
   // avoid recoloring a given range more than once per batch.
   std::vector<std::pair<int, int>>::const_iterator it =
       std::find_if(colormap_.begin(), colormap_.end(),
-                   [&](const std::pair<int, int>& kv) -> bool {
+                   [=](const std::pair<int, int>& kv) -> bool {
                      return kv.first == oldcolor || kv.second == oldcolor;
                    });
   if (it != colormap_.end())
