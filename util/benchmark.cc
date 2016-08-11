@@ -3,14 +3,8 @@
 // license that can be found in the LICENSE file.
 
 #include <stdint.h>
-#if defined(__APPLE__)
-#include <sys/time.h>
-#elif defined(_WIN32)
-#include <windows.h>
-#else
-#include <time.h>
-#endif
 #include <algorithm>
+#include <chrono>
 
 #include "util/util.h"
 #include "util/flags.h"
@@ -34,33 +28,8 @@ void Benchmark::Register() {
 }
 
 static int64_t nsec() {
-#if defined(__APPLE__)
-	struct timeval tv;
-	if(gettimeofday(&tv, 0) < 0)
-		return -1;
-	return (int64_t)tv.tv_sec*1000*1000*1000 + tv.tv_usec*1000;
-#elif defined(_WIN32)
-	// https://msdn.microsoft.com/en-us/library/windows/desktop/dn553408.aspx
-	// describes how to query ticks and convert to microseconds. Of course,
-	// what we want in this case are nanoseconds. Also, note that .QuadPart
-	// is a signed 64-bit integer, so casting to int64_t shouldn't be needed.
-	LARGE_INTEGER freq;
-	QueryPerformanceFrequency(&freq);
-	LARGE_INTEGER ticks;
-	QueryPerformanceCounter(&ticks);
-	ticks.QuadPart *= 1000*1000*1000;
-	ticks.QuadPart /= freq.QuadPart;
-	return ticks.QuadPart;
-#else
-	struct timespec tp;
-#ifdef CLOCK_PROCESS_CPUTIME_ID
-	if(clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tp) < 0)
-#else
-	if(clock_gettime(CLOCK_REALTIME, &tp) < 0)
-#endif
-		return -1;
-	return (int64_t)tp.tv_sec*1000*1000*1000 + tp.tv_nsec;
-#endif
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(
+		std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
 static int64_t bytes;
