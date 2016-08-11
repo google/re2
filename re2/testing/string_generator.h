@@ -10,11 +10,11 @@
 // Fetch strings using a Java-like Next()/HasNext() interface.
 
 #include <stdint.h>
+#include <random>
 #include <string>
 #include <vector>
 
 #include "util/util.h"
-#include "util/random.h"
 #include "re2/stringpiece.h"
 
 namespace re2 {
@@ -22,7 +22,8 @@ namespace re2 {
 class StringGenerator {
  public:
   StringGenerator(int maxlen, const std::vector<string>& alphabet);
-  ~StringGenerator();
+  ~StringGenerator() {}
+
   const StringPiece& Next();
   bool HasNext() { return hasnext_; }
 
@@ -51,7 +52,7 @@ class StringGenerator {
   bool generate_null_;       // Whether to generate a NULL StringPiece next.
   bool random_;              // Whether generated strings are random.
   int nrandom_;              // Number of random strings left to generate.
-  ACMRandom* acm_;           // Random number generator
+  std::minstd_rand0 rng_;    // Random number generator.
   DISALLOW_COPY_AND_ASSIGN(StringGenerator);
 };
 

@@ -82,7 +82,6 @@ HFILES=\
 	util/logging.h\
 	util/mutex.h\
 	util/pcre.h\
-	util/random.h\
 	util/sparse_array.h\
 	util/sparse_set.h\
 	util/test.h\
@@ -134,7 +133,6 @@ OFILES=\
 
 TESTOFILES=\
 	obj/util/pcre.o\
-	obj/util/random.o\
 	obj/re2/testing/backtrack.o\
 	obj/re2/testing/dump.o\
 	obj/re2/testing/exhaustive_tester.o\
