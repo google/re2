@@ -48,10 +48,19 @@ class Bitmap256 {
 
 #if defined(__GNUC__)
     return __builtin_ctzll(n);
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && defined(_M_X64)
     unsigned long c;
     _BitScanForward64(&c, n);
     return static_cast<int>(c);
+#elif defined(_MSC_VER) && defined(_M_IX86)
+    unsigned long c;
+    if (static_cast<uint32_t>(n) != 0) {
+      _BitScanForward(&c, static_cast<uint32_t>(n));
+      return static_cast<int>(c);
+    } else {
+      _BitScanForward(&c, static_cast<uint32_t>(n >> 32));
+      return static_cast<int>(c) + 32;
+    }
 #else
     int c = 63;
     for (int shift = 1 << 5; shift != 0; shift >>= 1) {
