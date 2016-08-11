@@ -1114,7 +1114,7 @@ DFA::RWLocker::RWLocker(Mutex* mu)
 void DFA::RWLocker::LockForWriting() NO_THREAD_SAFETY_ANALYSIS {
   if (!writing_) {
     mu_->ReaderUnlock();
-    mu_->Lock();
+    mu_->WriterLock();
     writing_ = true;
   }
 }
