@@ -408,6 +408,26 @@ int RE2::GlobalReplace(string *str,
       out.append(p, vec[0].begin() - p);
     if (vec[0].begin() == lastend && vec[0].size() == 0) {
       // Disallow empty match at end of last match: skip ahead.
+      if (re.options().encoding() == RE2::Options::EncodingUTF8 &&
+          fullrune(p, static_cast<int>(ep - p))) {
+        // re is in UTF-8 mode and there is enough left of str
+        // to allow us to advance by up to UTFmax bytes.
+        Rune r;
+        int n = chartorune(&r, p);
+        // Some copies of chartorune have a bug that accepts
+        // encodings of values in (10FFFF, 1FFFFF] as valid.
+        if (r > Runemax) {
+          n = 1;
+          r = Runeerror;
+        }
+        if (!(n == 1 && r == Runeerror)) {  // no decoding error
+          out.append(p, n);
+          p += n;
+          continue;
+        }
+      }
+      // Most likely, re is in Latin-1 mode. If it is in UTF-8 mode,
+      // we fell through from above and the GIGO principle applies.
       if (p < ep)
         out.append(p, 1);
       p++;
