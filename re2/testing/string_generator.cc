@@ -20,7 +20,7 @@ StringGenerator::StringGenerator(int maxlen,
                                  const std::vector<string>& alphabet)
     : maxlen_(maxlen), alphabet_(alphabet),
       generate_null_(false),
-      random_(false), nrandom_(0), acm_(NULL) {
+      random_(false), nrandom_(0) {
 
   // Degenerate case: no letters, no non-empty strings.
   if (alphabet_.size() == 0)
@@ -28,10 +28,6 @@ StringGenerator::StringGenerator(int maxlen,
 
   // Next() will return empty string (digits_ is empty).
   hasnext_ = true;
-}
-
-StringGenerator::~StringGenerator() {
-  delete acm_;
 }
 
 // Resets the string generator state to the beginning.
@@ -68,11 +64,15 @@ bool StringGenerator::RandomDigits() {
   if (--nrandom_ <= 0)
     return false;
 
+  std::uniform_int_distribution<int> random_len(0, maxlen_);
+  std::uniform_int_distribution<int> random_alphabet_index(
+      0, static_cast<int>(alphabet_.size()) - 1);
+
   // Pick length.
-  int len = acm_->Uniform(maxlen_+1);
+  int len = random_len(rng_);
   digits_.resize(len);
   for (int i = 0; i < len; i++)
-    digits_[i] = acm_->Uniform(static_cast<int32_t>(alphabet_.size()));
+    digits_[i] = random_alphabet_index(rng_);
   return true;
 }
 
@@ -98,10 +98,7 @@ const StringPiece& StringGenerator::Next() {
 
 // Sets generator up to return n random strings.
 void StringGenerator::Random(int32_t seed, int n) {
-  if (acm_ == NULL)
-    acm_ = new ACMRandom(seed);
-  else
-    acm_->Reset(seed);
+  rng_.seed(seed);
 
   random_ = true;
   nrandom_ = n;

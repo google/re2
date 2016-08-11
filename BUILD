@@ -75,7 +75,6 @@ cc_library(
         "re2/testing/string_generator.cc",
         "re2/testing/tester.cc",
         "util/pcre.cc",
-        "util/random.cc",
     ],
     hdrs = [
         "re2/testing/exhaustive_tester.h",
@@ -84,7 +83,6 @@ cc_library(
         "re2/testing/tester.h",
         "util/benchmark.h",
         "util/pcre.h",
-        "util/random.h",
         "util/test.h",
     ],
     deps = [":re2"],

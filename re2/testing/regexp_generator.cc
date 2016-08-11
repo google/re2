@@ -68,15 +68,12 @@ void RegexpGenerator::Generate() {
 
 // Generates random regular expressions, calling HandleRegexp for each one.
 void RegexpGenerator::GenerateRandom(int32_t seed, int n) {
-  ACMRandom acm(seed);
-  acm_ = &acm;
+  rng_.seed(seed);
 
   for (int i = 0; i < n; i++) {
     std::vector<string> postfix;
     GenerateRandomPostfix(&postfix, 0, 0, 0);
   }
-
-  acm_ = NULL;
 }
 
 // Counts and returns the number of occurrences of "%s" in s.
@@ -141,9 +138,16 @@ void RegexpGenerator::GeneratePostfix(std::vector<string>* post, int nstk,
 // Stops and returns true once a single sequence has been generated.
 bool RegexpGenerator::GenerateRandomPostfix(std::vector<string>* post, int nstk,
                                             int ops, int atoms) {
+  std::uniform_int_distribution<int> random_stop(0, maxatoms_ - atoms);
+  std::uniform_int_distribution<int> random_bit(0, 1);
+  std::uniform_int_distribution<int> random_ops_index(
+      0, static_cast<int>(ops_.size()) - 1);
+  std::uniform_int_distribution<int> random_atoms_index(
+      0, static_cast<int>(atoms_.size()) - 1);
+
   for (;;) {
     // Stop if we get to a single element, but only sometimes.
-    if (nstk == 1 && acm_->Uniform(maxatoms_ + 1 - atoms) == 0) {
+    if (nstk == 1 && random_stop(rng_) == 0) {
       RunPostfix(*post);
       return true;
     }
@@ -155,9 +159,8 @@ bool RegexpGenerator::GenerateRandomPostfix(std::vector<string>* post, int nstk,
       return false;
 
     // Add operators if there are enough arguments.
-    if (ops < maxops_ && acm_->Uniform(2) == 0) {
-      const string& fmt =
-          ops_[acm_->Uniform(static_cast<int32_t>(ops_.size()))];
+    if (ops < maxops_ && random_bit(rng_) == 0) {
+      const string& fmt = ops_[random_ops_index(rng_)];
       int nargs = CountArgs(fmt);
       if (nargs <= nstk) {
         post->push_back(fmt);
@@ -170,9 +173,8 @@ bool RegexpGenerator::GenerateRandomPostfix(std::vector<string>* post, int nstk,
     }
 
     // Add atoms if there is room.
-    if (atoms < maxatoms_ && acm_->Uniform(2) == 0) {
-      post->push_back(
-          atoms_[acm_->Uniform(static_cast<int32_t>(atoms_.size()))]);
+    if (atoms < maxatoms_ && random_bit(rng_) == 0) {
+      post->push_back(atoms_[random_atoms_index(rng_)]);
       bool ret = GenerateRandomPostfix(post, nstk + 1, ops, atoms + 1);
       post->pop_back();
       if (ret)

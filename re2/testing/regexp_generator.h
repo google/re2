@@ -9,10 +9,10 @@
 // regular expressions within given parameters (see below for details).
 
 #include <stdint.h>
+#include <random>
 #include <string>
 #include <vector>
 
-#include "util/random.h"
 #include "util/util.h"
 #include "re2/stringpiece.h"
 
@@ -55,7 +55,7 @@ class RegexpGenerator {
   int maxops_;                 // Maximum number of ops allowed in expr.
   std::vector<string> atoms_;  // Possible atoms.
   std::vector<string> ops_;    // Possible ops.
-  ACMRandom* acm_;             // Random generator.
+  std::minstd_rand0 rng_;      // Random number generator.
   DISALLOW_COPY_AND_ASSIGN(RegexpGenerator);
 };
 

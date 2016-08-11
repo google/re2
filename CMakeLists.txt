@@ -75,7 +75,6 @@ set(TEST_LIBRARY_SOURCES
     re2/testing/string_generator.cc
     re2/testing/tester.cc
     util/pcre.cc
-    util/random.cc
     )
 
 add_library(test STATIC ${TEST_LIBRARY_SOURCES} util/test.cc)
