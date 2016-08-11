@@ -1613,4 +1613,21 @@ TEST(RE2, Bug26356109) {
   CHECK_EQ(m, s) << " (ANCHOR_BOTH) got m='" << m << "', want '" << s << "'";
 }
 
+TEST(RE2, Issue104) {
+  // RE2::GlobalReplace always advanced by one byte when the empty string was
+  // matched, which would clobber any rune that is longer than one byte.
+
+  string s = "bc";
+  CHECK_EQ(3, RE2::GlobalReplace(&s, "a*", "d"));
+  CHECK_EQ("dbdcd", s);
+
+  s = "ąć";
+  CHECK_EQ(3, RE2::GlobalReplace(&s, "Ć*", "Ĉ"));
+  CHECK_EQ("ĈąĈćĈ", s);
+
+  s = "人类";
+  CHECK_EQ(3, RE2::GlobalReplace(&s, "大*", "小"));
+  CHECK_EQ("小人小类小", s);
+}
+
 }  // namespace re2
