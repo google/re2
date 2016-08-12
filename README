@@ -34,4 +34,5 @@ A Node.js wrapper is at https://github.com/uhop/node-re2/ and on NPM.
 An OCaml wrapper is at https://github.com/janestreet/re2/ and on OPAM.
 A Perl wrapper is at https://github.com/dgl/re-engine-RE2/ and on CPAN.
 A Python wrapper is at https://github.com/facebook/pyre2/.
+An R wrapper is at https://github.com/qinwf/re2r/.
 A Ruby wrapper is at https://github.com/mudge/re2/.
