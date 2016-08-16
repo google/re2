@@ -50,23 +50,6 @@ extern void SStringPrintf(string* dst, const char* format, ...);
 extern void StringAppendF(string* dst, const char* format, ...);
 extern string PrefixSuccessor(const StringPiece& prefix);
 
-uint32_t hashword(const uint32_t*, size_t, uint32_t);
-void hashword2(const uint32_t*, size_t, uint32_t*, uint32_t*);
-
-static inline uint32_t Hash32StringWithSeed(const char* s, int len,
-                                            uint32_t seed) {
-  return hashword((uint32_t*)s, len/4, seed);
-}
-
-static inline uint64_t Hash64StringWithSeed(const char* s, int len,
-                                            uint32_t seed) {
-  uint32_t x, y;
-  x = seed;
-  y = 0;
-  hashword2((uint32_t*)s, len/4, &x, &y);
-  return ((uint64_t)x << 32) | y;
-}
-
 }  // namespace re2
 
 #include "util/logging.h"

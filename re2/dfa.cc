@@ -36,6 +36,7 @@
 #include <vector>
 
 #include "util/flags.h"
+#include "util/mix.h"
 #include "util/sparse_set.h"
 #include "re2/prog.h"
 #include "re2/stringpiece.h"
@@ -130,31 +131,29 @@ class DFA {
 
   struct StateHash {
     size_t operator()(const State* a) const {
-      if (a == NULL)
-        return 0;
-      const char* s = reinterpret_cast<const char*>(a->inst_);
-      int len = a->ninst_ * sizeof a->inst_[0];
-      if (sizeof(size_t) == sizeof(uint32_t))
-        return static_cast<size_t>(Hash32StringWithSeed(s, len, a->flag_));
-      else
-        return static_cast<size_t>(Hash64StringWithSeed(s, len, a->flag_));
+      DCHECK(a != NULL);
+      HashMix mix(a->flag_);
+      for (int i = 0; i < a->ninst_; i++)
+        mix.Mix(a->inst_[i]);
+      mix.Mix(0);
+      return mix.get();
     }
   };
 
   struct StateEqual {
     bool operator()(const State* a, const State* b) const {
+      DCHECK(a != NULL);
+      DCHECK(b != NULL);
       if (a == b)
         return true;
-      if (a == NULL || b == NULL)
+      if (a->flag_ != b->flag_)
         return false;
       if (a->ninst_ != b->ninst_)
-        return false;
-      if (a->flag_ != b->flag_)
         return false;
       for (int i = 0; i < a->ninst_; i++)
         if (a->inst_[i] != b->inst_[i])
           return false;
-      return true;  // they're equal
+      return true;
     }
   };
 
