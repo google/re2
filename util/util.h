@@ -22,8 +22,6 @@ using std::string;
 
 #endif
 
-namespace re2 {
-
 // DISALLOW_COPY_AND_ASSIGN disallows the copy and operator= functions.
 // It goes in the private: declarations in a class.
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
@@ -39,18 +37,6 @@ namespace re2 {
 #ifndef NO_THREAD_SAFETY_ANALYSIS
 #define NO_THREAD_SAFETY_ANALYSIS
 #endif
-
-class StringPiece;
-
-string CEscape(const StringPiece& src);
-int CEscapeString(const char* src, int src_len, char* dest, int dest_len);
-
-extern string StringPrintf(const char* format, ...);
-extern void SStringPrintf(string* dst, const char* format, ...);
-extern void StringAppendF(string* dst, const char* format, ...);
-extern string PrefixSuccessor(const StringPiece& prefix);
-
-}  // namespace re2
 
 #include "util/logging.h"
 #include "util/mutex.h"

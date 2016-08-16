@@ -35,6 +35,7 @@
 #include "re2/regexp.h"
 #include "util/sparse_array.h"
 #include "util/sparse_set.h"
+#include "util/strutil.h"
 
 namespace re2 {
 

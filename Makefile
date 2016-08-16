@@ -85,6 +85,7 @@ HFILES=\
 	util/pcre.h\
 	util/sparse_array.h\
 	util/sparse_set.h\
+	util/strutil.h\
 	util/test.h\
 	util/utf.h\
 	util/util.h\
@@ -108,7 +109,6 @@ HFILES=\
 OFILES=\
 	obj/util/logging.o\
 	obj/util/rune.o\
-	obj/util/stringprintf.o\
 	obj/util/strutil.o\
 	obj/re2/bitstate.o\
 	obj/re2/compile.o\
