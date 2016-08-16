@@ -52,9 +52,9 @@ class Mutex {
 
   // Catch the error of writing Mutex when intending MutexLock.
   Mutex(Mutex *ignored);
-  // Disallow "evil" constructors
-  Mutex(const Mutex&);
-  void operator=(const Mutex&);
+
+  Mutex(const Mutex&) = delete;
+  Mutex& operator=(const Mutex&) = delete;
 };
 
 #if defined(MUTEX_IS_PTHREAD_RWLOCK)
@@ -94,9 +94,9 @@ class MutexLock {
   ~MutexLock() { mu_->Unlock(); }
  private:
   Mutex * const mu_;
-  // Disallow "evil" constructors
-  MutexLock(const MutexLock&);
-  void operator=(const MutexLock&);
+
+  MutexLock(const MutexLock&) = delete;
+  MutexLock& operator=(const MutexLock&) = delete;
 };
 
 // ReaderMutexLock and WriterMutexLock do the same, for rwlocks
@@ -106,9 +106,9 @@ class ReaderMutexLock {
   ~ReaderMutexLock() { mu_->ReaderUnlock(); }
  private:
   Mutex * const mu_;
-  // Disallow "evil" constructors
-  ReaderMutexLock(const ReaderMutexLock&);
-  void operator=(const ReaderMutexLock&);
+
+  ReaderMutexLock(const ReaderMutexLock&) = delete;
+  ReaderMutexLock& operator=(const ReaderMutexLock&) = delete;
 };
 
 class WriterMutexLock {
@@ -117,9 +117,9 @@ class WriterMutexLock {
   ~WriterMutexLock() { mu_->WriterUnlock(); }
  private:
   Mutex * const mu_;
-  // Disallow "evil" constructors
-  WriterMutexLock(const WriterMutexLock&);
-  void operator=(const WriterMutexLock&);
+
+  WriterMutexLock(const WriterMutexLock&) = delete;
+  WriterMutexLock& operator=(const WriterMutexLock&) = delete;
 };
 
 // Catch bug where variable name is omitted, e.g. MutexLock (&mu);
