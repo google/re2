@@ -249,7 +249,8 @@ class Compiler : public Regexp::Walker<Frag> {
 
   RE2::Anchor anchor_;  // anchor mode for RE2::Set
 
-  DISALLOW_COPY_AND_ASSIGN(Compiler);
+  Compiler(const Compiler&) = delete;
+  Compiler& operator=(const Compiler&) = delete;
 };
 
 Compiler::Compiler() {

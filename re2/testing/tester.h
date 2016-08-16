@@ -84,7 +84,8 @@ class TestInstance {
   PCRE* re_;                        // PCRE implementation
   RE2* re2_;                        // RE2 implementation
 
-  DISALLOW_COPY_AND_ASSIGN(TestInstance);
+  TestInstance(const TestInstance&) = delete;
+  TestInstance& operator=(const TestInstance&) = delete;
 };
 
 // A group of TestInstances for all possible configurations.
@@ -110,7 +111,8 @@ class Tester {
   bool error_;
   std::vector<TestInstance*> v_;
 
-  DISALLOW_COPY_AND_ASSIGN(Tester);
+  Tester(const Tester&) = delete;
+  Tester& operator=(const Tester&) = delete;
 };
 
 // Run all possible tests using regexp and text.

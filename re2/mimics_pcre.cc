@@ -124,7 +124,8 @@ class EmptyStringWalker : public Regexp::Walker<bool> {
   }
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(EmptyStringWalker);
+  EmptyStringWalker(const EmptyStringWalker&) = delete;
+  EmptyStringWalker& operator=(const EmptyStringWalker&) = delete;
 };
 
 // Called after visiting re's children.  child_args contains the return

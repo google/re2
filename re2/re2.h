@@ -749,9 +749,8 @@ class RE2 {
   mutable std::once_flag named_groups_once_;
   mutable std::once_flag group_names_once_;
 
-  //DISALLOW_COPY_AND_ASSIGN(RE2);
-  RE2(const RE2&);
-  void operator=(const RE2&);
+  RE2(const RE2&) = delete;
+  RE2& operator=(const RE2&) = delete;
 };
 
 /***** Implementation details *****/

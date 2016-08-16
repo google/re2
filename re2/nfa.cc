@@ -129,7 +129,8 @@ class NFA {
 
   Thread* free_threads_;  // free list
 
-  DISALLOW_COPY_AND_ASSIGN(NFA);
+  NFA(const NFA&) = delete;
+  NFA& operator=(const NFA&) = delete;
 };
 
 NFA::NFA(Prog* prog) {

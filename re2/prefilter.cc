@@ -500,7 +500,9 @@ class Prefilter::Info::Walker : public Regexp::Walker<Prefilter::Info*> {
   bool latin1() { return latin1_; }
  private:
   bool latin1_;
-  DISALLOW_COPY_AND_ASSIGN(Walker);
+
+  Walker(const Walker&) = delete;
+  Walker& operator=(const Walker&) = delete;
 };
 
 Prefilter::Info* Prefilter::BuildInfo(Regexp* re) {

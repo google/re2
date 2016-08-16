@@ -125,7 +125,8 @@ class CoalesceWalker : public Regexp::Walker<Regexp*> {
   // will be the coalesced op and the remainder of the literal string.
   static void DoCoalesce(Regexp** r1ptr, Regexp** r2ptr);
 
-  DISALLOW_COPY_AND_ASSIGN(CoalesceWalker);
+  CoalesceWalker(const CoalesceWalker&) = delete;
+  CoalesceWalker& operator=(const CoalesceWalker&) = delete;
 };
 
 // Walker subclass used by Simplify.
@@ -160,7 +161,8 @@ class SimplifyWalker : public Regexp::Walker<Regexp*> {
   // Caller must Decref return value when done with it.
   static Regexp* SimplifyCharClass(Regexp* re);
 
-  DISALLOW_COPY_AND_ASSIGN(SimplifyWalker);
+  SimplifyWalker(const SimplifyWalker&) = delete;
+  SimplifyWalker& operator=(const SimplifyWalker&) = delete;
 };
 
 // Simplifies a regular expression, returning a new regexp.

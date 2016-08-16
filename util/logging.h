@@ -83,7 +83,9 @@ class LogMessage {
   const int severity_;
   bool flushed_;
   std::ostringstream str_;
-  DISALLOW_COPY_AND_ASSIGN(LogMessage);
+
+  LogMessage(const LogMessage&) = delete;
+  LogMessage& operator=(const LogMessage&) = delete;
 };
 
 #ifdef _WIN32
@@ -100,7 +102,8 @@ class LogMessageFatal : public LogMessage {
     abort();
   }
  private:
-  DISALLOW_COPY_AND_ASSIGN(LogMessageFatal);
+  LogMessageFatal(const LogMessageFatal&) = delete;
+  LogMessageFatal& operator=(const LogMessageFatal&) = delete;
 };
 
 #ifdef _WIN32
