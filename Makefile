@@ -80,6 +80,7 @@ HFILES=\
 	util/benchmark.h\
 	util/flags.h\
 	util/logging.h\
+	util/mix.h\
 	util/mutex.h\
 	util/pcre.h\
 	util/sparse_array.h\
@@ -105,7 +106,6 @@ HFILES=\
 	re2/walker-inl.h\
 
 OFILES=\
-	obj/util/hash.o\
 	obj/util/logging.o\
 	obj/util/rune.o\
 	obj/util/stringprintf.o\
