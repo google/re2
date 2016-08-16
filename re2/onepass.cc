@@ -58,8 +58,10 @@
 #include <vector>
 
 #include "util/util.h"
+#include "util/logging.h"
 #include "util/sparse_set.h"
 #include "util/strutil.h"
+#include "util/utf.h"
 #include "re2/prog.h"
 #include "re2/stringpiece.h"
 

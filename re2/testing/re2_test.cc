@@ -20,6 +20,7 @@
 #endif
 
 #include "util/test.h"
+#include "util/logging.h"
 #include "util/strutil.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"

@@ -17,6 +17,9 @@
 #include <vector>
 
 #include "util/util.h"
+#include "util/logging.h"
+#include "util/mutex.h"
+#include "util/utf.h"
 #include "re2/stringpiece.h"
 #include "re2/walker-inl.h"
 

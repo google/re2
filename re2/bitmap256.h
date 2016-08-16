@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "util/util.h"
+#include "util/logging.h"
 
 namespace re2 {
 

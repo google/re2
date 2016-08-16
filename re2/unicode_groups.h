@@ -21,6 +21,7 @@
 #include <stdint.h>
 
 #include "util/util.h"
+#include "util/utf.h"
 
 namespace re2 {
 

@@ -15,6 +15,7 @@
 
 #include <stack>
 
+#include "util/logging.h"
 #include "re2/regexp.h"
 
 namespace re2 {

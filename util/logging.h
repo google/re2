@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <stdio.h>  /* for fwrite */
+#include <ostream>
 #include <sstream>
 
 #include "util/util.h"

@@ -92,6 +92,8 @@
 #include <string>
 
 #include "util/util.h"
+#include "util/logging.h"
+#include "util/utf.h"
 #include "re2/stringpiece.h"
 
 namespace re2 {

@@ -12,6 +12,7 @@
 
 #include "util/util.h"
 #include "util/flags.h"
+#include "util/logging.h"
 #include "util/pcre.h"
 #include "util/strutil.h"
 

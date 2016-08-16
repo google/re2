@@ -7,6 +7,7 @@
 #include <stddef.h>
 
 #include "util/util.h"
+#include "util/logging.h"
 #include "re2/stringpiece.h"
 #include "re2/prog.h"
 #include "re2/re2.h"

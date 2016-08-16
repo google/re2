@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "util/logging.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"
 

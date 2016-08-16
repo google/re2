@@ -16,6 +16,7 @@
 
 #include "util/util.h"
 #include "util/flags.h"
+#include "util/logging.h"
 #include "re2/prefilter.h"
 #include "re2/re2.h"
 
