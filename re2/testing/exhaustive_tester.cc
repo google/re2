@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "util/test.h"
+#include "util/strutil.h"
 #include "re2/testing/exhaustive_tester.h"
 #include "re2/testing/tester.h"
 

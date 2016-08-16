@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "util/test.h"
+#include "util/strutil.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
