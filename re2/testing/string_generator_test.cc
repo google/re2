@@ -8,6 +8,7 @@
 #include <string>
 
 #include "util/test.h"
+#include "util/utf.h"
 #include "re2/testing/string_generator.h"
 #include "re2/testing/regexp_generator.h"
 

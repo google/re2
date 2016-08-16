@@ -16,6 +16,8 @@
 #include <vector>
 
 #include "util/util.h"
+#include "util/logging.h"
+#include "util/mutex.h"
 #include "util/sparse_array.h"
 #include "util/sparse_set.h"
 #include "re2/re2.h"

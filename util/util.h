@@ -32,8 +32,4 @@ using std::string;
 #define NO_THREAD_SAFETY_ANALYSIS
 #endif
 
-#include "util/logging.h"
-#include "util/mutex.h"
-#include "util/utf.h"
-
 #endif  // UTIL_UTIL_H_

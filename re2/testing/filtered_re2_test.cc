@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "util/test.h"
+#include "util/logging.h"
 #include "re2/filtered_re2.h"
 #include "re2/re2.h"
 

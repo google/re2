@@ -14,6 +14,8 @@
 #include <map>
 #include <utility>
 
+#include "util/logging.h"
+#include "util/utf.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"

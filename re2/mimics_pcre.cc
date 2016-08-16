@@ -23,6 +23,7 @@
 // Regexp::MimicsPCRE checks for any of these conditions.
 
 #include "util/util.h"
+#include "util/logging.h"
 #include "re2/regexp.h"
 #include "re2/walker-inl.h"
 

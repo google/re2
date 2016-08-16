@@ -7,6 +7,7 @@
 #include <string>
 
 #include "util/test.h"
+#include "util/logging.h"
 #include "re2/regexp.h"
 #include "re2/prog.h"
 

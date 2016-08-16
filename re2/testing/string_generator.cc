@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "util/test.h"
+#include "util/logging.h"
 #include "re2/testing/string_generator.h"
 
 namespace re2 {

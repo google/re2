@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "util/test.h"
+#include "util/logging.h"
 #include "re2/regexp.h"
 
 namespace re2 {

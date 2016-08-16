@@ -36,7 +36,9 @@
 #include <vector>
 
 #include "util/flags.h"
+#include "util/logging.h"
 #include "util/mix.h"
+#include "util/mutex.h"
 #include "util/sparse_set.h"
 #include "util/strutil.h"
 #include "re2/prog.h"
