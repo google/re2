@@ -417,6 +417,16 @@ void TestInstance::RunSearch(Engine type,
         break;
       }
 
+      // In Perl/PCRE, \v matches any character considered vertical
+      // whitespace, not just vertical tab. Regexp::MimicsPCRE() is
+      // unable to handle all cases of this, unfortunately, so just
+      // catch them here. :(
+      if (regexp_str_.contains("\\v") &&
+          (text.contains("\n") || text.contains("\f") || text.contains("\r"))) {
+        result->skipped = true;
+        break;
+      }
+
       // PCRE 8.34 or so started allowing vertical tab to match \s,
       // following a change made in Perl 5.18. RE2 does not.
       if ((regexp_str_.contains("\\s") || regexp_str_.contains("\\S")) &&
