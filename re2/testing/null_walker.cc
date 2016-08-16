@@ -23,7 +23,8 @@ class NullWalker : public Regexp::Walker<bool> {
   }
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(NullWalker);
+  NullWalker(const NullWalker&) = delete;
+  NullWalker& operator=(const NullWalker&) = delete;
 };
 
 // Called after visiting re's children.  child_args contains the return

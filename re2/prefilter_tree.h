@@ -127,7 +127,8 @@ class PrefilterTree {
   // Has the prefilter tree been compiled.
   bool compiled_;
 
-  DISALLOW_COPY_AND_ASSIGN(PrefilterTree);
+  PrefilterTree(const PrefilterTree&) = delete;
+  PrefilterTree& operator=(const PrefilterTree&) = delete;
 };
 
 }  // namespace

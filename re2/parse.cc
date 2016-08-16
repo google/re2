@@ -172,7 +172,8 @@ private:
   int ncap_;  // number of capturing parens seen
   int rune_max_;  // maximum char value for this encoding
 
-  DISALLOW_COPY_AND_ASSIGN(ParseState);
+  ParseState(const ParseState&) = delete;
+  ParseState& operator=(const ParseState&) = delete;
 };
 
 // Pseudo-operators - only on parse stack.
@@ -497,7 +498,8 @@ class RepetitionWalker : public Regexp::Walker<int> {
   virtual int ShortVisit(Regexp* re, int parent_arg);
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(RepetitionWalker);
+  RepetitionWalker(const RepetitionWalker&) = delete;
+  RepetitionWalker& operator=(const RepetitionWalker&) = delete;
 };
 
 int RepetitionWalker::PreVisit(Regexp* re, int parent_arg, bool* stop) {

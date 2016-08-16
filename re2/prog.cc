@@ -362,7 +362,8 @@ class ByteMapBuilder {
   std::vector<std::pair<int, int>> colormap_;
   std::vector<std::pair<int, int>> ranges_;
 
-  DISALLOW_COPY_AND_ASSIGN(ByteMapBuilder);
+  ByteMapBuilder(const ByteMapBuilder&) = delete;
+  ByteMapBuilder& operator=(const ByteMapBuilder&) = delete;
 };
 
 void ByteMapBuilder::Mark(int lo, int hi) {

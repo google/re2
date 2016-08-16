@@ -53,7 +53,9 @@ class StringGenerator {
   bool random_;              // Whether generated strings are random.
   int nrandom_;              // Number of random strings left to generate.
   std::minstd_rand0 rng_;    // Random number generator.
-  DISALLOW_COPY_AND_ASSIGN(StringGenerator);
+
+  StringGenerator(const StringGenerator&) = delete;
+  StringGenerator& operator=(const StringGenerator&) = delete;
 };
 
 }  // namespace re2

@@ -46,7 +46,8 @@ class ToStringWalker : public Regexp::Walker<int> {
  private:
   string* t_;  // The string the walker appends to.
 
-  DISALLOW_COPY_AND_ASSIGN(ToStringWalker);
+  ToStringWalker(const ToStringWalker&) = delete;
+  ToStringWalker& operator=(const ToStringWalker&) = delete;
 };
 
 string Regexp::ToString() {

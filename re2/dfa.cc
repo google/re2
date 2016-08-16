@@ -259,7 +259,8 @@ class DFA {
     std::vector<int>* matches;
 
    private:
-    DISALLOW_COPY_AND_ASSIGN(SearchParams);
+    SearchParams(const SearchParams&) = delete;
+    SearchParams& operator=(const SearchParams&) = delete;
   };
 
   // Before each search, the parameters to Search are analyzed by
@@ -412,7 +413,9 @@ class DFA::Workq : public SparseSet {
   int maxmark_;          // maximum number of marks
   int nextmark_;         // id of next mark
   bool last_was_mark_;   // last inserted was mark
-  DISALLOW_COPY_AND_ASSIGN(Workq);
+
+  Workq(const Workq&) = delete;
+  Workq& operator=(const Workq&) = delete;
 };
 
 DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
@@ -1100,7 +1103,8 @@ class DFA::RWLocker {
   Mutex* mu_;
   bool writing_;
 
-  DISALLOW_COPY_AND_ASSIGN(RWLocker);
+  RWLocker(const RWLocker&) = delete;
+  RWLocker& operator=(const RWLocker&) = delete;
 };
 
 DFA::RWLocker::RWLocker(Mutex* mu)
@@ -1200,7 +1204,8 @@ class DFA::StateSaver {
   bool is_special_;  // whether original state was special
   State* special_;   // if is_special_, the original state
 
-  DISALLOW_COPY_AND_ASSIGN(StateSaver);
+  StateSaver(const StateSaver&) = delete;
+  StateSaver& operator=(const StateSaver&) = delete;
 };
 
 DFA::StateSaver::StateSaver(DFA* dfa, State* state) {

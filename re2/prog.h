@@ -373,7 +373,8 @@ class Prog {
 
   std::once_flag first_byte_once_;
 
-  DISALLOW_COPY_AND_ASSIGN(Prog);
+  Prog(const Prog&) = delete;
+  Prog& operator=(const Prog&) = delete;
 };
 
 }  // namespace re2

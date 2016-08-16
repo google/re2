@@ -191,7 +191,8 @@ class PossibleMatchTester : public RegexpGenerator {
   int regexps_;   // Number of HandleRegexp calls
   int tests_;     // Number of regexp tests.
 
-  DISALLOW_COPY_AND_ASSIGN(PossibleMatchTester);
+  PossibleMatchTester(const PossibleMatchTester&) = delete;
+  PossibleMatchTester& operator=(const PossibleMatchTester&) = delete;
 };
 
 // Processes a single generated regexp.

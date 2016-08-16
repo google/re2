@@ -56,7 +56,9 @@ class RegexpGenerator {
   std::vector<string> atoms_;  // Possible atoms.
   std::vector<string> ops_;    // Possible ops.
   std::minstd_rand0 rng_;      // Random number generator.
-  DISALLOW_COPY_AND_ASSIGN(RegexpGenerator);
+
+  RegexpGenerator(const RegexpGenerator&) = delete;
+  RegexpGenerator& operator=(const RegexpGenerator&) = delete;
 };
 
 // Helpers for preparing arguments to RegexpGenerator constructor.

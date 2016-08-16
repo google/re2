@@ -98,7 +98,8 @@ class Prefilter {
   // and -1 for duplicate nodes.
   int unique_id_;
 
-  DISALLOW_COPY_AND_ASSIGN(Prefilter);
+  Prefilter(const Prefilter&) = delete;
+  Prefilter& operator=(const Prefilter&) = delete;
 };
 
 }  // namespace re2
