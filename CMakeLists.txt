@@ -36,6 +36,13 @@ endif()
 
 include_directories(${CMAKE_SOURCE_DIR})
 
+set(RE2_INCLUDES
+    re2/filtered_re2.h
+    re2/re2.h
+    re2/set.h
+    re2/stringpiece.h
+    )
+
 set(RE2_LIBRARY_SOURCES
     re2/bitstate.cc
     re2/compile.cc
@@ -63,6 +70,8 @@ set(RE2_LIBRARY_SOURCES
     )
 
 add_library(re2 ${RE2_LIBRARY_SOURCES})
+install(TARGETS re2 LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
+install(FILES ${RE2_INCLUDES} DESTINATION include/re2)
 
 set(TEST_LIBRARY_SOURCES
     re2/testing/backtrack.cc
