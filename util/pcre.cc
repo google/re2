@@ -6,8 +6,13 @@
 // The main changes are the addition of the HitLimit method and
 // compilation as PCRE in namespace re2.
 
+#include <assert.h>
+#include <ctype.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #include <limits>
+#include <string>
 #include <utility>
 
 #include "util/util.h"
@@ -932,16 +937,21 @@ bool PCRE::Arg::parse_ulonglong_radix(const char* str,
   return true;
 }
 
-bool PCRE::Arg::parse_double(const char* str, int n, void* dest) {
+static bool parse_double_float(const char* str, int n, bool isfloat, void *dest) {
   if (n == 0) return false;
   static const int kMaxLength = 200;
   char buf[kMaxLength];
   if (n >= kMaxLength) return false;
   memcpy(buf, str, n);
   buf[n] = '\0';
-  errno = 0;
   char* end;
-  double r = strtod(buf, &end);
+  errno = 0;
+  double r;
+  if (isfloat) {
+    r = strtof(buf, &end);
+  } else {
+    r = strtod(buf, &end);
+  }
   if (end != buf + n) {
 #ifdef _WIN32
     // Microsoft's strtod() doesn't handle inf and nan, so we have to
@@ -955,11 +965,11 @@ bool PCRE::Arg::parse_double(const char* str, int n, void* dest) {
     } else if ('+' == *i) {
       ++i;
     }
-    if (0 == stricmp(i, "inf") || 0 == stricmp(i, "infinity")) {
+    if (0 == _stricmp(i, "inf") || 0 == _stricmp(i, "infinity")) {
       r = std::numeric_limits<double>::infinity();
       if (!pos)
         r = -r;
-    } else if (0 == stricmp(i, "nan")) {
+    } else if (0 == _stricmp(i, "nan")) {
       r = std::numeric_limits<double>::quiet_NaN();
     } else {
       return false;
@@ -970,16 +980,20 @@ bool PCRE::Arg::parse_double(const char* str, int n, void* dest) {
   }
   if (errno) return false;
   if (dest == NULL) return true;
-  *(reinterpret_cast<double*>(dest)) = r;
+  if (isfloat) {
+    *(reinterpret_cast<float*>(dest)) = r;
+  } else {
+    *(reinterpret_cast<double*>(dest)) = r;
+  }
   return true;
 }
 
+bool PCRE::Arg::parse_double(const char* str, int n, void* dest) {
+  return parse_double_float(str, n, false, dest);
+}
+
 bool PCRE::Arg::parse_float(const char* str, int n, void* dest) {
-  double r;
-  if (!parse_double(str, n, &r)) return false;
-  if (dest == NULL) return true;
-  *(reinterpret_cast<float*>(dest)) = static_cast<float>(r);
-  return true;
+  return parse_double_float(str, n, true, dest);
 }
 
 #define DEFINE_INTEGER_PARSER(name)                                           \

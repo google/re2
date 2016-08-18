@@ -11,10 +11,6 @@ using std::string;
 
 #ifdef _WIN32
 #define snprintf _snprintf_s
-#define stricmp _stricmp
-#define strtof strtod /* not really correct but best we can do */
-#define strtoll _strtoi64
-#define strtoull _strtoui64
 #define vsnprintf vsnprintf_s
 #endif
 
