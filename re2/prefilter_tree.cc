@@ -5,7 +5,6 @@
 #include "re2/prefilter_tree.h"
 
 #include <stddef.h>
-#include <stdio.h>
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -148,22 +147,16 @@ Prefilter* PrefilterTree::CanonicalNode(Prefilter* node) {
   return (*iter).second;
 }
 
-static string Itoa(int n) {
-  char buf[100];
-  snprintf(buf, sizeof buf, "%d", n);
-  return string(buf);
-}
-
 string PrefilterTree::NodeString(Prefilter* node) const {
   // Adding the operation disambiguates AND/OR/atom nodes.
-  string s = Itoa(node->op()) + ":";
+  string s = std::to_string(node->op()) + ":";
   if (node->op() == Prefilter::ATOM) {
     s += node->atom();
   } else {
     for (size_t i = 0; i < node->subs()->size(); i++) {
       if (i > 0)
         s += ',';
-      s += Itoa((*node->subs())[i]->unique_id());
+      s += std::to_string((*node->subs())[i]->unique_id());
     }
   }
   return s;
@@ -402,7 +395,7 @@ string PrefilterTree::DebugNodeString(Prefilter* node) const {
     for (size_t i = 0; i < node->subs()->size(); i++) {
       if (i > 0)
         node_string += ',';
-      node_string += Itoa((*node->subs())[i]->unique_id());
+      node_string += std::to_string((*node->subs())[i]->unique_id());
       node_string += ":";
       node_string += DebugNodeString((*node->subs())[i]);
     }

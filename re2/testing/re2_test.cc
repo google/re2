@@ -5,11 +5,9 @@
 
 // TODO: Test extractions for PartialMatch/Consume
 
-#include <assert.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include <map>
 #include <string>
@@ -824,42 +822,42 @@ TEST(RE2, FullMatchTypeTests) {
     int64_t v;
     static const int64_t max = INT64_C(0x7fffffffffffffff);
     static const int64_t min = -max - 1;
-    char buf[32];
+    string str;
 
     CHECK(RE2::FullMatch("100",  "(-?\\d+)", &v)); CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("-100", "(-?\\d+)", &v)); CHECK_EQ(v, -100);
 
-    snprintf(buf, sizeof(buf), "%lld", (long long)max);
-    CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, max);
+    str = std::to_string(max);
+    CHECK(RE2::FullMatch(str,    "(-?\\d+)", &v)); CHECK_EQ(v, max);
 
-    snprintf(buf, sizeof(buf), "%lld", (long long)min);
-    CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, min);
+    str = std::to_string(min);
+    CHECK(RE2::FullMatch(str,    "(-?\\d+)", &v)); CHECK_EQ(v, min);
 
-    snprintf(buf, sizeof(buf), "%lld", (long long)max);
-    assert(buf[strlen(buf)-1] != '9');
-    buf[strlen(buf)-1]++;
-    CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
+    str = std::to_string(max);
+    CHECK_NE(str.back(), '9');
+    str.back()++;
+    CHECK(!RE2::FullMatch(str,   "(-?\\d+)", &v));
 
-    snprintf(buf, sizeof(buf), "%lld", (long long)min);
-    assert(buf[strlen(buf)-1] != '9');
-    buf[strlen(buf)-1]++;
-    CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
+    str = std::to_string(min);
+    CHECK_NE(str.back(), '9');
+    str.back()++;
+    CHECK(!RE2::FullMatch(str,   "(-?\\d+)", &v));
   }
   {
     uint64_t v;
     int64_t v2;
     static const uint64_t max = UINT64_C(0xffffffffffffffff);
-    char buf[32];
+    string str;
 
     CHECK(RE2::FullMatch("100",  "(-?\\d+)", &v));  CHECK_EQ(v, 100);
     CHECK(RE2::FullMatch("-100", "(-?\\d+)", &v2)); CHECK_EQ(v2, -100);
 
-    snprintf(buf, sizeof(buf), "%llu", (unsigned long long)max);
-    CHECK(RE2::FullMatch(buf,    "(-?\\d+)", &v)); CHECK_EQ(v, max);
+    str = std::to_string(max);
+    CHECK(RE2::FullMatch(str,    "(-?\\d+)", &v)); CHECK_EQ(v, max);
 
-    assert(buf[strlen(buf)-1] != '9');
-    buf[strlen(buf)-1]++;
-    CHECK(!RE2::FullMatch(buf,   "(-?\\d+)", &v));
+    CHECK_NE(str.back(), '9');
+    str.back()++;
+    CHECK(!RE2::FullMatch(str,   "(-?\\d+)", &v));
   }
 }
 
