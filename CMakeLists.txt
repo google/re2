@@ -115,3 +115,13 @@ foreach(target ${BENCHMARK_TARGETS})
   add_executable(${target} re2/testing/${target}.cc)
   target_link_libraries(${target} benchmark re2 ${EXTRA_TARGET_LINK_LIBRARIES})
 endforeach(target)
+
+set(RE2_LIBRARY_HEADERS
+    re2/filtered_re2.h
+    re2/re2.h
+    re2/set.h
+    re2/stringpiece.h
+    )
+
+install(FILES ${RE2_LIBRARY_HEADERS} DESTINATION include/re2)
+install(TARGETS re2 ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
