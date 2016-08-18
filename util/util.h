@@ -9,11 +9,6 @@
 #include <string>
 using std::string;
 
-#ifdef _WIN32
-#define snprintf _snprintf_s
-#define vsnprintf vsnprintf_s
-#endif
-
 #define arraysize(array) (int)(sizeof(array)/sizeof((array)[0]))
 
 #ifndef FALLTHROUGH_INTENDED
