@@ -65,6 +65,11 @@
 #include "re2/prog.h"
 #include "re2/stringpiece.h"
 
+// Silence "zero-sized array in struct/union" warning for OneState::action.
+#ifdef _MSC_VER
+#pragma warning(disable: 4200)
+#endif
+
 namespace re2 {
 
 static const int Debug = 0;

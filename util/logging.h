@@ -89,9 +89,11 @@ class LogMessage {
   LogMessage& operator=(const LogMessage&) = delete;
 };
 
-#ifdef _WIN32
+// Silence "destructor never returns" warning for ~LogMessageFatal().
+// Since this is a header file, push and then pop to limit the scope.
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 4722) // destructor never returns
+#pragma warning(disable: 4722)
 #endif
 
 class LogMessageFatal : public LogMessage {
@@ -107,7 +109,7 @@ class LogMessageFatal : public LogMessage {
   LogMessageFatal& operator=(const LogMessageFatal&) = delete;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 

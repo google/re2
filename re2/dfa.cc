@@ -48,6 +48,11 @@ DEFINE_bool(re2_dfa_bail_when_slow, true,
             "Whether the RE2 DFA should bail out early "
             "if the NFA would be faster (for testing).");
 
+// Silence "zero-sized array in struct/union" warning for DFA::State::next_.
+#ifdef _MSC_VER
+#pragma warning(disable: 4200)
+#endif
+
 namespace re2 {
 
 #if !defined(__linux__)  /* only Linux seems to have memrchr */
