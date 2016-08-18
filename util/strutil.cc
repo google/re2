@@ -3,8 +3,14 @@
 // license that can be found in the LICENSE file.
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "util/strutil.h"
+
+#ifdef _WIN32
+#define snprintf _snprintf
+#define vsnprintf _vsnprintf
+#endif
 
 namespace re2 {
 
@@ -39,13 +45,7 @@ static int CEscapeString(const char* src, int src_len, char* dest,
         if (c < ' ' || c > '~') {
           if (dest_len - used < 5)   // space for four-character escape + \0
             return -1;
-#if !defined(_WIN32)
           snprintf(dest + used, 5, "\\%03o", c);
-#else
-          // On Windows, the function takes 4+VA arguments, not 3+VA. With an
-          // array, the buffer size will be inferred, but not with a pointer.
-          snprintf(dest + used, 5, _TRUNCATE, "\\%03o", c);
-#endif
           used += 4;
         } else {
           dest[used++] = c; break;
@@ -133,14 +133,7 @@ static void StringAppendV(string* dst, const char* format, va_list ap) {
 
     // Restore the va_list before we use it again
     va_copy(backup_ap, ap);
-#if !defined(_WIN32)
     result = vsnprintf(buf, length, format, backup_ap);
-#else
-    // On Windows, the function takes five arguments, not four. With an array,
-    // the buffer size will be inferred, but not with a pointer. C'est la vie.
-    // (See https://github.com/google/re2/issues/40 for more details.)
-    result = vsnprintf(buf, length, _TRUNCATE, format, backup_ap);
-#endif
     va_end(backup_ap);
 
     if ((result >= 0) && (result < length)) {

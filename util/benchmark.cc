@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 #include <stdint.h>
+#include <stdio.h>
 #include <algorithm>
 #include <chrono>
 
@@ -12,6 +13,10 @@
 #include "re2/re2.h"
 
 DEFINE_string(test_tmpdir, "/var/tmp", "temp directory");
+
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
 
 using testing::Benchmark;
 
