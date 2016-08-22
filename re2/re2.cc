@@ -479,7 +479,7 @@ string RE2::QuoteMeta(const StringPiece& unquoted) {
   // that.  (This also makes it identical to the perl function of the
   // same name except for the null-character special case;
   // see `perldoc -f quotemeta`.)
-  for (int ii = 0; ii < unquoted.size(); ++ii) {
+  for (size_t ii = 0; ii < unquoted.size(); ++ii) {
     // Note that using 'isalnum' here raises the benchmark time from
     // 32ns to 58ns:
     if ((unquoted[ii] < 'a' || unquoted[ii] > 'z') &&
@@ -551,7 +551,7 @@ bool RE2::PossibleMatchRange(string* min, string* max, int maxlen) const {
 
 // Avoid possible locale nonsense in standard strcasecmp.
 // The string a is known to be all lowercase.
-static int ascii_strcasecmp(const char* a, const char* b, int len) {
+static int ascii_strcasecmp(const char* a, const char* b, size_t len) {
   const char *ae = a + len;
 
   for (; a < ae; a++, b++) {
@@ -580,7 +580,8 @@ bool RE2::Match(const StringPiece& text,
     return false;
   }
 
-  if (startpos < 0 || startpos > endpos || endpos > text.size()) {
+  if (startpos < 0 || startpos > endpos ||
+      endpos > static_cast<int>(text.size())) {
     if (options_.log_errors())
       LOG(ERROR) << "RE2: invalid startpos, endpos pair. ["
                  << "startpos: " << startpos << ", "
@@ -618,11 +619,11 @@ bool RE2::Match(const StringPiece& text,
     re_anchor = ANCHOR_START;
 
   // Check for the required prefix, if any.
-  int prefixlen = 0;
+  size_t prefixlen = 0;
   if (!prefix_.empty()) {
     if (startpos != 0)
       return false;
-    prefixlen = static_cast<int>(prefix_.size());
+    prefixlen = prefix_.size();
     if (prefixlen > subtext.size())
       return false;
     if (prefix_foldcase_) {
@@ -654,7 +655,7 @@ bool RE2::Match(const StringPiece& text,
   const int MaxBitStateProg = 500;   // prog_->size() <= Max.
   const int MaxBitStateVector = 256*1024;  // bit vector size <= Max (bits)
   bool can_bit_state = prog_->size() <= MaxBitStateProg;
-  int bit_state_text_max = MaxBitStateVector / prog_->size();
+  size_t bit_state_text_max = MaxBitStateVector / prog_->size();
 
   bool dfa_failed = false;
   switch (re_anchor) {
@@ -819,7 +820,7 @@ bool RE2::Match(const StringPiece& text,
 
   // Adjust overall match for required prefix that we stripped off.
   if (prefixlen > 0 && nsubmatch > 0)
-    submatch[0] = StringPiece(submatch[0].begin() - prefixlen,
+    submatch[0] = StringPiece(submatch[0].data() - prefixlen,
                               submatch[0].size() + prefixlen);
 
   // Zero submatches that don't exist in the regexp.
