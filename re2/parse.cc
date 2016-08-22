@@ -1472,7 +1472,7 @@ BadEscape:
   // Unrecognized escape sequence.
   status->set_code(kRegexpBadEscape);
   status->set_error_arg(
-      StringPiece(begin, static_cast<size_t>(s->data() - begin)));
+      StringPiece(begin, static_cast<size_t>(s->begin() - begin)));
   return false;
 }
 
@@ -1637,7 +1637,7 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
   } else {
     // Name is in braces. Look for closing }
     size_t end = s->find('}', 0);
-    if (end == s->npos) {
+    if (end == StringPiece::npos) {
       if (!IsValidUTF8(seq, status))
         return kParseError;
       status->set_code(kRegexpBadCharRange);
@@ -1719,7 +1719,7 @@ static ParseStatus ParseCCName(StringPiece* s, Regexp::ParseFlags parse_flags,
 
   // Got it.  Check that it's valid.
   q += 2;
-  StringPiece name(p, static_cast<size_t>(q-p));
+  StringPiece name(p, static_cast<size_t>(q - p));
 
   const UGroup *g = LookupPosixGroup(name);
   if (g == NULL) {
@@ -1947,7 +1947,7 @@ bool Regexp::ParseState::ParsePerlFlags(StringPiece* s) {
   if (t.size() > 2 && t[0] == 'P' && t[1] == '<') {
     // Pull out name.
     size_t end = t.find('>', 2);
-    if (end == t.npos) {
+    if (end == StringPiece::npos) {
       if (!IsValidUTF8(*s, status_))
         return false;
       status_->set_code(kRegexpBadNamedCapture);
@@ -2202,13 +2202,14 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
             //   a** is a syntax error, not a double-star.
             // (and a++ means something else entirely, which we don't support!)
             status->set_code(kRegexpRepeatOp);
-            status->set_error_arg(
-                StringPiece(lastunary.begin(),
-                            static_cast<size_t>(t.begin() - lastunary.begin())));
+            status->set_error_arg(StringPiece(
+                lastunary.begin(),
+                static_cast<size_t>(t.begin() - lastunary.begin())));
             return NULL;
           }
         }
-        opstr.set(opstr.data(), static_cast<size_t>(t.data() - opstr.data()));
+        opstr = StringPiece(opstr.data(),
+                            static_cast<size_t>(t.data() - opstr.data()));
         if (!ps.PushRepeatOp(op, opstr, nongreedy))
           return NULL;
         isunary = opstr;
@@ -2234,13 +2235,14 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
           if (lastunary.size() > 0) {
             // Not allowed to stack repetition operators.
             status->set_code(kRegexpRepeatOp);
-            status->set_error_arg(
-                StringPiece(lastunary.begin(),
-                            static_cast<size_t>(t.begin() - lastunary.begin())));
+            status->set_error_arg(StringPiece(
+                lastunary.begin(),
+                static_cast<size_t>(t.begin() - lastunary.begin())));
             return NULL;
           }
         }
-        opstr.set(opstr.data(), static_cast<size_t>(t.data() - opstr.data()));
+        opstr = StringPiece(opstr.data(),
+                            static_cast<size_t>(t.data() - opstr.data()));
         if (!ps.PushRepetition(lo, hi, opstr, nongreedy))
           return NULL;
         isunary = opstr;

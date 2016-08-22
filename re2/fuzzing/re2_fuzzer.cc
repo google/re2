@@ -95,8 +95,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
       break;
 
     int frac = len / i;
-    pattern.set(ptr, frac);
-    text.set(ptr + frac, len - frac);
+    pattern = StringPiece(ptr, frac);
+    text = StringPiece(ptr + frac, len - frac);
     Test(pattern, options, text);
   }
 

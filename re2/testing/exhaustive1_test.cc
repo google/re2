@@ -36,7 +36,7 @@ TEST(Repetition, Capturing) {
                  7, Explode("ab"), "(?:%s)", "");
 
   // This would be a great test, but it runs forever when PCRE is enabled.
-  if (!StringPiece(FLAGS_regexp_engines).contains("PCRE"))
+  if (FLAGS_regexp_engines.find("PCRE") == string::npos)
     ExhaustiveTest(3, 2, Split(" ", "a (a)"), ops,
                    50, Explode("a"), "(?:%s)", "");
 }
