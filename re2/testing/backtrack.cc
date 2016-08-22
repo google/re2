@@ -229,8 +229,8 @@ bool Backtracker::Try(int id, const char* p) {
       if (submatch_[0].data() == NULL ||           // First match so far ...
           (longest_ && p > submatch_[0].end())) {  // ... or better match
         for (int i = 0; i < nsubmatch_; i++)
-          submatch_[i].set(cap_[2*i],
-                           static_cast<size_t>(cap_[2*i+1] - cap_[2*i]));
+          submatch_[i] = StringPiece(
+              cap_[2 * i], static_cast<size_t>(cap_[2 * i + 1] - cap_[2 * i]));
       }
       return true;
 

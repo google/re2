@@ -1910,9 +1910,10 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   // as the beginning.
   if (match0) {
     if (reversed_)
-      match0->set(ep, static_cast<size_t>(text.end() - ep));
+      *match0 = StringPiece(ep, static_cast<size_t>(text.end() - ep));
     else
-      match0->set(text.begin(), static_cast<size_t>(ep - text.begin()));
+      *match0 =
+          StringPiece(text.begin(), static_cast<size_t>(ep - text.begin()));
   }
   return true;
 }

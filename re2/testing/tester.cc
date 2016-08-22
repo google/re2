@@ -48,7 +48,7 @@ const char* engine_names[kEngineMax] = {
 };
 
 // Returns the name of the engine.
-static StringPiece EngineName(Engine e) {
+static const char* EngineName(Engine e) {
   CHECK_GE(e, 0);
   CHECK_LT(e, arraysize(engine_names));
   CHECK(engine_names[e] != NULL);
@@ -67,7 +67,7 @@ static uint32_t Engines() {
     cached_engines = ~0;
   } else {
     for (Engine i = static_cast<Engine>(0); i < kEngineMax; i++)
-      if (StringPiece(FLAGS_regexp_engines).contains(EngineName(i)))
+      if (FLAGS_regexp_engines.find(EngineName(i)) != string::npos)
         cached_engines |= 1<<i;
   }
 
@@ -422,16 +422,19 @@ void TestInstance::RunSearch(Engine type,
       // whitespace, not just vertical tab. Regexp::MimicsPCRE() is
       // unable to handle all cases of this, unfortunately, so just
       // catch them here. :(
-      if (regexp_str_.contains("\\v") &&
-          (text.contains("\n") || text.contains("\f") || text.contains("\r"))) {
+      if (regexp_str_.find("\\v") != StringPiece::npos &&
+          (text.find('\n') != StringPiece::npos ||
+           text.find('\f') != StringPiece::npos ||
+           text.find('\r') != StringPiece::npos)) {
         result->skipped = true;
         break;
       }
 
       // PCRE 8.34 or so started allowing vertical tab to match \s,
       // following a change made in Perl 5.18. RE2 does not.
-      if ((regexp_str_.contains("\\s") || regexp_str_.contains("\\S")) &&
-          text.contains("\v")) {
+      if ((regexp_str_.find("\\s") != StringPiece::npos ||
+           regexp_str_.find("\\S") != StringPiece::npos) &&
+          text.find('\v') != StringPiece::npos) {
         result->skipped = true;
         break;
       }

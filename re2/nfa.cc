@@ -642,8 +642,9 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
 
   if (matched_) {
     for (int i = 0; i < nsubmatch; i++)
-      submatch[i].set(match_[2*i],
-                      static_cast<size_t>(match_[2*i+1] - match_[2*i]));
+      submatch[i] =
+          StringPiece(match_[2 * i],
+                      static_cast<size_t>(match_[2 * i + 1] - match_[2 * i]));
     if (Debug)
       fprintf(stderr, "match (%td,%td)\n",
               match_[0] - btext_, match_[1] - btext_);

@@ -338,8 +338,9 @@ done:
   if (!matched)
     return false;
   for (int i = 0; i < nmatch; i++)
-    match[i].set(matchcap[2*i],
-                 static_cast<size_t>(matchcap[2*i+1] - matchcap[2*i]));
+    match[i] =
+        StringPiece(matchcap[2 * i],
+                    static_cast<size_t>(matchcap[2 * i + 1] - matchcap[2 * i]));
   return true;
 }
 

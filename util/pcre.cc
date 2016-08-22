@@ -753,7 +753,7 @@ bool PCRE::Arg::parse_string(const char* str, size_t n, void* dest) {
 
 bool PCRE::Arg::parse_stringpiece(const char* str, size_t n, void* dest) {
   if (dest == NULL) return true;
-  reinterpret_cast<StringPiece*>(dest)->set(str, n);
+  *(reinterpret_cast<StringPiece*>(dest)) = StringPiece(str, n);
   return true;
 }
 
