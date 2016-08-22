@@ -584,7 +584,7 @@ bool Regexp::ParseState::DoLeftParen(const StringPiece& name) {
   Regexp* re = new Regexp(kLeftParen, flags_);
   re->cap_ = ++ncap_;
   if (name.data() != NULL)
-    re->name_ = new string(name.as_string());
+    re->name_ = new string(name.ToString());
   return PushRegexp(re);
 }
 

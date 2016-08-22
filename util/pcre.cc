@@ -468,7 +468,7 @@ string PCRE::QuoteMeta(const StringPiece& unquoted) {
   // that.  (This also makes it identical to the perl function of the
   // same name except for the null-character special case;
   // see `perldoc -f quotemeta`.)
-  for (int ii = 0; ii < unquoted.length(); ++ii) {
+  for (int ii = 0; ii < unquoted.size(); ++ii) {
     // Note that using 'isalnum' here raises the benchmark time from
     // 32ns to 58ns:
     if ((unquoted[ii] < 'a' || unquoted[ii] > 'z') &&
