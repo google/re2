@@ -495,7 +495,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
 
   if (Debug) {
     fprintf(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
-            text.as_string().c_str(), context.as_string().c_str(), anchored,
+            text.ToString().c_str(), context.ToString().c_str(), anchored,
             longest);
   }
 

@@ -104,8 +104,8 @@ static RE2::ErrorCode RegexpErrorToRE2(re2::RegexpStatusCode code) {
 
 static string trunc(const StringPiece& pattern) {
   if (pattern.size() < 100)
-    return pattern.as_string();
-  return pattern.substr(0, 100).as_string() + "...";
+    return pattern.ToString();
+  return pattern.substr(0, 100).ToString() + "...";
 }
 
 
@@ -177,7 +177,7 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
     empty_group_names = new std::map<int, string>;
   });
 
-  pattern_ = pattern.as_string();
+  pattern_ = pattern.ToString();
   options_.Copy(options);
   entire_regexp_ = NULL;
   suffix_regexp_ = NULL;
@@ -201,7 +201,7 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
     }
     error_ = new string(status.Text());
     error_code_ = RegexpErrorToRE2(status.code());
-    error_arg_ = status.error_arg().as_string();
+    error_arg_ = status.error_arg().ToString();
     return;
   }
 
@@ -479,7 +479,7 @@ string RE2::QuoteMeta(const StringPiece& unquoted) {
   // that.  (This also makes it identical to the perl function of the
   // same name except for the null-character special case;
   // see `perldoc -f quotemeta`.)
-  for (int ii = 0; ii < unquoted.length(); ++ii) {
+  for (int ii = 0; ii < unquoted.size(); ++ii) {
     // Note that using 'isalnum' here raises the benchmark time from
     // 32ns to 58ns:
     if ((unquoted[ii] < 'a' || unquoted[ii] > 'z') &&

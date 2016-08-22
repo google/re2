@@ -1762,7 +1762,7 @@ bool DFA::Search(const StringPiece& text,
   if (DebugDFA) {
     fprintf(stderr, "\nprogram:\n%s\n", prog_->DumpUnanchored().c_str());
     fprintf(stderr, "text %s anchored=%d earliest=%d fwd=%d kind %d\n",
-            text.as_string().c_str(), anchored, want_earliest_match,
+            text.ToString().c_str(), anchored, want_earliest_match,
             run_forward, kind_);
   }
 
