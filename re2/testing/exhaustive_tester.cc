@@ -40,7 +40,7 @@ static char* escape(const StringPiece& sp) {
   static char buf[512];
   char* p = buf;
   *p++ = '\"';
-  for (int i = 0; i < sp.size(); i++) {
+  for (size_t i = 0; i < sp.size(); i++) {
     if(p+5 >= buf+sizeof buf)
       LOG(FATAL) << "ExhaustiveTester escape: too long";
     if(sp[i] == '\\' || sp[i] == '\"') {
@@ -69,10 +69,10 @@ static void PrintResult(const RE2& re, const StringPiece& input, RE2::Anchor anc
     if (m[i].begin() == NULL)
       printf("-");
     else
-      printf("%d-%d", static_cast<int>(m[i].begin() - input.begin()), static_cast<int>(m[i].end() - input.begin()));
+      printf("%td-%td", m[i].begin() - input.begin(), m[i].end() - input.begin());
   }
 }
-	
+
 // Processes a single generated regexp.
 // Compiles it using Regexp interface and PCRE, and then
 // checks that NFA, DFA, and PCRE all return the same results.
