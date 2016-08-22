@@ -1269,9 +1269,11 @@ static bool MaybeParseRepetition(StringPiece* sp, int* lo, int* hi) {
 // Argument order is backwards from usual Google style
 // but consistent with chartorune.
 static int StringPieceToRune(Rune *r, StringPiece *sp, RegexpStatus* status) {
-  int n;
-  if (fullrune(sp->data(), sp->size())) {
-    n = chartorune(r, sp->data());
+  // fullrune() takes int, not size_t. However, it just looks
+  // at the leading byte and treats any length >= 4 the same.
+  if (fullrune(sp->data(), static_cast<int>(std::min(static_cast<size_t>(4),
+                                                     sp->size())))) {
+    int n = chartorune(r, sp->data());
     // Some copies of chartorune have a bug that accepts
     // encodings of values in (10FFFF, 1FFFFF] as valid.
     // Those values break the character class algorithm,

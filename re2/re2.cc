@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 #include <iterator>
 #include <mutex>
 #include <string>
@@ -331,7 +332,7 @@ bool RE2::PartialMatchN(const StringPiece& text, const RE2& re,
 
 bool RE2::ConsumeN(StringPiece* input, const RE2& re,
                    const Arg* const args[], int n) {
-  int consumed;
+  size_t consumed;
   if (re.DoMatch(*input, ANCHOR_START, &consumed, args, n)) {
     input->remove_prefix(consumed);
     return true;
@@ -342,7 +343,7 @@ bool RE2::ConsumeN(StringPiece* input, const RE2& re,
 
 bool RE2::FindAndConsumeN(StringPiece* input, const RE2& re,
                           const Arg* const args[], int n) {
-  int consumed;
+  size_t consumed;
   if (re.DoMatch(*input, UNANCHORED, &consumed, args, n)) {
     input->remove_prefix(consumed);
     return true;
@@ -377,7 +378,7 @@ bool RE2::Replace(string *str,
   int nvec = 1 + MaxSubmatch(rewrite);
   if (nvec > arraysize(vec))
     return false;
-  if (!re.Match(*str, 0, static_cast<int>(str->size()), UNANCHORED, vec, nvec))
+  if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
     return false;
 
   string s;
@@ -404,15 +405,19 @@ int RE2::GlobalReplace(string *str,
   string out;
   int count = 0;
   while (p <= ep) {
-    if (!re.Match(*str, static_cast<int>(p - str->data()),
-                  static_cast<int>(str->size()), UNANCHORED, vec, nvec))
+    if (!re.Match(*str, static_cast<size_t>(p - str->data()),
+                  str->size(), UNANCHORED, vec, nvec))
       break;
     if (p < vec[0].begin())
       out.append(p, vec[0].begin() - p);
     if (vec[0].begin() == lastend && vec[0].size() == 0) {
       // Disallow empty match at end of last match: skip ahead.
+      //
+      // fullrune() takes int, not size_t. However, it just looks
+      // at the leading byte and treats any length >= 4 the same.
       if (re.options().encoding() == RE2::Options::EncodingUTF8 &&
-          fullrune(p, static_cast<int>(ep - p))) {
+          fullrune(p, static_cast<int>(std::min(static_cast<ptrdiff_t>(4),
+                                                ep - p)))) {
         // re is in UTF-8 mode and there is enough left of str
         // to allow us to advance by up to UTFmax bytes.
         Rune r;
@@ -569,8 +574,8 @@ static int ascii_strcasecmp(const char* a, const char* b, size_t len) {
 /***** Actual matching and rewriting code *****/
 
 bool RE2::Match(const StringPiece& text,
-                int startpos,
-                int endpos,
+                size_t startpos,
+                size_t endpos,
                 Anchor re_anchor,
                 StringPiece* submatch,
                 int nsubmatch) const {
@@ -580,8 +585,7 @@ bool RE2::Match(const StringPiece& text,
     return false;
   }
 
-  if (startpos < 0 || startpos > endpos ||
-      endpos > static_cast<int>(text.size())) {
+  if (startpos > endpos || endpos > text.size()) {
     if (options_.log_errors())
       LOG(ERROR) << "RE2: invalid startpos, endpos pair. ["
                  << "startpos: " << startpos << ", "
@@ -832,7 +836,7 @@ bool RE2::Match(const StringPiece& text,
 // Internal matcher - like Match() but takes Args not StringPieces.
 bool RE2::DoMatch(const StringPiece& text,
                   Anchor anchor,
-                  int* consumed,
+                  size_t* consumed,
                   const Arg* const* args,
                   int n) const {
   if (!ok()) {
@@ -865,7 +869,7 @@ bool RE2::DoMatch(const StringPiece& text,
   }
 
   if (consumed != NULL)
-    *consumed = static_cast<int>(vec[0].end() - text.begin());
+    *consumed = static_cast<size_t>(vec[0].end() - text.begin());
 
   if (n == 0 || args == NULL) {
     // We are not interested in results

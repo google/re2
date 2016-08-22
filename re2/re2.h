@@ -499,8 +499,8 @@ class RE2 {
   // whether submatch i matched the empty string or did not match:
   // either way, match[i].data() == NULL.
   bool Match(const StringPiece& text,
-             int startpos,
-             int endpos,
+             size_t startpos,
+             size_t endpos,
              Anchor anchor,
              StringPiece *match,
              int nmatch) const;
@@ -714,10 +714,10 @@ class RE2 {
   void Init(const StringPiece& pattern, const Options& options);
 
   bool DoMatch(const StringPiece& text,
-                   Anchor anchor,
-                   int* consumed,
-                   const Arg* const args[],
-                   int n) const;
+               Anchor anchor,
+               size_t* consumed,
+               const Arg* const args[],
+               int n) const;
 
   re2::Prog* ReverseProg() const;
 
