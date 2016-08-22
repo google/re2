@@ -248,7 +248,7 @@ class PCRE {
   // type, or one of:
   //    string          (matched piece is copied to string)
   //    StringPiece     (StringPiece is mutated to point to matched piece)
-  //    T               (where "bool T::ParseFrom(const char*, int)" exists)
+  //    T               (where "bool T::ParseFrom(const char*, size_t)" exists)
   //    (void*)NULL     (the corresponding matched sub-pattern is not copied)
   //
   // Returns true iff all of the following conditions are satisfied:
@@ -557,7 +557,7 @@ class PCRE_Options {
 template <class T>
 class _PCRE_MatchObject {
  public:
-  static inline bool Parse(const char* str, int n, void* dest) {
+  static inline bool Parse(const char* str, size_t n, void* dest) {
     if (dest == NULL) return true;
     T* object = reinterpret_cast<T*>(dest);
     return object->ParseFrom(str, n);
@@ -572,7 +572,7 @@ class PCRE::Arg {
   // Constructor specially designed for NULL arguments
   Arg(void*);
 
-  typedef bool (*Parser)(const char* str, int n, void* dest);
+  typedef bool (*Parser)(const char* str, size_t n, void* dest);
 
 // Type-specific parsers
 #define MAKE_PARSER(type, name)            \
@@ -606,31 +606,31 @@ class PCRE::Arg {
   }
 
   // Parse the data
-  bool Parse(const char* str, int n) const;
+  bool Parse(const char* str, size_t n) const;
 
  private:
   void*         arg_;
   Parser        parser_;
 
-  static bool parse_null          (const char* str, int n, void* dest);
-  static bool parse_char          (const char* str, int n, void* dest);
-  static bool parse_schar         (const char* str, int n, void* dest);
-  static bool parse_uchar         (const char* str, int n, void* dest);
-  static bool parse_float         (const char* str, int n, void* dest);
-  static bool parse_double        (const char* str, int n, void* dest);
-  static bool parse_string        (const char* str, int n, void* dest);
-  static bool parse_stringpiece   (const char* str, int n, void* dest);
+  static bool parse_null          (const char* str, size_t n, void* dest);
+  static bool parse_char          (const char* str, size_t n, void* dest);
+  static bool parse_schar         (const char* str, size_t n, void* dest);
+  static bool parse_uchar         (const char* str, size_t n, void* dest);
+  static bool parse_float         (const char* str, size_t n, void* dest);
+  static bool parse_double        (const char* str, size_t n, void* dest);
+  static bool parse_string        (const char* str, size_t n, void* dest);
+  static bool parse_stringpiece   (const char* str, size_t n, void* dest);
 
-#define DECLARE_INTEGER_PARSER(name)                                    \
- private:                                                               \
-  static bool parse_##name(const char* str, int n, void* dest);         \
-  static bool parse_##name##_radix(const char* str, int n, void* dest,  \
-                                   int radix);                          \
-                                                                        \
- public:                                                                \
-  static bool parse_##name##_hex(const char* str, int n, void* dest);   \
-  static bool parse_##name##_octal(const char* str, int n, void* dest); \
-  static bool parse_##name##_cradix(const char* str, int n, void* dest)
+#define DECLARE_INTEGER_PARSER(name)                                       \
+ private:                                                                  \
+  static bool parse_##name(const char* str, size_t n, void* dest);         \
+  static bool parse_##name##_radix(const char* str, size_t n, void* dest,  \
+                                   int radix);                             \
+                                                                           \
+ public:                                                                   \
+  static bool parse_##name##_hex(const char* str, size_t n, void* dest);   \
+  static bool parse_##name##_octal(const char* str, size_t n, void* dest); \
+  static bool parse_##name##_cradix(const char* str, size_t n, void* dest)
 
   DECLARE_INTEGER_PARSER(short);
   DECLARE_INTEGER_PARSER(ushort);
@@ -648,7 +648,7 @@ class PCRE::Arg {
 inline PCRE::Arg::Arg() : arg_(NULL), parser_(parse_null) { }
 inline PCRE::Arg::Arg(void* p) : arg_(p), parser_(parse_null) { }
 
-inline bool PCRE::Arg::Parse(const char* str, int n) const {
+inline bool PCRE::Arg::Parse(const char* str, size_t n) const {
   return (*parser_)(str, n, arg_);
 }
 

@@ -740,38 +740,38 @@ int PCRE::NumberOfCapturingGroups() const {
 
 /***** Parsers for various types *****/
 
-bool PCRE::Arg::parse_null(const char* str, int n, void* dest) {
+bool PCRE::Arg::parse_null(const char* str, size_t n, void* dest) {
   // We fail if somebody asked us to store into a non-NULL void* pointer
   return (dest == NULL);
 }
 
-bool PCRE::Arg::parse_string(const char* str, int n, void* dest) {
+bool PCRE::Arg::parse_string(const char* str, size_t n, void* dest) {
   if (dest == NULL) return true;
   reinterpret_cast<string*>(dest)->assign(str, n);
   return true;
 }
 
-bool PCRE::Arg::parse_stringpiece(const char* str, int n, void* dest) {
+bool PCRE::Arg::parse_stringpiece(const char* str, size_t n, void* dest) {
   if (dest == NULL) return true;
   reinterpret_cast<StringPiece*>(dest)->set(str, n);
   return true;
 }
 
-bool PCRE::Arg::parse_char(const char* str, int n, void* dest) {
+bool PCRE::Arg::parse_char(const char* str, size_t n, void* dest) {
   if (n != 1) return false;
   if (dest == NULL) return true;
   *(reinterpret_cast<char*>(dest)) = str[0];
   return true;
 }
 
-bool PCRE::Arg::parse_schar(const char* str, int n, void* dest) {
+bool PCRE::Arg::parse_schar(const char* str, size_t n, void* dest) {
   if (n != 1) return false;
   if (dest == NULL) return true;
   *(reinterpret_cast<signed char*>(dest)) = str[0];
   return true;
 }
 
-bool PCRE::Arg::parse_uchar(const char* str, int n, void* dest) {
+bool PCRE::Arg::parse_uchar(const char* str, size_t n, void* dest) {
   if (n != 1) return false;
   if (dest == NULL) return true;
   *(reinterpret_cast<unsigned char*>(dest)) = str[0];
@@ -788,7 +788,7 @@ static const int kMaxNumberLength = 32;
 //      a. "str" if no termination is needed
 //      b. "buf" if the string was copied and null-terminated
 //      c. "" if the input was invalid and has no hope of being parsed
-static const char* TerminateNumber(char* buf, const char* str, int n) {
+static const char* TerminateNumber(char* buf, const char* str, size_t n) {
   if ((n > 0) && isspace(*str)) {
     // We are less forgiving than the strtoxxx() routines and do not
     // allow leading spaces.
@@ -811,9 +811,9 @@ static const char* TerminateNumber(char* buf, const char* str, int n) {
 }
 
 bool PCRE::Arg::parse_long_radix(const char* str,
-                               int n,
-                               void* dest,
-                               int radix) {
+                                 size_t n,
+                                 void* dest,
+                                 int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
   str = TerminateNumber(buf, str, n);
@@ -828,16 +828,16 @@ bool PCRE::Arg::parse_long_radix(const char* str,
 }
 
 bool PCRE::Arg::parse_ulong_radix(const char* str,
-                                int n,
-                                void* dest,
-                                int radix) {
+                                  size_t n,
+                                  void* dest,
+                                  int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
   str = TerminateNumber(buf, str, n);
   if (str[0] == '-') {
-   // strtoul() will silently accept negative numbers and parse
-   // them.  This module is more strict and treats them as errors.
-   return false;
+    // strtoul() will silently accept negative numbers and parse
+    // them.  This module is more strict and treats them as errors.
+    return false;
   }
 
   char* end;
@@ -851,9 +851,9 @@ bool PCRE::Arg::parse_ulong_radix(const char* str,
 }
 
 bool PCRE::Arg::parse_short_radix(const char* str,
-                                int n,
-                                void* dest,
-                                int radix) {
+                                  size_t n,
+                                  void* dest,
+                                  int radix) {
   long r;
   if (!parse_long_radix(str, n, &r, radix)) return false;  // Could not parse
   if ((short)r != r) return false;                         // Out of range
@@ -863,9 +863,9 @@ bool PCRE::Arg::parse_short_radix(const char* str,
 }
 
 bool PCRE::Arg::parse_ushort_radix(const char* str,
-                                 int n,
-                                 void* dest,
-                                 int radix) {
+                                   size_t n,
+                                   void* dest,
+                                   int radix) {
   unsigned long r;
   if (!parse_ulong_radix(str, n, &r, radix)) return false;  // Could not parse
   if ((unsigned short)r != r) return false;                 // Out of range
@@ -875,9 +875,9 @@ bool PCRE::Arg::parse_ushort_radix(const char* str,
 }
 
 bool PCRE::Arg::parse_int_radix(const char* str,
-                              int n,
-                              void* dest,
-                              int radix) {
+                                size_t n,
+                                void* dest,
+                                int radix) {
   long r;
   if (!parse_long_radix(str, n, &r, radix)) return false;  // Could not parse
   if ((int)r != r) return false;                           // Out of range
@@ -887,9 +887,9 @@ bool PCRE::Arg::parse_int_radix(const char* str,
 }
 
 bool PCRE::Arg::parse_uint_radix(const char* str,
-                               int n,
-                               void* dest,
-                               int radix) {
+                                 size_t n,
+                                 void* dest,
+                                 int radix) {
   unsigned long r;
   if (!parse_ulong_radix(str, n, &r, radix)) return false;  // Could not parse
   if ((unsigned int)r != r) return false;                   // Out of range
@@ -899,9 +899,9 @@ bool PCRE::Arg::parse_uint_radix(const char* str,
 }
 
 bool PCRE::Arg::parse_longlong_radix(const char* str,
-                                   int n,
-                                   void* dest,
-                                   int radix) {
+                                     size_t n,
+                                     void* dest,
+                                     int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
   str = TerminateNumber(buf, str, n);
@@ -916,9 +916,9 @@ bool PCRE::Arg::parse_longlong_radix(const char* str,
 }
 
 bool PCRE::Arg::parse_ulonglong_radix(const char* str,
-                                    int n,
-                                    void* dest,
-                                    int radix) {
+                                      size_t n,
+                                      void* dest,
+                                      int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
   str = TerminateNumber(buf, str, n);
@@ -937,7 +937,8 @@ bool PCRE::Arg::parse_ulonglong_radix(const char* str,
   return true;
 }
 
-static bool parse_double_float(const char* str, int n, bool isfloat, void *dest) {
+static bool parse_double_float(const char* str, size_t n, bool isfloat,
+                               void* dest) {
   if (n == 0) return false;
   static const int kMaxLength = 200;
   char buf[kMaxLength];
@@ -988,25 +989,27 @@ static bool parse_double_float(const char* str, int n, bool isfloat, void *dest)
   return true;
 }
 
-bool PCRE::Arg::parse_double(const char* str, int n, void* dest) {
+bool PCRE::Arg::parse_double(const char* str, size_t n, void* dest) {
   return parse_double_float(str, n, false, dest);
 }
 
-bool PCRE::Arg::parse_float(const char* str, int n, void* dest) {
+bool PCRE::Arg::parse_float(const char* str, size_t n, void* dest) {
   return parse_double_float(str, n, true, dest);
 }
 
 #define DEFINE_INTEGER_PARSER(name)                                           \
-  bool PCRE::Arg::parse_##name(const char* str, int n, void* dest) {          \
+  bool PCRE::Arg::parse_##name(const char* str, size_t n, void* dest) {       \
     return parse_##name##_radix(str, n, dest, 10);                            \
   }                                                                           \
-  bool PCRE::Arg::parse_##name##_hex(const char* str, int n, void* dest) {    \
+  bool PCRE::Arg::parse_##name##_hex(const char* str, size_t n, void* dest) { \
     return parse_##name##_radix(str, n, dest, 16);                            \
   }                                                                           \
-  bool PCRE::Arg::parse_##name##_octal(const char* str, int n, void* dest) {  \
+  bool PCRE::Arg::parse_##name##_octal(const char* str, size_t n,             \
+                                       void* dest) {                          \
     return parse_##name##_radix(str, n, dest, 8);                             \
   }                                                                           \
-  bool PCRE::Arg::parse_##name##_cradix(const char* str, int n, void* dest) { \
+  bool PCRE::Arg::parse_##name##_cradix(const char* str, size_t n,            \
+                                        void* dest) {                         \
     return parse_##name##_radix(str, n, dest, 0);                             \
   }
 
