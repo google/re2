@@ -19,16 +19,16 @@ namespace re2 {
 //    Copies 'src' to 'dest', escaping dangerous characters using
 //    C-style escape sequences.  'src' and 'dest' should not overlap.
 //    Returns the number of bytes written to 'dest' (not including the \0)
-//    or -1 if there was insufficient space.
+//    or (size_t)-1 if there was insufficient space.
 // ----------------------------------------------------------------------
-static int CEscapeString(const char* src, int src_len, char* dest,
-                         int dest_len) {
+static size_t CEscapeString(const char* src, size_t src_len,
+                            char* dest, size_t dest_len) {
   const char* src_end = src + src_len;
-  int used = 0;
+  size_t used = 0;
 
   for (; src < src_end; src++) {
     if (dest_len - used < 2)   // space for two-character escape
-      return -1;
+      return (size_t)-1;
 
     unsigned char c = *src;
     switch (c) {
@@ -44,7 +44,7 @@ static int CEscapeString(const char* src, int src_len, char* dest,
         // interpreted as part of the character code by C.
         if (c < ' ' || c > '~') {
           if (dest_len - used < 5)   // space for four-character escape + \0
-            return -1;
+            return (size_t)-1;
           snprintf(dest + used, 5, "\\%03o", c);
           used += 4;
         } else {
@@ -54,12 +54,11 @@ static int CEscapeString(const char* src, int src_len, char* dest,
   }
 
   if (dest_len - used < 1)   // make sure that there is room for \0
-    return -1;
+    return (size_t)-1;
 
   dest[used] = '\0';   // doesn't count towards return value though
   return used;
 }
-
 
 // ----------------------------------------------------------------------
 // CEscape()
@@ -67,11 +66,11 @@ static int CEscapeString(const char* src, int src_len, char* dest,
 //    C-style escape sequences.  'src' and 'dest' should not overlap.
 // ----------------------------------------------------------------------
 string CEscape(const StringPiece& src) {
-  const int dest_length = src.size() * 4 + 1; // Maximum possible expansion
-  char* dest = new char[dest_length];
-  const int len = CEscapeString(src.data(), src.size(),
-                                dest, dest_length);
-  string s = string(dest, len);
+  const size_t dest_len = src.size() * 4 + 1; // Maximum possible expansion
+  char* dest = new char[dest_len];
+  const size_t used = CEscapeString(src.data(), src.size(),
+                                    dest, dest_len);
+  string s = string(dest, used);
   delete[] dest;
   return s;
 }
