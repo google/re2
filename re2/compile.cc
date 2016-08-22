@@ -1106,7 +1106,7 @@ void Compiler::Setup(Regexp::ParseFlags flags, int64_t max_mem,
   max_mem_ = max_mem;
   if (max_mem <= 0) {
     max_inst_ = 100000;  // more than enough
-  } else if (max_mem <= static_cast<int64_t>(sizeof(Prog))) {
+  } else if (static_cast<size_t>(max_mem) <= sizeof(Prog)) {
     // No room for anything.
     max_inst_ = 0;
   } else {

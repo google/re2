@@ -101,14 +101,13 @@ typedef TestInstance::Result Result;
 static string FormatCapture(const StringPiece& text, const StringPiece& s) {
   if (s.begin() == NULL)
     return "(?,?)";
-  return StringPrintf("(%d,%d)",
-                      static_cast<int>(s.begin() - text.begin()),
-                      static_cast<int>(s.end() - text.begin()));
+  return StringPrintf("(%td,%td)",
+                      s.begin() - text.begin(), s.end() - text.begin());
 }
 
 // Returns whether text contains non-ASCII (>= 0x80) bytes.
 static bool NonASCII(const StringPiece& text) {
-  for (int i = 0; i < text.size(); i++)
+  for (size_t i = 0; i < text.size(); i++)
     if ((uint8_t)text[i] >= 0x80)
       return true;
   return false;

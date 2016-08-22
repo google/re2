@@ -1470,7 +1470,7 @@ BadEscape:
   // Unrecognized escape sequence.
   status->set_code(kRegexpBadEscape);
   status->set_error_arg(
-      StringPiece(begin, static_cast<int>(s->data() - begin)));
+      StringPiece(begin, static_cast<size_t>(s->data() - begin)));
   return false;
 }
 
@@ -1631,7 +1631,7 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
   if (c != '{') {
     // Name is the bit of string we just skipped over for c.
     const char* p = seq.begin() + 2;
-    name = StringPiece(p, static_cast<int>(s->begin() - p));
+    name = StringPiece(p, static_cast<size_t>(s->begin() - p));
   } else {
     // Name is in braces. Look for closing }
     size_t end = s->find('}', 0);
@@ -1642,14 +1642,14 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
       status->set_error_arg(seq);
       return kParseError;
     }
-    name = StringPiece(s->begin(), static_cast<int>(end));  // without '}'
-    s->remove_prefix(static_cast<int>(end) + 1);  // with '}'
+    name = StringPiece(s->begin(), end);  // without '}'
+    s->remove_prefix(end + 1);  // with '}'
     if (!IsValidUTF8(name, status))
       return kParseError;
   }
 
   // Chop seq where s now begins.
-  seq = StringPiece(seq.begin(), static_cast<int>(s->begin() - seq.begin()));
+  seq = StringPiece(seq.begin(), static_cast<size_t>(s->begin() - seq.begin()));
 
   if (name.size() > 0 && name[0] == '^') {
     sign = -sign;
@@ -1717,7 +1717,7 @@ static ParseStatus ParseCCName(StringPiece* s, Regexp::ParseFlags parse_flags,
 
   // Got it.  Check that it's valid.
   q += 2;
-  StringPiece name(p, static_cast<int>(q-p));
+  StringPiece name(p, static_cast<size_t>(q-p));
 
   const UGroup *g = LookupPosixGroup(name);
   if (g == NULL) {
@@ -1772,7 +1772,7 @@ bool Regexp::ParseState::ParseCCRange(StringPiece* s, RuneRange* rr,
     if (rr->hi < rr->lo) {
       status->set_code(kRegexpBadCharRange);
       status->set_error_arg(
-          StringPiece(os.data(), static_cast<int>(s->data() - os.data())));
+          StringPiece(os.data(), static_cast<size_t>(s->data() - os.data())));
       return false;
     }
   } else {
@@ -1898,7 +1898,7 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
 static bool IsValidCaptureName(const StringPiece& name) {
   if (name.size() == 0)
     return false;
-  for (int i = 0; i < name.size(); i++) {
+  for (size_t i = 0; i < name.size(); i++) {
     int c = name[i];
     if (('0' <= c && c <= '9') ||
         ('a' <= c && c <= 'z') ||
@@ -1954,8 +1954,8 @@ bool Regexp::ParseState::ParsePerlFlags(StringPiece* s) {
     }
 
     // t is "P<name>...", t[end] == '>'
-    StringPiece capture(t.begin()-2, static_cast<int>(end)+3);  // "(?P<name>"
-    StringPiece name(t.begin()+2, static_cast<int>(end)-2);     // "name"
+    StringPiece capture(t.begin()-2, end+3);  // "(?P<name>"
+    StringPiece name(t.begin()+2, end-2);     // "name"
     if (!IsValidUTF8(name, status_))
       return false;
     if (!IsValidCaptureName(name)) {
@@ -1969,7 +1969,7 @@ bool Regexp::ParseState::ParsePerlFlags(StringPiece* s) {
       return false;
     }
 
-    s->remove_prefix(static_cast<int>(capture.end() - s->begin()));
+    s->remove_prefix(static_cast<size_t>(capture.end() - s->begin()));
     return true;
   }
 
@@ -2053,7 +2053,7 @@ bool Regexp::ParseState::ParsePerlFlags(StringPiece* s) {
 BadPerlOp:
   status_->set_code(kRegexpBadPerlOp);
   status_->set_error_arg(
-      StringPiece(s->begin(), static_cast<int>(t.begin() - s->begin())));
+      StringPiece(s->begin(), static_cast<size_t>(t.begin() - s->begin())));
   return false;
 }
 
@@ -2065,7 +2065,7 @@ void ConvertLatin1ToUTF8(const StringPiece& latin1, string* utf) {
   char buf[UTFmax];
 
   utf->clear();
-  for (int i = 0; i < latin1.size(); i++) {
+  for (size_t i = 0; i < latin1.size(); i++) {
     Rune r = latin1[i] & 0xFF;
     int n = runetochar(buf, &r);
     utf->append(buf, n);
@@ -2202,11 +2202,11 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
             status->set_code(kRegexpRepeatOp);
             status->set_error_arg(
                 StringPiece(lastunary.begin(),
-                            static_cast<int>(t.begin() - lastunary.begin())));
+                            static_cast<size_t>(t.begin() - lastunary.begin())));
             return NULL;
           }
         }
-        opstr.set(opstr.data(), static_cast<int>(t.data() - opstr.data()));
+        opstr.set(opstr.data(), static_cast<size_t>(t.data() - opstr.data()));
         if (!ps.PushRepeatOp(op, opstr, nongreedy))
           return NULL;
         isunary = opstr;
@@ -2234,11 +2234,11 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
             status->set_code(kRegexpRepeatOp);
             status->set_error_arg(
                 StringPiece(lastunary.begin(),
-                            static_cast<int>(t.begin() - lastunary.begin())));
+                            static_cast<size_t>(t.begin() - lastunary.begin())));
             return NULL;
           }
         }
-        opstr.set(opstr.data(), static_cast<int>(t.data() - opstr.data()));
+        opstr.set(opstr.data(), static_cast<size_t>(t.data() - opstr.data()));
         if (!ps.PushRepetition(lo, hi, opstr, nongreedy))
           return NULL;
         isunary = opstr;

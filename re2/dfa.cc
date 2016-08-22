@@ -1347,8 +1347,8 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
 
   while (p != ep) {
     if (DebugDFA)
-      fprintf(stderr, "@%d: %s\n", static_cast<int>(p - bp),
-              DumpState(s).c_str());
+      fprintf(stderr, "@%td: %s\n",
+              p - bp, DumpState(s).c_str());
     if (have_firstbyte && s == start) {
       // In start state, only way out is to find firstbyte,
       // so use optimized assembly in memchr to skip ahead.
@@ -1453,9 +1453,8 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       else
         lastmatch = p + 1;
       if (DebugDFA)
-        fprintf(stderr, "match @%d! [%s]\n",
-                static_cast<int>(lastmatch - bp),
-                DumpState(s).c_str());
+        fprintf(stderr, "match @%td! [%s]\n",
+                lastmatch - bp, DumpState(s).c_str());
 
       if (want_earliest_match) {
         params->ep = reinterpret_cast<const char*>(lastmatch);
@@ -1522,8 +1521,8 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       }
     }
     if (DebugDFA)
-      fprintf(stderr, "match @%d! [%s]\n", static_cast<int>(lastmatch - bp),
-              DumpState(s).c_str());
+      fprintf(stderr, "match @%td! [%s]\n",
+              lastmatch - bp, DumpState(s).c_str());
   }
   params->ep = reinterpret_cast<const char*>(lastmatch);
   return matched;
@@ -1911,9 +1910,9 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   // as the beginning.
   if (match0) {
     if (reversed_)
-      match0->set(ep, static_cast<int>(text.end() - ep));
+      match0->set(ep, static_cast<size_t>(text.end() - ep));
     else
-      match0->set(text.begin(), static_cast<int>(ep - text.begin()));
+      match0->set(text.begin(), static_cast<size_t>(ep - text.begin()));
   }
   return true;
 }
