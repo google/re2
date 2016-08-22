@@ -223,7 +223,7 @@ bool PCRE::FullMatchFunctor::operator ()(const StringPiece& text,
   if (&a15 == &no_more_args) goto done; args[n++] = &a15;
 done:
 
-  int consumed;
+  size_t consumed;
   int vec[kVecSize] = {};
   return re.DoMatchImpl(text, ANCHOR_BOTH, &consumed, args, n, vec, kVecSize);
 }
@@ -266,7 +266,7 @@ bool PCRE::PartialMatchFunctor::operator ()(const StringPiece& text,
   if (&a15 == &no_more_args) goto done; args[n++] = &a15;
 done:
 
-  int consumed;
+  size_t consumed;
   int vec[kVecSize] = {};
   return re.DoMatchImpl(text, UNANCHORED, &consumed, args, n, vec, kVecSize);
 }
@@ -309,7 +309,7 @@ bool PCRE::ConsumeFunctor::operator ()(StringPiece* input,
   if (&a15 == &no_more_args) goto done; args[n++] = &a15;
 done:
 
-  int consumed;
+  size_t consumed;
   int vec[kVecSize] = {};
   if (pattern.DoMatchImpl(*input, ANCHOR_START, &consumed,
                           args, n, vec, kVecSize)) {
@@ -358,7 +358,7 @@ bool PCRE::FindAndConsumeFunctor::operator ()(StringPiece* input,
   if (&a15 == &no_more_args) goto done; args[n++] = &a15;
 done:
 
-  int consumed;
+  size_t consumed;
   int vec[kVecSize] = {};
   if (pattern.DoMatchImpl(*input, UNANCHORED, &consumed,
                           args, n, vec, kVecSize)) {
@@ -393,10 +393,10 @@ int PCRE::GlobalReplace(string *str,
   int count = 0;
   int vec[kVecSize] = {};
   string out;
-  int start = 0;
+  size_t start = 0;
   bool last_match_was_empty_string = false;
 
-  while (start <= static_cast<int>(str->size())) {
+  while (start <= str->size()) {
     // If the previous match was for the empty string, we shouldn't
     // just match again: we'll match in the same way and get an
     // infinite loop.  Instead, we do the match in a special way:
@@ -412,7 +412,7 @@ int PCRE::GlobalReplace(string *str,
       matches = pattern.TryMatch(*str, start, ANCHOR_START, false,
                                  vec, kVecSize);
       if (matches <= 0) {
-        if (start < static_cast<int>(str->size()))
+        if (start < str->size())
           out.push_back((*str)[start]);
         start++;
         last_match_was_empty_string = false;
@@ -424,7 +424,7 @@ int PCRE::GlobalReplace(string *str,
       if (matches <= 0)
         break;
     }
-    int matchstart = vec[0], matchend = vec[1];
+    size_t matchstart = vec[0], matchend = vec[1];
     assert(matchstart >= start);
     assert(matchend >= matchstart);
 
@@ -438,8 +438,8 @@ int PCRE::GlobalReplace(string *str,
   if (count == 0)
     return 0;
 
-  if (start < static_cast<int>(str->size()))
-    out.append(*str, start, static_cast<int>(str->size()) - start);
+  if (start < str->size())
+    out.append(*str, start, str->size() - start);
   using std::swap;
   swap(out, *str);
   return count;
@@ -503,11 +503,11 @@ void PCRE::ClearHitLimit() {
 }
 
 int PCRE::TryMatch(const StringPiece& text,
-                 int startpos,
-                 Anchor anchor,
-                 bool empty_ok,
-                 int *vec,
-                 int vecsize) const {
+                   size_t startpos,
+                   Anchor anchor,
+                   bool empty_ok,
+                   int *vec,
+                   int vecsize) const {
   pcre* re = (anchor == ANCHOR_BOTH) ? re_full_ : re_partial_;
   if (re == NULL) {
     PCREPORT(ERROR) << "Matching against invalid re: " << *error_;
@@ -543,8 +543,8 @@ int PCRE::TryMatch(const StringPiece& text,
   int rc = pcre_exec(re,              // The regular expression object
                      &extra,
                      (text.data() == NULL) ? "" : text.data(),
-                     text.size(),
-                     startpos,
+                     static_cast<int>(text.size()),
+                     static_cast<int>(startpos),
                      options,
                      vec,
                      vecsize);
@@ -599,12 +599,12 @@ int PCRE::TryMatch(const StringPiece& text,
 }
 
 bool PCRE::DoMatchImpl(const StringPiece& text,
-                     Anchor anchor,
-                     int* consumed,
-                     const Arg* const* args,
-                     int n,
-                     int* vec,
-                     int vecsize) const {
+                       Anchor anchor,
+                       size_t* consumed,
+                       const Arg* const* args,
+                       int n,
+                       int* vec,
+                       int vecsize) const {
   assert((1 + n) * 3 <= vecsize);  // results + PCRE workspace
   int matches = TryMatch(text, 0, anchor, true, vec, vecsize);
   assert(matches >= 0);  // TryMatch never returns negatives
@@ -638,10 +638,10 @@ bool PCRE::DoMatchImpl(const StringPiece& text,
 }
 
 bool PCRE::DoMatch(const StringPiece& text,
-                 Anchor anchor,
-                 int* consumed,
-                 const Arg* const args[],
-                 int n) const {
+                   Anchor anchor,
+                   size_t* consumed,
+                   const Arg* const args[],
+                   int n) const {
   assert(n >= 0);
   const int vecsize = (1 + n) * 3;  // results + PCRE workspace
                                     // (as for kVecSize)

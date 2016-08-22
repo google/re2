@@ -402,8 +402,8 @@ void TestInstance::RunSearch(Engine type,
 
       result->matched = re2_->Match(
           context,
-          static_cast<int>(text.begin() - context.begin()),
-          static_cast<int>(text.end() - context.begin()),
+          static_cast<size_t>(text.begin() - context.begin()),
+          static_cast<size_t>(text.end() - context.begin()),
           re_anchor,
           result->submatch,
           nsubmatch);
@@ -442,7 +442,7 @@ void TestInstance::RunSearch(Engine type,
         a[i] = PCRE::Arg(&result->submatch[i]);
         argptr[i] = &a[i];
       }
-      int consumed;
+      size_t consumed;
       PCRE::Anchor pcre_anchor;
       if (anchor == Prog::kAnchored)
         pcre_anchor = PCRE::ANCHOR_START;

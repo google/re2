@@ -442,7 +442,7 @@ class PCRE {
   // "*consumed" if successful.
   bool DoMatch(const StringPiece& text,
                Anchor anchor,
-               int* consumed,
+               size_t* consumed,
                const Arg* const* args, int n) const;
 
   // Return the number of capturing subpatterns, or -1 if the
@@ -465,7 +465,7 @@ class PCRE {
   // When matching PCRE("(foo)|hello") against "hello", it will return 1.
   // But the values for all subpattern are filled in into "vec".
   int TryMatch(const StringPiece& text,
-               int startpos,
+               size_t startpos,
                Anchor anchor,
                bool empty_ok,
                int *vec,
@@ -482,7 +482,7 @@ class PCRE {
   // internal implementation for DoMatch
   bool DoMatchImpl(const StringPiece& text,
                    Anchor anchor,
-                   int* consumed,
+                   size_t* consumed,
                    const Arg* const args[],
                    int n,
                    int* vec,
