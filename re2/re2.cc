@@ -38,10 +38,10 @@ namespace re2 {
 static const int kMaxArgs = 16;
 static const int kVecSize = 1+kMaxArgs;
 
-// This will trigger LNK2005 error in MSVC.
-#ifndef _MSC_VER
-const int RE2::Options::kDefaultMaxMem;  // initialized in re2.h
+#ifdef _MSC_VER
+__declspec(selectany)
 #endif
+const int RE2::Options::kDefaultMaxMem;  // initialized in re2.h
 
 RE2::Options::Options(RE2::CannedOptions opt)
   : encoding_(opt == RE2::Latin1 ? EncodingLatin1 : EncodingUTF8),
