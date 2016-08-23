@@ -66,7 +66,7 @@ class BitState {
 
   static const int VisitedBits = 32;
   uint32_t *visited_;       // bitmap: (Inst*, char*) pairs already backtracked
-  int nvisited_;            //   # of words in bitmap
+  size_t nvisited_;         //   # of words in bitmap
 
   Job *job_;                // stack of text positions to explore
   int njob_;
