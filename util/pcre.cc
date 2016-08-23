@@ -982,7 +982,7 @@ static bool parse_double_float(const char* str, size_t n, bool isfloat,
   if (errno) return false;
   if (dest == NULL) return true;
   if (isfloat) {
-    *(reinterpret_cast<float*>(dest)) = r;
+    *(reinterpret_cast<float*>(dest)) = (float)r;
   } else {
     *(reinterpret_cast<double*>(dest)) = r;
   }
