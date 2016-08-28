@@ -30,10 +30,6 @@ DEFINE_int32(max_bad_regexp_inputs, 1,
              "Stop testing a regular expression after finding this many "
              "strings that break it.");
 
-// Compiled in debug mode, the usual tests run for over an hour.
-// Have to cut it down to make the unit test machines happy.
-DEFINE_bool(quick_debug_mode, true, "Run fewer tests in debug mode.");
-
 namespace re2 {
 
 static char* escape(const StringPiece& sp) {
@@ -152,7 +148,7 @@ void ExhaustiveTest(int maxatoms, int maxops,
                     const std::vector<string>& stralphabet,
                     const string& wrapper,
                     const string& topwrapper) {
-  if (RE2_DEBUG_MODE && FLAGS_quick_debug_mode) {
+  if (RE2_DEBUG_MODE) {
     if (maxatoms > 1)
       maxatoms--;
     if (maxops > 1)
