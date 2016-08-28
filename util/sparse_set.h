@@ -190,7 +190,7 @@ void SparseSetT<Value>::resize(int max_size) {
 #ifdef MEMORY_SANITIZER
     for (int i = max_size_; i < max_size; i++) {
       sparse_to_dense_[i] = 0xababababU;
-      dense_[i].index_ = 0xababababU;
+      dense_[i] = 0xababababU;
     }
 #endif
   }
@@ -231,7 +231,7 @@ template<typename Value> SparseSetT<Value>::SparseSetT(int max_size) {
 #ifdef MEMORY_SANITIZER
   for (int i = 0; i < max_size; i++) {
     sparse_to_dense_[i] = 0xababababU;
-    dense_[i].index_ = 0xababababU;
+    dense_[i] = 0xababababU;
   }
 #endif
 
