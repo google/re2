@@ -45,7 +45,6 @@ class Mutex {
   inline void ReaderUnlock(); // Release a read share of this Mutex
   inline void WriterLock() { Lock(); }     // Acquire an exclusive lock
   inline void WriterUnlock() { Unlock(); } // Release a lock from WriterLock()
-  inline void AssertHeld() { }
 
  private:
   MutexType mutex_;

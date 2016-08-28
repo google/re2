@@ -47,10 +47,8 @@ DECLARE_int32(minloglevel);
 #endif
 
 #ifdef NDEBUG
-#define DEBUG_MODE 0
 #define LOG_DFATAL LOG_ERROR
 #else
-#define DEBUG_MODE 1
 #define LOG_DFATAL LOG_FATAL
 #endif
 
