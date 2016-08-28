@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Old enough to support Ubuntu Precise.
-cmake_minimum_required(VERSION 2.8.7)
+# Old enough to support Ubuntu Trusty.
+cmake_minimum_required(VERSION 2.8.12)
 
 project(RE2 CXX)
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
