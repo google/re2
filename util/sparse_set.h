@@ -180,11 +180,19 @@ void SparseSetT<Value>::resize(int max_size) {
   DebugCheckInvariants();
   if (max_size > max_size_) {
     std::unique_ptr<int[]> a(new int[max_size]);
-    std::copy_n(sparse_to_dense_.get(), max_size_, a.get());
-    std::fill(a.get() + max_size_, a.get() + max_size, 0);
+    if (sparse_to_dense_) {
+      std::copy_n(sparse_to_dense_.get(), max_size_, a.get());
+    }
     sparse_to_dense_ = std::move(a);
 
     dense_.resize(max_size);
+
+#ifdef MEMORY_SANITIZER
+    for (int i = max_size_; i < max_size; i++) {
+      sparse_to_dense_[i] = 0xababababU;
+      dense_[i].index_ = 0xababababU;
+    }
+#endif
   }
   max_size_ = max_size;
   if (size_ > max_size_)
@@ -216,9 +224,17 @@ void SparseSetT<Value>::create_index(int i) {
 
 template<typename Value> SparseSetT<Value>::SparseSetT(int max_size) {
   max_size_ = max_size;
-  sparse_to_dense_ = std::unique_ptr<int[]>(new int[max_size]());
+  sparse_to_dense_ = std::unique_ptr<int[]>(new int[max_size]);
   dense_.resize(max_size);
   size_ = 0;
+
+#ifdef MEMORY_SANITIZER
+  for (int i = 0; i < max_size; i++) {
+    sparse_to_dense_[i] = 0xababababU;
+    dense_[i].index_ = 0xababababU;
+  }
+#endif
+
   DebugCheckInvariants();
 }
 
