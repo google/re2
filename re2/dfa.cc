@@ -600,8 +600,7 @@ string DFA::DumpState(State* state) {
 // If one is found, returns it.  If one is not found, allocates one,
 // inserts it in the cache, and returns it.
 DFA::State* DFA::WorkqToCachedState(Workq* q, uint32_t flag) {
-  if (DEBUG_MODE)
-    mutex_.AssertHeld();
+  //mutex_.AssertHeld();
 
   // Construct array of instruction ids for the new state.
   // Only ByteRange, EmptyWidth, and Match instructions are useful to keep:
@@ -719,8 +718,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint32_t flag) {
 // If one is found, returns it.  If one is not found, allocates one,
 // inserts it in the cache, and returns it.
 DFA::State* DFA::CachedState(int* inst, int ninst, uint32_t flag) {
-  if (DEBUG_MODE)
-    mutex_.AssertHeld();
+  //mutex_.AssertHeld();
 
   // Look in the cache for a pre-existing state.
   // We have to initialise the struct like this because otherwise
@@ -913,8 +911,7 @@ void DFA::RunWorkqOnEmptyString(Workq* oldq, Workq* newq, uint32_t flag) {
 void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
                          int c, uint32_t flag, bool* ismatch,
                          Prog::MatchKind kind) {
-  if (DEBUG_MODE)
-    mutex_.AssertHeld();
+  //mutex_.AssertHeld();
 
   newq->clear();
   for (Workq::iterator i = oldq->begin(); i != oldq->end(); ++i) {
@@ -971,8 +968,8 @@ DFA::State* DFA::RunStateOnByteUnlocked(State* state, int c) {
 
 // Processes input byte c in state, returning new state.
 DFA::State* DFA::RunStateOnByte(State* state, int c) {
-  if (DEBUG_MODE)
-    mutex_.AssertHeld();
+  //mutex_.AssertHeld();
+
   if (state <= SpecialStateMax) {
     if (state == FullMatchState) {
       // It is convenient for routines like PossibleMatchRange
