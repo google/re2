@@ -12,7 +12,7 @@
 #include <map>
 #include <string>
 #include <utility>
-#if !defined(_MSC_VER) && !defined(__MINGW32__)
+#if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MINGW32__)
 #include <sys/mman.h>
 #include <unistd.h>  /* for sysconf */
 #endif
@@ -887,8 +887,8 @@ TEST(RE2, FloatingPointFullMatchTypes) {
     // short.
     //
     // This is known to fail on Cygwin and MinGW due to a broken
-    // implementation of strtof(3). Sigh.
-#if !defined(__CYGWIN__) && !defined(__MINGW32__)
+    // implementation of strtof(3). And apparently MSVC too. Sigh.
+#if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MINGW32__)
     CHECK(RE2::FullMatch("0.1", "(.*)", &v));
     CHECK_EQ(v, 0.1f) << StringPrintf("%.8g != %.8g", v, 0.1f);
     CHECK(RE2::FullMatch("6700000000081920.1", "(.*)", &v));
