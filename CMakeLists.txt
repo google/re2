@@ -6,6 +6,8 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 project(RE2 CXX)
+include(CTest)
+
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
 option(USEPCRE "use PCRE in tests and benchmarks" OFF)
 
@@ -37,7 +39,7 @@ endif()
 
 include_directories(${CMAKE_SOURCE_DIR})
 
-set(RE2_LIBRARY_SOURCES
+set(RE2_SOURCES
     re2/bitstate.cc
     re2/compile.cc
     re2/dfa.cc
@@ -63,9 +65,9 @@ set(RE2_LIBRARY_SOURCES
     util/strutil.cc
     )
 
-add_library(re2 ${RE2_LIBRARY_SOURCES})
+add_library(re2 ${RE2_SOURCES})
 
-set(TEST_LIBRARY_SOURCES
+set(TESTING_SOURCES
     re2/testing/backtrack.cc
     re2/testing/dump.cc
     re2/testing/exhaustive_tester.cc
@@ -76,8 +78,7 @@ set(TEST_LIBRARY_SOURCES
     util/pcre.cc
     )
 
-add_library(test STATIC ${TEST_LIBRARY_SOURCES} util/test.cc)
-add_library(benchmark STATIC ${TEST_LIBRARY_SOURCES} util/benchmark.cc)
+add_library(testing STATIC ${TESTING_SOURCES})
 
 set(TEST_TARGETS
     charclass_test
@@ -108,21 +109,22 @@ set(BENCHMARK_TARGETS
     )
 
 foreach(target ${TEST_TARGETS})
-  add_executable(${target} re2/testing/${target}.cc)
-  target_link_libraries(${target} test re2 ${EXTRA_TARGET_LINK_LIBRARIES})
+  add_executable(${target} re2/testing/${target}.cc util/test.cc)
+  target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
+  add_test(NAME ${target} COMMAND ${target})
 endforeach(target)
 
 foreach(target ${BENCHMARK_TARGETS})
-  add_executable(${target} re2/testing/${target}.cc)
-  target_link_libraries(${target} benchmark re2 ${EXTRA_TARGET_LINK_LIBRARIES})
+  add_executable(${target} re2/testing/${target}.cc util/benchmark.cc)
+  target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
 endforeach(target)
 
-set(RE2_LIBRARY_HEADERS
+set(RE2_HEADERS
     re2/filtered_re2.h
     re2/re2.h
     re2/set.h
     re2/stringpiece.h
     )
 
-install(FILES ${RE2_LIBRARY_HEADERS} DESTINATION include/re2)
+install(FILES ${RE2_HEADERS} DESTINATION include/re2)
 install(TARGETS re2 ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
