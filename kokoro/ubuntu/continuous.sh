@@ -4,8 +4,8 @@ set -eux
 cd git/re2
 
 bazel clean
-bazel build -- //...
-bazel test  -- //... \
+bazel build --compilation_mode=dbg -- //...
+bazel test  --compilation_mode=dbg -- //... \
   -//:dfa_test \
   -//:exhaustive1_test \
   -//:exhaustive2_test \
