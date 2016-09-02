@@ -13,11 +13,12 @@
 #include "re2/filtered_re2.h"
 #include "re2/re2.h"
 
-DECLARE_int32(filtered_re2_min_atom_len); // From prefilter_tree.cc
-
 namespace re2 {
 
 struct FilterTestVars {
+  FilterTestVars() {}
+  explicit FilterTestVars(int min_atom_len) : f(min_atom_len) {}
+
   std::vector<string> atoms;
   std::vector<int> atom_indices;
   std::vector<int> matches;
@@ -32,9 +33,7 @@ TEST(FilteredRE2Test, EmptyTest) {
 }
 
 TEST(FilteredRE2Test, SmallOrTest) {
-  FLAGS_filtered_re2_min_atom_len = 4;
-
-  FilterTestVars v;
+  FilterTestVars v(4);  // override the minimum atom length
   int id;
   v.f.Add("(foo|bar)", v.opts, &id);
 
@@ -47,7 +46,6 @@ TEST(FilteredRE2Test, SmallOrTest) {
 }
 
 TEST(FilteredRE2Test, SmallLatinTest) {
-  FLAGS_filtered_re2_min_atom_len = 3;
   FilterTestVars v;
   int id;
 
@@ -176,8 +174,6 @@ bool CheckExpectedAtoms(const char* atoms[],
 }
 
 TEST(FilteredRE2Test, AtomTests) {
-  FLAGS_filtered_re2_min_atom_len = 3;
-
   int nfail = 0;
   for (int i = 0; i < arraysize(atom_tests); i++) {
     FilterTestVars v;
@@ -211,8 +207,6 @@ void FindAtomIndices(const std::vector<string>& atoms,
 }
 
 TEST(FilteredRE2Test, MatchEmptyPattern) {
-  FLAGS_filtered_re2_min_atom_len = 3;
-
   FilterTestVars v;
   AtomTest* t = &atom_tests[0];
   // We are using the regexps used in one of the atom tests
@@ -231,8 +225,6 @@ TEST(FilteredRE2Test, MatchEmptyPattern) {
 }
 
 TEST(FilteredRE2Test, MatchTests) {
-  FLAGS_filtered_re2_min_atom_len = 3;
-
   FilterTestVars v;
   AtomTest* t = &atom_tests[2];
   // We are using the regexps used in one of the atom tests
