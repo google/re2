@@ -8,7 +8,8 @@
 // Simplified version of Google's logging.
 
 #include <assert.h>
-#include <stdio.h>  /* for fwrite */
+#include <stdio.h>
+#include <stdlib.h>
 #include <ostream>
 #include <sstream>
 
