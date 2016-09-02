@@ -35,7 +35,6 @@
 #include <utility>
 #include <vector>
 
-#include "util/flags.h"
 #include "util/logging.h"
 #include "util/mix.h"
 #include "util/mutex.h"
@@ -43,10 +42,6 @@
 #include "util/strutil.h"
 #include "re2/prog.h"
 #include "re2/stringpiece.h"
-
-DEFINE_bool(re2_dfa_bail_when_slow, true,
-            "Whether the RE2 DFA should bail out early "
-            "if the NFA would be faster (for testing).");
 
 // Silence "zero-sized array in struct/union" warning for DFA::State::next_.
 #ifdef _MSC_VER
@@ -65,6 +60,9 @@ static void* memrchr(const void* s, int c, size_t n) {
   return NULL;
 }
 #endif
+
+// Controls whether the DFA should bail out early if the NFA would be faster.
+static bool dfa_should_bail_when_slow = false;
 
 // Changing this to true compiles in prints that trace execution of the DFA.
 // Generates a lot of output -- only useful for debugging.
@@ -1401,7 +1399,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
         // same at about 2 MB/s.  Unless we're processing an average
         // of 10 bytes per state computation, fail so that RE2 can
         // fall back to the NFA.
-        if (FLAGS_re2_dfa_bail_when_slow && resetp != NULL &&
+        if (dfa_should_bail_when_slow && resetp != NULL &&
             static_cast<size_t>(p - resetp) < 10*state_cache_.size()) {
           params->failed = true;
           return false;
@@ -1953,6 +1951,10 @@ int DFA::BuildAllStates() {
 int Prog::BuildEntireDFA(MatchKind kind) {
   //LOG(ERROR) << "BuildEntireDFA is only for testing.";
   return GetDFA(kind)->BuildAllStates();
+}
+
+void Prog::TEST_dfa_should_bail_when_slow(bool b) {
+  dfa_should_bail_when_slow = b;
 }
 
 // Computes min and max for matching string.

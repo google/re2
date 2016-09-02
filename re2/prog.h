@@ -264,6 +264,10 @@ class Prog {
   // for testing purposes.  Returns number of states.
   int BuildEntireDFA(MatchKind kind);
 
+  // Controls whether the DFA should bail out early if the NFA would be faster.
+  // FOR TESTING ONLY.
+  static void TEST_dfa_should_bail_when_slow(bool b);
+
   // Compute bytemap.
   void ComputeByteMap();
 
