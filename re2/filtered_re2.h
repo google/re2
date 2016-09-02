@@ -33,6 +33,7 @@ class PrefilterTree;
 class FilteredRE2 {
  public:
   FilteredRE2();
+  explicit FilteredRE2(int min_atom_len);
   ~FilteredRE2();
 
   // Uses RE2 constructor to create a RE2 object (re). Returns

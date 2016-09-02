@@ -33,6 +33,7 @@ class Prefilter;
 class PrefilterTree {
  public:
   PrefilterTree();
+  explicit PrefilterTree(int min_atom_len);
   ~PrefilterTree();
 
   // Adds the prefilter for the next regexp. Note that we assume that
@@ -84,6 +85,9 @@ class PrefilterTree {
   };
 
  private:
+  // Returns true if the prefilter node should be kept.
+  bool KeepNode(Prefilter* node) const;
+
   // This function assigns unique ids to various parts of the
   // prefilter, by looking at if these nodes are already in the
   // PrefilterTree.
@@ -126,6 +130,9 @@ class PrefilterTree {
 
   // Has the prefilter tree been compiled.
   bool compiled_;
+
+  // Strings less than this length are not stored as atoms.
+  const int min_atom_len_;
 
   PrefilterTree(const PrefilterTree&) = delete;
   PrefilterTree& operator=(const PrefilterTree&) = delete;

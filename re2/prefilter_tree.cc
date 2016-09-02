@@ -14,19 +14,20 @@
 #include <vector>
 
 #include "util/util.h"
-#include "util/flags.h"
 #include "util/logging.h"
 #include "re2/prefilter.h"
 #include "re2/re2.h"
 
-DEFINE_int32(filtered_re2_min_atom_len,
-             3,
-             "Strings less than this length are not stored as atoms");
-
 namespace re2 {
 
 PrefilterTree::PrefilterTree()
-    : compiled_(false) {
+    : compiled_(false),
+      min_atom_len_(3) {
+}
+
+PrefilterTree::PrefilterTree(int min_atom_len)
+    : compiled_(false),
+      min_atom_len_(min_atom_len) {
 }
 
 PrefilterTree::~PrefilterTree() {
@@ -37,57 +38,17 @@ PrefilterTree::~PrefilterTree() {
     delete entries_[i].parents;
 }
 
-// Functions used for adding and Compiling prefilters to the
-// PrefilterTree.
-static bool KeepPart(Prefilter* prefilter, int level) {
-  if (prefilter == NULL)
-    return false;
-
-  switch (prefilter->op()) {
-    default:
-      LOG(DFATAL) << "Unexpected op in KeepPart: "
-                  << prefilter->op();
-      return false;
-
-    case Prefilter::ALL:
-      return false;
-
-    case Prefilter::ATOM:
-      return prefilter->atom().size() >=
-          static_cast<size_t>(FLAGS_filtered_re2_min_atom_len);
-
-    case Prefilter::AND: {
-      int j = 0;
-      std::vector<Prefilter*>* subs = prefilter->subs();
-      for (size_t i = 0; i < subs->size(); i++)
-        if (KeepPart((*subs)[i], level + 1))
-          (*subs)[j++] = (*subs)[i];
-        else
-          delete (*subs)[i];
-
-      subs->resize(j);
-      return j > 0;
-    }
-
-    case Prefilter::OR:
-      for (size_t i = 0; i < prefilter->subs()->size(); i++)
-        if (!KeepPart((*prefilter->subs())[i], level + 1))
-          return false;
-      return true;
-  }
-}
-
-void PrefilterTree::Add(Prefilter *f) {
+void PrefilterTree::Add(Prefilter* prefilter) {
   if (compiled_) {
     LOG(DFATAL) << "Add after Compile.";
     return;
   }
-  if (f != NULL && !KeepPart(f, 0)) {
-    delete f;
-    f = NULL;
+  if (prefilter != NULL && !KeepNode(prefilter)) {
+    delete prefilter;
+    prefilter = NULL;
   }
 
-  prefilter_vec_.push_back(f);
+  prefilter_vec_.push_back(prefilter);
 }
 
 void PrefilterTree::Compile(std::vector<string>* atom_vec) {
@@ -160,6 +121,42 @@ string PrefilterTree::NodeString(Prefilter* node) const {
     }
   }
   return s;
+}
+
+bool PrefilterTree::KeepNode(Prefilter* node) const {
+  if (node == NULL)
+    return false;
+
+  switch (node->op()) {
+    default:
+      LOG(DFATAL) << "Unexpected op in KeepNode: " << node->op();
+      return false;
+
+    case Prefilter::ALL:
+      return false;
+
+    case Prefilter::ATOM:
+      return node->atom().size() >= static_cast<size_t>(min_atom_len_);
+
+    case Prefilter::AND: {
+      int j = 0;
+      std::vector<Prefilter*>* subs = node->subs();
+      for (size_t i = 0; i < subs->size(); i++)
+        if (KeepNode((*subs)[i]))
+          (*subs)[j++] = (*subs)[i];
+        else
+          delete (*subs)[i];
+
+      subs->resize(j);
+      return j > 0;
+    }
+
+    case Prefilter::OR:
+      for (size_t i = 0; i < node->subs()->size(); i++)
+        if (!KeepNode((*node->subs())[i]))
+          return false;
+      return true;
+  }
 }
 
 void PrefilterTree::AssignUniqueIds(std::vector<string>* atom_vec) {
