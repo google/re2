@@ -18,8 +18,6 @@
 
 static const bool UsingMallocCounter = false;
 
-DECLARE_bool(re2_dfa_bail_when_slow);
-
 DEFINE_int32(size, 8, "log2(number of DFA nodes)");
 DEFINE_int32(repeat, 2, "Repetition count.");
 DEFINE_int32(threads, 4, "number of threads");
@@ -161,6 +159,14 @@ static string DeBruijnString(int n) {
 // 2^n byte limit, it must be handling out-of-memory conditions
 // gracefully.
 TEST(SingleThreaded, SearchDFA) {
+  // The De Bruijn string is the worst case input for this regexp.
+  // By default, the DFA will notice that it is flushing its cache
+  // too frequently and will bail out early, so that RE2 can use the
+  // NFA implementation instead.  (The DFA loses its speed advantage
+  // if it can't get a good cache hit rate.)
+  // Tell the DFA to trudge along instead.
+  Prog::TEST_dfa_should_bail_when_slow(false);
+
   // Choice of n is mostly arbitrary, except that:
   //   * making n too big makes the test run for too long.
   //   * making n too small makes the DFA refuse to run,
@@ -176,14 +182,6 @@ TEST(SingleThreaded, SearchDFA) {
   // which is not a match for 0[01]{n}$.  Adding one more 0 is a match.
   string no_match = DeBruijnString(n);
   string match = no_match + "0";
-
-  // The De Bruijn string is the worst case input for this regexp.
-  // By default, the DFA will notice that it is flushing its cache
-  // too frequently and will bail out early, so that RE2 can use the
-  // NFA implementation instead.  (The DFA loses its speed advantage
-  // if it can't get a good cache hit rate.)
-  // Tell the DFA to trudge along instead.
-  FLAGS_re2_dfa_bail_when_slow = false;
 
   int64_t usage;
   int64_t peak_usage;
@@ -216,6 +214,9 @@ TEST(SingleThreaded, SearchDFA) {
     CHECK_LT(peak_usage, 1<<n);
   }
   re->Decref();
+
+  // Reset to original behaviour.
+  Prog::TEST_dfa_should_bail_when_slow(true);
 }
 
 // Helper function: searches for match, which should match,
@@ -239,6 +240,8 @@ static void DoSearch(Prog* prog, const StringPiece& match,
 }
 
 TEST(Multithreaded, SearchDFA) {
+  Prog::TEST_dfa_should_bail_when_slow(false);
+
   // Same as single-threaded test above.
   const int n = 18;
   Regexp* re = Regexp::Parse(StringPrintf("0[01]{%d}$", n),
@@ -246,7 +249,6 @@ TEST(Multithreaded, SearchDFA) {
   CHECK(re);
   string no_match = DeBruijnString(n);
   string match = no_match + "0";
-  FLAGS_re2_dfa_bail_when_slow = false;
 
   // Check that single-threaded code works.
   {
@@ -275,6 +277,9 @@ TEST(Multithreaded, SearchDFA) {
   }
 
   re->Decref();
+
+  // Reset to original behaviour.
+  Prog::TEST_dfa_should_bail_when_slow(true);
 }
 
 struct ReverseTest {
