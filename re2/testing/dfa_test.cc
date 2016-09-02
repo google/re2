@@ -77,15 +77,10 @@ TEST(Multithreaded, BuildEntireDFA) {
 // the DFA once the memory limits are reached.
 TEST(SingleThreaded, BuildEntireDFA) {
   // Create regexp with 2^30 states in DFA.
-  string s = "a";
-  for (int i = 0; i < 30; i++)
-    s += "[ab]";
-  s += "b";
-
-  Regexp* re = Regexp::Parse(s, Regexp::LikePerl, NULL);
+  Regexp* re = Regexp::Parse("a[ab]{30}b", Regexp::LikePerl, NULL);
   CHECK(re);
-  int max = 24;
-  for (int i = 17; i < max; i++) {
+
+  for (int i = 17; i < 24; i++) {
     int64_t limit = 1<<i;
     int64_t usage;
     //int64_t progusage, dfamem;
@@ -100,15 +95,15 @@ TEST(SingleThreaded, BuildEntireDFA) {
       usage = m.HeapGrowth();
       delete prog;
     }
-    if (!UsingMallocCounter)
-      continue;
-    //LOG(INFO) << "limit " << limit << ", "
-    //          << "prog usage " << progusage << ", "
-    //          << "DFA budget " << dfamem << ", "
-    //          << "total " << usage;
-    // Tolerate +/- 10%.
-    CHECK_GT(usage, limit*9/10);
-    CHECK_LT(usage, limit*11/10);
+    if (UsingMallocCounter) {
+      //LOG(INFO) << "limit " << limit << ", "
+      //          << "prog usage " << progusage << ", "
+      //          << "DFA budget " << dfamem << ", "
+      //          << "total " << usage;
+      // Tolerate +/- 10%.
+      CHECK_GT(usage, limit*9/10);
+      CHECK_LT(usage, limit*11/10);
+    }
   }
   re->Decref();
 }
@@ -197,7 +192,8 @@ TEST(SingleThreaded, SearchDFA) {
     Prog* prog = re->CompileToProg(1<<n);
     CHECK(prog);
     for (int i = 0; i < 10; i++) {
-      bool matched, failed = false;
+      bool matched = false;
+      bool failed = false;
       matched = prog->SearchDFA(match, NULL,
                                 Prog::kUnanchored, Prog::kFirstMatch,
                                 NULL, &failed, NULL);
@@ -213,12 +209,12 @@ TEST(SingleThreaded, SearchDFA) {
     peak_usage = m.PeakHeapGrowth();
     delete prog;
   }
-  if (!UsingMallocCounter)
-    return;
-  //LOG(INFO) << "usage " << usage << ", "
-  //          << "peak usage " << peak_usage;
-  CHECK_LT(usage, 1<<n);
-  CHECK_LT(peak_usage, 1<<n);
+  if (UsingMallocCounter) {
+    //LOG(INFO) << "usage " << usage << ", "
+    //          << "peak usage " << peak_usage;
+    CHECK_LT(usage, 1<<n);
+    CHECK_LT(peak_usage, 1<<n);
+  }
   re->Decref();
 }
 
