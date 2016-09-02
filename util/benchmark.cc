@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <algorithm>
 #include <chrono>
 
@@ -80,7 +81,7 @@ static void runN(Benchmark *b, int n, int siz) {
 		b->fnr(n, siz);
 	else {
 		fprintf(stderr, "%s: missing function\n", b->name);
-		exit(2);
+		abort();
 	}
 	if(t0 != 0)
 		ns += nsec() - t0;
