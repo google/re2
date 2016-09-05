@@ -10,9 +10,6 @@
 
 using re2::StringPiece;
 
-#ifdef _MSC_VER
-__declspec(selectany)
-#endif
 const StringPiece::size_type StringPiece::npos;  // initialized in stringpiece.h
 
 StringPiece::size_type StringPiece::copy(char* buf, size_type n,

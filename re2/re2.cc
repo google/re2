@@ -36,9 +36,6 @@ namespace re2 {
 static const int kMaxArgs = 16;
 static const int kVecSize = 1+kMaxArgs;
 
-#ifdef _MSC_VER
-__declspec(selectany)
-#endif
 const int RE2::Options::kDefaultMaxMem;  // initialized in re2.h
 
 RE2::Options::Options(RE2::CannedOptions opt)
