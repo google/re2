@@ -19,7 +19,7 @@
 
 namespace re2 {
 
-static const int Trace = false;
+static const bool Trace = false;
 
 typedef std::set<string>::iterator SSIter;
 typedef std::set<string>::const_iterator ConstSSIter;
@@ -30,13 +30,10 @@ Prefilter::Prefilter(Op op) {
   subs_ = NULL;
   if (op_ == AND || op_ == OR)
     subs_ = new std::vector<Prefilter*>;
-
-  VLOG(10) << "constructed: " << reinterpret_cast<intptr_t>(this);
 }
 
 // Destroys a Prefilter.
 Prefilter::~Prefilter() {
-  VLOG(10) << "destructing: " << reinterpret_cast<intptr_t>(this);
   if (subs_) {
     for (size_t i = 0; i < subs_->size(); i++)
       delete (*subs_)[i];
@@ -457,9 +454,9 @@ typedef CharClass::iterator CCIter;
 Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
                                          bool latin1) {
   if (Trace) {
-    VLOG(0) << "CharClassInfo:";
+    LOG(INFO) << "CharClassInfo:";
     for (CCIter i = cc->begin(); i != cc->end(); ++i)
-      VLOG(0) << "  " << i->lo << "-" << i->hi;
+      LOG(INFO) << "  " << i->lo << "-" << i->hi;
   }
 
   // If the class is too large, it's okay to overestimate.
@@ -480,7 +477,7 @@ Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
   a->is_exact_ = true;
 
   if (Trace) {
-    VLOG(0) << " = " << a->ToString();
+    LOG(INFO) << " = " << a->ToString();
   }
 
   return a;
@@ -612,7 +609,6 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
       info = child_args[0];
       for (int i = 1; i < nchild_args; i++)
         info = Alt(info, child_args[i]);
-      VLOG(10) << "Alt: " << info->ToString();
       break;
 
     case kRegexpStar:
@@ -643,8 +639,8 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
   }
 
   if (Trace) {
-    VLOG(0) << "BuildInfo " << re->ToString()
-            << ": " << (info ? info->ToString() : "");
+    LOG(INFO) << "BuildInfo " << re->ToString()
+              << ": " << (info ? info->ToString() : "");
   }
 
   return info;

@@ -108,7 +108,6 @@ bool BitState::ShouldVisit(int id, const char* p) {
 
 // Grow the stack.
 bool BitState::GrowStack() {
-  // VLOG(0) << "Reallocate.";
   maxjob_ *= 2;
   Job* newjob = new Job[maxjob_];
   memmove(newjob, job_, njob_*sizeof job_[0]);
@@ -179,8 +178,6 @@ bool BitState::TrySearch(int id0, const char* p0) {
     }
 
     // Visit ip, p.
-    // VLOG(0) << "Job: " << ip->id() << " "
-    //         << (p - text_.begin()) << " " << arg;
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       default:
@@ -274,7 +271,6 @@ bool BitState::TrySearch(int id0, const char* p0) {
         if (endmatch_ && p != text_.end())
           goto Next;
 
-        // VLOG(0) << "Found match.";
         // We found a match.  If the caller doesn't care
         // where the match is, no point going further.
         if (nsubmatch_ == 0)
@@ -334,7 +330,6 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
   nvisited_ = (prog_->size() * (text.size()+1) + VisitedBits-1) / VisitedBits;
   visited_ = new uint32_t[nvisited_];
   memset(visited_, 0, nvisited_*sizeof visited_[0]);
-  // VLOG(0) << "nvisited_ = " << nvisited_;
 
   ncap_ = 2*nsubmatch;
   if (ncap_ < 2)

@@ -641,7 +641,6 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
               match_[0] - btext_, match_[1] - btext_);
     return true;
   }
-  VLOG(1) << "No matches found";
   return false;
 }
 
