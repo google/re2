@@ -294,7 +294,7 @@ void PrefilterTree::RegexpsGivenStrings(
     std::vector<int>* regexps) const {
   regexps->clear();
   if (!compiled_) {
-    LOG(DFATAL) << "RegexpsGivenStrings before Compile.";
+    LOG(ERROR) << "RegexpsGivenStrings before Compile.";
     for (size_t i = 0; i < prefilter_vec_.size(); ++i)
       regexps->push_back(static_cast<int>(i));
   } else {
