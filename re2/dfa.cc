@@ -352,7 +352,6 @@ class DFA {
   int64_t state_budget_;   // Amount of memory remaining for new States.
   StateSet state_cache_;   // All States computed so far.
   StartInfo start_[kMaxStart];
-  bool cache_warned_;      // have printed to LOG(INFO) about the cache
 };
 
 // Shorthand for casting to uint8_t*.
@@ -430,8 +429,7 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
     q0_(NULL),
     q1_(NULL),
     astack_(NULL),
-    mem_budget_(max_mem),
-    cache_warned_(false) {
+    mem_budget_(max_mem) {
   if (DebugDFA)
     fprintf(stderr, "\nkind %d\n%s\n", (int)kind_, prog_->DumpUnanchored().c_str());
   int nmark = 0;
@@ -449,8 +447,6 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
                  (sizeof(int)+sizeof(int)) * 2;  // q0, q1
   mem_budget_ -= nastack_ * sizeof(int);  // astack
   if (mem_budget_ < 0) {
-    LOG(INFO) << "DFA out of memory: prog size " << prog_->size()
-              << " mem " << max_mem;
     init_failed_ = true;
     return;
   }
@@ -467,8 +463,6 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
   int64_t one_state = sizeof(State) + nnext*sizeof(std::atomic<State*>) +
                       (prog_->list_count()+nmark)*sizeof(int);
   if (state_budget_ < 20*one_state) {
-    LOG(INFO) << "DFA out of memory: prog size " << prog_->size()
-              << " mem " << max_mem;
     init_failed_ = true;
     return;
   }
@@ -1096,11 +1090,6 @@ class DFA::RWLocker {
   // Notice that the lock is *released* temporarily.
   void LockForWriting();
 
-  // Returns whether the lock is already held for writing.
-  bool IsLockedForWriting() {
-    return writing_;
-  }
-
  private:
   Mutex* mu_;
   bool writing_;
@@ -1109,9 +1098,7 @@ class DFA::RWLocker {
   RWLocker& operator=(const RWLocker&) = delete;
 };
 
-DFA::RWLocker::RWLocker(Mutex* mu)
-  : mu_(mu), writing_(false) {
-
+DFA::RWLocker::RWLocker(Mutex* mu) : mu_(mu), writing_(false) {
   mu_->ReaderLock();
 }
 
@@ -1126,10 +1113,10 @@ void DFA::RWLocker::LockForWriting() NO_THREAD_SAFETY_ANALYSIS {
 }
 
 DFA::RWLocker::~RWLocker() {
-  if (writing_)
-    mu_->WriterUnlock();
-  else
+  if (!writing_)
     mu_->ReaderUnlock();
+  else
+    mu_->WriterUnlock();
 }
 
 
@@ -1146,19 +1133,7 @@ DFA::RWLocker::~RWLocker() {
 
 void DFA::ResetCache(RWLocker* cache_lock) {
   // Re-acquire the cache_mutex_ for writing (exclusive use).
-  bool was_writing = cache_lock->IsLockedForWriting();
   cache_lock->LockForWriting();
-
-  // If we already held cache_mutex_ for writing, it means
-  // this invocation of Search() has already reset the
-  // cache once already.  That's a pretty clear indication
-  // that the cache is too small.  Warn about that, once.
-  // TODO(rsc): Only warn if state_cache_.size() < some threshold.
-  if (was_writing && !cache_warned_) {
-    LOG(INFO) << "DFA memory cache could be too small: "
-              << "only room for " << state_cache_.size() << " states.";
-    cache_warned_ = true;
-  }
 
   // Clear the cache, reset the memory budget.
   for (int i = 0; i < kMaxStart; i++) {
