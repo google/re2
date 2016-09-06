@@ -101,12 +101,16 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
   }
   if (v != NULL)
     v->clear();
-  bool failed;
+  bool dfa_failed = false;
   bool ret = prog_->SearchDFA(text, text, Prog::kAnchored,
-                              Prog::kManyMatch, NULL, &failed, v);
-  if (failed)
-    LOG(DFATAL) << "RE2::Set::Match: DFA ran out of cache space";
-
+                              Prog::kManyMatch, NULL, &dfa_failed, v);
+  if (dfa_failed) {
+    if (options_.log_errors())
+      LOG(ERROR) << "DFA out of memory: size " << prog_->size() << ", "
+                 << "bytemap range " << prog_->bytemap_range() << ", "
+                 << "list count " << prog_->list_count();
+    return false;
+  }
   if (ret == false)
     return false;
   if (v != NULL && v->empty()) {

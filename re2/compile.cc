@@ -1266,11 +1266,11 @@ Prog* Compiler::CompileSet(const RE2::Options& options, RE2::Anchor anchor,
 
   // Make sure DFA has enough memory to operate,
   // since we're not going to fall back to the NFA.
-  bool failed;
+  bool dfa_failed = false;
   StringPiece sp = "hello, world";
   prog->SearchDFA(sp, sp, Prog::kAnchored, Prog::kManyMatch,
-                  NULL, &failed, NULL);
-  if (failed) {
+                  NULL, &dfa_failed, NULL);
+  if (dfa_failed) {
     delete prog;
     return NULL;
   }
