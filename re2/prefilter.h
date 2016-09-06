@@ -43,7 +43,7 @@ class Prefilter {
 
   // The children of the Prefilter node.
   std::vector<Prefilter*>* subs() {
-    CHECK(op_ == AND || op_ == OR);
+    DCHECK(op_ == AND || op_ == OR);
     return subs_;
   }
 
