@@ -454,9 +454,9 @@ typedef CharClass::iterator CCIter;
 Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
                                          bool latin1) {
   if (ExtraDebug) {
-    LOG(INFO) << "CharClassInfo:";
+    LOG(ERROR) << "CharClassInfo:";
     for (CCIter i = cc->begin(); i != cc->end(); ++i)
-      LOG(INFO) << "  " << i->lo << "-" << i->hi;
+      LOG(ERROR) << "  " << i->lo << "-" << i->hi;
   }
 
   // If the class is too large, it's okay to overestimate.
@@ -477,7 +477,7 @@ Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
   a->is_exact_ = true;
 
   if (ExtraDebug)
-    LOG(INFO) << " = " << a->ToString();
+    LOG(ERROR) << " = " << a->ToString();
 
   return a;
 }
@@ -505,7 +505,7 @@ class Prefilter::Info::Walker : public Regexp::Walker<Prefilter::Info*> {
 
 Prefilter::Info* Prefilter::BuildInfo(Regexp* re) {
   if (ExtraDebug)
-    LOG(INFO) << "BuildPrefilter::Info: " << re->ToString();
+    LOG(ERROR) << "BuildPrefilter::Info: " << re->ToString();
 
   bool latin1 = (re->parse_flags() & Regexp::Latin1) != 0;
   Prefilter::Info::Walker w(latin1);
@@ -637,8 +637,8 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
   }
 
   if (ExtraDebug)
-    LOG(INFO) << "BuildInfo " << re->ToString()
-              << ": " << (info ? info->ToString() : "");
+    LOG(ERROR) << "BuildInfo " << re->ToString()
+               << ": " << (info ? info->ToString() : "");
 
   return info;
 }
