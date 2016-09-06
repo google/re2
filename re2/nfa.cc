@@ -40,6 +40,8 @@
 
 namespace re2 {
 
+static const bool ExtraDebug = false;
+
 class NFA {
  public:
   NFA(Prog* prog);
@@ -59,8 +61,6 @@ class NFA {
   bool Search(const StringPiece& text, const StringPiece& context,
               bool anchored, bool longest,
               StringPiece* submatch, int nsubmatch);
-
-  static const int Debug = 0;
 
  private:
   struct Thread {
@@ -238,7 +238,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, int flag,
     if (id == 0)
       continue;
     if (q->has_index(id)) {
-      if (Debug)
+      if (ExtraDebug)
         fprintf(stderr, "  [%d%s]\n", id, FormatCapture(t0->capture).c_str());
       continue;
     }
@@ -304,7 +304,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, int flag,
       // Save state; will pick up at next byte.
       t = Incref(t0);
       *tp = t;
-      if (Debug)
+      if (ExtraDebug)
         fprintf(stderr, " + %d%s\n", id, FormatCapture(t0->capture).c_str());
 
     Next:
@@ -484,11 +484,10 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
   // For debugging prints.
   btext_ = context.begin();
 
-  if (Debug) {
+  if (ExtraDebug)
     fprintf(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
             text.ToString().c_str(), context.ToString().c_str(), anchored,
             longest);
-  }
 
   // Set up search.
   Threadq* runq = &q0_;
@@ -528,7 +527,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
     else
       flag |= kEmptyNonWordBoundary;
 
-    if (Debug) {
+    if (ExtraDebug) {
       int c = 0;
       if (p == context.begin())
         c = '^';
@@ -620,7 +619,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
 
     // If all the threads have died, stop early.
     if (runq->size() == 0) {
-      if (Debug)
+      if (ExtraDebug)
         fprintf(stderr, "dead\n");
       break;
     }
@@ -636,7 +635,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
       submatch[i] =
           StringPiece(match_[2 * i],
                       static_cast<size_t>(match_[2 * i + 1] - match_[2 * i]));
-    if (Debug)
+    if (ExtraDebug)
       fprintf(stderr, "match (%td,%td)\n",
               match_[0] - btext_, match_[1] - btext_);
     return true;
@@ -709,7 +708,7 @@ bool
 Prog::SearchNFA(const StringPiece& text, const StringPiece& context,
                 Anchor anchor, MatchKind kind,
                 StringPiece* match, int nmatch) {
-  if (NFA::Debug)
+  if (ExtraDebug)
     Dump();
 
   NFA nfa(this);

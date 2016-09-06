@@ -72,7 +72,7 @@
 
 namespace re2 {
 
-static const int Debug = 0;
+static const bool ExtraDebug = false;
 
 // The key insight behind this implementation is that the
 // non-determinism in an NFA for a one-pass regular expression
@@ -460,7 +460,7 @@ bool Prog::IsOnePass() {
           int nextindex = nodebyid[ip->out()];
           if (nextindex == -1) {
             if (nalloc >= maxnodes) {
-              if (Debug)
+              if (ExtraDebug)
                 LOG(ERROR) << StringPrintf(
                     "Not OnePass: hit node limit %d >= %d", nalloc, maxnodes);
               goto fail;
@@ -485,10 +485,9 @@ bool Prog::IsOnePass() {
             if ((act & kImpossible) == kImpossible) {
               node->action[b] = newact;
             } else if (act != newact) {
-              if (Debug) {
+              if (ExtraDebug)
                 LOG(ERROR) << StringPrintf(
                     "Not OnePass: conflict on byte %#x at state %d", c, *it);
-              }
               goto fail;
             }
           }
@@ -507,10 +506,9 @@ bool Prog::IsOnePass() {
               if ((act & kImpossible) == kImpossible) {
                 node->action[b] = newact;
               } else if (act != newact) {
-                if (Debug) {
+                if (ExtraDebug)
                   LOG(ERROR) << StringPrintf(
                       "Not OnePass: conflict on byte %#x at state %d", c, *it);
-                }
                 goto fail;
               }
             }
@@ -549,10 +547,9 @@ bool Prog::IsOnePass() {
 
           // If already on work queue, (1) is violated: bail out.
           if (!AddQ(&workq, ip->out())) {
-            if (Debug) {
+            if (ExtraDebug)
               LOG(ERROR) << StringPrintf(
                   "Not OnePass: multiple paths %d -> %d\n", *it, ip->out());
-            }
             goto fail;
           }
           id = ip->out();
@@ -561,10 +558,9 @@ bool Prog::IsOnePass() {
         case kInstMatch:
           if (matched) {
             // (3) is violated
-            if (Debug) {
+            if (ExtraDebug)
               LOG(ERROR) << StringPrintf(
                   "Not OnePass: multiple matches from %d\n", *it);
-            }
             goto fail;
           }
           matched = true;
@@ -584,7 +580,7 @@ bool Prog::IsOnePass() {
     }
   }
 
-  if (Debug) {  // For debugging, dump one-pass NFA to LOG(ERROR).
+  if (ExtraDebug) {  // For debugging, dump one-pass NFA to LOG(ERROR).
     LOG(ERROR) << "bytemap:\n" << DumpByteMap();
     LOG(ERROR) << "prog:\n" << Dump();
 

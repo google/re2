@@ -20,6 +20,8 @@
 
 namespace re2 {
 
+static const bool ExtraDebug = false;
+
 PrefilterTree::PrefilterTree()
     : compiled_(false),
       min_atom_len_(3) {
@@ -97,7 +99,8 @@ void PrefilterTree::Compile(std::vector<string>* atom_vec) {
     }
   }
 
-  PrintDebugInfo();
+  if (ExtraDebug)
+    PrintDebugInfo();
 }
 
 Prefilter* PrefilterTree::CanonicalNode(Prefilter* node) {

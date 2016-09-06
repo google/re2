@@ -19,7 +19,7 @@
 
 namespace re2 {
 
-static const bool Trace = false;
+static const bool ExtraDebug = false;
 
 typedef std::set<string>::iterator SSIter;
 typedef std::set<string>::const_iterator ConstSSIter;
@@ -453,7 +453,7 @@ Prefilter::Info* Prefilter::Info::EmptyString() {
 typedef CharClass::iterator CCIter;
 Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
                                          bool latin1) {
-  if (Trace) {
+  if (ExtraDebug) {
     LOG(INFO) << "CharClassInfo:";
     for (CCIter i = cc->begin(); i != cc->end(); ++i)
       LOG(INFO) << "  " << i->lo << "-" << i->hi;
@@ -476,9 +476,8 @@ Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
 
   a->is_exact_ = true;
 
-  if (Trace) {
+  if (ExtraDebug)
     LOG(INFO) << " = " << a->ToString();
-  }
 
   return a;
 }
@@ -505,9 +504,8 @@ class Prefilter::Info::Walker : public Regexp::Walker<Prefilter::Info*> {
 };
 
 Prefilter::Info* Prefilter::BuildInfo(Regexp* re) {
-  if (Trace) {
+  if (ExtraDebug)
     LOG(INFO) << "BuildPrefilter::Info: " << re->ToString();
-  }
 
   bool latin1 = (re->parse_flags() & Regexp::Latin1) != 0;
   Prefilter::Info::Walker w(latin1);
@@ -638,10 +636,9 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
       break;
   }
 
-  if (Trace) {
+  if (ExtraDebug)
     LOG(INFO) << "BuildInfo " << re->ToString()
               << ": " << (info ? info->ToString() : "");
-  }
 
   return info;
 }
