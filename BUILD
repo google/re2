@@ -40,7 +40,6 @@ cc_library(
         "re2/unicode_groups.h",
         "re2/walker-inl.h",
         "util/flags.h",
-        "util/logging.cc",
         "util/logging.h",
         "util/mix.h",
         "util/mutex.h",
