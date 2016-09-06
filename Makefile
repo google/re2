@@ -107,7 +107,6 @@ HFILES=\
 	re2/walker-inl.h\
 
 OFILES=\
-	obj/util/logging.o\
 	obj/util/rune.o\
 	obj/util/strutil.o\
 	obj/re2/bitstate.o\

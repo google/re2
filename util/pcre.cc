@@ -730,11 +730,14 @@ int PCRE::NumberOfCapturingGroups() const {
   if (re_partial_ == NULL) return -1;
 
   int result;
-  int rv = pcre_fullinfo(re_partial_,       // The regular expression object
+  int rc = pcre_fullinfo(re_partial_,       // The regular expression object
                          NULL,              // We did not study the pattern
                          PCRE_INFO_CAPTURECOUNT,
                          &result);
-  DCHECK(rv == 0);
+  if (rc != 0) {
+    PCREPORT(ERROR) << "Unexpected return code: " << rc;
+    return -1;
+  }
   return result;
 }
 

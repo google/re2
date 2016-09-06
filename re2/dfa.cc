@@ -1588,7 +1588,7 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
 
   // Sanity check: make sure that text lies within context.
   if (text.begin() < context.begin() || text.end() > context.end()) {
-    LOG(DFATAL) << "Text is not inside context.";
+    LOG(DFATAL) << "context does not contain text";
     params->start = DeadState;
     return true;
   }

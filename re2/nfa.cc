@@ -435,12 +435,6 @@ string NFA::FormatCapture(const char** capture) {
   return s;
 }
 
-// Returns whether haystack contains needle's memory.
-static bool StringPieceContains(const StringPiece haystack, const StringPiece needle) {
-  return haystack.begin() <= needle.begin() &&
-         haystack.end() >= needle.end();
-}
-
 bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
             bool anchored, bool longest,
             StringPiece* submatch, int nsubmatch) {
@@ -451,12 +445,9 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
   if (context.begin() == NULL)
     context = text;
 
-  if (!StringPieceContains(context, text)) {
-    LOG(FATAL) << "Bad args: context does not contain text "
-                << reinterpret_cast<const void*>(context.begin())
-                << "+" << context.size() << " "
-                << reinterpret_cast<const void*>(text.begin())
-                << "+" << text.size();
+  // Sanity check: make sure that text lies within context.
+  if (text.begin() < context.begin() || text.end() > context.end()) {
+    LOG(DFATAL) << "context does not contain text";
     return false;
   }
 
