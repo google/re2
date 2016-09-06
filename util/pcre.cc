@@ -730,10 +730,11 @@ int PCRE::NumberOfCapturingGroups() const {
   if (re_partial_ == NULL) return -1;
 
   int result;
-  CHECK(pcre_fullinfo(re_partial_,       // The regular expression object
-                      NULL,              // We did not study the pattern
-                      PCRE_INFO_CAPTURECOUNT,
-                      &result) == 0);
+  int rv = pcre_fullinfo(re_partial_,       // The regular expression object
+                         NULL,              // We did not study the pattern
+                         PCRE_INFO_CAPTURECOUNT,
+                         &result);
+  DCHECK(rv == 0);
   return result;
 }
 
