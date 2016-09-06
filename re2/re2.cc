@@ -835,7 +835,6 @@ bool RE2::DoMatch(const StringPiece& text,
   int ncap = NumberOfCapturingGroups();
   if (ncap < n) {
     // RE has fewer capturing groups than number of arg pointers passed in
-    VLOG(1) << "Asked for " << n << " but only have " << ncap;
     delete[] heapvec;
     return false;
   }
@@ -845,8 +844,6 @@ bool RE2::DoMatch(const StringPiece& text,
     const StringPiece& s = vec[i+1];
     if (!args[i]->Parse(s.data(), s.size())) {
       // TODO: Should we indicate what the error was?
-      VLOG(1) << "Parse error on #" << i << " " << s << " "
-              << (void*)s.data() << "/" << s.size();
       delete[] heapvec;
       return false;
     }

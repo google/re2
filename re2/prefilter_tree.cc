@@ -300,7 +300,6 @@ void PrefilterTree::RegexpsGivenStrings(
       std::vector<int> matched_atom_ids;
       for (size_t j = 0; j < matched_atoms.size(); j++) {
         matched_atom_ids.push_back(atom_index_to_id_[matched_atoms[j]]);
-        VLOG(10) << "Atom id:" << atom_index_to_id_[matched_atoms[j]];
       }
       PropagateMatch(matched_atom_ids, &regexps_map);
       for (IntMap::iterator it = regexps_map.begin();
@@ -322,12 +321,9 @@ void PrefilterTree::PropagateMatch(const std::vector<int>& atom_ids,
     work.set(atom_ids[i], 1);
   for (IntMap::iterator it = work.begin(); it != work.end(); ++it) {
     const Entry& entry = entries_[it->index()];
-    VLOG(10) << "Processing: " << it->index();
     // Record regexps triggered.
-    for (size_t i = 0; i < entry.regexps.size(); i++) {
-      VLOG(10) << "Regexp triggered: " << entry.regexps[i];
+    for (size_t i = 0; i < entry.regexps.size(); i++)
       regexps->set(entry.regexps[i], 1);
-    }
     int c;
     // Pass trigger up to parents.
     for (StdIntMap::iterator it = entry.parents->begin();
@@ -335,7 +331,6 @@ void PrefilterTree::PropagateMatch(const std::vector<int>& atom_ids,
          ++it) {
       int j = it->first;
       const Entry& parent = entries_[j];
-      VLOG(10) << " parent= " << j << " trig= " << parent.propagate_up_at_count;
       // Delay until all the children have succeeded.
       if (parent.propagate_up_at_count > 1) {
         if (count.has_index(j)) {
@@ -348,7 +343,6 @@ void PrefilterTree::PropagateMatch(const std::vector<int>& atom_ids,
         if (c < parent.propagate_up_at_count)
           continue;
       }
-      VLOG(10) << "Triggering: " << j;
       // Trigger the parent.
       work.set(j, 1);
     }
@@ -361,22 +355,22 @@ void PrefilterTree::PrintPrefilter(int regexpid) {
 }
 
 void PrefilterTree::PrintDebugInfo() {
-  VLOG(10) << "#Unique Atoms: " << atom_index_to_id_.size();
-  VLOG(10) << "#Unique Nodes: " << entries_.size();
+  LOG(INFO) << "#Unique Atoms: " << atom_index_to_id_.size();
+  LOG(INFO) << "#Unique Nodes: " << entries_.size();
 
   for (size_t i = 0; i < entries_.size(); ++i) {
     StdIntMap* parents = entries_[i].parents;
     const std::vector<int>& regexps = entries_[i].regexps;
-    VLOG(10) << "EntryId: " << i
-            << " N: " << parents->size() << " R: " << regexps.size();
+    LOG(INFO) << "EntryId: " << i
+              << " N: " << parents->size() << " R: " << regexps.size();
     for (StdIntMap::iterator it = parents->begin(); it != parents->end(); ++it)
-      VLOG(10) << it->first;
+      LOG(INFO) << it->first;
   }
-  VLOG(10) << "Map:";
+  LOG(INFO) << "Map:";
   for (std::map<string, Prefilter*>::const_iterator iter = node_map_.begin();
        iter != node_map_.end(); ++iter)
-    VLOG(10) << "NodeId: " << (*iter).second->unique_id()
-            << " Str: " << (*iter).first;
+    LOG(INFO) << "NodeId: " << (*iter).second->unique_id()
+              << " Str: " << (*iter).first;
 }
 
 string PrefilterTree::DebugNodeString(Prefilter* node) const {

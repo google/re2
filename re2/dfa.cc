@@ -1997,11 +1997,8 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
   min->clear();
   MutexLock lock(&mutex_);
   for (int i = 0; i < maxlen; i++) {
-    if (previously_visited_states[s] > kMaxEltRepetitions) {
-      VLOG(2) << "Hit kMaxEltRepetitions=" << kMaxEltRepetitions
-        << " for state s=" << s << " and min=" << CEscape(*min);
+    if (previously_visited_states[s] > kMaxEltRepetitions)
       break;
-    }
     previously_visited_states[s]++;
 
     // Stop if min is a match.
@@ -2034,11 +2031,8 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
   s = params.start;
   max->clear();
   for (int i = 0; i < maxlen; i++) {
-    if (previously_visited_states[s] > kMaxEltRepetitions) {
-      VLOG(2) << "Hit kMaxEltRepetitions=" << kMaxEltRepetitions
-        << " for state s=" << s << " and max=" << CEscape(*max);
+    if (previously_visited_states[s] > kMaxEltRepetitions)
       break;
-    }
     previously_visited_states[s] += 1;
 
     // Try to extend the string with high bytes.
