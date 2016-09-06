@@ -497,8 +497,7 @@ class Regexp {
 
   // Allocate space for n sub-regexps.
   void AllocSub(int n) {
-    if (n < 0 || static_cast<uint16_t>(n) != n)
-      LOG(FATAL) << "Cannot AllocSub " << n;
+    DCHECK(n >= 0 && static_cast<uint16_t>(n) == n);
     if (n > 1)
       submany_ = new Regexp*[n];
     nsub_ = n;
