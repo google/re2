@@ -161,13 +161,13 @@ bool CheckExpectedAtoms(const char* atoms[],
       pass = pass && expected[i] == v->atoms[i];
 
   if (!pass) {
-    LOG(WARNING) << "Failed " << testname;
-    LOG(WARNING) << "Expected #atoms = " << expected.size();
+    LOG(ERROR) << "Failed " << testname;
+    LOG(ERROR) << "Expected #atoms = " << expected.size();
     for (size_t i = 0; i < expected.size(); i++)
-      LOG(WARNING) << expected[i];
-    LOG(WARNING) << "Found #atoms = " << v->atoms.size();
+      LOG(ERROR) << expected[i];
+    LOG(ERROR) << "Found #atoms = " << v->atoms.size();
     for (size_t i = 0; i < v->atoms.size(); i++)
-      LOG(WARNING) << v->atoms[i];
+      LOG(ERROR) << v->atoms[i];
   }
 
   return pass;
