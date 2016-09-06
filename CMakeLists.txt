@@ -60,7 +60,6 @@ set(RE2_SOURCES
     re2/tostring.cc
     re2/unicode_casefold.cc
     re2/unicode_groups.cc
-    util/logging.cc
     util/rune.cc
     util/strutil.cc
     )
