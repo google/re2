@@ -28,6 +28,8 @@ struct FilterTestVars {
 
 TEST(FilteredRE2Test, EmptyTest) {
   FilterTestVars v;
+  // This will log an error because Compile has no effect at all
+  // when called before Add.
   v.f.AllMatches("foo", v.atom_indices, &v.matches);
   EXPECT_EQ(0, v.matches.size());
 }
