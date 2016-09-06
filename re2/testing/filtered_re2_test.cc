@@ -28,6 +28,13 @@ struct FilterTestVars {
 
 TEST(FilteredRE2Test, EmptyTest) {
   FilterTestVars v;
+
+  v.f.Compile(&v.atoms);
+  EXPECT_EQ(0, v.atoms.size());
+
+  // Compile has no effect at all when called before Add: it will not
+  // record that it has been called and it will not clear the vector.
+  // Thus, an error will be logged during the call to AllMatches.
   v.f.AllMatches("foo", v.atom_indices, &v.matches);
   EXPECT_EQ(0, v.matches.size());
 }
