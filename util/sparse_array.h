@@ -121,10 +121,10 @@ class SparseArray {
   typedef typename std::vector<IndexValue>::const_iterator const_iterator;
 
   SparseArray(const SparseArray& src);
-  SparseArray(SparseArray&& src) noexcept;
+  SparseArray(SparseArray&& src) /*noexcept*/;
 
   SparseArray& operator=(const SparseArray& src);
-  SparseArray& operator=(SparseArray&& src) noexcept;
+  SparseArray& operator=(SparseArray&& src) /*noexcept*/;
 
   const IndexValue& iv(int i) const;
 
@@ -333,7 +333,7 @@ SparseArray<Value>::SparseArray(const SparseArray& src)
 }
 
 template<typename Value>
-SparseArray<Value>::SparseArray(SparseArray&& src) noexcept  // NOLINT
+SparseArray<Value>::SparseArray(SparseArray&& src) /*noexcept*/  // NOLINT
     : size_(src.size_),
       max_size_(src.max_size_),
       sparse_to_dense_(std::move(src.sparse_to_dense_)),
@@ -356,7 +356,7 @@ SparseArray<Value>& SparseArray<Value>::operator=(const SparseArray& src) {
 
 template<typename Value>
 SparseArray<Value>& SparseArray<Value>::operator=(
-    SparseArray&& src) noexcept {  // NOLINT
+    SparseArray&& src) /*noexcept*/ {  // NOLINT
   size_ = src.size_;
   max_size_ = src.max_size_;
   sparse_to_dense_ = std::move(src.sparse_to_dense_);
@@ -382,9 +382,9 @@ class SparseArray<Value>::IndexValue {
 
   int index() const { return index_; }
 
-  Value& value() & { return second; }
-  const Value& value() const & { return second; }
-  Value&& value() && { return std::move(second); }  // NOLINT
+  Value& value() /*&*/ { return second; }
+  const Value& value() const /*&*/ { return second; }
+  //Value&& value() /*&&*/ { return std::move(second); }  // NOLINT
 
  private:
   int index_;
