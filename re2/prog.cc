@@ -114,14 +114,14 @@ Prog::Prog()
     list_count_(0),
     inst_(NULL),
     onepass_nodes_(NULL),
+    dfa_mem_(0),
     dfa_first_(NULL),
-    dfa_longest_(NULL),
-    dfa_mem_(0) {
+    dfa_longest_(NULL) {
 }
 
 Prog::~Prog() {
-  DeleteDFA(&dfa_first_);
-  DeleteDFA(&dfa_longest_);
+  DeleteDFA(dfa_longest_);
+  DeleteDFA(dfa_first_);
   delete[] onepass_nodes_;
   delete[] inst_;
 }

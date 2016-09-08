@@ -10,14 +10,12 @@
 // expression symbolically.
 
 #include <stdint.h>
-#include <atomic>
 #include <mutex>
 #include <string>
 #include <vector>
 
 #include "util/util.h"
 #include "util/logging.h"
-#include "util/mutex.h"
 #include "util/sparse_array.h"
 #include "util/sparse_set.h"
 #include "re2/re2.h"
@@ -349,7 +347,7 @@ class Prog {
   friend class Compiler;
 
   DFA* GetDFA(MatchKind kind);
-  void DeleteDFA(std::atomic<DFA*>* pdfa);
+  void DeleteDFA(DFA* dfa);
 
   bool anchor_start_;       // regexp has explicit start anchor
   bool anchor_end_;         // regexp has explicit end anchor
@@ -370,14 +368,15 @@ class Prog {
   Inst* inst_;              // pointer to instruction array
   uint8_t* onepass_nodes_;  // data for OnePass nodes
 
-  Mutex dfa_mutex_;                // Protects dfa_first_, dfa_longest_
-  std::atomic<DFA*> dfa_first_;    // DFA cached for kFirstMatch
-  std::atomic<DFA*> dfa_longest_;  // DFA cached for kLongestMatch/kFullMatch
-  int64_t dfa_mem_;                // Maximum memory for DFAs.
+  int64_t dfa_mem_;         // Maximum memory for DFAs.
+  DFA* dfa_first_;          // DFA cached for kFirstMatch/kManyMatch
+  DFA* dfa_longest_;        // DFA cached for kLongestMatch/kFullMatch
 
   uint8_t bytemap_[256];    // map from input bytes to byte classes
 
   std::once_flag first_byte_once_;
+  std::once_flag dfa_first_once_;
+  std::once_flag dfa_longest_once_;
 
   Prog(const Prog&) = delete;
   Prog& operator=(const Prog&) = delete;

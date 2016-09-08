@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <atomic>
 #include <map>
+#include <mutex>
 #include <new>
 #include <string>
 #include <unordered_set>
@@ -1767,24 +1768,6 @@ bool DFA::Search(const StringPiece& text,
 }
 
 DFA* Prog::GetDFA(MatchKind kind) {
-  std::atomic<DFA*>* pdfa;
-  if (kind == kFirstMatch || kind == kManyMatch) {
-    pdfa = &dfa_first_;
-  } else {
-    kind = kLongestMatch;
-    pdfa = &dfa_longest_;
-  }
-
-  // Quick check.
-  DFA* dfa = pdfa->load(std::memory_order_acquire);
-  if (dfa != NULL)
-    return dfa;
-
-  MutexLock l(&dfa_mutex_);
-  dfa = pdfa->load(std::memory_order_relaxed);
-  if (dfa != NULL)
-    return dfa;
-
   // For a forward DFA, half the memory goes to each DFA.
   // However, if it is a "many match" DFA, then there is
   // no counterpart with which the memory must be shared.
@@ -1792,25 +1775,29 @@ DFA* Prog::GetDFA(MatchKind kind) {
   // For a reverse DFA, all the memory goes to the
   // "longest match" DFA, because RE2 never does reverse
   // "first match" searches.
-  int64_t m = dfa_mem_;
-  if (reversed_) {
-    DCHECK_EQ(kind, kLongestMatch);
-  } else if (kind == kFirstMatch || kind == kLongestMatch) {
-    m /= 2;
+  if (kind == kFirstMatch || kind == kManyMatch) {
+    std::call_once(dfa_first_once_, [this, &kind]() {
+      DCHECK(!reversed_);
+      int64_t dfa_mem = dfa_mem_;
+      if (kind == kFirstMatch)
+        dfa_mem /= 2;
+      dfa_first_ = new DFA(this, kind, dfa_mem);
+    });
+    return dfa_first_;
   } else {
-    DCHECK_EQ(kind, kManyMatch);
+    std::call_once(dfa_longest_once_, [this, &kind]() {
+      kind = kLongestMatch;
+      int64_t dfa_mem = dfa_mem_;
+      if (!reversed_)
+        dfa_mem /= 2;
+      dfa_longest_ = new DFA(this, kind, dfa_mem);
+    });
+    return dfa_longest_;
   }
-  dfa = new DFA(this, kind, m);
-
-  // Synchronize with "quick check" above.
-  pdfa->store(dfa, std::memory_order_release);
-  return dfa;
 }
 
-void Prog::DeleteDFA(std::atomic<DFA*>* pdfa) {
-  DFA* dfa = pdfa->load(std::memory_order_relaxed);
-  if (dfa != NULL)
-    delete dfa;
+void Prog::DeleteDFA(DFA* dfa) {
+  delete dfa;
 }
 
 // Executes the regexp program to search in text,
