@@ -905,7 +905,7 @@ class LazyRE2 {
 
   // Named accessor/initializer:
   RE2* get() const {
-    std::call_once(once_, [this]() { LazyRE2::Init(this); });
+    std::call_once(once_, &LazyRE2::Init, this);
     return ptr_;
   }
 

@@ -230,15 +230,16 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
 
 // Returns rprog_, computing it if needed.
 re2::Prog* RE2::ReverseProg() const {
-  std::call_once(rprog_once_, [this]() {
-    rprog_ = suffix_regexp_->CompileToReverseProg(options_.max_mem()/3);
-    if (rprog_ == NULL) {
-      if (options_.log_errors())
-        LOG(ERROR) << "Error reverse compiling '" << trunc(pattern_) << "'";
-      error_ = new string("pattern too large - reverse compile failed");
-      error_code_ = RE2::ErrorPatternTooLarge;
+  std::call_once(rprog_once_, [](const RE2* re) {
+    re->rprog_ =
+        re->suffix_regexp_->CompileToReverseProg(re->options_.max_mem() / 3);
+    if (re->rprog_ == NULL) {
+      if (re->options_.log_errors())
+        LOG(ERROR) << "Error reverse compiling '" << trunc(re->pattern_) << "'";
+      re->error_ = new string("pattern too large - reverse compile failed");
+      re->error_code_ = RE2::ErrorPatternTooLarge;
     }
-  });
+  }, this);
   return rprog_;
 }
 
@@ -283,32 +284,32 @@ int RE2::ProgramFanout(std::map<int, int>* histogram) const {
 // Returns num_captures_, computing it if needed, or -1 if the
 // regexp wasn't valid on construction.
 int RE2::NumberOfCapturingGroups() const {
-  std::call_once(num_captures_once_, [this]() {
-    if (suffix_regexp_ != NULL)
-      num_captures_ = suffix_regexp_->NumCaptures();
-  });
+  std::call_once(num_captures_once_, [](const RE2* re) {
+    if (re->suffix_regexp_ != NULL)
+      re->num_captures_ = re->suffix_regexp_->NumCaptures();
+  }, this);
   return num_captures_;
 }
 
 // Returns named_groups_, computing it if needed.
 const std::map<string, int>& RE2::NamedCapturingGroups() const {
-  std::call_once(named_groups_once_, [this]() {
-    if (suffix_regexp_ != NULL)
-      named_groups_ = suffix_regexp_->NamedCaptures();
-    if (named_groups_ == NULL)
-      named_groups_ = empty_named_groups;
-  });
+  std::call_once(named_groups_once_, [](const RE2* re) {
+    if (re->suffix_regexp_ != NULL)
+      re->named_groups_ = re->suffix_regexp_->NamedCaptures();
+    if (re->named_groups_ == NULL)
+      re->named_groups_ = empty_named_groups;
+  }, this);
   return *named_groups_;
 }
 
 // Returns group_names_, computing it if needed.
 const std::map<int, string>& RE2::CapturingGroupNames() const {
-  std::call_once(group_names_once_, [this]() {
-    if (suffix_regexp_ != NULL)
-      group_names_ = suffix_regexp_->CaptureNames();
-    if (group_names_ == NULL)
-      group_names_ = empty_group_names;
-  });
+  std::call_once(group_names_once_, [](const RE2* re) {
+    if (re->suffix_regexp_ != NULL)
+      re->group_names_ = re->suffix_regexp_->CaptureNames();
+    if (re->group_names_ == NULL)
+      re->group_names_ = empty_group_names;
+  }, this);
   return *group_names_;
 }
 
