@@ -1775,23 +1775,23 @@ DFA* Prog::GetDFA(MatchKind kind) {
   // For a reverse DFA, all the memory goes to the
   // "longest match" DFA, because RE2 never does reverse
   // "first match" searches.
-  if (kind == kFirstMatch || kind == kManyMatch) {
-    std::call_once(dfa_first_once_, [](Prog* prog, MatchKind kind) {
-      DCHECK(!prog->reversed_);
-      int64_t dfa_mem = prog->dfa_mem_;
-      if (kind == kFirstMatch)
-        dfa_mem /= 2;
-      prog->dfa_first_ = new DFA(prog, kind, dfa_mem);
-    }, this, kind);
+  if (kind == kFirstMatch) {
+    std::call_once(dfa_first_once_, [](Prog* prog) {
+      prog->dfa_first_ = new DFA(prog, kFirstMatch, prog->dfa_mem_ / 2);
+    }, this);
+    return dfa_first_;
+  } else if (kind == kManyMatch) {
+    std::call_once(dfa_first_once_, [](Prog* prog) {
+      prog->dfa_first_ = new DFA(prog, kManyMatch, prog->dfa_mem_);
+    }, this);
     return dfa_first_;
   } else {
-    std::call_once(dfa_longest_once_, [](Prog* prog, MatchKind kind) {
-      kind = kLongestMatch;
-      int64_t dfa_mem = prog->dfa_mem_;
+    std::call_once(dfa_longest_once_, [](Prog* prog) {
       if (!prog->reversed_)
-        dfa_mem /= 2;
-      prog->dfa_longest_ = new DFA(prog, kind, dfa_mem);
-    }, this, kind);
+        prog->dfa_longest_ = new DFA(prog, kLongestMatch, prog->dfa_mem_ / 2);
+      else
+        prog->dfa_longest_ = new DFA(prog, kLongestMatch, prog->dfa_mem_);
+    }, this);
     return dfa_longest_;
   }
 }
