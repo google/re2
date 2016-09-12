@@ -10,6 +10,13 @@
 
 namespace re2 {
 
+// Silence "truncation of constant value" warning for kMul in 32-bit mode.
+// Since this is a header file, push and then pop to limit the scope.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4309)
+#endif
+
 class HashMix {
  public:
   HashMix() : hash_(1) {}
@@ -24,6 +31,10 @@ class HashMix {
  private:
   size_t hash_;
 };
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 }  // namespace re2
 
