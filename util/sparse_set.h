@@ -47,15 +47,13 @@
 //
 // See sparse_array.h for implementation details.
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 #include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
-
-#include "util/util.h"
-#include "util/logging.h"
 
 namespace re2 {
 
@@ -134,16 +132,14 @@ class SparseSetT {
   iterator InsertInternal(bool allow_existing, int i) {
     DebugCheckInvariants();
     if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
-      LOG(DFATAL) << "(jyasskin) Illegal index " << i
-                  << " passed to SparseSet(" << max_size_
-                  << ").insert" << (allow_existing?"":"_new") << "().";
+      assert(!"illegal index");
       // Semantically, end() would be better here, but we already know
       // the user did something stupid, so begin() insulates them from
       // dereferencing an invalid pointer.
       return begin();
     }
     if (!allow_existing) {
-      DCHECK(!contains(i));
+      assert(!contains(i));
       create_index(i);
     } else {
       if (!contains(i))
@@ -203,8 +199,8 @@ void SparseSetT<Value>::resize(int max_size) {
 // Check whether index i is in the set.
 template<typename Value>
 bool SparseSetT<Value>::contains(int i) const {
-  DCHECK_GE(i, 0);
-  DCHECK_LT(i, max_size_);
+  assert(i >= 0);
+  assert(i < max_size_);
   if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
     return false;
   }
@@ -215,8 +211,8 @@ bool SparseSetT<Value>::contains(int i) const {
 
 template<typename Value>
 void SparseSetT<Value>::create_index(int i) {
-  DCHECK(!contains(i));
-  DCHECK_LT(size_, max_size_);
+  assert(!contains(i));
+  assert(size_ < max_size_);
   sparse_to_dense_[i] = size_;
   dense_[size_] = i;
   size_++;
@@ -243,9 +239,9 @@ template<typename Value> SparseSetT<Value>::~SparseSetT() {
 }
 
 template<typename Value> void SparseSetT<Value>::DebugCheckInvariants() const {
-  DCHECK_LE(0, size_);
-  DCHECK_LE(size_, max_size_);
-  DCHECK(size_ == 0 || sparse_to_dense_ != NULL);
+  assert(0 <= size_);
+  assert(size_ <= max_size_);
+  assert(size_ == 0 || sparse_to_dense_ != NULL);
 }
 
 // Comparison function for sorting.

@@ -94,15 +94,13 @@
 //
 // A moved-from SparseArray will be empty.
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 #include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
-
-#include "util/util.h"
-#include "util/logging.h"
 
 namespace re2 {
 
@@ -275,16 +273,14 @@ class SparseArray {
   iterator SetInternal(bool allow_overwrite, int i, U&& v) {  // NOLINT
     DebugCheckInvariants();
     if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
-      LOG(DFATAL) << "(jyasskin) Illegal index " << i
-                  << " passed to SparseArray(" << max_size_
-                  << ").set" << (allow_overwrite?"":"_new") << "().";
+      assert(!"illegal index");
       // Semantically, end() would be better here, but we already know
       // the user did something stupid, so begin() insulates them from
       // dereferencing an invalid pointer.
       return begin();
     }
     if (!allow_overwrite) {
-      DCHECK(!has_index(i));
+      assert(!has_index(i));
       create_index(i);
     } else {
       if (!has_index(i))
@@ -296,7 +292,7 @@ class SparseArray {
   template <typename U>
   iterator SetExistingInternal(int i, U&& v) {  // NOLINT
     DebugCheckInvariants();
-    DCHECK(has_index(i));
+    assert(has_index(i));
     dense_[sparse_to_dense_[i]].value() = std::forward<U>(v);
     DebugCheckInvariants();
     return dense_.begin() + sparse_to_dense_[i];
@@ -400,8 +396,8 @@ class SparseArray<Value>::IndexValue {
 template<typename Value>
 const typename SparseArray<Value>::IndexValue&
 SparseArray<Value>::iv(int i) const {
-  DCHECK_GE(i, 0);
-  DCHECK_LT(i, size_);
+  assert(i >= 0);
+  assert(i < size_);
   return dense_[i];
 }
 
@@ -435,8 +431,8 @@ void SparseArray<Value>::resize(int max_size) {
 // Check whether index i is in the array.
 template<typename Value>
 bool SparseArray<Value>::has_index(int i) const {
-  DCHECK_GE(i, 0);
-  DCHECK_LT(i, max_size_);
+  assert(i >= 0);
+  assert(i < max_size_);
   if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
     return false;
   }
@@ -447,7 +443,7 @@ bool SparseArray<Value>::has_index(int i) const {
 
 template<typename Value>
 const Value& SparseArray<Value>::get_existing(int i) const {
-  DCHECK(has_index(i));
+  assert(has_index(i));
   return dense_[sparse_to_dense_[i]].second;
 }
 
@@ -462,7 +458,7 @@ void SparseArray<Value>::erase(int i) {
 template<typename Value>
 void SparseArray<Value>::erase_existing(int i) {
   DebugCheckInvariants();
-  DCHECK(has_index(i));
+  assert(has_index(i));
   int di = sparse_to_dense_[i];
   if (di < size_ - 1) {
     dense_[di] = std::move(dense_[size_ - 1]);
@@ -474,8 +470,8 @@ void SparseArray<Value>::erase_existing(int i) {
 
 template<typename Value>
 void SparseArray<Value>::create_index(int i) {
-  DCHECK(!has_index(i));
-  DCHECK_LT(size_, max_size_);
+  assert(!has_index(i));
+  assert(size_ < max_size_);
   sparse_to_dense_[i] = size_;
   dense_[size_].index_ = i;
   size_++;
@@ -502,9 +498,9 @@ template<typename Value> SparseArray<Value>::~SparseArray() {
 }
 
 template<typename Value> void SparseArray<Value>::DebugCheckInvariants() const {
-  DCHECK_LE(0, size_);
-  DCHECK_LE(size_, max_size_);
-  DCHECK(size_ == 0 || sparse_to_dense_ != NULL);
+  assert(0 <= size_);
+  assert(size_ <= max_size_);
+  assert(size_ == 0 || sparse_to_dense_ != NULL);
 }
 
 // Comparison function for sorting.
