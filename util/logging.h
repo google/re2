@@ -33,9 +33,9 @@
 #define CHECK_EQ(x, y)	CHECK((x) == (y))
 #define CHECK_NE(x, y)	CHECK((x) != (y))
 
-#define LOG_INFO LogMessage(__FILE__, __LINE__, 0)
-#define LOG_WARNING LogMessage(__FILE__, __LINE__, 1)
-#define LOG_ERROR LogMessage(__FILE__, __LINE__, 2)
+#define LOG_INFO LogMessage(__FILE__, __LINE__)
+#define LOG_WARNING LogMessage(__FILE__, __LINE__)
+#define LOG_ERROR LogMessage(__FILE__, __LINE__)
 #define LOG_FATAL LogMessageFatal(__FILE__, __LINE__)
 #define LOG_QFATAL LOG_FATAL
 
@@ -56,8 +56,8 @@
 
 class LogMessage {
  public:
-  LogMessage(const char* file, int line, int severity)
-      : severity_(severity), flushed_(false) {
+  LogMessage(const char* file, int line)
+      : flushed_(false) {
     stream() << file << ":" << line << ": ";
   }
   void Flush() {
@@ -75,7 +75,6 @@ class LogMessage {
   std::ostream& stream() { return str_; }
 
  private:
-  const int severity_;
   bool flushed_;
   std::ostringstream str_;
 
@@ -93,7 +92,7 @@ class LogMessage {
 class LogMessageFatal : public LogMessage {
  public:
   LogMessageFatal(const char* file, int line)
-      : LogMessage(file, line, 3) {}
+      : LogMessage(file, line) {}
   ~LogMessageFatal() {
     Flush();
     abort();
