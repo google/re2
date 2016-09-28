@@ -21,6 +21,13 @@
 #include "util/pcre.h"
 #include "util/strutil.h"
 
+// Silence warnings about the wacky formatting in the operator() functions.
+// Note that we test for Clang first because it defines __GNUC__ as well.
+#if defined(__clang__)
+#elif defined(__GNUC__) && __GNUC__ >= 6
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#endif
+
 #define PCREPORT(level) LOG(level)
 
 // Default PCRE limits.
