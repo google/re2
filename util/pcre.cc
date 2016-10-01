@@ -1,14 +1,12 @@
-// Copyright 2003-2009 Google Inc.  All rights reserved.
+// Copyright 2015-2016 Google Inc.  All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 // This is a variant of PCRE's pcrecpp.cc, originally written at Google.
 // The main changes are the addition of the HitLimit method and
-// compilation as PCRE in namespace re2.
+// compilation as PCRE in namespace owner.
 
-#include <assert.h>
 #include <ctype.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits>
@@ -20,13 +18,6 @@
 #include "util/logging.h"
 #include "util/pcre.h"
 #include "util/strutil.h"
-
-// Silence warnings about the wacky formatting in the operator() functions.
-// Note that we test for Clang first because it defines __GNUC__ as well.
-#if defined(__clang__)
-#elif defined(__GNUC__) && __GNUC__ >= 6
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
-#endif
 
 #define PCREPORT(level) LOG(level)
 
