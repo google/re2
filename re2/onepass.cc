@@ -65,11 +65,6 @@
 #include "re2/prog.h"
 #include "re2/stringpiece.h"
 
-// Silence "zero-sized array in struct/union" warning for OneState::action.
-#ifdef _MSC_VER
-#pragma warning(disable: 4200)
-#endif
-
 namespace re2 {
 
 static const bool ExtraDebug = false;
@@ -144,7 +139,9 @@ static const bool ExtraDebug = false;
 // the memory footprint.)
 struct OneState {
   uint32_t matchcond;   // conditions to match right now.
-  uint32_t action[];
+  uint32_t* action() {
+    return reinterpret_cast<uint32_t*>(this + 1);
+  }
 };
 
 // The uint32_t conditions in the action are a combination of
@@ -258,7 +255,7 @@ bool Prog::SearchOnePass(const StringPiece& text,
   for (p = bp; p < ep; p++) {
     int c = bytemap[*p & 0xFF];
     uint32_t matchcond = nextmatchcond;
-    uint32_t cond = state->action[c];
+    uint32_t cond = state->action()[c];
 
     // Determine whether we can reach act->next.
     // If so, advance state and nextmatchcond.
@@ -427,7 +424,7 @@ bool Prog::IsOnePass() {
     // Flood graph using manual stack, filling in actions as found.
     // Default is none.
     for (int b = 0; b < bytemap_range_; b++)
-      node->action[b] = kImpossible;
+      node->action()[b] = kImpossible;
     node->matchcond = kImpossible;
 
     workq.clear();
@@ -478,12 +475,12 @@ bool Prog::IsOnePass() {
             // Skip any bytes immediately after c that are also in b.
             while (c < 256-1 && bytemap_[c+1] == b)
               c++;
-            uint32_t act = node->action[b];
+            uint32_t act = node->action()[b];
             uint32_t newact = (nextindex << kIndexShift) | cond;
             if (matched)
               newact |= kMatchWins;
             if ((act & kImpossible) == kImpossible) {
-              node->action[b] = newact;
+              node->action()[b] = newact;
             } else if (act != newact) {
               if (ExtraDebug)
                 LOG(ERROR) << StringPrintf(
@@ -499,12 +496,12 @@ bool Prog::IsOnePass() {
               // Skip any bytes immediately after c that are also in b.
               while (c < 256-1 && bytemap_[c+1] == b)
                 c++;
-              uint32_t act = node->action[b];
+              uint32_t act = node->action()[b];
               uint32_t newact = (nextindex << kIndexShift) | cond;
               if (matched)
                 newact |= kMatchWins;
               if ((act & kImpossible) == kImpossible) {
-                node->action[b] = newact;
+                node->action()[b] = newact;
               } else if (act != newact) {
                 if (ExtraDebug)
                   LOG(ERROR) << StringPrintf(
@@ -599,12 +596,12 @@ bool Prog::IsOnePass() {
       StringAppendF(&dump, "node %d id=%d: matchcond=%#x\n",
                     nodeindex, id, node->matchcond);
       for (int i = 0; i < bytemap_range_; i++) {
-        if ((node->action[i] & kImpossible) == kImpossible)
+        if ((node->action()[i] & kImpossible) == kImpossible)
           continue;
         StringAppendF(&dump, "  %d cond %#x -> %d id=%d\n",
-                      i, node->action[i] & 0xFFFF,
-                      node->action[i] >> kIndexShift,
-                      idmap[node->action[i] >> kIndexShift]);
+                      i, node->action()[i] & 0xFFFF,
+                      node->action()[i] >> kIndexShift,
+                      idmap[node->action()[i] >> kIndexShift]);
       }
     }
     LOG(ERROR) << "nodes:\n" << dump;

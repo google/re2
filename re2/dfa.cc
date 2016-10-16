@@ -44,11 +44,6 @@
 #include "re2/prog.h"
 #include "re2/stringpiece.h"
 
-// Silence "zero-sized array in struct/union" warning for DFA::State::next_.
-#ifdef _MSC_VER
-#pragma warning(disable: 4200)
-#endif
-
 namespace re2 {
 
 #if !defined(__linux__)  /* only Linux seems to have memrchr */
@@ -112,8 +107,8 @@ class DFA {
   class Workq;
 
   // A single DFA state.  The DFA is represented as a graph of these
-  // States, linked by the next_ pointers.  If in state s and reading
-  // byte c, the next state should be s->next_[c].
+  // States, linked by the next() pointers.  If in state s and reading
+  // byte c, the next state should be s->next()[c].
   struct State {
     inline bool IsMatch() const { return (flag_ & kFlagMatch) != 0; }
     void SaveMatch(std::vector<int>* v);
@@ -123,8 +118,11 @@ class DFA {
     uint32_t flag_;     // Empty string bitfield flags in effect on the way
                         // into this state, along with kFlagMatch if this
                         // is a matching state.
-    std::atomic<State*> next_[];    // Outgoing arrows from State,
-                        // one per input byte class
+
+    // Outgoing arrows from State, one per input byte class
+    std::atomic<State*>* next() {
+      return reinterpret_cast<std::atomic<State*>*>(this + 1);
+    }
   };
 
   enum {
@@ -741,15 +739,15 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint32_t flag) {
   }
   mem_budget_ -= mem + kStateCacheOverhead;
 
-  // Allocate new state along with room for next_ and inst_.
+  // Allocate new state along with room for next() and inst_.
   char* space = new char[mem];
   State* s = new (space) State;
-  (void) new (s->next_) std::atomic<State*>[nnext];
+  (void) new (s->next()) std::atomic<State*>[nnext];
   // Work around a unfortunate bug in older versions of libstdc++.
   // (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=64658)
   for (int i = 0; i < nnext; i++)
-    (void) new (s->next_ + i) std::atomic<State*>(NULL);
-  s->inst_ = new (s->next_ + nnext) int[ninst];
+    (void) new (s->next() + i) std::atomic<State*>(NULL);
+  s->inst_ = new (s->next() + nnext) int[ninst];
   memmove(s->inst_, inst, ninst*sizeof s->inst_[0]);
   s->ninst_ = ninst;
   s->flag_ = flag;
@@ -984,7 +982,7 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   }
 
   // If someone else already computed this, return it.
-  State* ns = state->next_[ByteMap(c)].load(std::memory_order_relaxed);
+  State* ns = state->next()[ByteMap(c)].load(std::memory_order_relaxed);
   if (ns != NULL)
     return ns;
 
@@ -1054,10 +1052,10 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   ns = WorkqToCachedState(q0_, flag);
 
   // Flush ns before linking to it.
-  // Write barrier before updating state->next_ so that the
+  // Write barrier before updating state->next() so that the
   // main search loop can proceed without any locking, for speed.
   // (Otherwise it would need one mutex operation per input byte.)
-  state->next_[ByteMap(c)].store(ns, std::memory_order_release);
+  state->next()[ByteMap(c)].store(ns, std::memory_order_release);
   return ns;
 }
 
@@ -1238,16 +1236,16 @@ DFA::State* DFA::StateSaver::Restore() {
 // is no longer possible.  In this case RunStateOnByte will return NULL
 // and the processing of the string can stop early.
 //
-// Second, a 256-element pointer array for s->next_ makes each State
+// Second, a 256-element pointer array for s->next() makes each State
 // quite large (2kB on 64-bit machines).  Instead, dfa->bytemap_[]
-// maps from bytes to "byte classes" and then next_ only needs to have
+// maps from bytes to "byte classes" and then next() only needs to have
 // as many pointers as there are byte classes.  A byte class is simply a
 // range of bytes that the regexp never distinguishes between.
 // A regexp looking for a[abc] would have four byte ranges -- 0 to 'a'-1,
 // 'a', 'b' to 'c', and 'c' to 0xFF.  The bytemap slows us a little bit
 // but in exchange we typically cut the size of a State (and thus our
 // memory footprint) by about 5-10x.  The comments still refer to
-// s->next[c] for simplicity, but code should refer to s->next_[bytemap_[c]].
+// s->next[c] for simplicity, but code should refer to s->next()[bytemap_[c]].
 //
 // Third, it is common for a DFA for an unanchored match to begin in a
 // state in which only one particular byte value can take the DFA to a
@@ -1346,7 +1344,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       c = *--p;
 
     // Note that multiple threads might be consulting
-    // s->next_[bytemap[c]] simultaneously.
+    // s->next()[bytemap[c]] simultaneously.
     // RunStateOnByte takes care of the appropriate locking,
     // including a memory barrier so that the unlocked access
     // (sometimes known as "double-checked locking") is safe.
@@ -1363,7 +1361,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     // Okay to use bytemap[] not ByteMap() here, because
     // c is known to be an actual byte and not kByteEndText.
 
-    State* ns = s->next_[bytemap[c]].load(std::memory_order_acquire);
+    State* ns = s->next()[bytemap[c]].load(std::memory_order_acquire);
     if (ns == NULL) {
       ns = RunStateOnByteUnlocked(s, c);
       if (ns == NULL) {
@@ -1449,7 +1447,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       lastbyte = params->text.begin()[-1] & 0xFF;
   }
 
-  State* ns = s->next_[ByteMap(lastbyte)].load(std::memory_order_acquire);
+  State* ns = s->next()[ByteMap(lastbyte)].load(std::memory_order_acquire);
   if (ns == NULL) {
     ns = RunStateOnByteUnlocked(s, lastbyte);
     if (ns == NULL) {
