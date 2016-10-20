@@ -89,6 +89,7 @@ cc_library(
 
 cc_library(
     name = "test",
+    testonly = 1,
     srcs = ["util/test.cc"],
     deps = [":testing"],
 )
@@ -155,12 +156,14 @@ re2_test(
 
 cc_library(
     name = "benchmark",
+    testonly = 1,
     srcs = ["util/benchmark.cc"],
     deps = [":testing"],
 )
 
 cc_binary(
     name = "regexp_benchmark",
+    testonly = 1,
     srcs = ["re2/testing/regexp_benchmark.cc"],
     linkopts = [
         "-lm",
