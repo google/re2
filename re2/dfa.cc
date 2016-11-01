@@ -1891,7 +1891,7 @@ int DFA::BuildAllStates() {
   // Pick out start state for unanchored search
   // at beginning of text.
   RWLocker l(&cache_mutex_);
-  SearchParams params(NULL, NULL, &l);
+  SearchParams params(StringPiece(), StringPiece(), &l);
   params.anchored = false;
   if (!AnalyzeSearch(&params) || params.start <= SpecialStateMax)
     return 0;
@@ -1950,7 +1950,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
 
   // Pick out start state for anchored search at beginning of text.
   RWLocker l(&cache_mutex_);
-  SearchParams params(NULL, NULL, &l);
+  SearchParams params(StringPiece(), StringPiece(), &l);
   params.anchored = true;
   if (!AnalyzeSearch(&params))
     return false;

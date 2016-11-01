@@ -785,7 +785,7 @@ bool RE2::Match(const StringPiece& text,
 
   // Zero submatches that don't exist in the regexp.
   for (int i = ncap; i < nsubmatch; i++)
-    submatch[i] = NULL;
+    submatch[i] = StringPiece();
   return true;
 }
 

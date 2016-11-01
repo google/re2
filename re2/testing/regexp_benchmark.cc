@@ -886,7 +886,7 @@ void SearchDFA(int iters, const char* regexp, const StringPiece& text,
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     bool failed = false;
-    CHECK_EQ(prog->SearchDFA(text, NULL, anchor, Prog::kFirstMatch,
+    CHECK_EQ(prog->SearchDFA(text, StringPiece(), anchor, Prog::kFirstMatch,
                              NULL, &failed, NULL),
              expect_match);
     CHECK(!failed);
@@ -902,7 +902,8 @@ void SearchNFA(int iters, const char* regexp, const StringPiece& text,
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
-    CHECK_EQ(prog->SearchNFA(text, NULL, anchor, Prog::kFirstMatch, NULL, 0),
+    CHECK_EQ(prog->SearchNFA(text, StringPiece(), anchor, Prog::kFirstMatch,
+                             NULL, 0),
              expect_match);
     delete prog;
     re->Decref();
@@ -974,8 +975,8 @@ void SearchCachedDFA(int iters, const char* regexp, const StringPiece& text,
   CHECK(prog);
   for (int i = 0; i < iters; i++) {
     bool failed = false;
-    CHECK_EQ(prog->SearchDFA(text, NULL, anchor,
-                             Prog::kFirstMatch, NULL, &failed, NULL),
+    CHECK_EQ(prog->SearchDFA(text, StringPiece(), anchor, Prog::kFirstMatch,
+                             NULL, &failed, NULL),
              expect_match);
     CHECK(!failed);
   }
@@ -990,7 +991,8 @@ void SearchCachedNFA(int iters, const char* regexp, const StringPiece& text,
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   for (int i = 0; i < iters; i++) {
-    CHECK_EQ(prog->SearchNFA(text, NULL, anchor, Prog::kFirstMatch, NULL, 0),
+    CHECK_EQ(prog->SearchNFA(text, StringPiece(), anchor, Prog::kFirstMatch,
+                             NULL, 0),
              expect_match);
   }
   delete prog;
@@ -1059,7 +1061,8 @@ void Parse3NFA(int iters, const char* regexp, const StringPiece& text) {
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     StringPiece sp[4];  // 4 because sp[0] is whole match.
-    CHECK(prog->SearchNFA(text, NULL, Prog::kAnchored, Prog::kFullMatch, sp, 4));
+    CHECK(prog->SearchNFA(text, StringPiece(), Prog::kAnchored,
+                          Prog::kFullMatch, sp, 4));
     delete prog;
     re->Decref();
   }
@@ -1130,7 +1133,8 @@ void Parse3CachedNFA(int iters, const char* regexp, const StringPiece& text) {
   CHECK(prog);
   StringPiece sp[4];  // 4 because sp[0] is whole match.
   for (int i = 0; i < iters; i++) {
-    CHECK(prog->SearchNFA(text, NULL, Prog::kAnchored, Prog::kFullMatch, sp, 4));
+    CHECK(prog->SearchNFA(text, StringPiece(), Prog::kAnchored,
+                          Prog::kFullMatch, sp, 4));
   }
   delete prog;
   re->Decref();
@@ -1202,7 +1206,8 @@ void Parse1NFA(int iters, const char* regexp, const StringPiece& text) {
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     StringPiece sp[2];  // 2 because sp[0] is whole match.
-    CHECK(prog->SearchNFA(text, NULL, Prog::kAnchored, Prog::kFullMatch, sp, 2));
+    CHECK(prog->SearchNFA(text, StringPiece(), Prog::kAnchored,
+                          Prog::kFullMatch, sp, 2));
     delete prog;
     re->Decref();
   }
@@ -1260,7 +1265,8 @@ void Parse1CachedNFA(int iters, const char* regexp, const StringPiece& text) {
   CHECK(prog);
   StringPiece sp[2];  // 2 because sp[0] is whole match.
   for (int i = 0; i < iters; i++) {
-    CHECK(prog->SearchNFA(text, NULL, Prog::kAnchored, Prog::kFullMatch, sp, 2));
+    CHECK(prog->SearchNFA(text, StringPiece(), Prog::kAnchored,
+                          Prog::kFullMatch, sp, 2));
   }
   delete prog;
   re->Decref();

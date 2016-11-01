@@ -324,7 +324,7 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
   submatch_ = submatch;
   nsubmatch_ = nsubmatch;
   for (int i = 0; i < nsubmatch_; i++)
-    submatch_[i] = NULL;
+    submatch_[i] = StringPiece();
 
   // Allocate scratch space.
   nvisited_ = (prog_->size() * (text.size()+1) + VisitedBits-1) / VisitedBits;

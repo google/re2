@@ -126,7 +126,7 @@ bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
     submatch_ = &sp0;
     nsubmatch_ = 1;
   }
-  submatch_[0] = NULL;
+  submatch_[0] = StringPiece();
 
   // Allocate new visited_ bitmap -- size is proportional
   // to text, so have to reallocate on each call to Search.
