@@ -473,7 +473,7 @@ void TestInstance::RunSearch(Engine type,
       // StringPiece(text.begin() - 1, 0).  Oops.
       for (int i = 0; i < nsubmatch; i++)
         if (result->submatch[i].begin() == text.begin() - 1)
-          result->submatch[i] = NULL;
+          result->submatch[i] = StringPiece();
       delete[] argptr;
       delete[] a;
       break;

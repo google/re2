@@ -85,7 +85,7 @@ const StringPiece& StringGenerator::Next() {
   CHECK(hasnext_);
   if (generate_null_) {
     generate_null_ = false;
-    sp_ = NULL;
+    sp_ = StringPiece();
     return sp_;
   }
   s_.clear();

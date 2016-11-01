@@ -1289,7 +1289,7 @@ static int StringPieceToRune(Rune *r, StringPiece *sp, RegexpStatus* status) {
   }
 
   status->set_code(kRegexpBadUTF8);
-  status->set_error_arg(NULL);
+  status->set_error_arg(StringPiece());
   return -1;
 }
 
@@ -1333,12 +1333,12 @@ static bool ParseEscape(StringPiece* s, Rune* rp,
   if (s->size() < 1 || (*s)[0] != '\\') {
     // Should not happen - caller always checks.
     status->set_code(kRegexpInternalError);
-    status->set_error_arg(NULL);
+    status->set_error_arg(StringPiece());
     return false;
   }
   if (s->size() < 2) {
     status->set_code(kRegexpTrailingBackslash);
-    status->set_error_arg(NULL);
+    status->set_error_arg(StringPiece());
     return false;
   }
   Rune c, c1;
@@ -1793,7 +1793,7 @@ bool Regexp::ParseState::ParseCharClass(StringPiece* s,
   if (s->size() == 0 || (*s)[0] != '[') {
     // Caller checked this.
     status->set_code(kRegexpInternalError);
-    status->set_error_arg(NULL);
+    status->set_error_arg(StringPiece());
     return false;
   }
   bool negated = false;
@@ -2108,9 +2108,9 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
     return ps.DoFinish();
   }
 
-  StringPiece lastunary = NULL;
+  StringPiece lastunary = StringPiece();
   while (t.size() > 0) {
-    StringPiece isunary = NULL;
+    StringPiece isunary = StringPiece();
     switch (t[0]) {
       default: {
         Rune r;
@@ -2133,7 +2133,7 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
           if (!ps.DoLeftParenNoCapture())
             return NULL;
         } else {
-          if (!ps.DoLeftParen(NULL))
+          if (!ps.DoLeftParen(StringPiece()))
             return NULL;
         }
         t.remove_prefix(1);  // '('

@@ -192,14 +192,12 @@ TEST(SingleThreaded, SearchDFA) {
     for (int i = 0; i < 10; i++) {
       bool matched = false;
       bool failed = false;
-      matched = prog->SearchDFA(match, NULL,
-                                Prog::kUnanchored, Prog::kFirstMatch,
-                                NULL, &failed, NULL);
+      matched = prog->SearchDFA(match, StringPiece(), Prog::kUnanchored,
+                                Prog::kFirstMatch, NULL, &failed, NULL);
       CHECK(!failed);
       CHECK(matched);
-      matched = prog->SearchDFA(no_match, NULL,
-                                Prog::kUnanchored, Prog::kFirstMatch,
-                                NULL, &failed, NULL);
+      matched = prog->SearchDFA(no_match, StringPiece(), Prog::kUnanchored,
+                                Prog::kFirstMatch, NULL, &failed, NULL);
       CHECK(!failed);
       CHECK(!matched);
     }
@@ -226,14 +224,12 @@ static void DoSearch(Prog* prog, const StringPiece& match,
   for (int i = 0; i < 2; i++) {
     bool matched = false;
     bool failed = false;
-    matched = prog->SearchDFA(match, NULL,
-                              Prog::kUnanchored, Prog::kFirstMatch,
-                              NULL, &failed, NULL);
+    matched = prog->SearchDFA(match, StringPiece(), Prog::kUnanchored,
+                              Prog::kFirstMatch, NULL, &failed, NULL);
     CHECK(!failed);
     CHECK(matched);
-    matched = prog->SearchDFA(no_match, NULL,
-                              Prog::kUnanchored, Prog::kFirstMatch,
-                              NULL, &failed, NULL);
+    matched = prog->SearchDFA(no_match, StringPiece(), Prog::kUnanchored,
+                              Prog::kFirstMatch, NULL, &failed, NULL);
     CHECK(!failed);
     CHECK(!matched);
   }
@@ -306,7 +302,8 @@ TEST(DFA, ReverseMatch) {
     Prog *prog = re->CompileToReverseProg(0);
     CHECK(prog);
     bool failed = false;
-    bool matched = prog->SearchDFA(t.text, NULL, Prog::kUnanchored, Prog::kFirstMatch, NULL, &failed, NULL);
+    bool matched = prog->SearchDFA(t.text, StringPiece(), Prog::kUnanchored,
+                                   Prog::kFirstMatch, NULL, &failed, NULL);
     if (matched != t.match) {
       LOG(ERROR) << t.regexp << " on " << t.text << ": want " << t.match;
       nfail++;
