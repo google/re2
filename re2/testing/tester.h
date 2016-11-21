@@ -72,7 +72,7 @@ class TestInstance {
   void LogMatch(const char* prefix, Engine e, const StringPiece& text,
                 const StringPiece& context, Prog::Anchor anchor);
 
-  const StringPiece& regexp_str_;   // regexp being tested
+  const StringPiece regexp_str_;    // regexp being tested
   Prog::MatchKind kind_;            // kind of match
   Regexp::ParseFlags flags_;        // flags for parsing regexp_str_
   bool error_;                      // error during constructor?
