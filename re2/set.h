@@ -41,6 +41,7 @@ class RE2::Set {
 
   // Match returns true if text matches any of the regexps in the set.
   // If so, it fills v (if not NULL) with the indices of the matching regexps.
+  // Callers must not expect v to be sorted.
   bool Match(const StringPiece& text, std::vector<int>* v) const;
 
  private:
