@@ -21,9 +21,10 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
     return;
 
   // Don't waste time fuzzing high-fanout programs.
+  // (They can also cause bug reports due to fuzzer timeouts.)
   std::map<int, int> histogram;
   int fanout = re.ProgramFanout(&histogram);
-  if (fanout > 10)
+  if (fanout > 9)
     return;
 
   StringPiece sp1, sp2, sp3, sp4;
