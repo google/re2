@@ -589,12 +589,12 @@ Regexp* SimplifyWalker::SimplifyRepeat(Regexp* re, int min, int max,
       return Regexp::Plus(re->Incref(), f);
 
     // General case: x{4,} is xxxx+
-    Regexp* nre = new Regexp(kRegexpConcat, f);
-    nre->AllocSub(min);
-    Regexp** nre_subs = nre->sub();
+    Regexp** nre_subs = new Regexp*[min];
     for (int i = 0; i < min-1; i++)
       nre_subs[i] = re->Incref();
     nre_subs[min-1] = Regexp::Plus(re->Incref(), f);
+    Regexp* nre = Regexp::Concat(nre_subs, min, f);
+    delete[] nre_subs;
     return nre;
   }
 
@@ -613,11 +613,11 @@ Regexp* SimplifyWalker::SimplifyRepeat(Regexp* re, int min, int max,
   // Build leading prefix: xx.  Capturing only on the last one.
   Regexp* nre = NULL;
   if (min > 0) {
-    nre = new Regexp(kRegexpConcat, f);
-    nre->AllocSub(min);
-    Regexp** nre_subs = nre->sub();
+    Regexp** nre_subs = new Regexp*[min];
     for (int i = 0; i < min; i++)
       nre_subs[i] = re->Incref();
+    nre = Regexp::Concat(nre_subs, min, f);
+    delete[] nre_subs;
   }
 
   // Build and attach suffix: (x(x(x)?)?)?
