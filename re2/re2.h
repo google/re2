@@ -181,7 +181,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <sys/types.h>
 #include <algorithm>
 #include <map>
 #include <mutex>

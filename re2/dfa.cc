@@ -25,7 +25,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
 #include <algorithm>
 #include <atomic>
 #include <map>
