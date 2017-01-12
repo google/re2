@@ -116,10 +116,11 @@ class StringPiece {
 
   int compare(const StringPiece& x) const {
     size_type min_size = std::min(size(), x.size());
-    if (!min_size) return 0;
-    int r = memcmp(data(), x.data(), min_size);
-    if (r < 0) return -1;
-    if (r > 0) return 1;
+    if (min_size > 0) {
+      int r = memcmp(data(), x.data(), min_size);
+      if (r < 0) return -1;
+      if (r > 0) return 1;
+    }
     if (size() < x.size()) return -1;
     if (size() > x.size()) return 1;
     return 0;
