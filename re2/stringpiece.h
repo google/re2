@@ -175,9 +175,9 @@ inline bool operator>=(const StringPiece& x, const StringPiece& y) {
   return !(x < y);
 }
 
-}  // namespace re2
-
 // Allow StringPiece to be logged.
 std::ostream& operator<<(std::ostream& o, const re2::StringPiece& p);
+
+}  // namespace re2
 
 #endif  // RE2_STRINGPIECE_H_

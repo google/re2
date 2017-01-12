@@ -8,7 +8,7 @@
 
 #include "util/util.h"
 
-using re2::StringPiece;
+namespace re2 {
 
 const StringPiece::size_type StringPiece::npos;  // initialized in stringpiece.h
 
@@ -60,4 +60,6 @@ StringPiece::size_type StringPiece::rfind(char c, size_type pos) const {
 std::ostream& operator<<(std::ostream& o, const StringPiece& p) {
   o.write(p.data(), p.size());
   return o;
+}
+
 }
