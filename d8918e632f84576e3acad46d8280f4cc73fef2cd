@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88690ee7_3d755736",
+        "filename": "re2/stringpiece.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 9755
+      },
+      "writtenOn": "2017-01-22T19:00:37Z",
+      "side": 0,
+      "message": "aaa",
+      "range": {
+        "startLine": 181,
+        "startChar": 30,
+        "endLine": 181,
+        "endChar": 39
+      },
+      "revId": "d8918e632f84576e3acad46d8280f4cc73fef2cd",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
