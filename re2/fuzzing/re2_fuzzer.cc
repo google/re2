@@ -41,7 +41,10 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
 
   s3 = s4 = text.ToString();
   RE2::Replace(&s3, re, "");
-  RE2::GlobalReplace(&s4, re, "");
+  // Call RE2::GlobalReplace() iff re does not match the empty string.
+  // Otherwise, it gets bogged down advancing one character at a time.
+  if (!RE2::FullMatch("", re))
+    RE2::GlobalReplace(&s4, re, "");
 
   // Exercise some other API functionality.
   dummy += re.NumberOfCapturingGroups();
