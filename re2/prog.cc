@@ -526,8 +526,8 @@ void Prog::Flatten() {
     return;
   did_flatten_ = true;
 
-  // Scratch structures. It's important that these are reused by EmitList()
-  // because we call it in a loop and it would thrash the heap otherwise.
+  // Scratch structures. It's important that these are reused by functions
+  // that we call in loops because they would thrash the heap otherwise.
   SparseSet q(size());
   std::vector<int> stk;
   stk.reserve(size());
@@ -535,9 +535,21 @@ void Prog::Flatten() {
   // First pass: Marks "roots".
   // Builds the mapping from inst-ids to root-ids.
   SparseArray<int> rootmap(size());
-  MarkRoots(&rootmap, &q, &stk);
+  SparseArray<int> predmap(size());
+  std::vector<std::vector<int>> predvec;
+  MarkRoots(&rootmap, &predmap, &predvec, &q, &stk);
 
-  // Second pass: Emits "lists". Remaps outs to root-ids.
+  // Second pass: Marks dominators.
+  // Note that rootmap is never empty because 0 (the kInstFail instruction)
+  // is always present. Note also that we work backwards towards it, but we
+  // don't need to handle it, which makes the loop more convenient to write.
+  for (SparseArray<int>::const_iterator i = rootmap.end() - 1;
+       i != rootmap.begin();
+       --i) {
+    MarkDominator(i->index(), &rootmap, &predmap, &predvec, &q, &stk);
+  }
+
+  // Third pass: Emits "lists". Remaps outs to root-ids.
   // Builds the mapping from root-ids to flat-ids.
   std::vector<int> flatmap(rootmap.size());
   std::vector<Inst> flat;
@@ -554,7 +566,7 @@ void Prog::Flatten() {
   for (int i = 0; i < kNumInst; i++)
     inst_count_[i] = 0;
 
-  // Third pass: Remaps outs to flat-ids.
+  // Fourth pass: Remaps outs to flat-ids.
   // Counts instructions by opcode.
   for (int id = 0; id < static_cast<int>(flat.size()); id++) {
     Inst* ip = &flat[id];
@@ -586,8 +598,10 @@ void Prog::Flatten() {
   memmove(inst_, flat.data(), size_ * sizeof *inst_);
 }
 
-void Prog::MarkRoots(SparseArray<int>* rootmap, SparseSet* q,
-                     std::vector<int>* stk) {
+void Prog::MarkRoots(SparseArray<int>* rootmap,
+                     SparseArray<int>* predmap,
+                     std::vector<std::vector<int>>* predvec,
+                     SparseSet* q, std::vector<int>* stk) {
   // Mark the kInstFail instruction.
   rootmap->set_new(0, rootmap->size());
 
@@ -616,6 +630,14 @@ void Prog::MarkRoots(SparseArray<int>* rootmap, SparseSet* q,
 
       case kInstAltMatch:
       case kInstAlt:
+        // Mark this instruction as a predecessor of each out.
+        for (int out : {ip->out(), ip->out1()}) {
+          if (!predmap->has_index(out)) {
+            predmap->set_new(out, predvec->size());
+            predvec->emplace_back();
+          }
+          (*predvec)[predmap->get_existing(out)].emplace_back(id);
+        }
         stk->push_back(ip->out1());
         id = ip->out();
         goto Loop;
@@ -623,7 +645,7 @@ void Prog::MarkRoots(SparseArray<int>* rootmap, SparseSet* q,
       case kInstByteRange:
       case kInstCapture:
       case kInstEmptyWidth:
-        // Mark the out of this instruction.
+        // Mark the out of this instruction as a "root".
         if (!rootmap->has_index(ip->out()))
           rootmap->set_new(ip->out(), rootmap->size());
         id = ip->out();
@@ -640,9 +662,73 @@ void Prog::MarkRoots(SparseArray<int>* rootmap, SparseSet* q,
   }
 }
 
+void Prog::MarkDominator(int root, SparseArray<int>* rootmap,
+                         SparseArray<int>* predmap,
+                         std::vector<std::vector<int>>* predvec,
+                         SparseSet* q, std::vector<int>* stk) {
+  q->clear();
+  stk->clear();
+  stk->push_back(root);
+  while (!stk->empty()) {
+    int id = stk->back();
+    stk->pop_back();
+  Loop:
+    if (q->contains(id))
+      continue;
+    q->insert_new(id);
+
+    if (id != root && rootmap->has_index(id)) {
+      // We reached another "tree" via epsilon transition.
+      continue;
+    }
+
+    Inst* ip = inst(id);
+    switch (ip->opcode()) {
+      default:
+        LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+        break;
+
+      case kInstAltMatch:
+      case kInstAlt:
+        stk->push_back(ip->out1());
+        id = ip->out();
+        goto Loop;
+
+      case kInstByteRange:
+      case kInstCapture:
+      case kInstEmptyWidth:
+        break;
+
+      case kInstNop:
+        id = ip->out();
+        goto Loop;
+
+      case kInstMatch:
+      case kInstFail:
+        break;
+    }
+  }
+
+  for (SparseSet::const_iterator i = q->begin();
+       i != q->end();
+       ++i) {
+    int id = *i;
+    if (predmap->has_index(id)) {
+      for (int pred : (*predvec)[predmap->get_existing(id)]) {
+        if (!q->contains(pred)) {
+          // id has a predecessor that cannot be reached from root!
+          // Therefore, id must be a "root" too - mark it as such.
+          if (!rootmap->has_index(id))
+            rootmap->set_new(id, rootmap->size());
+        }
+      }
+    }
+  }
+}
+
 void Prog::EmitList(int root, SparseArray<int>* rootmap,
-                    std::vector<Inst>* flat, SparseSet* q,
-                    std::vector<int>* stk) {
+                    std::vector<Inst>* flat,
+                    SparseSet* q, std::vector<int>* stk) {
   q->clear();
   stk->clear();
   stk->push_back(root);

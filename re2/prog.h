@@ -333,15 +333,25 @@ class Prog {
   void Flatten();
 
   // Marks the "roots" in the Prog: the outs of kInstByteRange, kInstCapture
-  // and kInstEmptyWidth instructions.
-  void MarkRoots(SparseArray<int>* rootmap, SparseSet* q,
-                 std::vector<int>* stk);
+  // and kInstEmptyWidth instructions. Marks the predecessors of kInstAltMatch
+  // and kInstAlt instructions.
+  void MarkRoots(SparseArray<int>* rootmap,
+                 SparseArray<int>* predmap,
+                 std::vector<std::vector<int>>* predvec,
+                 SparseSet* q, std::vector<int>* stk);
+
+  // Marks the dominator (if not already marked) found via "tree" traversal
+  // from the given "root" instruction.
+  void MarkDominator(int root, SparseArray<int>* rootmap,
+                     SparseArray<int>* predmap,
+                     std::vector<std::vector<int>>* predvec,
+                     SparseSet* q, std::vector<int>* stk);
 
   // Emits one "list" via "tree" traversal from the given "root" instruction.
   // The new instructions are appended to the given vector.
   void EmitList(int root, SparseArray<int>* rootmap,
-                std::vector<Inst>* flat, SparseSet* q,
-                std::vector<int>* stk);
+                std::vector<Inst>* flat,
+                SparseSet* q, std::vector<int>* stk);
 
  private:
   friend class Compiler;
