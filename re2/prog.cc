@@ -459,7 +459,7 @@ void Prog::ComputeByteMap() {
   // Don't repeat the work for \b and \B.
   bool marked_word_boundaries = false;
 
-  for (int id = 0; id < static_cast<int>(size()); id++) {
+  for (int id = 0; id < size(); id++) {
     Inst* ip = inst(id);
     if (ip->opcode() == kInstByteRange) {
       int lo = ip->lo();
@@ -633,7 +633,7 @@ void Prog::MarkRoots(SparseArray<int>* rootmap,
         // Mark this instruction as a predecessor of each out.
         for (int out : {ip->out(), ip->out1()}) {
           if (!predmap->has_index(out)) {
-            predmap->set_new(out, predvec->size());
+            predmap->set_new(out, static_cast<int>(predvec->size()));
             predvec->emplace_back();
           }
           (*predvec)[predmap->get_existing(out)].emplace_back(id);
