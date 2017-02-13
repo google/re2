@@ -323,18 +323,12 @@ TEST(TestCompile, Bug35237384) {
   string forward;
 
   Dump("a**{3,}", Regexp::Latin1|Regexp::NeverCapture, &forward, NULL);
-  EXPECT_EQ("3+ nop -> 5\n"
-            "4. nop -> 13\n"
+  EXPECT_EQ("3+ byte [61-61] -> 3\n"
+            "4. nop -> 5\n"
             "5+ byte [61-61] -> 5\n"
-            "6. nop -> 3\n"
+            "6. nop -> 7\n"
             "7+ byte [61-61] -> 7\n"
-            "8. nop -> 13\n"
-            "9+ byte [61-61] -> 9\n"
-            "10. nop -> 11\n"
-            "11+ nop -> 9\n"
-            "12. match! 0\n"
-            "13+ nop -> 7\n"
-            "14. nop -> 11\n",
+            "8. match! 0\n",
             forward);
 
   Dump("(a*|b*)*{3,}", Regexp::Latin1|Regexp::NeverCapture, &forward, NULL);

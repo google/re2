@@ -115,6 +115,11 @@ static Test tests[] = {
   { "ab|cd", "alt{str{ab}str{cd}}" },
   { "a(b|c)d", "cat{lit{a}cap{cc{0x62-0x63}}lit{d}}" },
 
+  // Test squashing of **, ++ and ??.
+  { "(?:(?:a)*)*", "star{lit{a}}" },
+  { "(?:(?:a)+)+", "plus{lit{a}}" },
+  { "(?:(?:a)?)?", "que{lit{a}}" },
+
   // Test flattening.
   { "(?:a)", "lit{a}" },
   { "(?:ab)(?:cd)", "str{abcd}" },

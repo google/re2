@@ -473,6 +473,12 @@ bool Regexp::ParseState::PushRepeatOp(RegexpOp op, const StringPiece& s,
   Regexp::ParseFlags fl = flags_;
   if (nongreedy)
     fl = fl ^ NonGreedy;
+
+  // Squash **, ++ and ??. Regexp::Star() et al. handle this too, but
+  // they're mostly for use during simplification, not during parsing.
+  if (op == stacktop_->op() && fl == stacktop_->parse_flags())
+    return true;
+
   Regexp* re = new Regexp(op, fl);
   re->AllocSub(1);
   re->down_ = stacktop_->down_;
