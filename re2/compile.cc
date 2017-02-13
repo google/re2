@@ -1210,7 +1210,7 @@ Prog* Compiler::Finish() {
   if (max_mem_ <= 0) {
     prog_->set_dfa_mem(1<<20);
   } else {
-    int64_t m = max_mem_ - sizeof(Prog) - inst_len_*sizeof(Prog::Inst);
+    int64_t m = max_mem_ - sizeof(Prog) - prog_->size_*sizeof(Prog::Inst);
     if (m < 0)
       m = 0;
     prog_->set_dfa_mem(m);
