@@ -273,7 +273,7 @@ class SparseArray {
   iterator SetInternal(bool allow_overwrite, int i, U&& v) {  // NOLINT
     DebugCheckInvariants();
     if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
-      assert(!"illegal index");
+      assert(false && "illegal index");
       // Semantically, end() would be better here, but we already know
       // the user did something stupid, so begin() insulates them from
       // dereferencing an invalid pointer.
