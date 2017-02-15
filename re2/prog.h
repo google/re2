@@ -332,26 +332,28 @@ class Prog {
   // operation in the sense that the old instructions are lost.
   void Flatten();
 
-  // Marks the "roots" in the Prog: the outs of kInstByteRange, kInstCapture
-  // and kInstEmptyWidth instructions. Marks the predecessors of kInstAltMatch
-  // and kInstAlt instructions.
-  void MarkRoots(SparseArray<int>* rootmap,
-                 SparseArray<int>* predmap,
-                 std::vector<std::vector<int>>* predvec,
-                 SparseSet* q, std::vector<int>* stk);
+  // Walks the Prog; the "successor roots" or predecessors of the reachable
+  // instructions are marked in rootmap or predmap/predvec, respectively.
+  // reachable and stk are preallocated scratch structures.
+  void MarkSuccessors(SparseArray<int>* rootmap,
+                      SparseArray<int>* predmap,
+                      std::vector<std::vector<int>>* predvec,
+                      SparseSet* reachable, std::vector<int>* stk);
 
-  // Marks the dominator (if not already marked) found via "tree" traversal
-  // from the given "root" instruction.
+  // Walks the Prog from the given "root" instruction; the "dominator root"
+  // of the reachable instructions (if such exists) is marked in rootmap.
+  // reachable and stk are preallocated scratch structures.
   void MarkDominator(int root, SparseArray<int>* rootmap,
                      SparseArray<int>* predmap,
                      std::vector<std::vector<int>>* predvec,
-                     SparseSet* q, std::vector<int>* stk);
+                     SparseSet* reachable, std::vector<int>* stk);
 
-  // Emits one "list" via "tree" traversal from the given "root" instruction.
-  // The new instructions are appended to the given vector.
+  // Walks the Prog from the given "root" instruction; the reachable
+  // instructions are emitted in "list" form and appended to flat.
+  // reachable and stk are preallocated scratch structures.
   void EmitList(int root, SparseArray<int>* rootmap,
                 std::vector<Inst>* flat,
-                SparseSet* q, std::vector<int>* stk);
+                SparseSet* reachable, std::vector<int>* stk);
 
  private:
   friend class Compiler;
