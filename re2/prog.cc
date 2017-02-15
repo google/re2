@@ -521,6 +521,42 @@ void Prog::ComputeByteMap() {
   }
 }
 
+// Prog::Flatten() implements a graph rewriting algorithm.
+//
+// The overall process is similar to epsilon removal, but retains some epsilon
+// transitions: those from Capture and EmptyWidth instructions; and those from
+// nullable subexpressions. (The latter avoids quadratic blowup in transitions
+// in the worst case.) It might be best thought of as Alt instruction elision.
+//
+// In conceptual terms, it divides the Prog into "trees" of instructions, then
+// traverses the "trees" in order to produce "lists" of instructions. A "tree"
+// is one or more instructions that grow from one "root" instruction to one or
+// more "leaf" instructions; if a "tree" has exactly one instruction, then the
+// "root" is also the "leaf". In most cases, a "root" is the successor of some
+// "leaf" (i.e. the "leaf" instruction's out() returns the "root" instruction)
+// and is considered a "successor root". A "leaf" can be a ByteRange, Capture,
+// EmptyWidth or Match instruction. However, this is insufficient for handling
+// nested nullable subexpressions correctly, so in some cases, a "root" is the
+// dominator of the instructions reachable from some "successor root" (i.e. it
+// has an unreachable predecessor) and is considered a "dominator root". Since
+// only Alt instructions can be "dominator roots" (other instructions would be
+// "leaves"), only Alt instructions require their predecessors to be computed.
+//
+// Dividing the Prog into "trees" comprises two passes: marking the "successor
+// roots" and the predecessors; and marking the "dominator roots". Walking the
+// Prog in its entirety causes the "successor roots" to be marked in a certain
+// order during the first pass. Iteration over the "successor roots" occurs in
+// reverse order of their marking during the second pass; by working backwards
+// and flooding the graph no further than "leaves" and already marked "roots",
+// it becomes possible to mark "dominator roots" without doing excessive work.
+//
+// Traversing the "trees" is just iterating over the "roots" in order of their
+// marking and flooding the graph no further than "leaves" and "roots". When a
+// "leaf" is reached, the instruction is copied with its successor remapped to
+// its "root" number. When a "root" is reached, a Nop instruction is generated
+// with its successor remapped similarly. As each "list" is produced, its last
+// instruction is marked as such. After all of the "lists" have been produced,
+// a pass over their instructions remaps their successors to bytecode offsets.
 void Prog::Flatten() {
   if (did_flatten_)
     return;
@@ -528,25 +564,22 @@ void Prog::Flatten() {
 
   // Scratch structures. It's important that these are reused by functions
   // that we call in loops because they would thrash the heap otherwise.
-  SparseSet q(size());
+  SparseSet reachable(size());
   std::vector<int> stk;
   stk.reserve(size());
 
-  // First pass: Marks "roots".
+  // First pass: Marks "successor roots" and predecessors.
   // Builds the mapping from inst-ids to root-ids.
   SparseArray<int> rootmap(size());
   SparseArray<int> predmap(size());
   std::vector<std::vector<int>> predvec;
-  MarkRoots(&rootmap, &predmap, &predvec, &q, &stk);
+  MarkSuccessors(&rootmap, &predmap, &predvec, &reachable, &stk);
 
-  // Second pass: Marks dominators.
-  // Note that rootmap is never empty because 0 (the kInstFail instruction)
-  // is always present. Note also that we work backwards towards it, but we
-  // don't need to handle it, which makes the loop more convenient to write.
+  // Second pass: Marks "dominator roots".
   for (SparseArray<int>::const_iterator i = rootmap.end() - 1;
        i != rootmap.begin();
        --i) {
-    MarkDominator(i->index(), &rootmap, &predmap, &predvec, &q, &stk);
+    MarkDominator(i->index(), &rootmap, &predmap, &predvec, &reachable, &stk);
   }
 
   // Third pass: Emits "lists". Remaps outs to root-ids.
@@ -558,7 +591,7 @@ void Prog::Flatten() {
        i != rootmap.end();
        ++i) {
     flatmap[i->value()] = static_cast<int>(flat.size());
-    EmitList(i->index(), &rootmap, &flat, &q, &stk);
+    EmitList(i->index(), &rootmap, &flat, &reachable, &stk);
     flat.back().set_last();
   }
 
@@ -598,10 +631,10 @@ void Prog::Flatten() {
   memmove(inst_, flat.data(), size_ * sizeof *inst_);
 }
 
-void Prog::MarkRoots(SparseArray<int>* rootmap,
-                     SparseArray<int>* predmap,
-                     std::vector<std::vector<int>>* predvec,
-                     SparseSet* q, std::vector<int>* stk) {
+void Prog::MarkSuccessors(SparseArray<int>* rootmap,
+                          SparseArray<int>* predmap,
+                          std::vector<std::vector<int>>* predvec,
+                          SparseSet* reachable, std::vector<int>* stk) {
   // Mark the kInstFail instruction.
   rootmap->set_new(0, rootmap->size());
 
@@ -611,16 +644,16 @@ void Prog::MarkRoots(SparseArray<int>* rootmap,
   if (!rootmap->has_index(start()))
     rootmap->set_new(start(), rootmap->size());
 
-  q->clear();
+  reachable->clear();
   stk->clear();
   stk->push_back(start_unanchored());
   while (!stk->empty()) {
     int id = stk->back();
     stk->pop_back();
   Loop:
-    if (q->contains(id))
+    if (reachable->contains(id))
       continue;
-    q->insert_new(id);
+    reachable->insert_new(id);
 
     Inst* ip = inst(id);
     switch (ip->opcode()) {
@@ -665,17 +698,17 @@ void Prog::MarkRoots(SparseArray<int>* rootmap,
 void Prog::MarkDominator(int root, SparseArray<int>* rootmap,
                          SparseArray<int>* predmap,
                          std::vector<std::vector<int>>* predvec,
-                         SparseSet* q, std::vector<int>* stk) {
-  q->clear();
+                         SparseSet* reachable, std::vector<int>* stk) {
+  reachable->clear();
   stk->clear();
   stk->push_back(root);
   while (!stk->empty()) {
     int id = stk->back();
     stk->pop_back();
   Loop:
-    if (q->contains(id))
+    if (reachable->contains(id))
       continue;
-    q->insert_new(id);
+    reachable->insert_new(id);
 
     if (id != root && rootmap->has_index(id)) {
       // We reached another "tree" via epsilon transition.
@@ -709,13 +742,13 @@ void Prog::MarkDominator(int root, SparseArray<int>* rootmap,
     }
   }
 
-  for (SparseSet::const_iterator i = q->begin();
-       i != q->end();
+  for (SparseSet::const_iterator i = reachable->begin();
+       i != reachable->end();
        ++i) {
     int id = *i;
     if (predmap->has_index(id)) {
       for (int pred : (*predvec)[predmap->get_existing(id)]) {
-        if (!q->contains(pred)) {
+        if (!reachable->contains(pred)) {
           // id has a predecessor that cannot be reached from root!
           // Therefore, id must be a "root" too - mark it as such.
           if (!rootmap->has_index(id))
@@ -728,17 +761,17 @@ void Prog::MarkDominator(int root, SparseArray<int>* rootmap,
 
 void Prog::EmitList(int root, SparseArray<int>* rootmap,
                     std::vector<Inst>* flat,
-                    SparseSet* q, std::vector<int>* stk) {
-  q->clear();
+                    SparseSet* reachable, std::vector<int>* stk) {
+  reachable->clear();
   stk->clear();
   stk->push_back(root);
   while (!stk->empty()) {
     int id = stk->back();
     stk->pop_back();
   Loop:
-    if (q->contains(id))
+    if (reachable->contains(id))
       continue;
-    q->insert_new(id);
+    reachable->insert_new(id);
 
     if (id != root && rootmap->has_index(id)) {
       // We reached another "tree" via epsilon transition. Emit a kInstNop
