@@ -20,6 +20,12 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
   if (!re.ok())
     return;
 
+  // Don't waste time fuzzing high-size programs.
+  // (They can cause bug reports due to fuzzer timeouts.)
+  int size = re.ProgramSize();
+  if (size > 9999)
+    return;
+
   // Don't waste time fuzzing high-fanout programs.
   // (They can also cause bug reports due to fuzzer timeouts.)
   std::map<int, int> histogram;
