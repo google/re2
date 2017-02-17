@@ -42,6 +42,13 @@
 
 namespace re2 {
 
+// Reduce the maximum repeat count by an order of magnitude when fuzzing.
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+static const int kMaxRepeat = 100;
+#else
+static const int kMaxRepeat = 1000;
+#endif
+
 // Regular expression parse state.
 // The list of parsed regexps so far is maintained as a vector of
 // Regexp pointers called the stack.  Left parenthesis and vertical
@@ -547,7 +554,7 @@ int RepetitionWalker::ShortVisit(Regexp* re, int parent_arg) {
 bool Regexp::ParseState::PushRepetition(int min, int max,
                                         const StringPiece& s,
                                         bool nongreedy) {
-  if ((max != -1 && max < min) || min > 1000 || max > 1000) {
+  if ((max != -1 && max < min) || min > kMaxRepeat || max > kMaxRepeat) {
     status_->set_code(kRegexpRepeatSize);
     status_->set_error_arg(s);
     return false;
@@ -570,7 +577,7 @@ bool Regexp::ParseState::PushRepetition(int min, int max,
   stacktop_ = re;
   if (min >= 2 || max >= 2) {
     RepetitionWalker w;
-    if (w.Walk(stacktop_, 1000) == 0) {
+    if (w.Walk(stacktop_, kMaxRepeat) == 0) {
       status_->set_code(kRegexpRepeatSize);
       status_->set_error_arg(s);
       return false;
