@@ -92,15 +92,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   StringPiece text(ptr, len);
   Test(pattern, options, text);
 
-  for (int i = 2; i <= 4; i++) {
-    if (len < i)
-      break;
-
-    int frac = len / i;
-    pattern = StringPiece(ptr, frac);
-    text = StringPiece(ptr + frac, len - frac);
-    Test(pattern, options, text);
-  }
-
   return 0;
 }
