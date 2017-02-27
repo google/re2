@@ -190,31 +190,41 @@ Regexp* Regexp::HaveMatch(int match_id, ParseFlags flags) {
   return re;
 }
 
-Regexp* Regexp::Plus(Regexp* sub, ParseFlags flags) {
-  if (sub->op() == kRegexpPlus && sub->parse_flags() == flags)
+Regexp* Regexp::StarPlusOrQuest(RegexpOp op, Regexp* sub, ParseFlags flags) {
+  // Squash **, ++ and ??.
+  if (op == sub->op() && flags == sub->parse_flags())
     return sub;
-  Regexp* re = new Regexp(kRegexpPlus, flags);
+
+  // Squash *+, *?, +*, +?, ?* and ?+. They all squash to *, so because
+  // op is Star/Plus/Quest, we just have to check that sub->op() is too,
+  // then rewrite sub.
+  if ((sub->op() == kRegexpStar ||
+       sub->op() == kRegexpPlus ||
+       sub->op() == kRegexpQuest) &&
+      flags == sub->parse_flags()) {
+    Regexp* re = new Regexp(kRegexpStar, flags);
+    re->AllocSub(1);
+    re->sub()[0] = sub->sub()[0]->Incref();
+    sub->Decref();  // We didn't consume the reference after all.
+    return re;
+  }
+
+  Regexp* re = new Regexp(op, flags);
   re->AllocSub(1);
   re->sub()[0] = sub;
   return re;
+}
+
+Regexp* Regexp::Plus(Regexp* sub, ParseFlags flags) {
+  return StarPlusOrQuest(kRegexpPlus, sub, flags);
 }
 
 Regexp* Regexp::Star(Regexp* sub, ParseFlags flags) {
-  if (sub->op() == kRegexpStar && sub->parse_flags() == flags)
-    return sub;
-  Regexp* re = new Regexp(kRegexpStar, flags);
-  re->AllocSub(1);
-  re->sub()[0] = sub;
-  return re;
+  return StarPlusOrQuest(kRegexpStar, sub, flags);
 }
 
 Regexp* Regexp::Quest(Regexp* sub, ParseFlags flags) {
-  if (sub->op() == kRegexpQuest && sub->parse_flags() == flags)
-    return sub;
-  Regexp* re = new Regexp(kRegexpQuest, flags);
-  re->AllocSub(1);
-  re->sub()[0] = sub;
-  return re;
+  return StarPlusOrQuest(kRegexpQuest, sub, flags);
 }
 
 Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub,
