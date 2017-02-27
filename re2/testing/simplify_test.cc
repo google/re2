@@ -231,6 +231,17 @@ static Test tests[] = {
   // capture. The new capture must have the cap of the old capture.
   // Failure to copy it results in cap=0 -> ToString() logs a fatal error.
   { "(a*aab)", "(aa+b)" },
+
+  // Test squashing of **, ++, ?? et cetera.
+  { "(?:(?:a){0,}){0,}", "a*" },
+  { "(?:(?:a){1,}){1,}", "a+" },
+  { "(?:(?:a){0,1}){0,1}", "a?" },
+  { "(?:(?:a){0,}){1,}", "a*" },
+  { "(?:(?:a){0,}){0,1}", "a*" },
+  { "(?:(?:a){1,}){0,}", "a*" },
+  { "(?:(?:a){1,}){0,1}", "a*" },
+  { "(?:(?:a){0,1}){0,}", "a*" },
+  { "(?:(?:a){0,1}){1,}", "a*" },
 };
 
 TEST(TestSimplify, SimpleRegexps) {

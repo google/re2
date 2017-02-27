@@ -460,6 +460,10 @@ class Regexp {
   // Computes whether Regexp is already simple.
   bool ComputeSimple();
 
+  // Constructor that generates a Star, Plus or Quest,
+  // squashing the pair if sub is also a Star, Plus or Quest.
+  static Regexp* StarPlusOrQuest(RegexpOp op, Regexp* sub, ParseFlags flags);
+
   // Constructor that generates a concatenation or alternation,
   // enforcing the limit on the number of subexpressions for
   // a particular Regexp.

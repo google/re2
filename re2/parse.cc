@@ -486,6 +486,17 @@ bool Regexp::ParseState::PushRepeatOp(RegexpOp op, const StringPiece& s,
   if (op == stacktop_->op() && fl == stacktop_->parse_flags())
     return true;
 
+  // Squash *+, *?, +*, +?, ?* and ?+. They all squash to *, so because
+  // op is a repeat, we just have to check that stacktop_->op() is too,
+  // then adjust stacktop_.
+  if ((stacktop_->op() == kRegexpStar ||
+       stacktop_->op() == kRegexpPlus ||
+       stacktop_->op() == kRegexpQuest) &&
+      fl == stacktop_->parse_flags()) {
+    stacktop_->op_ = kRegexpStar;
+    return true;
+  }
+
   Regexp* re = new Regexp(op, fl);
   re->AllocSub(1);
   re->down_ = stacktop_->down_;
