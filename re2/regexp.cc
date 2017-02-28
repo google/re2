@@ -196,12 +196,16 @@ Regexp* Regexp::StarPlusOrQuest(RegexpOp op, Regexp* sub, ParseFlags flags) {
     return sub;
 
   // Squash *+, *?, +*, +?, ?* and ?+. They all squash to *, so because
-  // op is Star/Plus/Quest, we just have to check that sub->op() is too,
-  // then rewrite sub.
+  // op is Star/Plus/Quest, we just have to check that sub->op() is too.
   if ((sub->op() == kRegexpStar ||
        sub->op() == kRegexpPlus ||
        sub->op() == kRegexpQuest) &&
       flags == sub->parse_flags()) {
+    // If sub is Star, no need to rewrite it.
+    if (sub->op() == kRegexpStar)
+      return sub;
+
+    // Rewrite sub to Star.
     Regexp* re = new Regexp(kRegexpStar, flags);
     re->AllocSub(1);
     re->sub()[0] = sub->sub()[0]->Incref();
