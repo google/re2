@@ -543,10 +543,9 @@ void Prog::ComputeByteMap() {
 // "leaves"), only Alt instructions require their predecessors to be computed.
 //
 // Dividing the Prog into "trees" comprises two passes: marking the "successor
-// roots" and the predecessors; and marking the "dominator roots". Walking the
-// Prog in its entirety causes the "successor roots" to be marked in a certain
-// order during the first pass. Iteration over the "successor roots" occurs in
-// reverse order of their marking during the second pass; by working backwards
+// roots" and the predecessors; and marking the "dominator roots". Sorting the
+// "successor roots" by their bytecode offsets enables iteration in order from
+// greatest to least during the second pass; by working backwards in this case
 // and flooding the graph no further than "leaves" and already marked "roots",
 // it becomes possible to mark "dominator roots" without doing excessive work.
 //
@@ -576,10 +575,13 @@ void Prog::Flatten() {
   MarkSuccessors(&rootmap, &predmap, &predvec, &reachable, &stk);
 
   // Second pass: Marks "dominator roots".
-  for (SparseArray<int>::const_iterator i = rootmap.end() - 1;
-       i != rootmap.begin();
+  SparseArray<int> sorted(rootmap);
+  std::sort(sorted.begin(), sorted.end(), sorted.less);
+  for (SparseArray<int>::const_iterator i = sorted.end() - 1;
+       i != sorted.begin();
        --i) {
-    MarkDominator(i->index(), &rootmap, &predmap, &predvec, &reachable, &stk);
+    if (i->index() != start_unanchored() && i->index() != start())
+      MarkDominator(i->index(), &rootmap, &predmap, &predvec, &reachable, &stk);
   }
 
   // Third pass: Emits "lists". Remaps outs to root-ids.
