@@ -39,7 +39,7 @@ if(USEPCRE)
   list(APPEND EXTRA_TARGET_LINK_LIBRARIES pcre)
 endif()
 
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(RE2_SOURCES
     re2/bitstate.cc
