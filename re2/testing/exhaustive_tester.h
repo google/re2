@@ -15,10 +15,15 @@
 
 namespace re2 {
 
+// Doing this simplifies the logic below.
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+
 #if !defined(NDEBUG)
 // We are in a debug build.
 const bool RE2_DEBUG_MODE = true;
-#elif ADDRESS_SANITIZER || MEMORY_SANITIZER || THREAD_SANITIZER
+#elif __has_feature(address_sanitizer) || __has_feature(memory_sanitizer) || __has_feature(thread_sanitizer)
 // Not a debug build, but still under sanitizers.
 const bool RE2_DEBUG_MODE = true;
 #else
