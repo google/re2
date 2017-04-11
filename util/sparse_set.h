@@ -183,11 +183,13 @@ void SparseSetT<Value>::resize(int max_size) {
 
     dense_.resize(max_size);
 
-#ifdef MEMORY_SANITIZER
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
     for (int i = max_size_; i < max_size; i++) {
       sparse_to_dense_[i] = 0xababababU;
       dense_[i] = 0xababababU;
     }
+#endif
 #endif
   }
   max_size_ = max_size;
@@ -224,11 +226,13 @@ template<typename Value> SparseSetT<Value>::SparseSetT(int max_size) {
   dense_.resize(max_size);
   size_ = 0;
 
-#ifdef MEMORY_SANITIZER
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
   for (int i = 0; i < max_size; i++) {
     sparse_to_dense_[i] = 0xababababU;
     dense_[i] = 0xababababU;
   }
+#endif
 #endif
 
   DebugCheckInvariants();
