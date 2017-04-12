@@ -388,7 +388,7 @@ static void TestRecursion(int size, const char* pattern) {
 
 // A meta-quoted string, interpreted as a pattern, should always match
 // the original unquoted string.
-static void TestQuoteMeta(string unquoted,
+static void TestQuoteMeta(const string& unquoted,
                           const RE2::Options& options = RE2::DefaultOptions) {
   string quoted = RE2::QuoteMeta(unquoted);
   RE2 re(quoted, options);
@@ -398,8 +398,9 @@ static void TestQuoteMeta(string unquoted,
 
 // A meta-quoted string, interpreted as a pattern, should always match
 // the original unquoted string.
-static void NegativeTestQuoteMeta(string unquoted, string should_not_match,
-                                  const RE2::Options& options = RE2::DefaultOptions) {
+static void NegativeTestQuoteMeta(
+    const string& unquoted, const string& should_not_match,
+    const RE2::Options& options = RE2::DefaultOptions) {
   string quoted = RE2::QuoteMeta(unquoted);
   RE2 re(quoted, options);
   EXPECT_FALSE(RE2::FullMatch(should_not_match, re))

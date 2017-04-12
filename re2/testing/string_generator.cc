@@ -24,7 +24,7 @@ StringGenerator::StringGenerator(int maxlen,
       random_(false), nrandom_(0) {
 
   // Degenerate case: no letters, no non-empty strings.
-  if (alphabet_.size() == 0)
+  if (alphabet_.empty())
     maxlen_ = 0;
 
   // Next() will return empty string (digits_ is empty).

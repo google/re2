@@ -49,7 +49,7 @@ Prefilter* Prefilter::Simplify() {
   }
 
   // Nothing left in the AND/OR.
-  if (subs_->size() == 0) {
+  if (subs_->empty()) {
     if (op_ == AND)
       op_ = ALL;  // AND of nothing is true
     else
