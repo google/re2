@@ -56,9 +56,9 @@ RegexpGenerator::RegexpGenerator(int maxatoms, int maxops,
                                  const std::vector<string>& ops)
     : maxatoms_(maxatoms), maxops_(maxops), atoms_(atoms), ops_(ops) {
   // Degenerate case.
-  if (atoms_.size() == 0)
+  if (atoms_.empty())
     maxatoms_ = 0;
-  if (ops_.size() == 0)
+  if (ops_.empty())
     maxops_ = 0;
 }
 

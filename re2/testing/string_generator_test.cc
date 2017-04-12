@@ -31,7 +31,7 @@ static int64_t IntegerPower(int i, int e) {
 // If all of these hold, the StringGenerator is behaving.
 // Assumes that the alphabet is sorted, so that the generated
 // strings can just be compared lexicographically.
-static void RunTest(int len, string alphabet, bool donull) {
+static void RunTest(int len, const string& alphabet, bool donull) {
   StringGenerator g(len, Explode(alphabet));
 
   int n = 0;
