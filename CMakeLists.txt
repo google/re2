@@ -11,6 +11,10 @@ include(CTest)
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
 option(USEPCRE "use PCRE in tests and benchmarks" OFF)
 
+# CMake seems to have no way to enable/disable testing per subproject,
+# so we provide an option similar to BUILD_TESTING, but just for RE2.
+option(RE2_BUILD_TESTING "enable testing for RE2" ON)
+
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -112,7 +116,9 @@ set(BENCHMARK_TARGETS
 foreach(target ${TEST_TARGETS})
   add_executable(${target} re2/testing/${target}.cc util/test.cc)
   target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
-  add_test(NAME ${target} COMMAND ${target})
+  if(RE2_BUILD_TESTING)
+    add_test(NAME ${target} COMMAND ${target})
+  endif()
 endforeach(target)
 
 foreach(target ${BENCHMARK_TARGETS})
