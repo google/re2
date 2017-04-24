@@ -131,8 +131,7 @@ static void AppendLiteral(string *t, Rune r, bool foldcase) {
     t->append(1, '\\');
     t->append(1, static_cast<char>(r));
   } else if (foldcase && 'a' <= r && r <= 'z') {
-    if ('a' <= r && r <= 'z')
-      r += 'A' - 'a';
+    r -= 'a' - 'A';
     t->append(1, '[');
     t->append(1, static_cast<char>(r));
     t->append(1, static_cast<char>(r) + 'a' - 'A');
