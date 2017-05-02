@@ -18,6 +18,7 @@ option(RE2_BUILD_TESTING "enable testing for RE2" ON)
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  add_compile_options("/EHs")
   if(MSVC_VERSION LESS 1800)
     message(FATAL_ERROR "you need Visual Studio 2013 or later")
   endif()
@@ -72,59 +73,62 @@ set(RE2_SOURCES
 
 add_library(re2 ${RE2_SOURCES})
 
-set(TESTING_SOURCES
-    re2/testing/backtrack.cc
-    re2/testing/dump.cc
-    re2/testing/exhaustive_tester.cc
-    re2/testing/null_walker.cc
-    re2/testing/regexp_generator.cc
-    re2/testing/string_generator.cc
-    re2/testing/tester.cc
-    util/pcre.cc
-    )
+if(${RE2_BUILD_TESTING})
 
-add_library(testing STATIC ${TESTING_SOURCES})
+  set(TESTING_SOURCES
+      re2/testing/backtrack.cc
+      re2/testing/dump.cc
+      re2/testing/exhaustive_tester.cc
+      re2/testing/null_walker.cc
+      re2/testing/regexp_generator.cc
+      re2/testing/string_generator.cc
+      re2/testing/tester.cc
+      util/pcre.cc
+      )
 
-set(TEST_TARGETS
-    charclass_test
-    compile_test
-    filtered_re2_test
-    mimics_pcre_test
-    parse_test
-    possible_match_test
-    re2_test
-    re2_arg_test
-    regexp_test
-    required_prefix_test
-    search_test
-    set_test
-    simplify_test
-    string_generator_test
+  add_library(testing STATIC ${TESTING_SOURCES})
 
-    dfa_test
-    exhaustive1_test
-    exhaustive2_test
-    exhaustive3_test
-    exhaustive_test
-    random_test
-    )
+  set(TEST_TARGETS
+      charclass_test
+      compile_test
+      filtered_re2_test
+      mimics_pcre_test
+      parse_test
+      possible_match_test
+      re2_test
+      re2_arg_test
+      regexp_test
+      required_prefix_test
+      search_test
+      set_test
+      simplify_test
+      string_generator_test
 
-set(BENCHMARK_TARGETS
-    regexp_benchmark
-    )
+      dfa_test
+      exhaustive1_test
+      exhaustive2_test
+      exhaustive3_test
+      exhaustive_test
+      random_test
+      )
 
-foreach(target ${TEST_TARGETS})
-  add_executable(${target} re2/testing/${target}.cc util/test.cc)
-  target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
-  if(RE2_BUILD_TESTING)
+  set(BENCHMARK_TARGETS
+      regexp_benchmark
+      )
+
+  foreach(target ${TEST_TARGETS})
+    add_executable(${target} re2/testing/${target}.cc util/test.cc)
+    target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
     add_test(NAME ${target} COMMAND ${target})
-  endif()
-endforeach(target)
+  endforeach(target)
 
-foreach(target ${BENCHMARK_TARGETS})
-  add_executable(${target} re2/testing/${target}.cc util/benchmark.cc)
-  target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
-endforeach(target)
+  foreach(target ${BENCHMARK_TARGETS})
+    add_executable(${target} re2/testing/${target}.cc util/benchmark.cc)
+    target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
+  endforeach(target)
+
+endif()
+
 
 set(RE2_HEADERS
     re2/filtered_re2.h
