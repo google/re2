@@ -20,6 +20,13 @@
 #include "util/sparse_set.h"
 #include "re2/re2.h"
 
+#ifdef _WIN32
+// Avoid "nameless struct/union" warning on Windows
+#pragma warning(disable : 4201)
+// Avoid "zero-sized array in stack" warning on Windows
+#pragma warning(disable : 4815)
+#endif
+
 namespace re2 {
 
 // Opcodes for Inst
