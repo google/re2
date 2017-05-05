@@ -505,7 +505,7 @@ class Regexp {
     DCHECK(n >= 0 && static_cast<uint16_t>(n) == n);
     if (n > 1)
       submany_ = new Regexp*[n];
-    nsub_ = n;
+    nsub_ = static_cast<uint16_t>(n);
   }
 
   // Add Rune to LiteralString
