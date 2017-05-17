@@ -436,7 +436,9 @@ class Regexp {
   // begin with a non-empty fixed string (perhaps after ASCII
   // case-folding).  If so, returns the prefix and the sub-regexp that
   // follows it.
-  bool RequiredPrefix(string* prefix, bool *foldcase, Regexp** suffix);
+  // Callers should expect *prefix, *foldcase and *suffix to be "zeroed"
+  // regardless of the return value.
+  bool RequiredPrefix(string* prefix, bool* foldcase, Regexp** suffix);
 
  private:
   // Constructor allocates vectors as appropriate for operator.

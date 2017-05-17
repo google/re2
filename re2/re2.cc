@@ -200,8 +200,6 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
     return;
   }
 
-  prefix_.clear();
-  prefix_foldcase_ = false;
   re2::Regexp* suffix;
   if (entire_regexp_->RequiredPrefix(&prefix_, &prefix_foldcase_, &suffix))
     suffix_regexp_ = suffix;
