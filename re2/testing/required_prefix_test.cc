@@ -48,11 +48,13 @@ TEST(RequiredPrefix, SimpleTests) {
         flags = flags | Regexp::Latin1;
       Regexp* re = Regexp::Parse(t.regexp, flags, NULL);
       CHECK(re) << " " << t.regexp;
+
       string p;
-      bool f = false;
-      Regexp* s = NULL;
+      bool f;
+      Regexp* s;
       CHECK_EQ(t.return_value, re->RequiredPrefix(&p, &f, &s))
-        << " " << t.regexp << " " << (j==0 ? "latin1" : "utf") << " " << re->Dump();
+        << " " << t.regexp << " " << (j==0 ? "latin1" : "utf")
+        << " " << re->Dump();
       if (t.return_value) {
         CHECK_EQ(p, string(t.prefix))
           << " " << t.regexp << " " << (j==0 ? "latin1" : "utf");

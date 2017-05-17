@@ -653,7 +653,7 @@ std::map<int, string>* Regexp::CaptureNames() {
 // with a fixed string prefix.  If so, returns the prefix and
 // the regexp that remains after the prefix.  The prefix might
 // be ASCII case-insensitive.
-bool Regexp::RequiredPrefix(string *prefix, bool *foldcase, Regexp** suffix) {
+bool Regexp::RequiredPrefix(string* prefix, bool* foldcase, Regexp** suffix) {
   // No need for a walker: the regexp must be of the form
   // 1. some number of ^ anchors
   // 2. a literal char or string
