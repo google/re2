@@ -96,6 +96,11 @@
 #include "util/utf.h"
 #include "re2/stringpiece.h"
 
+#ifdef _WIN32
+#pragma warning (disable : 4201)
+#pragma warning (disable : 4815)
+#endif
+
 namespace re2 {
 
 // Keep in sync with string list kOpcodeNames[] in testing/dump.cc

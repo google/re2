@@ -20,6 +20,11 @@
 #include "util/sparse_set.h"
 #include "re2/re2.h"
 
+#ifdef _WIN32
+#pragma warning (disable : 4201)
+#pragma warning (disable : 4815)
+#endif
+
 namespace re2 {
 
 // Opcodes for Inst
