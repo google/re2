@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 
+LD_LIBRARY_PATH=obj/so:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH
+
 success=true
 for i
 do
