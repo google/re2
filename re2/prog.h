@@ -19,6 +19,7 @@
 #include "util/sparse_array.h"
 #include "util/sparse_set.h"
 #include "re2/re2.h"
+#include "re2/dfa.h"
 
 namespace re2 {
 
@@ -48,6 +49,7 @@ enum EmptyOp {
 
 class DFA;
 class Regexp;
+class DFAWriter;
 
 // Compiled form of regexp program.
 class Prog {
@@ -256,11 +258,13 @@ class Prog {
                  Anchor anchor, MatchKind kind, StringPiece* match0,
                  bool* failed, std::vector<int>* matches);
 
-  // Build the entire DFA for the given match kind.  FOR TESTING ONLY.
+  // Build the entire DFA for the given match kind.
+  // This function is useful only for testing or advanced purposes.
   // Usually the DFA is built out incrementally, as needed, which
-  // avoids lots of unnecessary work.  This function is useful only
-  // for testing purposes.  Returns number of states.
-  int BuildEntireDFA(MatchKind kind);
+  // avoids lots of unnecessary work.  
+  // Returns number of states built.
+  // If w != NULL, information about the DFA is written to w.
+  int BuildEntireDFA(MatchKind kind, DFAWriter *w);
 
   // Controls whether the DFA should bail out early if the NFA would be faster.
   // FOR TESTING ONLY.

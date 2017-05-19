@@ -10,6 +10,7 @@
 #include "util/test.h"
 #include "util/logging.h"
 #include "util/strutil.h"
+#include "re2/dfa.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
@@ -24,11 +25,65 @@ DEFINE_int32(threads, 4, "number of threads");
 
 namespace re2 {
 
+class DFAStringWriter : public DFAWriter {
+ public:
+  DFAStringWriter() {}
+  virtual ~DFAStringWriter() {};
+  string str() { return s_ + bad_; }
+  
+  virtual void AddTransition(int src_state, int c, int dst_state) {
+    StringAppendF(&s_, " %d-%d->%d", src_state, c, dst_state);
+  }
+  virtual void AddFinal(int state) {
+    StringAppendF(&s_, " (%d)", state);
+  }
+  virtual void OutOfMemory() {
+    bad_ = " incomplete!";
+  }
+
+ private:
+  string s_;
+  string bad_;
+};
+
+struct WriterTest {
+  const char *regexp;
+  const char *dump;
+};
+
+WriterTest writer_tests[] = {
+  { "\\Aa\\z", " 0-97->1 1-256->2 (2)" },
+  { "\\Aab\\z", " 0-97->1 1-98->2 2-256->3 (3)" },
+  { "\\A(a|b)c\\z", " 0-97->1 0-98->1 1-99->2 2-256->3 (3)" },
+  { "\\Aa*b\\z", " 0-97->0 0-98->1 1-256->2 (2)" },
+  { "\\Aa+b\\z", " 0-97->1 1-97->1 1-98->2 2-256->3 (3)" },
+};
+
+TEST(DFA, Writer) {
+  int nfail = 0;
+  for (int i = 0; i < arraysize(writer_tests); i++) {
+    const WriterTest& t = writer_tests[i];
+    Regexp* re = Regexp::Parse(t.regexp, Regexp::LikePerl, NULL);
+    CHECK(re);
+    Prog *prog = re->CompileToProg(0);
+    CHECK(prog);
+    DFAStringWriter w;
+    prog->BuildEntireDFA(Prog::kLongestMatch, &w);
+    if (w.str() != t.dump) {
+      LOG(ERROR) << t.regexp << " dump:\nhave " << w.str() << "\nwant " << t.dump;
+      nfail++;
+    }
+    delete prog;
+    re->Decref();
+  }
+  EXPECT_EQ(nfail, 0);
+}
+
 // Check that multithreaded access to DFA class works.
 
 // Helper function: builds entire DFA for prog.
 static void DoBuild(Prog* prog) {
-  CHECK(prog->BuildEntireDFA(Prog::kFirstMatch));
+  CHECK(prog->BuildEntireDFA(Prog::kFirstMatch, NULL));
 }
 
 TEST(Multithreaded, BuildEntireDFA) {
@@ -63,7 +118,7 @@ TEST(Multithreaded, BuildEntireDFA) {
       threads[j].join();
 
     // One more compile, to make sure everything is okay.
-    prog->BuildEntireDFA(Prog::kFirstMatch);
+    prog->BuildEntireDFA(Prog::kFirstMatch, NULL);
     delete prog;
   }
 
@@ -88,8 +143,8 @@ TEST(SingleThreaded, BuildEntireDFA) {
       CHECK(prog);
       //progusage = m.HeapGrowth();
       //dfamem = prog->dfa_mem();
-      prog->BuildEntireDFA(Prog::kFirstMatch);
-      prog->BuildEntireDFA(Prog::kLongestMatch);
+      prog->BuildEntireDFA(Prog::kFirstMatch, NULL);
+      prog->BuildEntireDFA(Prog::kLongestMatch, NULL);
       usage = m.HeapGrowth();
       delete prog;
     }

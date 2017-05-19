@@ -91,6 +91,7 @@ HFILES=\
 	util/util.h\
 	re2/bitmap256.h\
 	re2/filtered_re2.h\
+	re2/dfa.h\
 	re2/prefilter.h\
 	re2/prefilter_tree.h\
 	re2/prog.h\

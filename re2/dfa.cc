@@ -31,6 +31,7 @@
 #include <mutex>
 #include <new>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -96,9 +97,11 @@ class DFA {
               bool anchored, bool want_earliest_match, bool run_forward,
               bool* failed, const char** ep, std::vector<int>* matches);
 
-  // Builds out all states for the entire DFA.  FOR TESTING ONLY
-  // Returns number of states.
-  int BuildAllStates();
+  // Builds out all states for the entire DFA.
+  // Writes DFA information to w, and returns number of states.
+  // Stops building if DFA cache memory fills.
+  // For testing or advanced uses only: do NOT call for ordinary RE2 use.
+  int BuildAllStates(DFAWriter *w);
 
   // Computes min and max for matching strings.  Won't return strings
   // bigger than maxlen.
@@ -1882,8 +1885,10 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   return true;
 }
 
+typedef std::unordered_map<DFA::State*, int, DFA::StateHash, DFA::StateEqual> StateMap;
+
 // Build out all states in DFA.  Returns number of states.
-int DFA::BuildAllStates() {
+int DFA::BuildAllStates(DFAWriter *w) {
   if (!ok())
     return 0;
 
@@ -1892,13 +1897,13 @@ int DFA::BuildAllStates() {
   RWLocker l(&cache_mutex_);
   SearchParams params(StringPiece(), StringPiece(), &l);
   params.anchored = false;
-  if (!AnalyzeSearch(&params) || params.start <= SpecialStateMax)
+  if (!AnalyzeSearch(&params) || params.start == NULL || params.start == DeadState)
     return 0;
 
   // Add start state to work queue.
-  StateSet queued;
+  StateMap queued;
   std::vector<State*> q;
-  queued.insert(params.start);
+  queued[params.start] = static_cast<int>(q.size());
   q.push_back(params.start);
 
   // Flood to expand every state.
@@ -1906,20 +1911,34 @@ int DFA::BuildAllStates() {
     State* s = q[i];
     for (int c = 0; c < 257; c++) {
       State* ns = RunStateOnByteUnlocked(s, c);
-      if (ns > SpecialStateMax && queued.find(ns) == queued.end()) {
-        queued.insert(ns);
+      if (ns == NULL) {
+        if (w != NULL)
+          w->OutOfMemory();
+        continue;
+      }
+      if (ns == DeadState)
+        continue;
+      if (queued.find(ns) == queued.end()) {
+        queued[ns] = static_cast<int>(q.size());
         q.push_back(ns);
       }
+      if (w != NULL)
+        w->AddTransition(i, c, queued[ns]);
     }
+    if (w != NULL && (s == FullMatchState || s->IsMatch()))
+      w->AddFinal(i);
   }
 
   return static_cast<int>(q.size());
 }
 
+DFAWriter::DFAWriter() {}
+DFAWriter::~DFAWriter() {}
+
 // Build out all states in DFA for kind.  Returns number of states.
-int Prog::BuildEntireDFA(MatchKind kind) {
+int Prog::BuildEntireDFA(MatchKind kind, DFAWriter* w) {
   //LOG(ERROR) << "BuildEntireDFA is only for testing.";
-  return GetDFA(kind)->BuildAllStates();
+  return GetDFA(kind)->BuildAllStates(w);
 }
 
 void Prog::TEST_dfa_should_bail_when_slow(bool b) {
