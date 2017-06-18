@@ -160,6 +160,20 @@ class SparseSetT {
   // and at the beginning and end of all public non-const member functions.
   void DebugCheckInvariants() const;
 
+  static bool ShouldInitializeMemory() {
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+    return true;
+#else
+    return false;
+#endif
+#elif defined(RE2_ON_VALGRIND)
+    return true;
+#else
+    return false;
+#endif
+  }
+
   int size_ = 0;
   int max_size_ = 0;
   std::unique_ptr<int[]> sparse_to_dense_;
@@ -183,14 +197,12 @@ void SparseSetT<Value>::resize(int max_size) {
 
     dense_.resize(max_size);
 
-#if defined(__has_feature)
-#if __has_feature(memory_sanitizer)
-    for (int i = max_size_; i < max_size; i++) {
-      sparse_to_dense_[i] = 0xababababU;
-      dense_[i] = 0xababababU;
+    if (ShouldInitializeMemory()) {
+      for (int i = max_size_; i < max_size; i++) {
+        sparse_to_dense_[i] = 0xababababU;
+        dense_[i] = 0xababababU;
+      }
     }
-#endif
-#endif
   }
   max_size_ = max_size;
   if (size_ > max_size_)
@@ -226,14 +238,12 @@ template<typename Value> SparseSetT<Value>::SparseSetT(int max_size) {
   dense_.resize(max_size);
   size_ = 0;
 
-#if defined(__has_feature)
-#if __has_feature(memory_sanitizer)
-  for (int i = 0; i < max_size; i++) {
-    sparse_to_dense_[i] = 0xababababU;
-    dense_[i] = 0xababababU;
+  if (ShouldInitializeMemory()) {
+    for (int i = 0; i < max_size; i++) {
+      sparse_to_dense_[i] = 0xababababU;
+      dense_[i] = 0xababababU;
+    }
   }
-#endif
-#endif
 
   DebugCheckInvariants();
 }
