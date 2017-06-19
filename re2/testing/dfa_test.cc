@@ -28,7 +28,7 @@ namespace re2 {
 
 // Helper function: builds entire DFA for prog.
 static void DoBuild(Prog* prog) {
-  CHECK(prog->BuildEntireDFA(Prog::kFirstMatch));
+  CHECK(prog->BuildEntireDFA(Prog::kFirstMatch, NULL));
 }
 
 TEST(Multithreaded, BuildEntireDFA) {
@@ -63,7 +63,7 @@ TEST(Multithreaded, BuildEntireDFA) {
       threads[j].join();
 
     // One more compile, to make sure everything is okay.
-    prog->BuildEntireDFA(Prog::kFirstMatch);
+    prog->BuildEntireDFA(Prog::kFirstMatch, NULL);
     delete prog;
   }
 
@@ -88,8 +88,8 @@ TEST(SingleThreaded, BuildEntireDFA) {
       CHECK(prog);
       //progusage = m.HeapGrowth();
       //dfamem = prog->dfa_mem();
-      prog->BuildEntireDFA(Prog::kFirstMatch);
-      prog->BuildEntireDFA(Prog::kLongestMatch);
+      prog->BuildEntireDFA(Prog::kFirstMatch, NULL);
+      prog->BuildEntireDFA(Prog::kLongestMatch, NULL);
       usage = m.HeapGrowth();
       delete prog;
     }
@@ -279,8 +279,8 @@ TEST(Multithreaded, SearchDFA) {
 }
 
 struct ReverseTest {
-  const char *regexp;
-  const char *text;
+  const char* regexp;
+  const char* text;
   bool match;
 };
 
@@ -299,13 +299,63 @@ TEST(DFA, ReverseMatch) {
     const ReverseTest& t = reverse_tests[i];
     Regexp* re = Regexp::Parse(t.regexp, Regexp::LikePerl, NULL);
     CHECK(re);
-    Prog *prog = re->CompileToReverseProg(0);
+    Prog* prog = re->CompileToReverseProg(0);
     CHECK(prog);
     bool failed = false;
     bool matched = prog->SearchDFA(t.text, StringPiece(), Prog::kUnanchored,
                                    Prog::kFirstMatch, NULL, &failed, NULL);
     if (matched != t.match) {
       LOG(ERROR) << t.regexp << " on " << t.text << ": want " << t.match;
+      nfail++;
+    }
+    delete prog;
+    re->Decref();
+  }
+  EXPECT_EQ(nfail, 0);
+}
+
+struct CallbackTest {
+  const char* regexp;
+  const char* dump;
+};
+
+// Test that DFA::BuildAllStates() builds the expected DFA states
+// and issues the expected callbacks.
+CallbackTest callback_tests[] = {
+  { "\\Aa\\z", "[-1,1,-1] [-1,-1,2] [[-1,-1,-1]]" },
+  { "\\Aab\\z", "[-1,1,-1,-1] [-1,-1,2,-1] [-1,-1,-1,3] [[-1,-1,-1,-1]]" },
+  { "\\Aa*b\\z", "[-1,0,1,-1] [-1,-1,-1,2] [[-1,-1,-1,-1]]" },
+  { "\\Aa+b\\z", "[-1,1,-1,-1] [-1,1,2,-1] [-1,-1,-1,3] [[-1,-1,-1,-1]]" },
+  { "\\Aa?b\\z", "[-1,1,2,-1] [-1,-1,2,-1] [-1,-1,-1,3] [[-1,-1,-1,-1]]" },
+  { "\\Aa\\C*\\z", "[-1,1,-1] [1,1,2] [[-1,-1,-1]]" },
+  { "\\Aa\\C*", "[-1,1,-1] [2,2,3] [[2,2,2]] [[-1,-1,-1]]" },
+  { "a\\C*", "[0,1,-1] [2,2,3] [[2,2,2]] [[-1,-1,-1]]" },
+  { "\\C*", "[1,2] [[1,1]] [[-1,-1]]" },
+  { "a", "[0,1,-1] [2,2,2] [[-1,-1,-1]]"} ,
+};
+
+TEST(DFA, Callback) {
+  int nfail = 0;
+  for (int i = 0; i < arraysize(callback_tests); i++) {
+    const CallbackTest& t = callback_tests[i];
+    Regexp* re = Regexp::Parse(t.regexp, Regexp::LikePerl, NULL);
+    CHECK(re);
+    Prog* prog = re->CompileToProg(0);
+    CHECK(prog);
+    string dump;
+    prog->BuildEntireDFA(Prog::kLongestMatch, [&](const int* next, bool match) {
+      CHECK(next != NULL);
+      if (!dump.empty())
+        StringAppendF(&dump, " ");
+      StringAppendF(&dump, match ? "[[" : "[");
+      for (int b = 0; b < prog->bytemap_range() + 1; b++)
+        StringAppendF(&dump, "%d,", next[b]);
+      dump.pop_back();
+      StringAppendF(&dump, match ? "]]" : "]");
+    });
+    if (dump != t.dump) {
+      LOG(ERROR) << t.regexp << " bytemap:\n" << prog->DumpByteMap();
+      LOG(ERROR) << t.regexp << " dump:\ngot " << dump << "\nwant " << t.dump;
       nfail++;
     }
     delete prog;
