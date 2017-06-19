@@ -27,6 +27,7 @@
 #include <string.h>
 #include <algorithm>
 #include <atomic>
+#include <deque>
 #include <map>
 #include <mutex>
 #include <new>
@@ -1896,24 +1897,36 @@ int DFA::BuildAllStates() {
     return 0;
 
   // Add start state to work queue.
-  StateSet queued;
-  std::vector<State*> q;
-  queued.insert(params.start);
+  StateSet seen;
+  std::deque<State*> q;
+  seen.insert(params.start);
   q.push_back(params.start);
 
+  // Compute the input bytes needed to cover all of the next pointers.
+  int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
+  std::vector<int> input(nnext);
+  for (int c = 0; c < 256; c++) {
+    int b = prog_->bytemap()[c];
+    while (c < 256-1 && prog_->bytemap()[c+1] == b)
+      c++;
+    input[b] = c;
+  }
+  input[prog_->bytemap_range()] = 257;
+
   // Flood to expand every state.
-  for (size_t i = 0; i < q.size(); i++) {
-    State* s = q[i];
-    for (int c = 0; c < 257; c++) {
+  while (!q.empty()) {
+    State* s = q.front();
+    q.pop_front();
+    for (int c : input) {
       State* ns = RunStateOnByteUnlocked(s, c);
-      if (ns > SpecialStateMax && queued.find(ns) == queued.end()) {
-        queued.insert(ns);
+      if (ns > SpecialStateMax && seen.find(ns) == seen.end()) {
+        seen.insert(ns);
         q.push_back(ns);
       }
     }
   }
 
-  return static_cast<int>(q.size());
+  return static_cast<int>(seen.size());
 }
 
 // Build out all states in DFA for kind.  Returns number of states.
