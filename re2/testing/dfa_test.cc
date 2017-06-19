@@ -28,7 +28,7 @@ namespace re2 {
 
 // Helper function: builds entire DFA for prog.
 static void DoBuild(Prog* prog) {
-  CHECK(prog->BuildEntireDFA(Prog::kFirstMatch, NULL));
+  CHECK(prog->BuildEntireDFA(Prog::kFirstMatch, nullptr));
 }
 
 TEST(Multithreaded, BuildEntireDFA) {
@@ -63,7 +63,7 @@ TEST(Multithreaded, BuildEntireDFA) {
       threads[j].join();
 
     // One more compile, to make sure everything is okay.
-    prog->BuildEntireDFA(Prog::kFirstMatch, NULL);
+    prog->BuildEntireDFA(Prog::kFirstMatch, nullptr);
     delete prog;
   }
 
@@ -88,8 +88,8 @@ TEST(SingleThreaded, BuildEntireDFA) {
       CHECK(prog);
       //progusage = m.HeapGrowth();
       //dfamem = prog->dfa_mem();
-      prog->BuildEntireDFA(Prog::kFirstMatch, NULL);
-      prog->BuildEntireDFA(Prog::kLongestMatch, NULL);
+      prog->BuildEntireDFA(Prog::kFirstMatch, nullptr);
+      prog->BuildEntireDFA(Prog::kLongestMatch, nullptr);
       usage = m.HeapGrowth();
       delete prog;
     }
