@@ -32,6 +32,7 @@
 #include <mutex>
 #include <new>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -97,9 +98,11 @@ class DFA {
               bool anchored, bool want_earliest_match, bool run_forward,
               bool* failed, const char** ep, std::vector<int>* matches);
 
-  // Builds out all states for the entire DFA.  FOR TESTING ONLY
-  // Returns number of states.
-  int BuildAllStates();
+  // Builds out all states for the entire DFA.
+  // If cb is not empty, it receives one callback per state built.
+  // Returns the number of states built.
+  // FOR TESTING OR EXPERIMENTAL PURPOSES ONLY.
+  int BuildAllStates(Prog::DFAStateCallback cb);
 
   // Computes min and max for matching strings.  Won't return strings
   // bigger than maxlen.
@@ -1884,7 +1887,7 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
 }
 
 // Build out all states in DFA.  Returns number of states.
-int DFA::BuildAllStates() {
+int DFA::BuildAllStates(Prog::DFAStateCallback cb) {
   if (!ok())
     return 0;
 
@@ -1893,13 +1896,17 @@ int DFA::BuildAllStates() {
   RWLocker l(&cache_mutex_);
   SearchParams params(StringPiece(), StringPiece(), &l);
   params.anchored = false;
-  if (!AnalyzeSearch(&params) || params.start <= SpecialStateMax)
+  if (!AnalyzeSearch(&params) ||
+      params.start == NULL ||
+      params.start == DeadState)
     return 0;
 
   // Add start state to work queue.
-  StateSet seen;
+  // Note that any State* that we handle here must point into the cache,
+  // so we can simply depend on pointer-as-a-number hashing and equality.
+  std::unordered_map<State*, int> m;
   std::deque<State*> q;
-  seen.insert(params.start);
+  m.emplace(params.start, static_cast<int>(m.size()));
   q.push_back(params.start);
 
   // Compute the input bytes needed to cover all of the next pointers.
@@ -1911,28 +1918,45 @@ int DFA::BuildAllStates() {
       c++;
     input[b] = c;
   }
-  input[prog_->bytemap_range()] = 257;
+  input[prog_->bytemap_range()] = kByteEndText;
+
+  // Scratch space for the output.
+  std::vector<int> output(nnext);
 
   // Flood to expand every state.
+  bool oom = false;
   while (!q.empty()) {
     State* s = q.front();
     q.pop_front();
     for (int c : input) {
       State* ns = RunStateOnByteUnlocked(s, c);
-      if (ns > SpecialStateMax && seen.find(ns) == seen.end()) {
-        seen.insert(ns);
+      if (ns == NULL) {
+        oom = true;
+        break;
+      }
+      if (ns == DeadState) {
+        output[ByteMap(c)] = -1;
+        continue;
+      }
+      if (m.find(ns) == m.end()) {
+        m.emplace(ns, static_cast<int>(m.size()));
         q.push_back(ns);
       }
+      output[ByteMap(c)] = m[ns];
     }
+    if (cb)
+      cb(oom ? NULL : output.data(),
+         s == FullMatchState || s->IsMatch());
+    if (oom)
+      break;
   }
 
-  return static_cast<int>(seen.size());
+  return static_cast<int>(m.size());
 }
 
 // Build out all states in DFA for kind.  Returns number of states.
-int Prog::BuildEntireDFA(MatchKind kind) {
-  //LOG(ERROR) << "BuildEntireDFA is only for testing.";
-  return GetDFA(kind)->BuildAllStates();
+int Prog::BuildEntireDFA(MatchKind kind, DFAStateCallback cb) {
+  return GetDFA(kind)->BuildAllStates(std::move(cb));
 }
 
 void Prog::TEST_dfa_should_bail_when_slow(bool b) {
