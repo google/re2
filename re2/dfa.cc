@@ -102,7 +102,7 @@ class DFA {
   // If cb is not empty, it receives one callback per state built.
   // Returns the number of states built.
   // FOR TESTING OR EXPERIMENTAL PURPOSES ONLY.
-  int BuildAllStates(Prog::DFAStateCallback cb);
+  int BuildAllStates(const Prog::DFAStateCallback& cb);
 
   // Computes min and max for matching strings.  Won't return strings
   // bigger than maxlen.
@@ -1887,7 +1887,7 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
 }
 
 // Build out all states in DFA.  Returns number of states.
-int DFA::BuildAllStates(Prog::DFAStateCallback cb) {
+int DFA::BuildAllStates(const Prog::DFAStateCallback& cb) {
   if (!ok())
     return 0;
 
@@ -1956,7 +1956,7 @@ int DFA::BuildAllStates(Prog::DFAStateCallback cb) {
 
 // Build out all states in DFA for kind.  Returns number of states.
 int Prog::BuildEntireDFA(MatchKind kind, DFAStateCallback cb) {
-  return GetDFA(kind)->BuildAllStates(std::move(cb));
+  return GetDFA(kind)->BuildAllStates(cb);
 }
 
 void Prog::TEST_dfa_should_bail_when_slow(bool b) {

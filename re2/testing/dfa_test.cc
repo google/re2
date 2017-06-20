@@ -320,7 +320,21 @@ struct CallbackTest {
 };
 
 // Test that DFA::BuildAllStates() builds the expected DFA states
-// and issues the expected callbacks.
+// and issues the expected callbacks. These test cases reflect the
+// very compact encoding of the callbacks, but that also makes them
+// very difficult to understand, so let's work through "\\Aa\\z".
+// There are three slots per DFA state because the bytemap has two
+// equivalence classes and there is a third slot for kByteEndText:
+//   0: all bytes that are not 'a'
+//   1: the byte 'a'
+//   2: kByteEndText
+// -1 means that there is no transition from that DFA state to any
+// other DFA state for that slot. The valid transitions are thus:
+//   state 0 --slot 1--> state 1
+//   state 1 --slot 2--> state 2
+// The double brackets indicate that state 2 is a matching state.
+// Putting it together, this means that the DFA must consume the
+// byte 'a' and then hit end of text. Q.E.D.
 CallbackTest callback_tests[] = {
   { "\\Aa\\z", "[-1,1,-1] [-1,-1,2] [[-1,-1,-1]]" },
   { "\\Aab\\z", "[-1,1,-1,-1] [-1,-1,2,-1] [-1,-1,-1,3] [[-1,-1,-1,-1]]" },
