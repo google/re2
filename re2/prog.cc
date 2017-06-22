@@ -540,7 +540,7 @@ void Prog::ComputeByteMap() {
 // dominator of the instructions reachable from some "successor root" (i.e. it
 // has an unreachable predecessor) and is considered a "dominator root". Since
 // only Alt instructions can be "dominator roots" (other instructions would be
-// "leaves"), only Alt instructions require their predecessors to be computed.
+// "leaves"), only Alt instructions are required to be marked as predecessors.
 //
 // Dividing the Prog into "trees" comprises two passes: marking the "successor
 // roots" and the predecessors; and marking the "dominator roots". Sorting the
