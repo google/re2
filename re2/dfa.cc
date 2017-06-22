@@ -1955,7 +1955,7 @@ int DFA::BuildAllStates(const Prog::DFAStateCallback& cb) {
 }
 
 // Build out all states in DFA for kind.  Returns number of states.
-int Prog::BuildEntireDFA(MatchKind kind, DFAStateCallback cb) {
+int Prog::BuildEntireDFA(MatchKind kind, const DFAStateCallback& cb) {
   return GetDFA(kind)->BuildAllStates(cb);
 }
 

@@ -272,7 +272,7 @@ class Prog {
   // If cb is not empty, it receives one callback per state built.
   // Returns the number of states built.
   // FOR TESTING OR EXPERIMENTAL PURPOSES ONLY.
-  int BuildEntireDFA(MatchKind kind, DFAStateCallback cb);
+  int BuildEntireDFA(MatchKind kind, const DFAStateCallback& cb);
 
   // Controls whether the DFA should bail out early if the NFA would be faster.
   // FOR TESTING ONLY.
