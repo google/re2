@@ -638,8 +638,8 @@ bool PCRE::DoMatchImpl(const StringPiece& text,
 
     // Avoid invoking undefined behavior when text.data() happens
     // to be null and start happens to be -1, the latter being the
-    // case for for an unmatched subexpression. Even if text.data()
-    // is not null, pointing one byte before was a longstanding bug.
+    // case for an unmatched subexpression. Even if text.data() is
+    // not null, pointing one byte before was a longstanding bug.
     const char* addr = NULL;
     if (start != -1) {
       addr = text.data() + start;
