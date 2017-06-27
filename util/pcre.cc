@@ -635,7 +635,17 @@ bool PCRE::DoMatchImpl(const StringPiece& text,
   for (int i = 0; i < n; i++) {
     const int start = vec[2*(i+1)];
     const int limit = vec[2*(i+1)+1];
-    if (!args[i]->Parse(text.data() + start, limit-start)) {
+
+    // Avoid invoking undefined behavior when text.data() happens
+    // to be null and start happens to be -1, the latter being the
+    // case for for an unmatched subexpression. Even if text.data()
+    // is not null, pointing one byte before was a longstanding bug.
+    const char* addr = NULL;
+    if (start != -1) {
+      addr = text.data() + start;
+    }
+
+    if (!args[i]->Parse(addr, limit-start)) {
       // TODO: Should we indicate what the error was?
       return false;
     }
