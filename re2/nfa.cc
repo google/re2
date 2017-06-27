@@ -382,12 +382,12 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
         break;
 
       case kInstMatch: {
-        // Avoid invoking undefined behavior (awkwardly...)
-        // when p happens to be null.
-        const char* pminus1 = reinterpret_cast<const char*>(
-            reinterpret_cast<intptr_t>(p) - 1);
+        // Avoid invoking undefined behavior when p happens
+        // to be null - and p-1 would be meaningless anyway.
+        if (p == NULL)
+          break;
 
-        if (endmatch_ && pminus1 != etext_)
+        if (endmatch_ && p-1 != etext_)
           break;
 
         if (longest_) {
@@ -395,16 +395,16 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, int flag, const char* p) {
           // it is either farther to the left or at the same
           // point but longer than an existing match.
           if (!matched_ || t->capture[0] < match_[0] ||
-              (t->capture[0] == match_[0] && pminus1 > match_[1])) {
+              (t->capture[0] == match_[0] && p-1 > match_[1])) {
             CopyCapture(match_, t->capture);
-            match_[1] = pminus1;
+            match_[1] = p-1;
             matched_ = true;
           }
         } else {
           // Leftmost-biased mode: this match is by definition
           // better than what we've already found (see next line).
           CopyCapture(match_, t->capture);
-          match_[1] = pminus1;
+          match_[1] = p-1;
           matched_ = true;
 
           // Cut off the threads that can only find matches
