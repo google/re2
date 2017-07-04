@@ -58,7 +58,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-3.5
+            - llvm-toolchain-precise-3.5
           packages:
             - clang-3.5
       env:
@@ -68,7 +68,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-3.6
+            - llvm-toolchain-precise-3.6
           packages:
             - clang-3.6
       env:
@@ -78,7 +78,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-3.7
+            - llvm-toolchain-precise-3.7
           packages:
             - clang-3.7
       env:
@@ -88,7 +88,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-3.8
+            - llvm-toolchain-precise-3.8
           packages:
             - clang-3.8
       env:
@@ -97,7 +97,8 @@ matrix:
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-3.9
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.9
           packages:
             - clang-3.9
       env:
