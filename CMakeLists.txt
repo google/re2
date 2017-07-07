@@ -29,6 +29,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # CMake defaults to /W3, but some users like /W4 (or /Wall) and /WX,
   # so we disable various warnings that aren't particularly helpful.
   add_compile_options(/wd4100 /wd4201 /wd4456 /wd4457 /wd4702 /wd4815)
+elseif(CYGWIN OR MINGW)
+  # See https://stackoverflow.com/questions/38139631 for details.
+  add_compile_options(-std=gnu++11)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   add_compile_options(-std=c++11)
 endif()
