@@ -1224,9 +1224,8 @@ bool Regexp::ParseState::MaybeConcatString(int r, ParseFlags flags) {
 
 // Lexing routines.
 
-// Parses a decimal integer, storing it in *n.
+// Parses a decimal integer, storing it in *np.
 // Sets *s to span the remainder of the string.
-// Sets *out_re to the regexp for the class.
 static bool ParseInteger(StringPiece* s, int* np) {
   if (s->size() == 0 || !isdigit((*s)[0] & 0xFF))
     return false;
