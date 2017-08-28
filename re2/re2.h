@@ -523,8 +523,8 @@ class RE2 {
   // Returns true on success.  This method can fail because of a malformed
   // rewrite string.  CheckRewriteString guarantees that the rewrite will
   // be sucessful.
-  bool Rewrite(string *out,
-               const StringPiece &rewrite,
+  bool Rewrite(string* out,
+               const StringPiece& rewrite,
                const StringPiece* vec,
                int veclen) const;
 

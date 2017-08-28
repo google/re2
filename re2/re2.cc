@@ -345,25 +345,6 @@ bool RE2::FindAndConsumeN(StringPiece* input, const RE2& re,
   }
 }
 
-// Returns the maximum submatch needed for the rewrite to be done by Replace().
-// E.g. if rewrite == "foo \\2,\\1", returns 2.
-int RE2::MaxSubmatch(const StringPiece& rewrite) {
-  int max = 0;
-  for (const char *s = rewrite.data(), *end = s + rewrite.size();
-       s < end; s++) {
-    if (*s == '\\') {
-      s++;
-      int c = (s < end) ? *s : -1;
-      if (isdigit(c)) {
-        int n = (c - '0');
-        if (n > max)
-          max = n;
-      }
-    }
-  }
-  return max;
-}
-
 bool RE2::Replace(string *str,
                  const RE2& re,
                  const StringPiece& rewrite) {
@@ -858,41 +839,6 @@ bool RE2::DoMatch(const StringPiece& text,
   return true;
 }
 
-// Append the "rewrite" string, with backslash subsitutions from "vec",
-// to string "out".
-bool RE2::Rewrite(string *out, const StringPiece &rewrite,
-                 const StringPiece *vec, int veclen) const {
-  for (const char *s = rewrite.data(), *end = s + rewrite.size();
-       s < end; s++) {
-    if (*s != '\\') {
-      out->push_back(*s);
-      continue;
-    }
-    s++;
-    int c = (s < end) ? *s : -1;
-    if (isdigit(c)) {
-      int n = (c - '0');
-      if (n >= veclen) {
-        if (options_.log_errors()) {
-          LOG(ERROR) << "requested group " << n
-                     << " in regexp " << rewrite.data();
-        }
-        return false;
-      }
-      StringPiece snip = vec[n];
-      if (snip.size() > 0)
-        out->append(snip.data(), snip.size());
-    } else if (c == '\\') {
-      out->push_back('\\');
-    } else {
-      if (options_.log_errors())
-        LOG(ERROR) << "invalid rewrite pattern: " << rewrite.data();
-      return false;
-    }
-  }
-  return true;
-}
-
 // Checks that the rewrite string is well-formed with respect to this
 // regular expression.
 bool RE2::CheckRewriteString(const StringPiece& rewrite, string* error) const {
@@ -927,6 +873,60 @@ bool RE2::CheckRewriteString(const StringPiece& rewrite, string* error) const {
                   "but the regexp only has %d parenthesized subexpressions.",
                   max_token, NumberOfCapturingGroups());
     return false;
+  }
+  return true;
+}
+
+// Returns the maximum submatch needed for the rewrite to be done by Replace().
+// E.g. if rewrite == "foo \\2,\\1", returns 2.
+int RE2::MaxSubmatch(const StringPiece& rewrite) {
+  int max = 0;
+  for (const char *s = rewrite.data(), *end = s + rewrite.size();
+       s < end; s++) {
+    if (*s == '\\') {
+      s++;
+      int c = (s < end) ? *s : -1;
+      if (isdigit(c)) {
+        int n = (c - '0');
+        if (n > max)
+          max = n;
+      }
+    }
+  }
+  return max;
+}
+
+// Append the "rewrite" string, with backslash subsitutions from "vec",
+// to string "out".
+bool RE2::Rewrite(string* out, const StringPiece& rewrite,
+                  const StringPiece* vec, int veclen) const {
+  for (const char *s = rewrite.data(), *end = s + rewrite.size();
+       s < end; s++) {
+    if (*s != '\\') {
+      out->push_back(*s);
+      continue;
+    }
+    s++;
+    int c = (s < end) ? *s : -1;
+    if (isdigit(c)) {
+      int n = (c - '0');
+      if (n >= veclen) {
+        if (options_.log_errors()) {
+          LOG(ERROR) << "requested group " << n
+                     << " in regexp " << rewrite.data();
+        }
+        return false;
+      }
+      StringPiece snip = vec[n];
+      if (snip.size() > 0)
+        out->append(snip.data(), snip.size());
+    } else if (c == '\\') {
+      out->push_back('\\');
+    } else {
+      if (options_.log_errors())
+        LOG(ERROR) << "invalid rewrite pattern: " << rewrite.data();
+      return false;
+    }
   }
   return true;
 }
