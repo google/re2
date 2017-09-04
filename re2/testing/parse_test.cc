@@ -12,7 +12,10 @@
 
 namespace re2 {
 
-static const Regexp::ParseFlags TestZeroFlags = Regexp::ParseFlags(1<<30);
+// In the past, we used 1<<30 here and zeroed the bit later, but that
+// has undefined behaviour, so now we use an internal-only flag because
+// otherwise we would have to introduce a new flag value just for this.
+static const Regexp::ParseFlags TestZeroFlags = Regexp::WasDollar;
 
 struct Test {
   const char* regexp;
