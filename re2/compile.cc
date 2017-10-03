@@ -878,9 +878,11 @@ Frag Compiler::PostVisit(Regexp* re, Frag, Frag, Frag* child_frags,
 
     case kRegexpHaveMatch: {
       Frag f = Match(re->match_id());
-      // Remember unanchored match to end of string.
-      if (anchor_ != RE2::ANCHOR_BOTH)
-        f = Cat(DotStar(), Cat(EmptyWidth(kEmptyEndText), f));
+      if (anchor_ == RE2::ANCHOR_BOTH) {
+        // Append \z or else the subexpression will effectively be unanchored.
+        // Complemented by the UNANCHORED case in CompileSet().
+        f = Cat(EmptyWidth(kEmptyEndText), f);
+      }
       return f;
     }
 
@@ -1250,8 +1252,8 @@ Prog* Compiler::CompileSet(const RE2::Options& options, RE2::Anchor anchor,
     return NULL;
 
   if (anchor == RE2::UNANCHORED) {
-    // The trailing .* was added while handling kRegexpHaveMatch.
-    // We just have to add the leading one.
+    // Prepend .* or else the expression will effectively be anchored.
+    // Complemented by the ANCHOR_BOTH case in PostVisit().
     all = c.Cat(c.DotStar(), all);
   }
 
