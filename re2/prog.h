@@ -255,7 +255,7 @@ class Prog {
   // SearchDFA fills matches with the match IDs of the final matching state.
   bool SearchDFA(const StringPiece& text, const StringPiece& context,
                  Anchor anchor, MatchKind kind, StringPiece* match0,
-                 bool* failed, std::vector<int>* matches);
+                 bool* failed, SparseSet* matches);
 
   // The callback issued after building each DFA state with BuildEntireDFA().
   // If next is null, then the memory budget has been exhausted and building

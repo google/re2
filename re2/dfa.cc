@@ -96,7 +96,7 @@ class DFA {
   //   memory), it sets *failed and returns false.
   bool Search(const StringPiece& text, const StringPiece& context,
               bool anchored, bool want_earliest_match, bool run_forward,
-              bool* failed, const char** ep, std::vector<int>* matches);
+              bool* failed, const char** ep, SparseSet* matches);
 
   // Builds out all states for the entire DFA.
   // If cb is not empty, it receives one callback per state built.
@@ -272,7 +272,7 @@ class DFA {
     RWLocker *cache_lock;
     bool failed;     // "out" parameter: whether search gave up
     const char* ep;  // "out" parameter: end pointer for match
-    std::vector<int>* matches;
+    SparseSet* matches;
 
    private:
     SearchParams(const SearchParams&) = delete;
@@ -1501,13 +1501,11 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     if (ExtraDebug)
       fprintf(stderr, "match @etx! [%s]\n", DumpState(s).c_str());
     if (params->matches && kind_ == Prog::kManyMatch) {
-      std::vector<int>* v = params->matches;
-      v->clear();
       for (int i = 0; i < s->ninst_; i++) {
         Prog::Inst* ip = prog_->inst(s->inst_[i]);
         for (;;) {
           if (ip->opcode() == kInstMatch)
-            v->push_back(ip->match_id());
+            params->matches->insert(ip->match_id());
           if (ip->last())
             break;
           ip++;
@@ -1742,7 +1740,7 @@ bool DFA::Search(const StringPiece& text,
                  bool run_forward,
                  bool* failed,
                  const char** epp,
-                 std::vector<int>* matches) {
+                 SparseSet* matches) {
   *epp = NULL;
   if (!ok()) {
     *failed = true;
@@ -1833,7 +1831,7 @@ void Prog::DeleteDFA(DFA* dfa) {
 //
 bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
                      Anchor anchor, MatchKind kind, StringPiece* match0,
-                     bool* failed, std::vector<int>* matches) {
+                     bool* failed, SparseSet* matches) {
   *failed = false;
 
   StringPiece context = const_context;

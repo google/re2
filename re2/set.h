@@ -50,6 +50,7 @@ class RE2::Set {
   std::vector<re2::Regexp*> re_;
   re2::Prog* prog_;
   bool compiled_;
+  int size_;
 
   Set(const Set&) = delete;
   Set& operator=(const Set&) = delete;

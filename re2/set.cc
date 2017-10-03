@@ -20,6 +20,7 @@ RE2::Set::Set(const RE2::Options& options, RE2::Anchor anchor) {
   anchor_ = anchor;
   prog_ = NULL;
   compiled_ = false;
+  size_ = 0;
 }
 
 RE2::Set::~Set() {
@@ -75,6 +76,7 @@ bool RE2::Set::Compile() {
     return false;
   }
   compiled_ = true;
+  size_ = static_cast<int>(re_.size());
 
   Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
     options_.ParseFlags());
@@ -102,8 +104,9 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
   if (v != NULL)
     v->clear();
   bool dfa_failed = false;
+  SparseSet matches(size_);
   bool ret = prog_->SearchDFA(text, text, Prog::kAnchored,
-                              Prog::kManyMatch, NULL, &dfa_failed, v);
+                              Prog::kManyMatch, NULL, &dfa_failed, &matches);
   if (dfa_failed) {
     if (options_.log_errors())
       LOG(ERROR) << "DFA out of memory: size " << prog_->size() << ", "
@@ -113,10 +116,12 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
   }
   if (ret == false)
     return false;
-  if (v != NULL && v->empty()) {
+  if (matches.empty()) {
     LOG(DFATAL) << "RE2::Set::Match: match but unknown regexp set";
     return false;
   }
+  if (v != NULL)
+    v->assign(matches.begin(), matches.end());
   return true;
 }
 
