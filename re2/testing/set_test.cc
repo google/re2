@@ -78,9 +78,36 @@ TEST(Set, UnanchoredDollar) {
   CHECK_EQ(s.Compile(), true);
 
   CHECK_EQ(s.Match("foo", NULL), true);
+  CHECK_EQ(s.Match("foobar", NULL), false);
 
   std::vector<int> v;
   CHECK_EQ(s.Match("foo", &v), true);
+  CHECK_EQ(v.size(), 1);
+  CHECK_EQ(v[0], 0);
+
+  CHECK_EQ(s.Match("foobar", &v), false);
+  CHECK_EQ(v.size(), 0);
+}
+
+TEST(Set, UnanchoredWordBoundary) {
+  RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
+
+  CHECK_EQ(s.Add("foo\\b", NULL), 0);
+  CHECK_EQ(s.Compile(), true);
+
+  CHECK_EQ(s.Match("foo", NULL), true);
+  CHECK_EQ(s.Match("foobar", NULL), false);
+  CHECK_EQ(s.Match("foo bar", NULL), true);
+
+  std::vector<int> v;
+  CHECK_EQ(s.Match("foo", &v), true);
+  CHECK_EQ(v.size(), 1);
+  CHECK_EQ(v[0], 0);
+
+  CHECK_EQ(s.Match("foobar", &v), false);
+  CHECK_EQ(v.size(), 0);
+
+  CHECK_EQ(s.Match("foo bar", &v), true);
   CHECK_EQ(v.size(), 1);
   CHECK_EQ(v[0], 0);
 }
