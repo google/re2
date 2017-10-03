@@ -207,7 +207,7 @@ class DFA {
 
   // Looks up and returns the State corresponding to a Workq.
   // L >= mutex_
-  State* WorkqToCachedState(Workq* q, uint32_t flag);
+  State* WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag);
 
   // Looks up and returns a State matching the inst, ninst, and flag.
   // L >= mutex_
@@ -376,6 +376,10 @@ static inline const uint8_t* BytePtr(const void* v) {
 // in the work queue when in leftmost-longest matching mode.
 #define Mark (-1)
 
+// Separates the match IDs from the instructions in inst_.
+// Used only for "many match" DFA states.
+#define MatchSep (-2)
+
 // Internally, the DFA uses a sparse array of
 // program instruction pointers as a work queue.
 // In leftmost longest mode, marks separate sections
@@ -535,6 +539,9 @@ string DFA::DumpState(State* state) {
     if (state->inst_[i] == Mark) {
       StringAppendF(&s, "|");
       sep = "";
+    } else if (state->inst_[i] == MatchSep) {
+      StringAppendF(&s, "||");
+      sep = "";
     } else {
       StringAppendF(&s, "%s%d", sep, state->inst_[i]);
       sep = ",";
@@ -602,7 +609,9 @@ string DFA::DumpState(State* state) {
 // Looks in the State cache for a State matching q, flag.
 // If one is found, returns it.  If one is not found, allocates one,
 // inserts it in the cache, and returns it.
-DFA::State* DFA::WorkqToCachedState(Workq* q, uint32_t flag) {
+// If mq is not null, MatchSep and the match IDs in mq will be appended
+// to the State.
+DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
   //mutex_.AssertHeld();
 
   // Construct array of instruction ids for the new state.
@@ -709,6 +718,17 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, uint32_t flag) {
     }
   }
 
+  // Append MatchSep and the match IDs in mq if necessary.
+  if (mq != NULL) {
+    inst[n++] = MatchSep;
+    for (Workq::iterator i = mq->begin(); i != mq->end(); ++i) {
+      int id = *i;
+      Prog::Inst* ip = prog_->inst(id);
+      if (ip->opcode() == kInstMatch)
+        inst[n++] = ip->match_id();
+    }
+  }
+
   // Save the needed empty-width flags in the top bits for use later.
   flag |= needflags << kFlagNeedShift;
 
@@ -788,11 +808,15 @@ void DFA::ClearCache() {
 void DFA::StateToWorkq(State* s, Workq* q) {
   q->clear();
   for (int i = 0; i < s->ninst_; i++) {
-    if (s->inst_[i] == Mark)
+    if (s->inst_[i] == Mark) {
       q->mark();
-    else
+    } else if (s->inst_[i] == MatchSep) {
+      // Nothing after this is an instruction!
+      break;
+    } else {
       // Explore from the head of the list.
       AddToQueue(q, s->inst_[i], s->flag_ & kFlagEmptyMask);
+    }
   }
 }
 
@@ -943,7 +967,8 @@ void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
         break;
 
       case kInstMatch:
-        if (prog_->anchor_end() && c != kByteEndText)
+        if (prog_->anchor_end() && c != kByteEndText &&
+            kind_ != Prog::kManyMatch)
           break;
         *ismatch = true;
         if (kind_ == Prog::kFirstMatch) {
@@ -1039,19 +1064,8 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   }
   bool ismatch = false;
   RunWorkqOnByte(q0_, q1_, c, afterflag, &ismatch);
-
-  // Most of the time, we build the state from the output of
-  // RunWorkqOnByte, so swap q0_ and q1_ here.  However, so that
-  // RE2::Set can tell exactly which match instructions
-  // contributed to the match, don't swap if c is kByteEndText.
-  // The resulting state wouldn't be correct for further processing
-  // of the string, but we're at the end of the text so that's okay.
-  // Leaving q0_ alone preseves the match instructions that led to
-  // the current setting of ismatch.
-  if (c != kByteEndText || kind_ != Prog::kManyMatch) {
-    using std::swap;
-    swap(q0_, q1_);
-  }
+  using std::swap;
+  swap(q0_, q1_);
 
   // Save afterflag along with ismatch and isword in new state.
   uint32_t flag = afterflag;
@@ -1060,7 +1074,10 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
   if (isword)
     flag |= kFlagLastWord;
 
-  ns = WorkqToCachedState(q0_, flag);
+  if (ismatch && kind_ == Prog::kManyMatch)
+    ns = WorkqToCachedState(q0_, q1_, flag);
+  else
+    ns = WorkqToCachedState(q0_, NULL, flag);
 
   // Flush ns before linking to it.
   // Write barrier before updating state->next_ so that the
@@ -1324,6 +1341,14 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     lastmatch = p;
     if (ExtraDebug)
       fprintf(stderr, "match @stx! [%s]\n", DumpState(s).c_str());
+    if (params->matches && kind_ == Prog::kManyMatch) {
+      for (int i = s->ninst_ - 1; i >= 0; i--) {
+        int id = s->inst_[i];
+        if (id == MatchSep)
+          break;
+        params->matches->insert(id);
+      }
+    }
     if (want_earliest_match) {
       params->ep = reinterpret_cast<const char*>(lastmatch);
       return true;
@@ -1441,6 +1466,14 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       if (ExtraDebug)
         fprintf(stderr, "match @%td! [%s]\n",
                 lastmatch - bp, DumpState(s).c_str());
+      if (params->matches && kind_ == Prog::kManyMatch) {
+        for (int i = s->ninst_ - 1; i >= 0; i--) {
+          int id = s->inst_[i];
+          if (id == MatchSep)
+            break;
+          params->matches->insert(id);
+        }
+      }
       if (want_earliest_match) {
         params->ep = reinterpret_cast<const char*>(lastmatch);
         return true;
@@ -1501,15 +1534,11 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     if (ExtraDebug)
       fprintf(stderr, "match @etx! [%s]\n", DumpState(s).c_str());
     if (params->matches && kind_ == Prog::kManyMatch) {
-      for (int i = 0; i < s->ninst_; i++) {
-        Prog::Inst* ip = prog_->inst(s->inst_[i]);
-        for (;;) {
-          if (ip->opcode() == kInstMatch)
-            params->matches->insert(ip->match_id());
-          if (ip->last())
-            break;
-          ip++;
-        }
+      for (int i = s->ninst_ - 1; i >= 0; i--) {
+        int id = s->inst_[i];
+        if (id == MatchSep)
+          break;
+        params->matches->insert(id);
       }
     }
   }
@@ -1689,7 +1718,7 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
   AddToQueue(q0_,
              params->anchored ? prog_->start() : prog_->start_unanchored(),
              flags);
-  info->start = WorkqToCachedState(q0_, flags);
+  info->start = WorkqToCachedState(q0_, NULL, flags);
   if (info->start == NULL)
     return false;
 
@@ -1878,7 +1907,8 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
     return false;
   if (!matched)
     return false;
-  if (endmatch && ep != (reversed_ ? text.begin() : text.end()))
+  if (endmatch && ep != (reversed_ ? text.begin() : text.end()) &&
+      kind != kManyMatch)
     return false;
 
   // If caller cares, record the boundary of the match.
