@@ -53,7 +53,6 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
-#include <vector>
 
 namespace re2 {
 
@@ -64,8 +63,8 @@ class SparseSetT {
   explicit SparseSetT(int max_size);
   ~SparseSetT();
 
-  typedef typename std::vector<int>::iterator iterator;
-  typedef typename std::vector<int>::const_iterator const_iterator;
+  typedef int* iterator;
+  typedef const int* const_iterator;
 
   // Return the number of entries in the set.
   int size() const {
@@ -79,17 +78,17 @@ class SparseSetT {
 
   // Iterate over the set.
   iterator begin() {
-    return dense_.begin();
+    return dense_.get();
   }
   iterator end() {
-    return dense_.begin() + size_;
+    return dense_.get() + size_;
   }
 
   const_iterator begin() const {
-    return dense_.begin();
+    return dense_.get();
   }
   const_iterator end() const {
-    return dense_.begin() + size_;
+    return dense_.get() + size_;
   }
 
   // Change the maximum size of the set.
@@ -146,7 +145,7 @@ class SparseSetT {
         create_index(i);
     }
     DebugCheckInvariants();
-    return dense_.begin() + sparse_to_dense_[i];
+    return dense_.get() + sparse_to_dense_[i];
   }
 
   // Add the index i to the set.
@@ -177,7 +176,7 @@ class SparseSetT {
   int size_ = 0;
   int max_size_ = 0;
   std::unique_ptr<int[]> sparse_to_dense_;
-  std::vector<int> dense_;
+  std::unique_ptr<int[]> dense_;
 };
 
 template<typename Value>
@@ -195,7 +194,11 @@ void SparseSetT<Value>::resize(int max_size) {
     }
     sparse_to_dense_ = std::move(a);
 
-    dense_.resize(max_size);
+    std::unique_ptr<int[]> b(new int[max_size]);
+    if (dense_) {
+      std::copy_n(dense_.get(), max_size_, b.get());
+    }
+    dense_ = std::move(b);
 
     if (ShouldInitializeMemory()) {
       for (int i = max_size_; i < max_size; i++) {
@@ -234,8 +237,8 @@ void SparseSetT<Value>::create_index(int i) {
 
 template<typename Value> SparseSetT<Value>::SparseSetT(int max_size) {
   max_size_ = max_size;
-  sparse_to_dense_ = std::unique_ptr<int[]>(new int[max_size]);
-  dense_.resize(max_size);
+  sparse_to_dense_.reset(new int[max_size]);
+  dense_.reset(new int[max_size]);
   size_ = 0;
 
   if (ShouldInitializeMemory()) {
