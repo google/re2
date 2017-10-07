@@ -1341,7 +1341,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     lastmatch = p;
     if (ExtraDebug)
       fprintf(stderr, "match @stx! [%s]\n", DumpState(s).c_str());
-    if (params->matches && kind_ == Prog::kManyMatch) {
+    if (params->matches != NULL && kind_ == Prog::kManyMatch) {
       for (int i = s->ninst_ - 1; i >= 0; i--) {
         int id = s->inst_[i];
         if (id == MatchSep)
@@ -1466,7 +1466,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       if (ExtraDebug)
         fprintf(stderr, "match @%td! [%s]\n",
                 lastmatch - bp, DumpState(s).c_str());
-      if (params->matches && kind_ == Prog::kManyMatch) {
+      if (params->matches != NULL && kind_ == Prog::kManyMatch) {
         for (int i = s->ninst_ - 1; i >= 0; i--) {
           int id = s->inst_[i];
           if (id == MatchSep)
@@ -1533,7 +1533,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     lastmatch = p;
     if (ExtraDebug)
       fprintf(stderr, "match @etx! [%s]\n", DumpState(s).c_str());
-    if (params->matches && kind_ == Prog::kManyMatch) {
+    if (params->matches != NULL && kind_ == Prog::kManyMatch) {
       for (int i = s->ninst_ - 1; i >= 0; i--) {
         int id = s->inst_[i];
         if (id == MatchSep)
@@ -1883,6 +1883,8 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   bool anchored = anchor == kAnchored || anchor_start() || kind == kFullMatch;
   bool endmatch = false;
   if (kind == kManyMatch) {
+    // In theory, this could be if matches != NULL && kind == kManyMatch,
+    // but the Prog has been marked as anchored, which we cannot alter.
     endmatch = true;
   } else if (kind == kFullMatch || anchor_end()) {
     endmatch = true;
@@ -1891,17 +1893,17 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
 
   // If the caller doesn't care where the match is (just whether one exists),
   // then we can stop at the very first match we find, the so-called
-  // "shortest match".
-  bool want_shortest_match = false;
+  // "earliest match".
+  bool want_earliest_match = false;
   if (match0 == NULL && !endmatch) {
-    want_shortest_match = true;
+    want_earliest_match = true;
     kind = kLongestMatch;
   }
 
   DFA* dfa = GetDFA(kind);
   const char* ep;
   bool matched = dfa->Search(text, context, anchored,
-                             want_shortest_match, !reversed_,
+                             want_earliest_match, !reversed_,
                              failed, &ep, matches);
   if (*failed)
     return false;

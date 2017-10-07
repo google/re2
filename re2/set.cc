@@ -5,6 +5,7 @@
 #include "re2/set.h"
 
 #include <stddef.h>
+#include <memory>
 
 #include "util/util.h"
 #include "util/logging.h"
@@ -101,12 +102,14 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
     LOG(DFATAL) << "RE2::Set::Match without Compile";
     return false;
   }
-  if (v != NULL)
-    v->clear();
   bool dfa_failed = false;
-  SparseSet matches(size_);
-  bool ret = prog_->SearchDFA(text, text, Prog::kAnchored,
-                              Prog::kManyMatch, NULL, &dfa_failed, &matches);
+  std::unique_ptr<SparseSet> matches;
+  if (v != NULL) {
+    matches.reset(new SparseSet(size_));
+    v->clear();
+  }
+  bool ret = prog_->SearchDFA(text, text, Prog::kAnchored, Prog::kManyMatch,
+                              NULL, &dfa_failed, matches.get());
   if (dfa_failed) {
     if (options_.log_errors())
       LOG(ERROR) << "DFA out of memory: size " << prog_->size() << ", "
@@ -116,12 +119,13 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
   }
   if (ret == false)
     return false;
-  if (matches.empty()) {
-    LOG(DFATAL) << "RE2::Set::Match: match but unknown regexp set";
-    return false;
+  if (v != NULL) {
+    if (matches->empty()) {
+      LOG(DFATAL) << "RE2::Set::Match: match but unknown regexp set";
+      return false;
+    }
+    v->assign(matches->begin(), matches->end());
   }
-  if (v != NULL)
-    v->assign(matches.begin(), matches.end());
   return true;
 }
 
