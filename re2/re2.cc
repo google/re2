@@ -500,14 +500,13 @@ bool RE2::PossibleMatchRange(string* min, string* max, int maxlen) const {
     n = maxlen;
 
   // Determine initial min max from prefix_ literal.
-  string pmin, pmax;
-  pmin = prefix_.substr(0, n);
-  pmax = prefix_.substr(0, n);
+  *min = prefix_.substr(0, n);
+  *max = prefix_.substr(0, n);
   if (prefix_foldcase_) {
-    // prefix is ASCII lowercase; change pmin to uppercase.
+    // prefix is ASCII lowercase; change *min to uppercase.
     for (int i = 0; i < n; i++) {
-      if ('a' <= pmin[i] && pmin[i] <= 'z')
-        pmin[i] += 'A' - 'a';
+      char& c = (*min)[i];
+      if ('a' <= c && c <= 'z') c += 'A' - 'a';
     }
   }
 
@@ -515,13 +514,13 @@ bool RE2::PossibleMatchRange(string* min, string* max, int maxlen) const {
   string dmin, dmax;
   maxlen -= n;
   if (maxlen > 0 && prog_->PossibleMatchRange(&dmin, &dmax, maxlen)) {
-    pmin += dmin;
-    pmax += dmax;
-  } else if (!pmax.empty()) {
+    min->append(dmin);
+    max->append(dmax);
+  } else if (!max->empty()) {
     // prog_->PossibleMatchRange has failed us,
     // but we still have useful information from prefix_.
-    // Round up pmax to allow any possible suffix.
-    pmax = PrefixSuccessor(pmax);
+    // Round up *max to allow any possible suffix.
+    *max = PrefixSuccessor(*max);
   } else {
     // Nothing useful.
     *min = "";
@@ -529,8 +528,6 @@ bool RE2::PossibleMatchRange(string* min, string* max, int maxlen) const {
     return false;
   }
 
-  *min = pmin;
-  *max = pmax;
   return true;
 }
 
