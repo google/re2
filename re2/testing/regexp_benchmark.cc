@@ -1544,4 +1544,34 @@ BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedPCRE, 8, 2<<20);
 #endif
 BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedRE2,  8, 2<<20);
 
+void PossibleMatchRangeCommon(int iter, const char* regexp) {
+  StopBenchmarkTiming();
+  RE2 re(regexp);
+  StartBenchmarkTiming();
+  string min;
+  string max;
+  const int kMaxLen = 16;
+  for (int i = 0; i < iter; i++) {
+    CHECK(re.PossibleMatchRange(&min, &max, kMaxLen));
+  }
+}
+
+void PossibleMatchRange_Trivial(int i) {
+  PossibleMatchRangeCommon(i, ".*");
+}
+void PossibleMatchRange_Complex(int i) {
+  PossibleMatchRangeCommon(i, "^abc[def]?[gh]{1,2}.*");
+}
+void PossibleMatchRange_Prefix(int i) {
+  PossibleMatchRangeCommon(i, "^some_random_prefix.*");
+}
+void PossibleMatchRange_NoProg(int i) {
+  PossibleMatchRangeCommon(i, "^some_random_string$");
+}
+
+BENCHMARK(PossibleMatchRange_Trivial);
+BENCHMARK(PossibleMatchRange_Complex);
+BENCHMARK(PossibleMatchRange_Prefix);
+BENCHMARK(PossibleMatchRange_NoProg);
+
 }  // namespace re2
