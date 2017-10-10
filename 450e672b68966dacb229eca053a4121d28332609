@@ -22,6 +22,30 @@
       "revId": "450e672b68966dacb229eca053a4121d28332609",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec135b06_9c0a5673",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 12251
+      },
+      "writtenOn": "2017-10-10T13:35:01Z",
+      "side": 0,
+      "message": "It\u0027t slightly less efficient (I guess we\u0027re also paying for the string creation/destruction):\n\nPossibleMatchRange_Prefix          74.5           74.4      8821184  \nPossibleMatchRange_NoProg          72.0           71.9      9335709",
+      "parentUuid": "c433f584_caf6d271",
+      "range": {
+        "startLine": 532,
+        "startChar": 0,
+        "endLine": 533,
+        "endChar": 14
+      },
+      "revId": "450e672b68966dacb229eca053a4121d28332609",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
