@@ -75,28 +75,20 @@ string CEscape(const StringPiece& src) {
   return s;
 }
 
-string PrefixSuccessor(const StringPiece& prefix) {
+void PrefixSuccessorInPlace(string* prefix) {
   // We can increment the last character in the string and be done
   // unless that character is 255, in which case we have to erase the
   // last character and increment the previous character, unless that
   // is 255, etc. If the string is empty or consists entirely of
   // 255's, we just return the empty string.
-  bool done = false;
-  string limit(prefix.data(), prefix.size());
-  int index = static_cast<int>(limit.size()) - 1;
-  while (!done && index >= 0) {
-    if ((limit[index]&255) == 255) {
-      limit.erase(index);
-      index--;
+  while (!prefix->empty()) {
+    char& c = prefix->back();
+    if (c == '\xff') {  // char literal avoids signed/unsigned.
+      prefix->pop_back();
     } else {
-      limit[index]++;
-      done = true;
+      ++c;
+      break;
     }
-  }
-  if (!done) {
-    return "";
-  } else {
-    return limit;
   }
 }
 
