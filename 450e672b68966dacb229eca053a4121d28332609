@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c433f584_caf6d271",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2017-10-10T13:15:50Z",
+      "side": 0,
+      "message": "It is not really a problem in this case, but I generally prefer to avoid writing to the output variable(s) until we are logically committed. (I happened to find a partial output situation earlier today...)\n\nWhat if you just do this:\n\n  using std::swap;\n  swap(pmin, *min);\n  swap(pmax, *max);\n\nand keep everything else the same? :)",
+      "range": {
+        "startLine": 532,
+        "startChar": 0,
+        "endLine": 533,
+        "endChar": 14
+      },
+      "revId": "450e672b68966dacb229eca053a4121d28332609",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    }
+  ]
+}
