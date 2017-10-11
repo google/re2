@@ -94,7 +94,7 @@ cc_library(
     deps = [":testing"],
 )
 
-load("re2_test.bzl", "re2_test")
+load(":re2_test.bzl", "re2_test")
 
 re2_test(
     "charclass_test",
