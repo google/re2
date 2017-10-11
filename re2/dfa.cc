@@ -1882,9 +1882,7 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   bool anchored = anchor == kAnchored || anchor_start() || kind == kFullMatch;
   bool endmatch = false;
   if (kind == kManyMatch) {
-    // In theory, this could be if matches != NULL && kind == kManyMatch,
-    // but the Prog has been marked as anchored, which we cannot alter.
-    endmatch = true;
+    // This is split out in order to avoid clobbering kind.
   } else if (kind == kFullMatch || anchor_end()) {
     endmatch = true;
     kind = kLongestMatch;
@@ -1894,7 +1892,12 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   // then we can stop at the very first match we find, the so-called
   // "earliest match".
   bool want_earliest_match = false;
-  if (match0 == NULL && !endmatch) {
+  if (kind == kManyMatch) {
+    // This is split out in order to avoid clobbering kind.
+    if (matches == NULL) {
+      want_earliest_match = true;
+    }
+  } else if (match0 == NULL && !endmatch) {
     want_earliest_match = true;
     kind = kLongestMatch;
   }
@@ -1908,8 +1911,7 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
     return false;
   if (!matched)
     return false;
-  if (endmatch && ep != (reversed_ ? text.begin() : text.end()) &&
-      kind != kManyMatch)
+  if (endmatch && ep != (reversed_ ? text.begin() : text.end()))
     return false;
 
   // If caller cares, record the boundary of the match.
