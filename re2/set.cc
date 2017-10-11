@@ -18,6 +18,7 @@ namespace re2 {
 
 RE2::Set::Set(const RE2::Options& options, RE2::Anchor anchor) {
   options_.Copy(options);
+  options_.set_never_capture(true);  // might unblock some optimisations
   anchor_ = anchor;
   prog_ = NULL;
   compiled_ = false;
@@ -38,7 +39,6 @@ int RE2::Set::Add(const StringPiece& pattern, string* error) {
 
   Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
     options_.ParseFlags());
-
   RegexpStatus status;
   re2::Regexp* re = Regexp::Parse(pattern, pf, &status);
   if (re == NULL) {
