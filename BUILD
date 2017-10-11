@@ -94,35 +94,77 @@ cc_library(
     deps = [":testing"],
 )
 
-load("re2_test", "re2_test")
+load("re2_test.bzl", "re2_test")
 
-re2_test("charclass_test")
+re2_test(
+    "charclass_test",
+    size = "small",
+)
 
-re2_test("compile_test")
+re2_test(
+    "compile_test",
+    size = "small",
+)
 
-re2_test("filtered_re2_test")
+re2_test(
+    "filtered_re2_test",
+    size = "small",
+)
 
-re2_test("mimics_pcre_test")
+re2_test(
+    "mimics_pcre_test",
+    size = "small",
+)
 
-re2_test("parse_test")
+re2_test(
+    "parse_test",
+    size = "small",
+)
 
-re2_test("possible_match_test")
+re2_test(
+    "possible_match_test",
+    size = "small",
+)
 
-re2_test("re2_arg_test")
+re2_test(
+    "re2_arg_test",
+    size = "small",
+)
 
-re2_test("re2_test")
+re2_test(
+    "re2_test",
+    size = "small",
+)
 
-re2_test("regexp_test")
+re2_test(
+    "regexp_test",
+    size = "small",
+)
 
-re2_test("required_prefix_test")
+re2_test(
+    "required_prefix_test",
+    size = "small",
+)
 
-re2_test("search_test")
+re2_test(
+    "search_test",
+    size = "small",
+)
 
-re2_test("set_test")
+re2_test(
+    "set_test",
+    size = "small",
+)
 
-re2_test("simplify_test")
+re2_test(
+    "simplify_test",
+    size = "small",
+)
 
-re2_test("string_generator_test")
+re2_test(
+    "string_generator_test",
+    size = "small",
+)
 
 re2_test(
     "dfa_test",
