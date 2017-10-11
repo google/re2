@@ -336,9 +336,8 @@ class Prog {
   void Fanout(SparseArray<int>* fanout);
 
   // Compiles a collection of regexps to Prog.  Each regexp will have
-  // its own Match instruction recording the index in the vector.
-  static Prog* CompileSet(const RE2::Options& options, RE2::Anchor anchor,
-                          Regexp* re);
+  // its own Match instruction recording the index in the output vector.
+  static Prog* CompileSet(Regexp* re, RE2::Anchor anchor, int64_t max_mem);
 
   // Flattens the Prog from "tree" form to "list" form. This is an in-place
   // operation in the sense that the old instructions are lost.
