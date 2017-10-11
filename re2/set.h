@@ -6,6 +6,7 @@
 #define RE2_SET_H_
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "re2/re2.h"
@@ -45,9 +46,11 @@ class RE2::Set {
   bool Match(const StringPiece& text, std::vector<int>* v) const;
 
  private:
+  typedef std::pair<string, re2::Regexp*> Elem;
+
   RE2::Options options_;
   RE2::Anchor anchor_;
-  std::vector<re2::Regexp*> re_;
+  std::vector<Elem> elem_;
   re2::Prog* prog_;
   bool compiled_;
   int size_;

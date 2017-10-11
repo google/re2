@@ -5,6 +5,7 @@
 #include "re2/set.h"
 
 #include <stddef.h>
+#include <algorithm>
 #include <memory>
 
 #include "util/util.h"
@@ -26,8 +27,8 @@ RE2::Set::Set(const RE2::Options& options, RE2::Anchor anchor) {
 }
 
 RE2::Set::~Set() {
-  for (size_t i = 0; i < re_.size(); i++)
-    re_[i]->Decref();
+  for (size_t i = 0; i < elem_.size(); i++)
+    elem_[i].second->Decref();
   delete prog_;
 }
 
@@ -50,7 +51,7 @@ int RE2::Set::Add(const StringPiece& pattern, string* error) {
   }
 
   // Concatenate with match index and push on vector.
-  int n = static_cast<int>(re_.size());
+  int n = static_cast<int>(elem_.size());
   re2::Regexp* m = re2::Regexp::HaveMatch(n, pf);
   if (re->op() == kRegexpConcat) {
     int nsub = re->nsub();
@@ -67,7 +68,7 @@ int RE2::Set::Add(const StringPiece& pattern, string* error) {
     sub[1] = m;
     re = re2::Regexp::Concat(sub, 2, pf);
   }
-  re_.push_back(re);
+  elem_.emplace_back(pattern.ToString(), re);
   return n;
 }
 
@@ -77,13 +78,26 @@ bool RE2::Set::Compile() {
     return false;
   }
   compiled_ = true;
-  size_ = static_cast<int>(re_.size());
+  size_ = static_cast<int>(elem_.size());
+
+  // Sort the elements by their patterns. This is "good enough" because
+  // we are only hoping to improve the factoring of common prefixes and
+  // that can be achieved without chasing pointers around Regexp graphs
+  // right now. (The factoring logic will do exactly that soon enough.)
+  std::sort(elem_.begin(), elem_.end(),
+            [](const Elem& a, const Elem& b) -> bool {
+              return a.first < b.first;
+            });
+
+  re2::Regexp** sub = new re2::Regexp*[size_];
+  for (size_t i = 0; i < elem_.size(); i++)
+    sub[i] = elem_[i].second;
+  elem_.clear();
 
   Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
     options_.ParseFlags());
-  re2::Regexp* re = re2::Regexp::Alternate(const_cast<re2::Regexp**>(re_.data()),
-                                           static_cast<int>(re_.size()), pf);
-  re_.clear();
+  re2::Regexp* re = re2::Regexp::Alternate(sub, size_, pf);
+  delete[] sub;
 
   prog_ = Prog::CompileSet(re, anchor_, options_.max_mem());
   re->Decref();
