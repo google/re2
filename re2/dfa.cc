@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <atomic>
 #include <deque>
-#include <map>
 #include <mutex>
 #include <new>
 #include <string>
@@ -2022,7 +2021,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
   // Also note that previously_visited_states[UnseenStatePtr] will, in the STL
   // tradition, implicitly insert a '0' value at first use. We take advantage
   // of that property below.
-  std::map<State*, int> previously_visited_states;
+  std::unordered_map<State*, int> previously_visited_states;
 
   // Pick out start state for anchored search at beginning of text.
   RWLocker l(&cache_mutex_);
