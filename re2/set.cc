@@ -32,7 +32,7 @@ RE2::Set::~Set() {
 
 int RE2::Set::Add(const StringPiece& pattern, string* error) {
   if (compiled_) {
-    LOG(DFATAL) << "RE2::Set::Add after Compile";
+    LOG(DFATAL) << "RE2::Set::Add() called after compiling";
     return -1;
   }
 
@@ -73,7 +73,7 @@ int RE2::Set::Add(const StringPiece& pattern, string* error) {
 
 bool RE2::Set::Compile() {
   if (compiled_) {
-    LOG(DFATAL) << "RE2::Set::Compile multiple times";
+    LOG(DFATAL) << "RE2::Set::Compile() called more than once";
     return false;
   }
   compiled_ = true;
@@ -84,22 +84,15 @@ bool RE2::Set::Compile() {
   re2::Regexp* re = re2::Regexp::Alternate(const_cast<re2::Regexp**>(re_.data()),
                                            static_cast<int>(re_.size()), pf);
   re_.clear();
-  re2::Regexp* sre = re->Simplify();
-  re->Decref();
-  re = sre;
-  if (re == NULL) {
-    if (options_.log_errors())
-      LOG(ERROR) << "Error simplifying during Compile.";
-    return false;
-  }
 
-  prog_ = Prog::CompileSet(options_, anchor_, re);
+  prog_ = Prog::CompileSet(re, anchor_, options_.max_mem());
+  re->Decref();
   return prog_ != NULL;
 }
 
 bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
   if (!compiled_) {
-    LOG(DFATAL) << "RE2::Set::Match without Compile";
+    LOG(DFATAL) << "RE2::Set::Match() called before compiling";
     return false;
   }
   bool dfa_failed = false;
@@ -121,7 +114,7 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
     return false;
   if (v != NULL) {
     if (matches->empty()) {
-      LOG(DFATAL) << "RE2::Set::Match: match but unknown regexp set";
+      LOG(DFATAL) << "RE2::Set::Match() matched, but matches unknown";
       return false;
     }
     v->assign(matches->begin(), matches->end());
