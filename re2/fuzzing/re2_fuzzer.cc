@@ -72,6 +72,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
   RE2::Options options;
   options.set_log_errors(false);
+  options.set_max_mem(64 << 20);
   options.set_encoding(hash & 1 ? RE2::Options::EncodingLatin1
                                 : RE2::Options::EncodingUTF8);
   options.set_posix_syntax(hash & 2);
