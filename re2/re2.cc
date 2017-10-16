@@ -521,7 +521,7 @@ bool RE2::PossibleMatchRange(string* min, string* max, int maxlen) const {
     // prog_->PossibleMatchRange has failed us,
     // but we still have useful information from prefix_.
     // Round up *max to allow any possible suffix.
-    PrefixSuccessorInPlace(max);
+    PrefixSuccessor(max);
   } else {
     // Nothing useful.
     *min = "";

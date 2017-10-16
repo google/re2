@@ -13,7 +13,7 @@
 namespace re2 {
 
 string CEscape(const StringPiece& src);
-void PrefixSuccessorInPlace(string* prefix);
+void PrefixSuccessor(string* prefix);
 string StringPrintf(const char* format, ...);
 void SStringPrintf(string* dst, const char* format, ...);
 void StringAppendF(string* dst, const char* format, ...);
