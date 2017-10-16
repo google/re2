@@ -2128,7 +2128,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
   }
 
   // Stopped while still adding to *max - round aaaaaaaaaa... to aaaa...b
-  PrefixSuccessorInPlace(max);
+  PrefixSuccessor(max);
 
   // If there are no bytes left, we have no way to say "there is no maximum
   // string".  We could make the interface more complicated and be able to

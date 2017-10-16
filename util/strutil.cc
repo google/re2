@@ -75,7 +75,7 @@ string CEscape(const StringPiece& src) {
   return s;
 }
 
-void PrefixSuccessorInPlace(string* prefix) {
+void PrefixSuccessor(string* prefix) {
   // We can increment the last character in the string and be done
   // unless that character is 255, in which case we have to erase the
   // last character and increment the previous character, unless that
