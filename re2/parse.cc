@@ -42,9 +42,9 @@
 
 namespace re2 {
 
-// Reduce the maximum repeat count to its square root (roughly) when fuzzing.
+// Reduce the maximum repeat count by an order of magnitude when fuzzing.
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-static const int kMaxRepeat = 32;
+static const int kMaxRepeat = 100;
 #else
 static const int kMaxRepeat = 1000;
 #endif
