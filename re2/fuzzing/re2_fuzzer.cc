@@ -59,6 +59,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   if (size == 0 || size > 1024)
     return 0;
 
+  // Crudely limit the use of \p and \P.
+  int backslash_p = 0;
+  for (size_t i = 0; i < size; i++) {
+    if (data[i] == '\\' && i+1 < size && (data[i+1] == 'p' || data[i+1] == 'P'))
+      backslash_p++;
+  }
+  if (backslash_p > 10)
+    return 0;
+
   // The one-at-a-time hash by Bob Jenkins.
   uint32_t hash = 0;
   for (size_t i = 0; i < size; i++) {
