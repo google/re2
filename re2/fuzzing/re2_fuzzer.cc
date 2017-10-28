@@ -60,6 +60,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     return 0;
 
   // Crudely limit the use of \p and \P.
+  // Otherwise, we will waste time on inputs that have long runs of Unicode
+  // character classes. The fuzzer has shown itself to be easily capable of
+  // generating such patterns that fall within the other limits, but result
+  // in timeouts nonetheless. The marginal cost is high - even more so when
+  // counted repetition is involved - whereas the marginal benefit is zero.
   int backslash_p = 0;
   for (size_t i = 0; i < size; i++) {
     if (data[i] == '\\' && i+1 < size && (data[i+1] == 'p' || data[i+1] == 'P'))
