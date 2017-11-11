@@ -15,6 +15,7 @@
 
 #include "util/util.h"
 #include "util/logging.h"
+#include "util/strutil.h"
 #include "re2/prefilter.h"
 #include "re2/re2.h"
 
@@ -113,14 +114,14 @@ Prefilter* PrefilterTree::CanonicalNode(Prefilter* node) {
 
 string PrefilterTree::NodeString(Prefilter* node) const {
   // Adding the operation disambiguates AND/OR/atom nodes.
-  string s = std::to_string(node->op()) + ":";
+  string s = StringPrintf("%d", node->op()) + ":";
   if (node->op() == Prefilter::ATOM) {
     s += node->atom();
   } else {
     for (size_t i = 0; i < node->subs()->size(); i++) {
       if (i > 0)
         s += ',';
-      s += std::to_string((*node->subs())[i]->unique_id());
+      s += StringPrintf("%d", (*node->subs())[i]->unique_id());
     }
   }
   return s;
@@ -389,7 +390,7 @@ string PrefilterTree::DebugNodeString(Prefilter* node) const {
     for (size_t i = 0; i < node->subs()->size(); i++) {
       if (i > 0)
         node_string += ',';
-      node_string += std::to_string((*node->subs())[i]->unique_id());
+      node_string += StringPrintf("%d", (*node->subs())[i]->unique_id());
       node_string += ":";
       node_string += DebugNodeString((*node->subs())[i]);
     }
