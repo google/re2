@@ -26,12 +26,12 @@
 
 namespace re2 {
 
-typedef SparseArray<int> IntMap;
-typedef std::map<int, int> StdIntMap;
-typedef std::map<string, Prefilter*> NodeMap;
-
 class PrefilterTree {
  public:
+  typedef SparseArray<int> IntMap;
+  typedef std::map<int, int> StdIntMap;
+  typedef std::map<string, Prefilter*> NodeMap;
+
   PrefilterTree();
   explicit PrefilterTree(int min_atom_len);
   ~PrefilterTree();
