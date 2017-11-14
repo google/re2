@@ -55,36 +55,34 @@
 
 // IMPLEMENTATION
 //
-// SparseArray uses a vector dense_ and an array sparse_to_dense_, both of
-// size max_size_. At any point, the number of elements in the sparse array is
-// size_.
+// SparseArray is an array dense_ and an array sparse_, both of size max_size_.
+// At any point, the number of elements in the sparse array is size_.
 //
-// The vector dense_ contains the size_ elements in the sparse array (with
+// The array dense_ contains the size_ elements in the sparse array (with
 // their indices),
 // in the order that the elements were first inserted.  This array is dense:
 // the size_ pairs are dense_[0] through dense_[size_-1].
 //
-// The array sparse_to_dense_ maps from indices in [0,m) to indices in
-// [0,size_).
-// For indices present in the array, dense_[sparse_to_dense_[i]].index_ == i.
-// For indices not present in the array, sparse_to_dense_ can contain
-// any value at all, perhaps outside the range [0, size_) but perhaps not.
+// The array sparse_ maps from indices in [0,m) to indices in [0,size_).
+// For indices present in the array, dense_[sparse_[i]].index_ == i.
+// For indices not present in the array, sparse_ can contain any value at all,
+// perhaps outside the range [0, size_) but perhaps not.
 //
-// The lax requirement on sparse_to_dense_ values makes clearing
-// the array very easy: set size_ to 0.  Lookups are slightly more
-// complicated.  An index i has a value in the array if and only if:
-//   sparse_to_dense_[i] is in [0, size_) AND
-//   dense_[sparse_to_dense_[i]].index_ == i.
+// The lax requirement on sparse_ values makes clearing the array very easy:
+// set size_ to 0.  Lookups are slightly more complicated.
+// An index i has a value in the array if and only if:
+//   sparse_[i] is in [0, size_) AND
+//   dense_[sparse_[i]].index_ == i.
 // If both these properties hold, only then it is safe to refer to
-//   dense_[sparse_to_dense_[i]].value_
+//   dense_[sparse_[i]].value_
 // as the value associated with index i.
 //
-// To insert a new entry, set sparse_to_dense_[i] to size_,
+// To insert a new entry, set sparse_[i] to size_,
 // initialize dense_[size_], and then increment size_.
 //
 // Deletion of specific values from the array is implemented by
 // swapping dense_[size_-1] and the dense_ being deleted and then
-// updating the appropriate sparse_to_dense_ entries.
+// updating the appropriate sparse_ entries.
 //
 // To make the sparse array as efficient as possible for non-primitive types,
 // elements may or may not be destroyed when they are deleted from the sparse
@@ -94,9 +92,17 @@
 //
 // A moved-from SparseArray will be empty.
 
+// Doing this simplifies the logic below.
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
+#if __has_feature(memory_sanitizer)
+#include <sanitizer/msan_interface.h>
+#endif
 #include <algorithm>
 #include <memory>
 #include <type_traits>
@@ -200,13 +206,13 @@ class SparseArray {
 
   iterator find(int i) {
     if (has_index(i))
-      return dense_.get() + sparse_to_dense_[i];
+      return dense_.get() + sparse_[i];
     return end();
   }
 
   const_iterator find(int i) const {
     if (has_index(i))
-      return dense_.get() + sparse_to_dense_[i];
+      return dense_.get() + sparse_[i];
     return end();
   }
 
@@ -263,7 +269,7 @@ class SparseArray {
     DebugCheckInvariants();
     std::pair<iterator, bool> p;
     if (has_index(v.index_)) {
-      p = {dense_.get() + sparse_to_dense_[v.index_], false};
+      p = {dense_.get() + sparse_[v.index_], false};
     } else {
       p = {set_new(std::forward<U>(v).index_, std::forward<U>(v).second), true};
     }
@@ -295,9 +301,9 @@ class SparseArray {
   iterator SetExistingInternal(int i, U&& v) {  // NOLINT
     DebugCheckInvariants();
     assert(has_index(i));
-    dense_[sparse_to_dense_[i]].value() = std::forward<U>(v);
+    dense_[sparse_[i]].value() = std::forward<U>(v);
     DebugCheckInvariants();
-    return dense_.get() + sparse_to_dense_[i];
+    return dense_.get() + sparse_[i];
   }
 
   // Add the index i to the array.
@@ -312,23 +318,20 @@ class SparseArray {
   // and at the beginning and end of all public non-const member functions.
   void DebugCheckInvariants() const;
 
-  static bool ShouldInitializeMemory() {
-#if defined(__has_feature)
+  // Initializes memory for elements [min, max).
+  static void MaybeInitializeMemory(int min, int max) {
 #if __has_feature(memory_sanitizer)
-    return true;
-#else
-    return false;
-#endif
+    __msan_unpoison(sparse_.get() + min, (max - min) * sizeof sparse_[0]);
 #elif defined(RE2_ON_VALGRIND)
-    return true;
-#else
-    return false;
+    for (int i = min; i < max; i++) {
+      sparse_[i] = 0xababababU;
+    }
 #endif
   }
 
   int size_ = 0;
   int max_size_ = 0;
-  std::unique_ptr<int[]> sparse_to_dense_;
+  std::unique_ptr<int[]> sparse_;
   std::unique_ptr<IndexValue[]> dense_;
 };
 
@@ -339,9 +342,9 @@ template<typename Value>
 SparseArray<Value>::SparseArray(const SparseArray& src)
     : size_(src.size_),
       max_size_(src.max_size_),
-      sparse_to_dense_(new int[max_size_]),
+      sparse_(new int[max_size_]),
       dense_(new IndexValue[max_size_]) {
-  std::copy_n(src.sparse_to_dense_.get(), max_size_, sparse_to_dense_.get());
+  std::copy_n(src.sparse_.get(), max_size_, sparse_.get());
   std::copy_n(src.dense_.get(), max_size_, dense_.get());
 }
 
@@ -349,7 +352,7 @@ template<typename Value>
 SparseArray<Value>::SparseArray(SparseArray&& src) /*noexcept*/  // NOLINT
     : size_(src.size_),
       max_size_(src.max_size_),
-      sparse_to_dense_(std::move(src.sparse_to_dense_)),
+      sparse_(std::move(src.sparse_)),
       dense_(std::move(src.dense_)) {
   src.size_ = 0;
   src.max_size_ = 0;
@@ -360,8 +363,8 @@ SparseArray<Value>& SparseArray<Value>::operator=(const SparseArray& src) {
   size_ = src.size_;
   max_size_ = src.max_size_;
   std::unique_ptr<int[]> a(new int[max_size_]);
-  std::copy_n(src.sparse_to_dense_.get(), src.max_size_, a.get());
-  sparse_to_dense_ = std::move(a);
+  std::copy_n(src.sparse_.get(), src.max_size_, a.get());
+  sparse_ = std::move(a);
   std::unique_ptr<IndexValue[]> b(new IndexValue[max_size_]);
   std::copy_n(src.dense_.get(), src.max_size_, b.get());
   dense_ = std::move(b);
@@ -373,7 +376,7 @@ SparseArray<Value>& SparseArray<Value>::operator=(
     SparseArray&& src) /*noexcept*/ {  // NOLINT
   size_ = src.size_;
   max_size_ = src.max_size_;
-  sparse_to_dense_ = std::move(src.sparse_to_dense_);
+  sparse_ = std::move(src.sparse_);
   dense_ = std::move(src.dense_);
   // clear out the source
   src.size_ = 0;
@@ -425,10 +428,10 @@ void SparseArray<Value>::resize(int max_size) {
   DebugCheckInvariants();
   if (max_size > max_size_) {
     std::unique_ptr<int[]> a(new int[max_size]);
-    if (sparse_to_dense_) {
-      std::copy_n(sparse_to_dense_.get(), max_size_, a.get());
+    if (sparse_) {
+      std::copy_n(sparse_.get(), max_size_, a.get());
     }
-    sparse_to_dense_ = std::move(a);
+    sparse_ = std::move(a);
 
     std::unique_ptr<IndexValue[]> b(new IndexValue[max_size]);
     if (dense_) {
@@ -436,12 +439,7 @@ void SparseArray<Value>::resize(int max_size) {
     }
     dense_ = std::move(b);
 
-    if (ShouldInitializeMemory()) {
-      for (int i = max_size_; i < max_size; i++) {
-        sparse_to_dense_[i] = 0xababababU;
-        dense_[i].index_ = 0xababababU;
-      }
-    }
+    MaybeInitializeMemory(max_size_, max_size);
   }
   max_size_ = max_size;
   if (size_ > max_size_)
@@ -457,15 +455,15 @@ bool SparseArray<Value>::has_index(int i) const {
   if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
     return false;
   }
-  // Unsigned comparison avoids checking sparse_to_dense_[i] < 0.
-  return (uint32_t)sparse_to_dense_[i] < (uint32_t)size_ &&
-         dense_[sparse_to_dense_[i]].index_ == i;
+  // Unsigned comparison avoids checking sparse_[i] < 0.
+  return (uint32_t)sparse_[i] < (uint32_t)size_ &&
+         dense_[sparse_[i]].index_ == i;
 }
 
 template<typename Value>
 const Value& SparseArray<Value>::get_existing(int i) const {
   assert(has_index(i));
-  return dense_[sparse_to_dense_[i]].second;
+  return dense_[sparse_[i]].second;
 }
 
 template<typename Value>
@@ -480,10 +478,10 @@ template<typename Value>
 void SparseArray<Value>::erase_existing(int i) {
   DebugCheckInvariants();
   assert(has_index(i));
-  int di = sparse_to_dense_[i];
+  int di = sparse_[i];
   if (di < size_ - 1) {
     dense_[di] = std::move(dense_[size_ - 1]);
-    sparse_to_dense_[dense_[di].index_] = di;
+    sparse_[dense_[di].index_] = di;
   }
   size_--;
   DebugCheckInvariants();
@@ -493,24 +491,17 @@ template<typename Value>
 void SparseArray<Value>::create_index(int i) {
   assert(!has_index(i));
   assert(size_ < max_size_);
-  sparse_to_dense_[i] = size_;
+  sparse_[i] = size_;
   dense_[size_].index_ = i;
   size_++;
 }
 
 template<typename Value> SparseArray<Value>::SparseArray(int max_size) {
-  max_size_ = max_size;
-  sparse_to_dense_.reset(new int[max_size]);
+  sparse_.reset(new int[max_size]);
   dense_.reset(new IndexValue[max_size]);
   size_ = 0;
-
-  if (ShouldInitializeMemory()) {
-    for (int i = 0; i < max_size; i++) {
-      sparse_to_dense_[i] = 0xababababU;
-      dense_[i].index_ = 0xababababU;
-    }
-  }
-
+  MaybeInitializeMemory(size_, max_size);
+  max_size_ = max_size;
   DebugCheckInvariants();
 }
 
@@ -521,7 +512,7 @@ template<typename Value> SparseArray<Value>::~SparseArray() {
 template<typename Value> void SparseArray<Value>::DebugCheckInvariants() const {
   assert(0 <= size_);
   assert(size_ <= max_size_);
-  assert(size_ == 0 || sparse_to_dense_ != NULL);
+  assert(size_ == 0 || sparse_ != NULL);
 }
 
 // Comparison function for sorting.
