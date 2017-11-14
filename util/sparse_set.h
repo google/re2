@@ -168,7 +168,7 @@ class SparseSetT {
   void DebugCheckInvariants() const;
 
   // Initializes memory for elements [min, max).
-  static void MaybeInitializeMemory(int min, int max) {
+  void MaybeInitializeMemory(int min, int max) {
 #if __has_feature(memory_sanitizer)
     __msan_unpoison(sparse_.get() + min, (max - min) * sizeof sparse_[0]);
 #elif defined(RE2_ON_VALGRIND)
