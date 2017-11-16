@@ -28,10 +28,6 @@ namespace re2 {
 
 class PrefilterTree {
  public:
-  typedef SparseArray<int> IntMap;
-  typedef std::map<int, int> StdIntMap;
-  typedef std::map<string, Prefilter*> NodeMap;
-
   PrefilterTree();
   explicit PrefilterTree(int min_atom_len);
   ~PrefilterTree();
@@ -61,6 +57,10 @@ class PrefilterTree {
   // nodes of the prefilter of the regexp.
   void PrintPrefilter(int regexpid);
 
+ private:
+  typedef SparseArray<int> IntMap;
+  typedef std::map<int, int> StdIntMap;
+  typedef std::map<string, Prefilter*> NodeMap;
 
   // Each unique node has a corresponding Entry that helps in
   // passing the matching trigger information along the tree.
@@ -84,7 +84,6 @@ class PrefilterTree {
     std::vector<int> regexps;
   };
 
- private:
   // Returns true if the prefilter node should be kept.
   bool KeepNode(Prefilter* node) const;
 
