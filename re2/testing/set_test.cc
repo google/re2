@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 #include <stddef.h>
+#include <string>
 #include <vector>
 
 #include "util/test.h"
@@ -198,6 +199,20 @@ TEST(Set, Prefix) {
   CHECK_EQ(s.Match("/prefix/42", &v), true);
   CHECK_EQ(v.size(), 1);
   CHECK_EQ(v[0], 0);
+}
+
+TEST(Set, OutOfMemory) {
+  RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
+
+  string a(10000, 'a');
+  CHECK_EQ(s.Add(a, NULL), 0);
+  CHECK_EQ(s.Compile(), true);
+
+  std::vector<int> v;
+  RE2::Set::ErrorInfo ei;
+  CHECK_EQ(s.Match(a, &v, &ei), false);
+  CHECK_EQ(v.size(), 0);
+  CHECK_EQ(ei.kind, RE2::Set::kOutOfMemory);
 }
 
 }  // namespace re2

@@ -104,8 +104,15 @@ bool RE2::Set::Compile() {
 }
 
 bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
+  return Match(text, v, NULL);
+}
+
+bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v,
+                     ErrorInfo* error_info) const {
   if (!compiled_) {
     LOG(DFATAL) << "RE2::Set::Match() called before compiling";
+    if (error_info != NULL)
+      error_info->kind = kNotCompiled;
     return false;
   }
   bool dfa_failed = false;
@@ -121,17 +128,26 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
       LOG(ERROR) << "DFA out of memory: size " << prog_->size() << ", "
                  << "bytemap range " << prog_->bytemap_range() << ", "
                  << "list count " << prog_->list_count();
+    if (error_info != NULL)
+      error_info->kind = kOutOfMemory;
     return false;
   }
-  if (ret == false)
+  if (ret == false) {
+    if (error_info != NULL)
+      error_info->kind = kNoError;
     return false;
+  }
   if (v != NULL) {
     if (matches->empty()) {
-      LOG(DFATAL) << "RE2::Set::Match() matched, but matches unknown";
+      LOG(DFATAL) << "RE2::Set::Match() matched, but no matches returned?!";
+      if (error_info != NULL)
+        error_info->kind = kInconsistent;
       return false;
     }
     v->assign(matches->begin(), matches->end());
   }
+  if (error_info != NULL)
+    error_info->kind = kNoError;
   return true;
 }
 
