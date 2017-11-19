@@ -73,9 +73,9 @@ static void PrintResult(const RE2& re, const StringPiece& input, RE2::Anchor anc
 // Processes a single generated regexp.
 // Compiles it using Regexp interface and PCRE, and then
 // checks that NFA, DFA, and PCRE all return the same results.
-void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
+void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
   regexps_++;
-  string regexp = const_regexp;
+  std::string regexp = const_regexp;
   if (!topwrapper_.empty())
     regexp = StringPrintf(topwrapper_.c_str(), regexp.c_str());
 
@@ -142,12 +142,12 @@ void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
 
 // Runs an exhaustive test on the given parameters.
 void ExhaustiveTest(int maxatoms, int maxops,
-                    const std::vector<string>& alphabet,
-                    const std::vector<string>& ops,
+                    const std::vector<std::string>& alphabet,
+                    const std::vector<std::string>& ops,
                     int maxstrlen,
-                    const std::vector<string>& stralphabet,
-                    const string& wrapper,
-                    const string& topwrapper) {
+                    const std::vector<std::string>& stralphabet,
+                    const std::string& wrapper,
+                    const std::string& topwrapper) {
   if (RE2_DEBUG_MODE) {
     if (maxatoms > 1)
       maxatoms--;
@@ -169,9 +169,9 @@ void ExhaustiveTest(int maxatoms, int maxops,
 
 // Runs an exhaustive test using the given parameters and
 // the basic egrep operators.
-void EgrepTest(int maxatoms, int maxops, const string& alphabet,
-               int maxstrlen, const string& stralphabet,
-               const string& wrapper) {
+void EgrepTest(int maxatoms, int maxops, const std::string& alphabet,
+               int maxstrlen, const std::string& stralphabet,
+               const std::string& wrapper) {
   const char* tops[] = { "", "^(?:%s)", "(?:%s)$", "^(?:%s)$" };
 
   for (int i = 0; i < arraysize(tops); i++) {

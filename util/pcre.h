@@ -212,21 +212,21 @@ class PCRE {
   // pass in a string or a "const char*" wherever an "PCRE" is expected.
   PCRE(const char* pattern);
   PCRE(const char* pattern, Option option);
-  PCRE(const string& pattern);
-  PCRE(const string& pattern, Option option);
+  PCRE(const std::string& pattern);
+  PCRE(const std::string& pattern, Option option);
   PCRE(const char *pattern, const PCRE_Options& re_option);
-  PCRE(const string& pattern, const PCRE_Options& re_option);
+  PCRE(const std::string& pattern, const PCRE_Options& re_option);
 
   ~PCRE();
 
   // The string specification for this PCRE.  E.g.
   //   PCRE re("ab*c?d+");
   //   re.pattern();    // "ab*c?d+"
-  const string& pattern() const { return pattern_; }
+  const std::string& pattern() const { return pattern_; }
 
   // If PCRE could not be created properly, returns an error string.
   // Else returns the empty string.
-  const string& error() const { return *error_; }
+  const std::string& error() const { return *error_; }
 
   // Whether the PCRE has hit a match limit during execution.
   // Not thread safe.  Intended only for testing.
@@ -376,7 +376,7 @@ class PCRE {
   //
   // Returns true if the pattern matches and a replacement occurs,
   // false otherwise.
-  static bool Replace(string *str,
+  static bool Replace(std::string *str,
                       const PCRE& pattern,
                       const StringPiece& rewrite);
 
@@ -390,7 +390,7 @@ class PCRE {
   // will leave "s" containing "yada dada doo"
   //
   // Returns the number of replacements made.
-  static int GlobalReplace(string *str,
+  static int GlobalReplace(std::string *str,
                            const PCRE& pattern,
                            const StringPiece& rewrite);
 
@@ -403,7 +403,7 @@ class PCRE {
   static bool Extract(const StringPiece &text,
                       const PCRE& pattern,
                       const StringPiece &rewrite,
-                      string *out);
+                      std::string *out);
 
   // Check that the given @p rewrite string is suitable for use with
   // this PCRE.  It checks that:
@@ -418,7 +418,7 @@ class PCRE {
   // @param error An error message is recorded here, iff we return false.
   //              Otherwise, it is unchanged.
   // @return true, iff @p rewrite is suitable for use with the PCRE.
-  bool CheckRewriteString(const StringPiece& rewrite, string* error) const;
+  bool CheckRewriteString(const StringPiece& rewrite, std::string* error) const;
 
   // Returns a copy of 'unquoted' with all potentially meaningful
   // regexp characters backslash-escaped.  The returned string, used
@@ -427,7 +427,7 @@ class PCRE {
   //           1.5-2.0?
   //  becomes:
   //           1\.5\-2\.0\?
-  static string QuoteMeta(const StringPiece& unquoted);
+  static std::string QuoteMeta(const StringPiece& unquoted);
 
   /***** Generic matching interface (not so nice to use) *****/
 
@@ -473,7 +473,7 @@ class PCRE {
 
   // Append the "rewrite" string, with backslash subsitutions from "text"
   // and "vec", to string "out".
-  bool Rewrite(string *out,
+  bool Rewrite(std::string *out,
                const StringPiece &rewrite,
                const StringPiece &text,
                int *vec,
@@ -491,11 +491,11 @@ class PCRE {
   // Compile the regexp for the specified anchoring mode
   pcre* Compile(Anchor anchor);
 
-  string            pattern_;
+  std::string       pattern_;
   Option            options_;
   pcre*             re_full_;        // For full matches
   pcre*             re_partial_;     // For partial matches
-  const string*     error_;          // Error indicator (or empty string)
+  const std::string* error_;          // Error indicator (or empty string)
   bool              report_errors_;  // Silences error logging if false
   int               match_limit_;    // Limit on execution resources
   int               stack_limit_;    // Limit on stack resources (bytes)
@@ -584,7 +584,7 @@ class PCRE::Arg {
   MAKE_PARSER(unsigned char,      parse_uchar);
   MAKE_PARSER(float,              parse_float);
   MAKE_PARSER(double,             parse_double);
-  MAKE_PARSER(string,             parse_string);
+  MAKE_PARSER(std::string,        parse_string);
   MAKE_PARSER(StringPiece,        parse_stringpiece);
 
   MAKE_PARSER(short,              parse_short);

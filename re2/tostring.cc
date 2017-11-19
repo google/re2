@@ -28,7 +28,7 @@ enum {
 };
 
 // Helper function.  See description below.
-static void AppendCCRange(string* t, Rune lo, Rune hi);
+static void AppendCCRange(std::string* t, Rune lo, Rune hi);
 
 // Walker to generate string in s_.
 // The arg pointers are actually integers giving the
@@ -36,7 +36,7 @@ static void AppendCCRange(string* t, Rune lo, Rune hi);
 // The child_args are always NULL.
 class ToStringWalker : public Regexp::Walker<int> {
  public:
-  explicit ToStringWalker(string* t) : t_(t) {}
+  explicit ToStringWalker(std::string* t) : t_(t) {}
 
   virtual int PreVisit(Regexp* re, int parent_arg, bool* stop);
   virtual int PostVisit(Regexp* re, int parent_arg, int pre_arg,
@@ -46,14 +46,14 @@ class ToStringWalker : public Regexp::Walker<int> {
   }
 
  private:
-  string* t_;  // The string the walker appends to.
+  std::string* t_;  // The string the walker appends to.
 
   ToStringWalker(const ToStringWalker&) = delete;
   ToStringWalker& operator=(const ToStringWalker&) = delete;
 };
 
-string Regexp::ToString() {
-  string t;
+std::string Regexp::ToString() {
+  std::string t;
   ToStringWalker w(&t);
   w.WalkExponential(this, PrecToplevel, 100000);
   if (w.stopped_early())
@@ -126,7 +126,7 @@ int ToStringWalker::PreVisit(Regexp* re, int parent_arg, bool* stop) {
   return nprec;
 }
 
-static void AppendLiteral(string *t, Rune r, bool foldcase) {
+static void AppendLiteral(std::string *t, Rune r, bool foldcase) {
   if (r != 0 && r < 0x80 && strchr("(){}[]*+?|.^$\\", r)) {
     t->append(1, '\\');
     t->append(1, static_cast<char>(r));
@@ -303,7 +303,7 @@ int ToStringWalker::PostVisit(Regexp* re, int parent_arg, int pre_arg,
 }
 
 // Appends a rune for use in a character class to the string t.
-static void AppendCCChar(string* t, Rune r) {
+static void AppendCCChar(std::string* t, Rune r) {
   if (0x20 <= r && r <= 0x7E) {
     if (strchr("[]^-\\", r))
       t->append("\\");
@@ -338,7 +338,7 @@ static void AppendCCChar(string* t, Rune r) {
   StringAppendF(t, "\\x{%x}", static_cast<int>(r));
 }
 
-static void AppendCCRange(string* t, Rune lo, Rune hi) {
+static void AppendCCRange(std::string* t, Rune lo, Rune hi) {
   if (lo > hi)
     return;
   AppendCCChar(t, lo);

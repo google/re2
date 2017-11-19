@@ -99,7 +99,7 @@ const PCRE::ConsumeFunctor PCRE::Consume = { };
 const PCRE::FindAndConsumeFunctor PCRE::FindAndConsume = { };
 
 // If a regular expression has no error, its error_ field points here
-static const string empty_string;
+static const std::string empty_string;
 
 void PCRE::Init(const char* pattern, Option options, int match_limit,
               int stack_limit, bool report_errors) {
@@ -114,7 +114,7 @@ void PCRE::Init(const char* pattern, Option options, int match_limit,
   re_partial_ = NULL;
 
   if (options & ~(EnabledCompileOptions | EnabledExecOptions)) {
-    error_ = new string("illegal regexp option");
+    error_ = new std::string("illegal regexp option");
     PCREPORT(ERROR)
         << "Error compiling '" << pattern << "': illegal regexp option";
   } else {
@@ -131,13 +131,13 @@ PCRE::PCRE(const char* pattern) {
 PCRE::PCRE(const char* pattern, Option option) {
   Init(pattern, option, 0, 0, true);
 }
-PCRE::PCRE(const string& pattern) {
+PCRE::PCRE(const std::string& pattern) {
   Init(pattern.c_str(), None, 0, 0, true);
 }
-PCRE::PCRE(const string& pattern, Option option) {
+PCRE::PCRE(const std::string& pattern, Option option) {
   Init(pattern.c_str(), option, 0, 0, true);
 }
-PCRE::PCRE(const string& pattern, const PCRE_Options& re_option) {
+PCRE::PCRE(const std::string& pattern, const PCRE_Options& re_option) {
   Init(pattern.c_str(), re_option.option(), re_option.match_limit(),
        re_option.stack_limit(), re_option.report_errors());
 }
@@ -176,7 +176,7 @@ pcre* PCRE::Compile(Anchor anchor) {
   } else {
     // Tack a '\z' at the end of PCRE.  Parenthesize it first so that
     // the '\z' applies to all top-level alternatives in the regexp.
-    string wrapped = "(?:";  // A non-counting grouping operator
+    std::string wrapped = "(?:";  // A non-counting grouping operator
     wrapped += pattern_;
     wrapped += ")\\z";
     re = pcre_compile(wrapped.c_str(),
@@ -184,7 +184,7 @@ pcre* PCRE::Compile(Anchor anchor) {
                       &error, &eoffset, NULL);
   }
   if (re == NULL) {
-    if (error_ == &empty_string) error_ = new string(error);
+    if (error_ == &empty_string) error_ = new std::string(error);
     PCREPORT(ERROR) << "Error compiling '" << pattern_ << "': " << error;
   }
   return re;
@@ -376,15 +376,15 @@ done:
   }
 }
 
-bool PCRE::Replace(string *str,
-                 const PCRE& pattern,
-                 const StringPiece& rewrite) {
+bool PCRE::Replace(std::string *str,
+                   const PCRE& pattern,
+                   const StringPiece& rewrite) {
   int vec[kVecSize] = {};
   int matches = pattern.TryMatch(*str, 0, UNANCHORED, true, vec, kVecSize);
   if (matches == 0)
     return false;
 
-  string s;
+  std::string s;
   if (!pattern.Rewrite(&s, rewrite, *str, vec, matches))
     return false;
 
@@ -394,12 +394,12 @@ bool PCRE::Replace(string *str,
   return true;
 }
 
-int PCRE::GlobalReplace(string *str,
-                      const PCRE& pattern,
-                      const StringPiece& rewrite) {
+int PCRE::GlobalReplace(std::string *str,
+                        const PCRE& pattern,
+                        const StringPiece& rewrite) {
   int count = 0;
   int vec[kVecSize] = {};
-  string out;
+  std::string out;
   size_t start = 0;
   bool last_match_was_empty_string = false;
 
@@ -453,9 +453,9 @@ int PCRE::GlobalReplace(string *str,
 }
 
 bool PCRE::Extract(const StringPiece &text,
-                 const PCRE& pattern,
-                 const StringPiece &rewrite,
-                 string *out) {
+                   const PCRE& pattern,
+                   const StringPiece &rewrite,
+		   std::string *out) {
   int vec[kVecSize] = {};
   int matches = pattern.TryMatch(text, 0, UNANCHORED, true, vec, kVecSize);
   if (matches == 0)
@@ -464,8 +464,8 @@ bool PCRE::Extract(const StringPiece &text,
   return pattern.Rewrite(out, rewrite, text, vec, matches);
 }
 
-string PCRE::QuoteMeta(const StringPiece& unquoted) {
-  string result;
+std::string PCRE::QuoteMeta(const StringPiece& unquoted) {
+  std::string result;
   result.reserve(unquoted.size() << 1);
 
   // Escape any ascii character not in [A-Za-z_0-9].
@@ -668,8 +668,8 @@ bool PCRE::DoMatch(const StringPiece& text,
   return b;
 }
 
-bool PCRE::Rewrite(string *out, const StringPiece &rewrite,
-                 const StringPiece &text, int *vec, int veclen) const {
+bool PCRE::Rewrite(std::string *out, const StringPiece &rewrite,
+                   const StringPiece &text, int *vec, int veclen) const {
   int number_of_capturing_groups = NumberOfCapturingGroups();
   for (const char *s = rewrite.data(), *end = s + rewrite.size();
        s < end; s++) {
@@ -704,7 +704,7 @@ bool PCRE::Rewrite(string *out, const StringPiece &rewrite,
   return true;
 }
 
-bool PCRE::CheckRewriteString(const StringPiece& rewrite, string* error) const {
+bool PCRE::CheckRewriteString(const StringPiece& rewrite, std::string* error) const {
   int max_token = -1;
   for (const char *s = rewrite.data(), *end = s + rewrite.size();
        s < end; s++) {
@@ -768,7 +768,7 @@ bool PCRE::Arg::parse_null(const char* str, size_t n, void* dest) {
 
 bool PCRE::Arg::parse_string(const char* str, size_t n, void* dest) {
   if (dest == NULL) return true;
-  reinterpret_cast<string*>(dest)->assign(str, n);
+  reinterpret_cast<std::string*>(dest)->assign(str, n);
   return true;
 }
 
