@@ -56,7 +56,7 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
 
 // Entry point for libFuzzer.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  if (size == 0 || size > 1024)
+  if (size == 0 || size > 512)
     return 0;
 
   // Crudely limit the use of \p and \P.
