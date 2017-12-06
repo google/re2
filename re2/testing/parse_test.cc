@@ -336,6 +336,11 @@ Test prefix_tests[] = {
     "cat{lit{a}alt{cat{nstar{byte{}}lit{c}}cat{nstar{byte{}}lit{b}}}}" },
   { "^/a/bc|^/a/de",
     "cat{bol{}cat{str{/a/}alt{str{bc}str{de}}}}" },
+  // Test past kFactorAlternationMaxDepth (8).
+  { "a|aa|aaa|aaaa|aaaaa|aaaaaa|aaaaaaa|aaaaaaaa|aaaaaaaaa|aaaaaaaaaa",
+    "cat{lit{a}alt{emp{}" "cat{lit{a}alt{emp{}" "cat{lit{a}alt{emp{}"
+    "cat{lit{a}alt{emp{}" "cat{lit{a}alt{emp{}" "cat{lit{a}alt{emp{}"
+    "cat{lit{a}alt{emp{}" "cat{lit{a}alt{emp{}lit{a}str{aa}}}}}}}}}}}}}}}}}" },
 };
 
 // Test that prefix factoring works.
