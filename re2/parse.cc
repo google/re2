@@ -1294,8 +1294,7 @@ static bool MaybeParseRepetition(StringPiece* sp, int* lo, int* hi) {
 static int StringPieceToRune(Rune *r, StringPiece *sp, RegexpStatus* status) {
   // fullrune() takes int, not size_t. However, it just looks
   // at the leading byte and treats any length >= 4 the same.
-  if (fullrune(sp->data(), static_cast<int>(std::min(static_cast<size_t>(4),
-                                                     sp->size())))) {
+  if (fullrune(sp->data(), static_cast<int>(std::min(size_t{4}, sp->size())))) {
     int n = chartorune(r, sp->data());
     // Some copies of chartorune have a bug that accepts
     // encodings of values in (10FFFF, 1FFFFF] as valid.
