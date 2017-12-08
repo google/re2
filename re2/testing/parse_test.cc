@@ -53,7 +53,7 @@ static Test tests[] = {
   { "a{2,3}?", "nrep{2,3 lit{a}}" },
   { "a{2,}?", "nrep{2,-1 lit{a}}" },
   { "", "emp{}" },
-  { "|", "emp{}" },  // alt{emp{}emp{}} but got factored
+  { "|", "alt{emp{}emp{}}" },
   { "|x|", "alt{emp{}lit{x}emp{}}" },
   { ".", "dot{}" },
   { "^", "bol{}" },

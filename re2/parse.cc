@@ -1082,20 +1082,6 @@ int Regexp::FactorAlternationRecursive(
   }
   n = out;
 
-  // Round 4: Collapse runs of empty matches into single empty match.
-  start = 0;
-  out = 0;
-  for (int i = 0; i < n; i++) {
-    if (i + 1 < n &&
-        sub[i]->op() == kRegexpEmptyMatch &&
-        sub[i+1]->op() == kRegexpEmptyMatch) {
-      sub[i]->Decref();
-      continue;
-    }
-    sub[out++] = sub[i];
-  }
-  n = out;
-
   return n;
 }
 
