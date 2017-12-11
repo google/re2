@@ -870,7 +870,7 @@ void Regexp::RemoveLeadingString(Regexp* re, int n) {
 //     ABC|ABD|AEF|BCX|BCY
 // simplifies to
 //     A(B(C|D)|EF)|BC(X|Y)
-// which the normal parse state routines will further simplify to
+// and thence to
 //     A(B[CD]|EF)|BC[XY]
 //
 // Rewrites sub to contain simplified list to alternate and returns
@@ -895,12 +895,21 @@ int Regexp::FactorAlternationRecursive(Regexp** sub, int nsub,
   if (maxdepth <= 0)
     return nsub;
 
-  // Round 1: Factor out common literal prefixes.
-  Rune *rune = NULL;
-  int nrune = 0;
-  Regexp::ParseFlags runeflags = Regexp::NoParseFlags;
+  nsub = FactorAlternationRound1(sub, nsub, flags, maxdepth);
+  nsub = FactorAlternationRound2(sub, nsub, flags, maxdepth);
+  nsub = FactorAlternationRound3(sub, nsub, flags, maxdepth);
+  return nsub;
+}
+
+int Regexp::FactorAlternationRound1(Regexp** sub, int nsub,
+                                    ParseFlags flags, int maxdepth) {
   int start = 0;
   int out = 0;
+
+  // Round 1: Factor out common literal prefixes.
+  Rune* rune = NULL;
+  int nrune = 0;
+  Regexp::ParseFlags runeflags = Regexp::NoParseFlags;
   for (int i = 0; i <= nsub; i++) {
     // Invariant: what was in sub[0:start] has been Decref'ed
     // and that space has been reused for sub[0:out] (out <= start).
@@ -955,7 +964,14 @@ int Regexp::FactorAlternationRecursive(Regexp** sub, int nsub,
       runeflags = runeflags_i;
     }
   }
-  nsub = out;
+
+  return out;
+}
+
+int Regexp::FactorAlternationRound2(Regexp** sub, int nsub,
+                                    ParseFlags flags, int maxdepth) {
+  int start = 0;
+  int out = 0;
 
   // Round 2: Factor out common simple prefixes,
   // just the first piece of each concatenation.
@@ -965,8 +981,6 @@ int Regexp::FactorAlternationRecursive(Regexp** sub, int nsub,
   // are not safe to factor because that collapses their
   // distinct paths through the automaton, which affects
   // correctness in some cases.
-  start = 0;
-  out = 0;
   Regexp* first = NULL;
   for (int i = 0; i <= nsub; i++) {
     // Invariant: what was in sub[0:start] has been Decref'ed
@@ -1027,11 +1041,16 @@ int Regexp::FactorAlternationRecursive(Regexp** sub, int nsub,
       first = first_i;
     }
   }
-  nsub = out;
+
+  return out;
+}
+
+int Regexp::FactorAlternationRound3(Regexp** sub, int nsub,
+                                    ParseFlags flags, int maxdepth) {
+  int start = 0;
+  int out = 0;
 
   // Round 3: Collapse runs of single literals into character classes.
-  start = 0;
-  out = 0;
   for (int i = 0; i <= nsub; i++) {
     // Invariant: what was in sub[0:start] has been Decref'ed
     // and that space has been reused for sub[0:out] (out <= start).
@@ -1075,9 +1094,8 @@ int Regexp::FactorAlternationRecursive(Regexp** sub, int nsub,
       sub[out++] = sub[i];
     start = i+1;
   }
-  nsub = out;
 
-  return nsub;
+  return out;
 }
 
 // Collapse the regexps on top of the stack, down to the
