@@ -885,20 +885,15 @@ void Regexp::RemoveLeadingString(Regexp* re, int n) {
 // probably enough benefit for practical uses.
 const int kFactorAlternationMaxDepth = 8;
 
-int Regexp::FactorAlternation(
-    Regexp** sub, int n,
-    Regexp::ParseFlags altflags) {
-  return FactorAlternationRecursive(sub, n, altflags,
+int Regexp::FactorAlternation(Regexp** sub, int nsub, ParseFlags flags) {
+  return FactorAlternationRecursive(sub, nsub, flags,
                                     kFactorAlternationMaxDepth);
 }
 
-int Regexp::FactorAlternationRecursive(
-    Regexp** sub, int n,
-    Regexp::ParseFlags altflags,
-    int maxdepth) {
-
+int Regexp::FactorAlternationRecursive(Regexp** sub, int nsub,
+                                       ParseFlags flags, int maxdepth) {
   if (maxdepth <= 0)
-    return n;
+    return nsub;
 
   // Round 1: Factor out common literal prefixes.
   Rune *rune = NULL;
@@ -906,7 +901,7 @@ int Regexp::FactorAlternationRecursive(
   Regexp::ParseFlags runeflags = Regexp::NoParseFlags;
   int start = 0;
   int out = 0;
-  for (int i = 0; i <= n; i++) {
+  for (int i = 0; i <= nsub; i++) {
     // Invariant: what was in sub[0:start] has been Decref'ed
     // and that space has been reused for sub[0:out] (out <= start).
     //
@@ -916,7 +911,7 @@ int Regexp::FactorAlternationRecursive(
     Rune* rune_i = NULL;
     int nrune_i = 0;
     Regexp::ParseFlags runeflags_i = Regexp::NoParseFlags;
-    if (i < n) {
+    if (i < nsub) {
       rune_i = LeadingString(sub[i], &nrune_i, &runeflags_i);
       if (runeflags_i == runeflags) {
         int same = 0;
@@ -946,21 +941,21 @@ int Regexp::FactorAlternationRecursive(
       x[0] = LiteralString(rune, nrune, runeflags);
       for (int j = start; j < i; j++)
         RemoveLeadingString(sub[j], nrune);
-      int nn = FactorAlternationRecursive(sub + start, i - start, altflags,
+      int nn = FactorAlternationRecursive(sub + start, i - start, flags,
                                           maxdepth - 1);
-      x[1] = AlternateNoFactor(sub + start, nn, altflags);
-      sub[out++] = Concat(x, 2, altflags);
+      x[1] = AlternateNoFactor(sub + start, nn, flags);
+      sub[out++] = Concat(x, 2, flags);
     }
 
     // Prepare for next round (if there is one).
-    if (i < n) {
+    if (i < nsub) {
       start = i;
       rune = rune_i;
       nrune = nrune_i;
       runeflags = runeflags_i;
     }
   }
-  n = out;
+  nsub = out;
 
   // Round 2: Factor out common simple prefixes,
   // just the first piece of each concatenation.
@@ -973,14 +968,14 @@ int Regexp::FactorAlternationRecursive(
   start = 0;
   out = 0;
   Regexp* first = NULL;
-  for (int i = 0; i <= n; i++) {
+  for (int i = 0; i <= nsub; i++) {
     // Invariant: what was in sub[0:start] has been Decref'ed
     // and that space has been reused for sub[0:out] (out <= start).
     //
     // Invariant: sub[start:i] consists of regexps that all begin with first.
 
     Regexp* first_i = NULL;
-    if (i < n) {
+    if (i < nsub) {
       first_i = LeadingRegexp(sub[i]);
       if (first != NULL && Regexp::Equal(first, first_i) &&
           // first must be an empty-width op
@@ -1020,31 +1015,31 @@ int Regexp::FactorAlternationRecursive(
       x[0] = first->Incref();
       for (int j = start; j < i; j++)
         sub[j] = RemoveLeadingRegexp(sub[j]);
-      int nn = FactorAlternationRecursive(sub + start, i - start, altflags,
-                                   maxdepth - 1);
-      x[1] = AlternateNoFactor(sub + start, nn, altflags);
-      sub[out++] = Concat(x, 2, altflags);
+      int nn = FactorAlternationRecursive(sub + start, i - start, flags,
+                                          maxdepth - 1);
+      x[1] = AlternateNoFactor(sub + start, nn, flags);
+      sub[out++] = Concat(x, 2, flags);
     }
 
     // Prepare for next round (if there is one).
-    if (i < n) {
+    if (i < nsub) {
       start = i;
       first = first_i;
     }
   }
-  n = out;
+  nsub = out;
 
   // Round 3: Collapse runs of single literals into character classes.
   start = 0;
   out = 0;
-  for (int i = 0; i <= n; i++) {
+  for (int i = 0; i <= nsub; i++) {
     // Invariant: what was in sub[0:start] has been Decref'ed
     // and that space has been reused for sub[0:out] (out <= start).
     //
     // Invariant: sub[start:i] consists of regexps that are either
     // literal runes or character classes.
 
-    if (i < n &&
+    if (i < nsub &&
         (sub[i]->op() == kRegexpLiteral ||
          sub[i]->op() == kRegexpCharClass))
       continue;
@@ -1072,17 +1067,17 @@ int Regexp::FactorAlternationRecursive(
         }
         re->Decref();
       }
-      sub[out++] = NewCharClass(ccb.GetCharClass(), altflags);
+      sub[out++] = NewCharClass(ccb.GetCharClass(), flags);
     }
 
     // ... and then emit sub[i].
-    if (i < n)
+    if (i < nsub)
       sub[out++] = sub[i];
     start = i+1;
   }
-  n = out;
+  nsub = out;
 
-  return n;
+  return nsub;
 }
 
 // Collapse the regexps on top of the stack, down to the
