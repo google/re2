@@ -911,12 +911,8 @@ int Regexp::FactorAlternationRound1(Regexp** sub, int nsub,
   int nrune = 0;
   Regexp::ParseFlags runeflags = Regexp::NoParseFlags;
   for (int i = 0; i <= nsub; i++) {
-    // Invariant: what was in sub[0:start] has been Decref'ed
-    // and that space has been reused for sub[0:out] (out <= start).
-    //
-    // Invariant: sub[start:i] consists of regexps that all begin
-    // with the string rune[0:nrune].
-
+    // Invariant: sub[start:i] consists of regexps that all
+    // begin with rune[0:nrune].
     Rune* rune_i = NULL;
     int nrune_i = 0;
     Regexp::ParseFlags runeflags_i = Regexp::NoParseFlags;
@@ -935,8 +931,8 @@ int Regexp::FactorAlternationRound1(Regexp** sub, int nsub,
     }
 
     // Found end of a run with common leading literal string:
-    // sub[start:i] all begin with rune[0:nrune] but sub[i]
-    // does not even begin with rune[0].
+    // sub[start:i] all begin with rune[0:nrune],
+    // but sub[i] does not even begin with rune[0].
     //
     // Factor out common string and append factored expression to sub[0:out].
     if (i == start) {
@@ -983,15 +979,12 @@ int Regexp::FactorAlternationRound2(Regexp** sub, int nsub,
   // correctness in some cases.
   Regexp* first = NULL;
   for (int i = 0; i <= nsub; i++) {
-    // Invariant: what was in sub[0:start] has been Decref'ed
-    // and that space has been reused for sub[0:out] (out <= start).
-    //
-    // Invariant: sub[start:i] consists of regexps that all begin with first.
-
+    // Invariant: sub[start:i] consists of regexps that all
+    // begin with first.
     Regexp* first_i = NULL;
     if (i < nsub) {
       first_i = LeadingRegexp(sub[i]);
-      if (first != NULL && Regexp::Equal(first, first_i) &&
+      if (first != NULL &&
           // first must be an empty-width op
           // OR a char class, any char or any byte
           // OR a fixed repeat of a literal, char class, any char or any byte.
@@ -1009,13 +1002,14 @@ int Regexp::FactorAlternationRound2(Regexp** sub, int nsub,
             (first->sub()[0]->op() == kRegexpLiteral ||
              first->sub()[0]->op() == kRegexpCharClass ||
              first->sub()[0]->op() == kRegexpAnyChar ||
-             first->sub()[0]->op() == kRegexpAnyByte)))) {
+             first->sub()[0]->op() == kRegexpAnyByte))) &&
+          Regexp::Equal(first, first_i))
         continue;
-      }
     }
 
     // Found end of a run with common leading regexp:
-    // sub[start:i] all begin with first but sub[i] does not.
+    // sub[start:i] all begin with first,
+    // but sub[i] does not.
     //
     // Factor out common regexp and append factored expression to sub[0:out].
     if (i == start) {
@@ -1051,26 +1045,33 @@ int Regexp::FactorAlternationRound3(Regexp** sub, int nsub,
   int out = 0;
 
   // Round 3: Collapse runs of single literals into character classes.
+  Regexp* first = NULL;
   for (int i = 0; i <= nsub; i++) {
-    // Invariant: what was in sub[0:start] has been Decref'ed
-    // and that space has been reused for sub[0:out] (out <= start).
+    // Invariant: sub[start:i] consists of regexps that all
+    // are either literals (i.e. runes) or character classes.
+    Regexp* first_i = NULL;
+    if (i < nsub) {
+      first_i = sub[i];
+      if (first != NULL &&
+          (first->op() == kRegexpLiteral ||
+           first->op() == kRegexpCharClass) &&
+          (first_i->op() == kRegexpLiteral ||
+           first_i->op() == kRegexpCharClass))
+        continue;
+    }
+
+    // Found end of a run of Literal/CharClass:
+    // sub[start:i] all are either one or the other,
+    // but sub[i] is not.
     //
-    // Invariant: sub[start:i] consists of regexps that are either
-    // literal runes or character classes.
-
-    if (i < nsub &&
-        (sub[i]->op() == kRegexpLiteral ||
-         sub[i]->op() == kRegexpCharClass))
-      continue;
-
-    // sub[i] is not a char or char class;
-    // emit char class for sub[start:i]...
+    // Merge into character class and append merged expression to sub[0:out].
     if (i == start) {
-      // Nothing to do.
+      // Nothing to do - first iteration.
     } else if (i == start+1) {
+      // Just one: don't bother factoring.
       sub[out++] = sub[start];
     } else {
-      // Make new char class.
+      // Make new character class.
       CharClassBuilder ccb;
       for (int j = start; j < i; j++) {
         Regexp* re = sub[j];
@@ -1089,10 +1090,11 @@ int Regexp::FactorAlternationRound3(Regexp** sub, int nsub,
       sub[out++] = NewCharClass(ccb.GetCharClass(), flags);
     }
 
-    // ... and then emit sub[i].
-    if (i < nsub)
-      sub[out++] = sub[i];
-    start = i+1;
+    // Prepare for next round (if there is one).
+    if (i < nsub) {
+      start = i;
+      first = first_i;
+    }
   }
 
   return out;
