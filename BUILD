@@ -57,7 +57,15 @@ cc_library(
         "re2/set.h",
         "re2/stringpiece.h",
     ],
-    copts = ["-pthread"],
+    includes = [
+        ".",
+    ],
+    copts = [
+        # Suppress known warnings.
+        "-Wno-c99-extensions",
+
+        "-pthread",
+    ],
     linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
 )
