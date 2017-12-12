@@ -79,7 +79,7 @@ TEST(SingleThreaded, BuildEntireDFA) {
   CHECK(re);
 
   for (int i = 17; i < 24; i++) {
-    int64_t limit = 1<<i;
+    int64_t limit = static_cast<int64_t>(1<<i);
     int64_t usage;
     //int64_t progusage, dfamem;
     {
@@ -120,7 +120,7 @@ static string DeBruijnString(int n) {
   CHECK_LT(n, static_cast<int>(8*sizeof(int)));
   CHECK_GT(n, 0);
 
-  std::vector<bool> did(1<<n);
+  std::vector<bool> did(static_cast<size_t>(1<<n));
   for (int i = 0; i < 1<<n; i++)
     did[i] = false;
 
