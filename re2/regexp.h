@@ -494,15 +494,7 @@ class Regexp {
   // Simplifies an alternation of literal strings by factoring out
   // common prefixes.
   static int FactorAlternation(Regexp** sub, int nsub, ParseFlags flags);
-  static int FactorAlternationRecursive(Regexp** sub, int nsub,
-                                        ParseFlags flags, int maxdepth);
-  // Helper functions.
-  static int FactorAlternationRound1(Regexp** sub, int nsub,
-                                     ParseFlags flags, int maxdepth);
-  static int FactorAlternationRound2(Regexp** sub, int nsub,
-                                     ParseFlags flags, int maxdepth);
-  static int FactorAlternationRound3(Regexp** sub, int nsub,
-                                     ParseFlags flags, int maxdepth);
+  friend class FactorAlternationImpl;
 
   // Is a == b?  Only efficient on regexps that have not been through
   // Simplify yet - the expansion of a kRegexpRepeat will make this

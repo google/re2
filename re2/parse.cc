@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "util/util.h"
 #include "util/logging.h"
@@ -865,6 +866,57 @@ void Regexp::RemoveLeadingString(Regexp* re, int n) {
   }
 }
 
+// In the context of factoring alternations, a Splice is: a factored prefix or
+// merged character class computed by one iteration of one round of factoring;
+// the span of subexpressions of the alternation to be "spliced" (i.e. removed
+// and replaced); and, for a factored prefix, the number of suffixes after any
+// factoring that might have subsequently been performed on them. For a merged
+// character class, there are no suffixes, of course, so the field is ignored.
+struct Splice {
+  Splice(Regexp* prefix, Regexp** sub, int nsub)
+      : prefix(prefix),
+        sub(sub),
+        nsub(nsub),
+        nsuffix(-1) {}
+
+  Regexp* prefix;
+  Regexp** sub;
+  int nsub;
+  int nsuffix;
+};
+
+// Named so because it is used to implement an explicit stack, a Frame is: the
+// span of subexpressions of the alternation to be factored; the current round
+// of factoring; any Splices computed; and, for a factored prefix, an iterator
+// to the next Splice to be factored (i.e. in another Frame) because suffixes.
+struct Frame {
+  Frame(Regexp** sub, int nsub)
+      : sub(sub),
+        nsub(nsub),
+        round(0) {}
+
+  Regexp** sub;
+  int nsub;
+  int round;
+  std::vector<Splice> splices;
+  std::vector<Splice>::iterator spliceiter;
+};
+
+// Bundled into a class for friend access to Regexp without needing to declare
+// (or define) Splice in regexp.h.
+class FactorAlternationImpl {
+ public:
+  static void Round1(Regexp** sub, int nsub,
+                     Regexp::ParseFlags flags,
+                     std::vector<Splice>* splices);
+  static void Round2(Regexp** sub, int nsub,
+                     Regexp::ParseFlags flags,
+                     std::vector<Splice>* splices);
+  static void Round3(Regexp** sub, int nsub,
+                     Regexp::ParseFlags flags,
+                     std::vector<Splice>* splices);
+};
+
 // Factors common prefixes from alternation.
 // For example,
 //     ABC|ABD|AEF|BCX|BCY
@@ -876,37 +928,107 @@ void Regexp::RemoveLeadingString(Regexp* re, int n) {
 // Rewrites sub to contain simplified list to alternate and returns
 // the new length of sub.  Adjusts reference counts accordingly
 // (incoming sub[i] decremented, outgoing sub[i] incremented).
-
-// It's too much of a pain to write this code with an explicit stack,
-// so instead we let the caller specify a maximum depth and
-// don't simplify beyond that.  There are around 15 words of local
-// variables and parameters in the frame, so allowing 8 levels
-// on a 64-bit machine is still less than a kilobyte of stack and
-// probably enough benefit for practical uses.
-const int kFactorAlternationMaxDepth = 8;
-
 int Regexp::FactorAlternation(Regexp** sub, int nsub, ParseFlags flags) {
-  return FactorAlternationRecursive(sub, nsub, flags,
-                                    kFactorAlternationMaxDepth);
+  std::vector<Frame> stk;
+  stk.emplace_back(sub, nsub);
+
+  for (;;) {
+    auto& sub = stk.back().sub;
+    auto& nsub = stk.back().nsub;
+    auto& round = stk.back().round;
+    auto& splices = stk.back().splices;
+    auto& spliceiter = stk.back().spliceiter;
+
+    if (splices.empty()) {
+      // Advance to the next round of factoring. Note that this covers
+      // the initialised state: when splices is empty and round is 0.
+      round++;
+    } else if (spliceiter != splices.end()) {
+      // We have at least one more Splice to factor. Recurse logically.
+      stk.emplace_back(spliceiter->sub, spliceiter->nsub);
+      continue;
+    } else {
+      // We have no more Splices to factor. Apply them.
+      auto iter = splices.begin();
+      int out = 0;
+      for (int i = 0; i < nsub; i++) {
+        // Copy until we reach where the next Splice begins.
+        while (sub + i < iter->sub)
+          sub[out++] = sub[i++];
+        switch (round) {
+          case 1:
+          case 2: {
+            // Assemble the Splice prefix and the suffixes.
+            Regexp* re[2];
+            re[0] = iter->prefix;
+            re[1] = Regexp::AlternateNoFactor(iter->sub, iter->nsuffix, flags);
+            sub[out++] = Regexp::Concat(re, 2, flags);
+            i += iter->nsub;
+            break;
+          }
+          case 3:
+            // Just use the Splice prefix.
+            sub[out++] = iter->prefix;
+            i += iter->nsub;
+            break;
+          default:
+            LOG(DFATAL) << "unknown round: " << round;
+            break;
+        }
+        // If we are done, copy until the end of sub.
+        if (++iter == splices.end()) {
+          while (i < nsub)
+            sub[out++] = sub[i++];
+        }
+      }
+      splices.clear();
+      nsub = out;
+      // Advance to the next round of factoring.
+      round++;
+    }
+
+    switch (round) {
+      case 1:
+        FactorAlternationImpl::Round1(sub, nsub, flags, &splices);
+        break;
+      case 2:
+        FactorAlternationImpl::Round2(sub, nsub, flags, &splices);
+        break;
+      case 3:
+        FactorAlternationImpl::Round3(sub, nsub, flags, &splices);
+        break;
+      case 4:
+        if (stk.size() == 1) {
+          // We are at the top of the stack. Just return.
+          return nsub;
+        } else {
+          // Pop the stack and set the number of suffixes.
+          // (Note that references will be invalidated!)
+          int nsuffix = nsub;
+          stk.pop_back();
+          stk.back().spliceiter->nsuffix = nsuffix;
+          ++stk.back().spliceiter;
+          continue;
+        }
+      default:
+        LOG(DFATAL) << "unknown round: " << round;
+        break;
+    }
+
+    // Set spliceiter depending on whether we have Splices to factor.
+    if (splices.empty() || round == 3) {
+      spliceiter = splices.end();
+    } else {
+      spliceiter = splices.begin();
+    }
+  }
 }
 
-int Regexp::FactorAlternationRecursive(Regexp** sub, int nsub,
-                                       ParseFlags flags, int maxdepth) {
-  if (maxdepth <= 0)
-    return nsub;
-
-  nsub = FactorAlternationRound1(sub, nsub, flags, maxdepth);
-  nsub = FactorAlternationRound2(sub, nsub, flags, maxdepth);
-  nsub = FactorAlternationRound3(sub, nsub, flags, maxdepth);
-  return nsub;
-}
-
-int Regexp::FactorAlternationRound1(Regexp** sub, int nsub,
-                                    ParseFlags flags, int maxdepth) {
-  int start = 0;
-  int out = 0;
-
+void FactorAlternationImpl::Round1(Regexp** sub, int nsub,
+                                   Regexp::ParseFlags flags,
+                                   std::vector<Splice>* splices) {
   // Round 1: Factor out common literal prefixes.
+  int start = 0;
   Rune* rune = NULL;
   int nrune = 0;
   Regexp::ParseFlags runeflags = Regexp::NoParseFlags;
@@ -917,7 +1039,7 @@ int Regexp::FactorAlternationRound1(Regexp** sub, int nsub,
     int nrune_i = 0;
     Regexp::ParseFlags runeflags_i = Regexp::NoParseFlags;
     if (i < nsub) {
-      rune_i = LeadingString(sub[i], &nrune_i, &runeflags_i);
+      rune_i = Regexp::LeadingString(sub[i], &nrune_i, &runeflags_i);
       if (runeflags_i == runeflags) {
         int same = 0;
         while (same < nrune && same < nrune_i && rune[same] == rune_i[same])
@@ -933,26 +1055,18 @@ int Regexp::FactorAlternationRound1(Regexp** sub, int nsub,
     // Found end of a run with common leading literal string:
     // sub[start:i] all begin with rune[0:nrune],
     // but sub[i] does not even begin with rune[0].
-    //
-    // Factor out common string and append factored expression to sub[0:out].
     if (i == start) {
       // Nothing to do - first iteration.
     } else if (i == start+1) {
       // Just one: don't bother factoring.
-      sub[out++] = sub[start];
     } else {
-      // Construct factored form: prefix(suffix1|suffix2|...)
-      Regexp* x[2];  // x[0] = prefix, x[1] = suffix1|suffix2|...
-      x[0] = LiteralString(rune, nrune, runeflags);
+      Regexp* prefix = Regexp::LiteralString(rune, nrune, runeflags);
       for (int j = start; j < i; j++)
-        RemoveLeadingString(sub[j], nrune);
-      int nn = FactorAlternationRecursive(sub + start, i - start, flags,
-                                          maxdepth - 1);
-      x[1] = AlternateNoFactor(sub + start, nn, flags);
-      sub[out++] = Concat(x, 2, flags);
+        Regexp::RemoveLeadingString(sub[j], nrune);
+      splices->emplace_back(prefix, sub + start, i - start);
     }
 
-    // Prepare for next round (if there is one).
+    // Prepare for next iteration (if there is one).
     if (i < nsub) {
       start = i;
       rune = rune_i;
@@ -960,15 +1074,11 @@ int Regexp::FactorAlternationRound1(Regexp** sub, int nsub,
       runeflags = runeflags_i;
     }
   }
-
-  return out;
 }
 
-int Regexp::FactorAlternationRound2(Regexp** sub, int nsub,
-                                    ParseFlags flags, int maxdepth) {
-  int start = 0;
-  int out = 0;
-
+void FactorAlternationImpl::Round2(Regexp** sub, int nsub,
+                                   Regexp::ParseFlags flags,
+                                   std::vector<Splice>* splices) {
   // Round 2: Factor out common simple prefixes,
   // just the first piece of each concatenation.
   // This will be good enough a lot of the time.
@@ -977,13 +1087,14 @@ int Regexp::FactorAlternationRound2(Regexp** sub, int nsub,
   // are not safe to factor because that collapses their
   // distinct paths through the automaton, which affects
   // correctness in some cases.
+  int start = 0;
   Regexp* first = NULL;
   for (int i = 0; i <= nsub; i++) {
     // Invariant: sub[start:i] consists of regexps that all
     // begin with first.
     Regexp* first_i = NULL;
     if (i < nsub) {
-      first_i = LeadingRegexp(sub[i]);
+      first_i = Regexp::LeadingRegexp(sub[i]);
       if (first != NULL &&
           // first must be an empty-width op
           // OR a char class, any char or any byte
@@ -1010,41 +1121,30 @@ int Regexp::FactorAlternationRound2(Regexp** sub, int nsub,
     // Found end of a run with common leading regexp:
     // sub[start:i] all begin with first,
     // but sub[i] does not.
-    //
-    // Factor out common regexp and append factored expression to sub[0:out].
     if (i == start) {
       // Nothing to do - first iteration.
     } else if (i == start+1) {
       // Just one: don't bother factoring.
-      sub[out++] = sub[start];
     } else {
-      // Construct factored form: prefix(suffix1|suffix2|...)
-      Regexp* x[2];  // x[0] = prefix, x[1] = suffix1|suffix2|...
-      x[0] = first->Incref();
+      Regexp* prefix = first->Incref();
       for (int j = start; j < i; j++)
-        sub[j] = RemoveLeadingRegexp(sub[j]);
-      int nn = FactorAlternationRecursive(sub + start, i - start, flags,
-                                          maxdepth - 1);
-      x[1] = AlternateNoFactor(sub + start, nn, flags);
-      sub[out++] = Concat(x, 2, flags);
+        sub[j] = Regexp::RemoveLeadingRegexp(sub[j]);
+      splices->emplace_back(prefix, sub + start, i - start);
     }
 
-    // Prepare for next round (if there is one).
+    // Prepare for next iteration (if there is one).
     if (i < nsub) {
       start = i;
       first = first_i;
     }
   }
-
-  return out;
 }
 
-int Regexp::FactorAlternationRound3(Regexp** sub, int nsub,
-                                    ParseFlags flags, int maxdepth) {
+void FactorAlternationImpl::Round3(Regexp** sub, int nsub,
+                                   Regexp::ParseFlags flags,
+                                   std::vector<Splice>* splices) {
+  // Round 3: Merge runs of literals and/or character classes.
   int start = 0;
-  int out = 0;
-
-  // Round 3: Collapse runs of single literals into character classes.
   Regexp* first = NULL;
   for (int i = 0; i <= nsub; i++) {
     // Invariant: sub[start:i] consists of regexps that all
@@ -1063,15 +1163,11 @@ int Regexp::FactorAlternationRound3(Regexp** sub, int nsub,
     // Found end of a run of Literal/CharClass:
     // sub[start:i] all are either one or the other,
     // but sub[i] is not.
-    //
-    // Merge into character class and append merged expression to sub[0:out].
     if (i == start) {
       // Nothing to do - first iteration.
     } else if (i == start+1) {
       // Just one: don't bother factoring.
-      sub[out++] = sub[start];
     } else {
-      // Make new character class.
       CharClassBuilder ccb;
       for (int j = start; j < i; j++) {
         Regexp* re = sub[j];
@@ -1087,17 +1183,16 @@ int Regexp::FactorAlternationRound3(Regexp** sub, int nsub,
         }
         re->Decref();
       }
-      sub[out++] = NewCharClass(ccb.GetCharClass(), flags);
+      Regexp* re = Regexp::NewCharClass(ccb.GetCharClass(), flags);
+      splices->emplace_back(re, sub + start, i - start);
     }
 
-    // Prepare for next round (if there is one).
+    // Prepare for next iteration (if there is one).
     if (i < nsub) {
       start = i;
       first = first_i;
     }
   }
-
-  return out;
 }
 
 // Collapse the regexps on top of the stack, down to the
