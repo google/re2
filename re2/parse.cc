@@ -951,7 +951,7 @@ int Regexp::FactorAlternation(Regexp** sub, int nsub, ParseFlags flags) {
       // We have no more Splices to factor. Apply them.
       auto iter = splices.begin();
       int out = 0;
-      for (int i = 0; i < nsub; i++) {
+      for (int i = 0; i < nsub; ) {
         // Copy until we reach where the next Splice begins.
         while (sub + i < iter->sub)
           sub[out++] = sub[i++];

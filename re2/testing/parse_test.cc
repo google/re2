@@ -342,6 +342,10 @@ Test prefix_tests[] = {
     "cat{lit{a}alt{emp{}" "cat{lit{a}alt{emp{}" "cat{lit{a}alt{emp{}"
     "cat{lit{a}alt{emp{}" "cat{lit{a}alt{emp{}" "cat{lit{a}alt{emp{}"
     "lit{a}}}}}}}}}}}}}}}}}}}" },
+  { "a|aardvark|aardvarks|abaci|aback|abacus|abacuses|abaft|abalone|abalones",
+    "cat{lit{a}alt{emp{}cat{str{ardvark}alt{emp{}lit{s}}}"
+    "cat{str{ba}alt{cat{lit{c}alt{cc{0x69 0x6b}cat{str{us}alt{emp{}str{es}}}}}"
+    "str{ft}cat{str{lone}alt{emp{}lit{s}}}}}}}" },
 };
 
 // Test that prefix factoring works.
