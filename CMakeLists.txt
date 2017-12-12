@@ -22,8 +22,8 @@ option(RE2_BUILD_TESTING "enable testing for RE2" ON)
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  if(MSVC_VERSION LESS 1800)
-    message(FATAL_ERROR "you need Visual Studio 2013 or later")
+  if(MSVC_VERSION LESS 1900)
+    message(FATAL_ERROR "you need Visual Studio 2015 or later")
   endif()
   if(BUILD_SHARED_LIBS)
     # See http://www.kitware.com/blog/home/post/939 for details.
