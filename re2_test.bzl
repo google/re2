@@ -7,6 +7,9 @@ def re2_test(name, deps=[], size="medium"):
   native.cc_test(
       name=name,
       srcs=["re2/testing/%s.cc" % (name)],
+      copts = [
+        "-std=c++11",
+      ],
       deps=[":test"] + deps,
       size = size,
   )

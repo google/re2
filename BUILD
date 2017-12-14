@@ -63,7 +63,7 @@ cc_library(
     copts = [
         # Suppress known warnings.
         "-Wno-c99-extensions",
-
+        "-std=c++11",
         "-pthread",
     ],
     linkopts = ["-pthread"],
@@ -91,6 +91,9 @@ cc_library(
         "util/benchmark.h",
         "util/pcre.h",
         "util/test.h",
+    ],
+    copts = [
+        "-std=c++11",
     ],
     deps = [":re2"],
 )
@@ -208,6 +211,9 @@ cc_library(
     name = "benchmark",
     testonly = 1,
     srcs = ["util/benchmark.cc"],
+    copts = [
+        "-std=c++11",
+    ],
     deps = [":testing"],
 )
 
@@ -215,6 +221,9 @@ cc_binary(
     name = "regexp_benchmark",
     testonly = 1,
     srcs = ["re2/testing/regexp_benchmark.cc"],
+    copts = [
+        "-std=c++11",
+    ],
     linkopts = [
         "-lm",
         "-lrt",
