@@ -57,7 +57,15 @@ cc_library(
         "re2/set.h",
         "re2/stringpiece.h",
     ],
-    copts = ["-pthread"],
+    includes = [
+        ".",
+    ],
+    copts = [
+        # Suppress known warnings.
+        "-Wno-c99-extensions",
+        "-std=c++11",
+        "-pthread",
+    ],
     linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
 )
@@ -83,6 +91,9 @@ cc_library(
         "util/benchmark.h",
         "util/pcre.h",
         "util/test.h",
+    ],
+    copts = [
+        "-std=c++11",
     ],
     deps = [":re2"],
 )
@@ -200,6 +211,9 @@ cc_library(
     name = "benchmark",
     testonly = 1,
     srcs = ["util/benchmark.cc"],
+    copts = [
+        "-std=c++11",
+    ],
     deps = [":testing"],
 )
 
@@ -207,6 +221,9 @@ cc_binary(
     name = "regexp_benchmark",
     testonly = 1,
     srcs = ["re2/testing/regexp_benchmark.cc"],
+    copts = [
+        "-std=c++11",
+    ],
     linkopts = [
         "-lm",
         "-lrt",
