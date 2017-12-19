@@ -35,7 +35,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   add_compile_options(/wd4100 /wd4201 /wd4456 /wd4457 /wd4702 /wd4815)
   # Without a byte order mark (BOM), Visual Studio assumes that the source
   # file is encoded using the current user code page, so we specify UTF-8.
-  add_compile_options(/source-charset:utf-8)
+  add_compile_options(/utf-8)
 elseif(CYGWIN OR MINGW)
   # See https://stackoverflow.com/questions/38139631 for details.
   add_compile_options(-std=gnu++11)
