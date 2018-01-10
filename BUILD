@@ -8,6 +8,16 @@ licenses(["notice"])
 
 exports_files(["LICENSE"])
 
+config_setting(
+    name = "windows",
+    values = { "cpu": "x64_windows" },
+)
+
+config_setting(
+    name = "windows_msvc",
+    values = {"cpu": "x64_windows_msvc"},
+)
+
 cc_library(
     name = "re2",
     srcs = [
@@ -57,8 +67,16 @@ cc_library(
         "re2/set.h",
         "re2/stringpiece.h",
     ],
-    copts = ["-pthread"],
-    linkopts = ["-pthread"],
+    copts = select({
+        ":windows": [],
+        ":windows_msvc": [],
+        "//conditions:default": ["-pthread"],
+    }),
+    linkopts = select({
+        ":windows": [],
+        ":windows_msvc": [],
+        "//conditions:default": ["-pthread"],
+    }),
     visibility = ["//visibility:public"],
 )
 
@@ -207,9 +225,13 @@ cc_binary(
     name = "regexp_benchmark",
     testonly = 1,
     srcs = ["re2/testing/regexp_benchmark.cc"],
-    linkopts = [
-        "-lm",
-        "-lrt",
-    ],
+    linkopts = select({
+        ":windows": [],
+        ":windows_msvc": [],
+        "//conditions:default": [
+            "-lm",
+            "-lrt",
+        ],
+    }),
     deps = [":benchmark"],
 )
