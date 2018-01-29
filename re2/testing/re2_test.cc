@@ -707,8 +707,14 @@ TEST(RE2, FullMatchN) {
 TEST(RE2, FullMatchIgnoredArg) {
   int i;
   string s;
-  // Ignored arg
+
+  // Old-school NULL should be ignored.
   CHECK(RE2::FullMatch("ruby:1234", "(\\w+)(:)(\\d+)", &s, (void*)NULL, &i));
+  CHECK_EQ(s, string("ruby"));
+  CHECK_EQ(i, 1234);
+
+  // C++11 nullptr should also be ignored.
+  CHECK(RE2::FullMatch("ruby:1234", "(\\w+)(:)(\\d+)", &s, nullptr, &i));
   CHECK_EQ(s, string("ruby"));
   CHECK_EQ(i, 1234);
 }
