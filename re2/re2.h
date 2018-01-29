@@ -774,6 +774,7 @@ class RE2::Arg {
 
   // Constructor specially designed for NULL arguments
   Arg(void*);
+  Arg(std::nullptr_t);
 
   typedef bool (*Parser)(const char* str, size_t n, void* dest);
 
@@ -849,6 +850,7 @@ class RE2::Arg {
 
 inline RE2::Arg::Arg() : arg_(NULL), parser_(parse_null) { }
 inline RE2::Arg::Arg(void* p) : arg_(p), parser_(parse_null) { }
+inline RE2::Arg::Arg(std::nullptr_t p) : arg_(p), parser_(parse_null) { }
 
 inline bool RE2::Arg::Parse(const char* str, size_t n) const {
   return (*parser_)(str, n, arg_);
