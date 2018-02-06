@@ -381,7 +381,7 @@ class RE2 {
   }
 #endif
 
-  // Replace the first match of "pattern" in "str" with "rewrite".
+  // Replace the first match of "re" in "str" with "rewrite".
   // Within "rewrite", backslash-escaped digits (\1 to \9) can be
   // used to insert text matching corresponding parenthesized group
   // from the pattern.  \0 in "rewrite" refers to the entire matching
@@ -394,8 +394,8 @@ class RE2 {
   //
   // Returns true if the pattern matches and a replacement occurs,
   // false otherwise.
-  static bool Replace(string *str,
-                      const RE2& pattern,
+  static bool Replace(string* str,
+                      const RE2& re,
                       const StringPiece& rewrite);
 
   // Like Replace(), except replaces successive non-overlapping occurrences
@@ -411,8 +411,8 @@ class RE2 {
   // replacing "ana" within "banana" makes only one replacement, not two.
   //
   // Returns the number of replacements made.
-  static int GlobalReplace(string *str,
-                           const RE2& pattern,
+  static int GlobalReplace(string* str,
+                           const RE2& re,
                            const StringPiece& rewrite);
 
   // Like Replace, except that if the pattern matches, "rewrite"
@@ -423,10 +423,10 @@ class RE2 {
   // successfully;  if no match occurs, the string is left unaffected.
   //
   // REQUIRES: "text" must not alias any part of "*out".
-  static bool Extract(const StringPiece &text,
-                      const RE2& pattern,
-                      const StringPiece &rewrite,
-                      string *out);
+  static bool Extract(const StringPiece& text,
+                      const RE2& re,
+                      const StringPiece& rewrite,
+                      string* out);
 
   // Escapes all potentially meaningful regexp characters in
   // 'unquoted'.  The returned string, used as a regular expression,
@@ -481,28 +481,28 @@ class RE2 {
   // Match against text starting at offset startpos
   // and stopping the search at offset endpos.
   // Returns true if match found, false if not.
-  // On a successful match, fills in match[] (up to nmatch entries)
+  // On a successful match, fills in submatch[] (up to nsubmatch entries)
   // with information about submatches.
-  // I.e. matching RE2("(foo)|(bar)baz") on "barbazbla" will return true,
-  // setting match[0] = "barbaz", match[1].data() = NULL, match[2] = "bar",
-  // match[3].data() = NULL, ..., up to match[nmatch-1].data() = NULL.
+  // I.e. matching RE2("(foo)|(bar)baz") on "barbazbla" will return true, with
+  // submatch[0] = "barbaz", submatch[1].data() = NULL, submatch[2] = "bar",
+  // submatch[3].data() = NULL, ..., up to submatch[nsubmatch-1].data() = NULL.
   //
   // Don't ask for more match information than you will use:
-  // runs much faster with nmatch == 1 than nmatch > 1, and
-  // runs even faster if nmatch == 0.
-  // Doesn't make sense to use nmatch > 1 + NumberOfCapturingGroups(),
+  // runs much faster with nsubmatch == 1 than nsubmatch > 1, and
+  // runs even faster if nsubmatch == 0.
+  // Doesn't make sense to use nsubmatch > 1 + NumberOfCapturingGroups(),
   // but will be handled correctly.
   //
   // Passing text == StringPiece(NULL, 0) will be handled like any other
   // empty string, but note that on return, it will not be possible to tell
   // whether submatch i matched the empty string or did not match:
-  // either way, match[i].data() == NULL.
+  // either way, submatch[i].data() == NULL.
   bool Match(const StringPiece& text,
              size_t startpos,
              size_t endpos,
-             Anchor anchor,
-             StringPiece *match,
-             int nmatch) const;
+             Anchor re_anchor,
+             StringPiece* submatch,
+             int nsubmatch) const;
 
   // Check that the given rewrite string is suitable for use with this
   // regular expression.  It checks that:

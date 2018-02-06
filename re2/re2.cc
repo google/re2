@@ -345,9 +345,9 @@ bool RE2::FindAndConsumeN(StringPiece* input, const RE2& re,
   }
 }
 
-bool RE2::Replace(string *str,
-                 const RE2& re,
-                 const StringPiece& rewrite) {
+bool RE2::Replace(string* str,
+                  const RE2& re,
+                  const StringPiece& rewrite) {
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
   if (nvec > arraysize(vec))
@@ -365,9 +365,9 @@ bool RE2::Replace(string *str,
   return true;
 }
 
-int RE2::GlobalReplace(string *str,
-                      const RE2& re,
-                      const StringPiece& rewrite) {
+int RE2::GlobalReplace(string* str,
+                       const RE2& re,
+                       const StringPiece& rewrite) {
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
   if (nvec > arraysize(vec))
@@ -437,10 +437,10 @@ int RE2::GlobalReplace(string *str,
   return count;
 }
 
-bool RE2::Extract(const StringPiece &text,
-                 const RE2& re,
-                 const StringPiece &rewrite,
-                 string *out) {
+bool RE2::Extract(const StringPiece& text,
+                  const RE2& re,
+                  const StringPiece& rewrite,
+                  string* out) {
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
   if (nvec > arraysize(vec))
@@ -535,7 +535,7 @@ bool RE2::PossibleMatchRange(string* min, string* max, int maxlen) const {
 // Avoid possible locale nonsense in standard strcasecmp.
 // The string a is known to be all lowercase.
 static int ascii_strcasecmp(const char* a, const char* b, size_t len) {
-  const char *ae = a + len;
+  const char* ae = a + len;
 
   for (; a < ae; a++, b++) {
     uint8_t x = *a;
@@ -896,8 +896,10 @@ int RE2::MaxSubmatch(const StringPiece& rewrite) {
 
 // Append the "rewrite" string, with backslash subsitutions from "vec",
 // to string "out".
-bool RE2::Rewrite(string* out, const StringPiece& rewrite,
-                  const StringPiece* vec, int veclen) const {
+bool RE2::Rewrite(string* out,
+                  const StringPiece& rewrite,
+                  const StringPiece* vec,
+                  int veclen) const {
   for (const char *s = rewrite.data(), *end = s + rewrite.size();
        s < end; s++) {
     if (*s != '\\') {
