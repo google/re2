@@ -78,6 +78,9 @@ cc_library(
         "//conditions:default": ["-pthread"],
     }),
     visibility = ["//visibility:public"],
+    deps = [
+        "@com_google_absl//absl/strings",
+    ],
 )
 
 cc_library(
