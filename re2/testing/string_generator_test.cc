@@ -47,7 +47,7 @@ static void RunTest(int len, const string& alphabet, bool donull) {
   }
 
   while (g.HasNext()) {
-    string s = g.Next().ToString();
+    string s = string(g.Next());
     n++;
 
     // Check that all characters in s appear in alphabet.

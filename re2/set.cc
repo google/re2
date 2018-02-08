@@ -68,7 +68,7 @@ int RE2::Set::Add(const StringPiece& pattern, string* error) {
     sub[1] = m;
     re = re2::Regexp::Concat(sub, 2, pf);
   }
-  elem_.emplace_back(pattern.ToString(), re);
+  elem_.emplace_back(string(pattern), re);
   return n;
 }
 
