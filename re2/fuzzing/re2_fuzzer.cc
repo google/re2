@@ -45,7 +45,7 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
   RE2::Consume(&sp1, re, &i1, &i2, &i3, &i4);
   RE2::FindAndConsume(&sp2, re, &d1, &d2, &d3, &d4);
 
-  s3 = s4 = text.ToString();
+  s3 = s4 = string(text);
   RE2::Replace(&s3, re, "");
   RE2::GlobalReplace(&s4, re, "");
 

@@ -609,7 +609,7 @@ bool Regexp::ParseState::DoLeftParen(const StringPiece& name) {
   Regexp* re = new Regexp(kLeftParen, flags_);
   re->cap_ = ++ncap_;
   if (name.data() != NULL)
-    re->name_ = new string(name.ToString());
+    re->name_ = new string(name);
   return PushRegexp(re);
 }
 
@@ -1790,7 +1790,7 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
   // Look up the group in the ICU Unicode data. Because ICU provides full
   // Unicode properties support, this could be more than a lookup by name.
   ::icu::UnicodeString ustr = ::icu::UnicodeString::fromUTF8(
-      string("\\p{") + name.ToString() + string("}"));
+      string("\\p{") + string(name) + string("}"));
   UErrorCode uerr = U_ZERO_ERROR;
   ::icu::UnicodeSet uset(ustr, uerr);
   if (U_FAILURE(uerr)) {

@@ -99,8 +99,8 @@ static RE2::ErrorCode RegexpErrorToRE2(re2::RegexpStatusCode code) {
 
 static string trunc(const StringPiece& pattern) {
   if (pattern.size() < 100)
-    return pattern.ToString();
-  return pattern.substr(0, 100).ToString() + "...";
+    return string(pattern);
+  return string(pattern.substr(0, 100)) + "...";
 }
 
 
@@ -172,7 +172,7 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
     empty_group_names = new std::map<int, string>;
   });
 
-  pattern_ = pattern.ToString();
+  pattern_ = string(pattern);
   options_.Copy(options);
   entire_regexp_ = NULL;
   suffix_regexp_ = NULL;
@@ -196,7 +196,7 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
     }
     error_ = new string(status.Text());
     error_code_ = RegexpErrorToRE2(status.code());
-    error_arg_ = status.error_arg().ToString();
+    error_arg_ = string(status.error_arg());
     return;
   }
 
