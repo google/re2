@@ -30,6 +30,7 @@ namespace re2 {
 
 class StringPiece {
  public:
+  typedef std::char_traits<char> traits_type;
   typedef char value_type;
   typedef char* pointer;
   typedef const char* const_pointer;
@@ -88,6 +89,13 @@ class StringPiece {
   void set(const char* str, size_type len) {
     data_ = str;
     size_ = len;
+  }
+
+  // Converts to `std::basic_string`.
+  template <typename A>
+  explicit operator std::basic_string<char, traits_type, A>() const {
+    if (!data_) return {};
+    return std::basic_string<char, traits_type, A>(data_, size_);
   }
 
   std::string as_string() const {
