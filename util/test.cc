@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 #include <stdio.h>
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__Fuchsia__)
 #include <sys/resource.h>
 #endif
 
