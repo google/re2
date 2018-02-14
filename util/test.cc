@@ -3,9 +3,6 @@
 // license that can be found in the LICENSE file.
 
 #include <stdio.h>
-#ifndef _WIN32
-#include <sys/resource.h>
-#endif
 
 #include "util/test.h"
 
