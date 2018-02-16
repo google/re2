@@ -771,7 +771,7 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint32_t flag) {
   mem_budget_ -= mem + kStateCacheOverhead;
 
   // Allocate new state along with room for next_ and inst_.
-  char* space = new char[mem];
+  char* space = std::allocator<char>().allocate(mem);
   State* s = new (space) State;
   (void) new (s->next_) std::atomic<State*>[nnext];
   // Work around a unfortunate bug in older versions of libstdc++.
@@ -798,7 +798,13 @@ void DFA::ClearCache() {
     StateSet::iterator tmp = begin;
     ++begin;
     // Deallocate the blob of memory that we allocated in DFA::CachedState().
-    delete[] reinterpret_cast<const char*>(*tmp);
+    // We recompute the size so we can benefit from sized delete.
+    const int nnext = prog_->bytemap_range() + 1;
+    const int ninst = (*tmp)->ninst_;
+    const size_t mem =
+        sizeof(State) + nnext*sizeof(std::atomic<State*>) + ninst*sizeof(int);
+    std::allocator<char>().deallocate(
+        reinterpret_cast<char*>(*tmp), mem);
   }
   state_cache_.clear();
 }
