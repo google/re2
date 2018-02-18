@@ -9,6 +9,11 @@ licenses(["notice"])
 exports_files(["LICENSE"])
 
 config_setting(
+    name = "darwin",
+    values = {"cpu": "darwin"},
+)
+
+config_setting(
     name = "windows",
     values = {"cpu": "x64_windows"},
 )
@@ -68,11 +73,13 @@ cc_library(
         "re2/stringpiece.h",
     ],
     copts = select({
+        ":darwin": [],
         ":windows": [],
         ":windows_msvc": [],
         "//conditions:default": ["-pthread"],
     }),
     linkopts = select({
+        ":darwin": [],
         ":windows": [],
         ":windows_msvc": [],
         "//conditions:default": ["-pthread"],
