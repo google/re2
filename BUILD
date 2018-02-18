@@ -18,6 +18,11 @@ config_setting(
     values = {"cpu": "x64_windows_msvc"},
 )
 
+config_setting(
+    name = 'darwin',
+    values = {'cpu': 'darwin'},
+)
+
 cc_library(
     name = "re2",
     srcs = [
@@ -70,11 +75,13 @@ cc_library(
     copts = select({
         ":windows": [],
         ":windows_msvc": [],
+        ":darwin": [],
         "//conditions:default": ["-pthread"],
     }),
     linkopts = select({
         ":windows": [],
         ":windows_msvc": [],
+        ":darwin": [],
         "//conditions:default": ["-pthread"],
     }),
     visibility = ["//visibility:public"],
@@ -228,6 +235,9 @@ cc_binary(
     linkopts = select({
         ":windows": [],
         ":windows_msvc": [],
+        ":darwin": [
+            "-lm",
+        ],
         "//conditions:default": [
             "-lm",
             "-lrt",
