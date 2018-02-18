@@ -228,13 +228,5 @@ cc_binary(
     name = "regexp_benchmark",
     testonly = 1,
     srcs = ["re2/testing/regexp_benchmark.cc"],
-    linkopts = select({
-        ":windows": [],
-        ":windows_msvc": [],
-        "//conditions:default": [
-            "-lm",
-            "-lrt",
-        ],
-    }),
     deps = [":benchmark"],
 )
