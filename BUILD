@@ -9,6 +9,11 @@ licenses(["notice"])
 exports_files(["LICENSE"])
 
 config_setting(
+    name = "darwin",
+    values = {"cpu": "darwin"},
+)
+
+config_setting(
     name = "windows",
     values = {"cpu": "x64_windows"},
 )
@@ -73,6 +78,10 @@ cc_library(
         "//conditions:default": ["-pthread"],
     }),
     linkopts = select({
+        # Darwin doesn't need `-pthread' when linking and it appears that
+        # older versions of Clang will warn about the unused command line
+        # argument, so just don't pass it.
+        ":darwin": [],
         ":windows": [],
         ":windows_msvc": [],
         "//conditions:default": ["-pthread"],
