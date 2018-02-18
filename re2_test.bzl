@@ -8,5 +8,5 @@ def re2_test(name, deps=[], size="medium"):
       name=name,
       srcs=["re2/testing/%s.cc" % (name)],
       deps=[":test"] + deps,
-      size = size,
+      size=size,
   )
