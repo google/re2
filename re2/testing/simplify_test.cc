@@ -252,13 +252,13 @@ TEST(TestSimplify, SimpleRegexps) {
                                Regexp::MatchNL | (Regexp::LikePerl &
                                                   ~Regexp::OneLine),
                                &status);
-    CHECK(re != NULL) << " " << tests[i].regexp << " " << status.Text();
+    ASSERT_TRUE(re != NULL) << " " << tests[i].regexp << " " << status.Text();
     Regexp* sre = re->Simplify();
-    CHECK(sre != NULL);
+    ASSERT_TRUE(sre != NULL);
 
     // Check that already-simple regexps don't allocate new ones.
     if (strcmp(tests[i].regexp, tests[i].simplified) == 0) {
-      CHECK(re == sre) << " " << tests[i].regexp
+      ASSERT_TRUE(re == sre) << " " << tests[i].regexp
         << " " << re->ToString() << " " << sre->ToString();
     }
 

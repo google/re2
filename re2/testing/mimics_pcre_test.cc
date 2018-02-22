@@ -65,8 +65,8 @@ TEST(MimicsPCRE, SimpleTests) {
       if (j == 0)
         flags = flags | Regexp::Latin1;
       Regexp* re = Regexp::Parse(t.regexp, flags, NULL);
-      CHECK(re) << " " << t.regexp;
-      CHECK_EQ(t.should_match, re->MimicsPCRE())
+      ASSERT_TRUE(re != NULL) << " " << t.regexp;
+      ASSERT_EQ(t.should_match, re->MimicsPCRE())
         << " " << t.regexp << " "
         << (j==0 ? "latin1" : "utf");
       re->Decref();
