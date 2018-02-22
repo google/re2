@@ -23,14 +23,26 @@ class TestRegisterer {
   }
 };
 
-// TODO(rsc): Do a better job.
-#define EXPECT_EQ CHECK_EQ
+// fatal assertions
+#define ASSERT_TRUE CHECK
+#define ASSERT_FALSE(x) CHECK(!(x))
+#define ASSERT_EQ CHECK_EQ
+#define ASSERT_NE CHECK_NE
+#define ASSERT_LT CHECK_LT
+#define ASSERT_LE CHECK_LE
+#define ASSERT_GT CHECK_GT
+#define ASSERT_GE CHECK_GE
+
+// nonfatal assertions
+// TODO(rsc): Do a better job?
 #define EXPECT_TRUE CHECK
-#define EXPECT_LT CHECK_LT
-#define EXPECT_GT CHECK_GT
-#define EXPECT_LE CHECK_LE
-#define EXPECT_GE CHECK_GE
 #define EXPECT_FALSE(x) CHECK(!(x))
+#define EXPECT_EQ CHECK_EQ
+#define EXPECT_NE CHECK_NE
+#define EXPECT_LT CHECK_LT
+#define EXPECT_LE CHECK_LE
+#define EXPECT_GT CHECK_GT
+#define EXPECT_GE CHECK_GE
 
 namespace testing {
 class MallocCounter {

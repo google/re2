@@ -114,15 +114,15 @@ TEST(PossibleMatchRange, HandWritten) {
       if (j == 0) {
         LOG(INFO) << "Checking regexp=" << CEscape(t.regexp);
         Regexp* re = Regexp::Parse(t.regexp, Regexp::LikePerl, NULL);
-        CHECK(re);
+        ASSERT_TRUE(re != NULL);
         Prog* prog = re->CompileToProg(0);
-        CHECK(prog);
-        CHECK(prog->PossibleMatchRange(&min, &max, t.maxlen))
+        ASSERT_TRUE(prog != NULL);
+        ASSERT_TRUE(prog->PossibleMatchRange(&min, &max, t.maxlen))
           << " " << t.regexp;
         delete prog;
         re->Decref();
       } else {
-        CHECK(RE2(t.regexp).PossibleMatchRange(&min, &max, t.maxlen));
+        ASSERT_TRUE(RE2(t.regexp).PossibleMatchRange(&min, &max, t.maxlen));
       }
       EXPECT_EQ(t.min, min) << t.regexp;
       EXPECT_EQ(t.max, max) << t.regexp;
@@ -204,7 +204,7 @@ void PossibleMatchTester::HandleRegexp(const string& regexp) {
   VLOG(3) << CEscape(regexp);
 
   RE2 re(regexp, RE2::Latin1);
-  CHECK_EQ(re.error(), "");
+  ASSERT_EQ(re.error(), "");
 
   string min, max;
   if(!re.PossibleMatchRange(&min, &max, 10)) {
@@ -222,8 +222,8 @@ void PossibleMatchTester::HandleRegexp(const string& regexp) {
     tests_++;
     if (!RE2::FullMatch(s, re))
       continue;
-    CHECK_GE(s, min) << " regexp: " << regexp << " max: " << max;
-    CHECK_LE(s, max) << " regexp: " << regexp << " min: " << min;
+    ASSERT_GE(s, min) << " regexp: " << regexp << " max: " << max;
+    ASSERT_LE(s, max) << " regexp: " << regexp << " min: " << min;
   }
 }
 
