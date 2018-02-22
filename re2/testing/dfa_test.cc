@@ -117,8 +117,8 @@ TEST(SingleThreaded, BuildEntireDFA) {
 // position in the input, never reusing any states until it gets to the
 // end of the string.  This is the worst possible case for DFA execution.
 static string DeBruijnString(int n) {
-  ASSERT_LT(n, static_cast<int>(8*sizeof(int)));
-  ASSERT_GT(n, 0);
+  CHECK_LT(n, static_cast<int>(8*sizeof(int)));
+  CHECK_GT(n, 0);
 
   std::vector<bool> did(size_t{1}<<n);
   for (int i = 0; i < 1<<n; i++)
@@ -138,7 +138,7 @@ static string DeBruijnString(int n) {
     } else {
       s.append("0");
     }
-    ASSERT_FALSE(did[bits]);
+    CHECK(!did[bits]);
     did[bits] = true;
   }
   return s;
