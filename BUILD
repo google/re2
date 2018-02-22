@@ -47,7 +47,6 @@ cc_library(
         "re2/regexp.h",
         "re2/set.cc",
         "re2/simplify.cc",
-        "re2/stringpiece.cc",
         "re2/tostring.cc",
         "re2/unicode_casefold.cc",
         "re2/unicode_casefold.h",
