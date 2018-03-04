@@ -246,22 +246,13 @@ testofiles: $(TESTOFILES)
 test: $(DTESTS) $(TESTS) $(STESTS) debug-test static-test shared-test
 
 debug-test: $(DTESTS)
-	@echo
-	@echo Running debug binary tests.
-	@echo
 	@./runtests $(DTESTS)
 
 static-test: $(TESTS)
-	@echo
-	@echo Running static binary tests.
-	@echo
 	@./runtests $(TESTS)
 
 shared-test: $(STESTS)
-	@echo
-	@echo Running dynamic binary tests.
-	@echo
-	@LD_LIBRARY_PATH=obj/so:$(LD_LIBRARY_PATH) ./runtests $(STESTS)
+	@./runtests -shared-library-path obj/so $(STESTS)
 
 debug-bigtest: $(DTESTS) $(DBIGTESTS)
 	@./runtests $(DTESTS) $(DBIGTESTS)
@@ -270,7 +261,7 @@ static-bigtest: $(TESTS) $(BIGTESTS)
 	@./runtests $(TESTS) $(BIGTESTS)
 
 shared-bigtest: $(STESTS) $(SBIGTESTS)
-	@LD_LIBRARY_PATH=obj/so:$(LD_LIBRARY_PATH) ./runtests $(STESTS) $(SBIGTESTS)
+	@./runtests -shared-library-path obj/so $(STESTS) $(SBIGTESTS)
 
 benchmark: obj/test/regexp_benchmark
 
@@ -314,7 +305,11 @@ shared-testinstall:
 	@mkdir -p obj
 	@cp testinstall.cc obj
 	(cd obj && $(CXX) testinstall.cc -o testinstall $(CXXFLAGS) $(LDFLAGS))
-	LD_LIBRARY_PATH=$(DESTDIR)$(libdir) obj/testinstall
+ifeq ($(shell uname),Darwin)
+	DYLD_LIBRARY_PATH="$(DESTDIR)$(libdir):$(DYLD_LIBRARY_PATH)" obj/testinstall
+else
+	LD_LIBRARY_PATH="$(DESTDIR)$(libdir):$(LD_LIBRARY_PATH)" obj/testinstall
+endif
 
 benchlog: obj/test/regexp_benchmark
 	(echo '==BENCHMARK==' `hostname` `date`; \
