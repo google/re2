@@ -107,6 +107,7 @@ matrix:
       addons:
         apt:
           sources:
+            - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-4.0
           packages:
             - clang-4.0
@@ -116,6 +117,7 @@ matrix:
       addons:
         apt:
           sources:
+            - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
@@ -125,6 +127,7 @@ matrix:
       addons:
         apt:
           sources:
+            - ubuntu-toolchain-r-test
             - sourceline: 'deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
