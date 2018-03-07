@@ -12,7 +12,13 @@ using std::string;
 #define arraysize(array) (int)(sizeof(array)/sizeof((array)[0]))
 
 #ifndef FALLTHROUGH_INTENDED
-#define FALLTHROUGH_INTENDED do { } while (0)
+#if defined(__clang__)
+#define FALLTHROUGH_INTENDED [[clang::fallthrough]]
+#elif defined(__GNUC__)
+#define FALLTHROUGH_INTENDED [[gnu::fallthrough]]
+#else
+#define FALLTHROUGH_INTENDED do {} while (0)
+#endif
 #endif
 
 #ifndef NO_THREAD_SAFETY_ANALYSIS
