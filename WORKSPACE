@@ -13,12 +13,6 @@ http_archive(
 )
 
 http_archive(
-    name = "com_googlesource_code_cctz",
-    strip_prefix = "cctz-master",
-    urls = ["https://github.com/google/cctz/archive/master.zip"],
-)
-
-http_archive(
     name = "com_google_googletest",
     strip_prefix = "googletest-master",
     urls = ["https://github.com/google/googletest/archive/master.zip"],
