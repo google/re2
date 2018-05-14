@@ -82,18 +82,11 @@ class LogMessage {
   LogMessage& operator=(const LogMessage&) = delete;
 };
 
-// Silence "destructor never returns" warning for ~LogMessageFatal().
-// Since this is a header file, push and then pop to limit the scope.
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4722)
-#endif
-
 class LogMessageFatal : public LogMessage {
  public:
   LogMessageFatal(const char* file, int line)
       : LogMessage(file, line) {}
-  ~LogMessageFatal() {
+  ATTRIBUTE_NORETURN ~LogMessageFatal() {
     Flush();
     abort();
   }
@@ -101,9 +94,5 @@ class LogMessageFatal : public LogMessage {
   LogMessageFatal(const LogMessageFatal&) = delete;
   LogMessageFatal& operator=(const LogMessageFatal&) = delete;
 };
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 #endif  // UTIL_LOGGING_H_
