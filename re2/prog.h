@@ -14,6 +14,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 #include "util/util.h"
 #include "util/logging.h"
@@ -59,7 +60,8 @@ class Prog {
   // Single instruction in regexp program.
   class Inst {
    public:
-    Inst() : out_opcode_(0), out1_(0) {}
+    // See the assertion below for why this is so.
+    Inst() = default;
 
     // Copyable.
     Inst(const Inst&) = default;
@@ -155,6 +157,11 @@ class Prog {
     friend struct PatchList;
     friend class Prog;
   };
+
+  // Inst must be trivial so that we can freely clear it with memset(3).
+  // Arrays of Inst are initialised by copying the initial elements with
+  // memmove(3) and then clearing any remaining elements with memset(3).
+  static_assert(std::is_trivial<Inst>::value, "Inst must be trivial");
 
   // Whether to anchor the search.
   enum Anchor {
