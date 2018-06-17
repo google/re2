@@ -9,7 +9,7 @@ import re
 import urllib2
 
 # Directory or URL where Unicode tables reside.
-_UNICODE_DIR = "http://www.unicode.org/Public/10.0.0/ucd"
+_UNICODE_DIR = "https://www.unicode.org/Public/11.0.0/ucd"
 
 # Largest valid Unicode code value.
 _RUNE_MAX = 0x10FFFF
@@ -148,7 +148,7 @@ def ReadUnicodeTable(filename, nfields, doline):
     raise InputError("invalid number of fields %d" % (nfields,))
 
   if type(filename) == str:
-    if filename.startswith("http://"):
+    if filename.startswith("https://"):
       fil = urllib2.urlopen(filename)
     else:
       fil = open(filename, "r")
