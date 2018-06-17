@@ -260,6 +260,7 @@ Cypriot
 Cyrillic
 Deseret
 Devanagari
+Dogra
 Duployan
 Egyptian_Hieroglyphs
 Elbasan
@@ -270,9 +271,11 @@ Gothic
 Grantha
 Greek
 Gujarati
+Gunjala_Gondi
 Gurmukhi
 Han
 Hangul
+Hanifi_Rohingya
 Hanunoo
 Hatran
 Hebrew
@@ -300,11 +303,13 @@ Lisu
 Lycian
 Lydian
 Mahajani
+Makasar
 Malayalam
 Mandaic
 Manichaean
 Marchen
 Masaram_Gondi
+Medefaidrin
 Meetei_Mayek
 Mende_Kikakui
 Meroitic_Cursive
@@ -327,6 +332,7 @@ Old_Italic
 Old_North_Arabian
 Old_Permic
 Old_Persian
+Old_Sogdian
 Old_South_Arabian
 Old_Turkic
 Oriya
@@ -347,6 +353,7 @@ Shavian
 Siddham
 SignWriting
 Sinhala
+Sogdian
 Sora_Sompeng
 Soyombo
 Sundanese
