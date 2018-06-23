@@ -5,6 +5,8 @@
 #ifndef UTIL_UTIL_H_
 #define UTIL_UTIL_H_
 
+#include <absl/base/thread_annotations.h>
+
 // TODO(junyer): Get rid of this.
 #include <string>
 using std::string;
@@ -29,10 +31,6 @@ using std::string;
 #else
 #define FALLTHROUGH_INTENDED do {} while (0)
 #endif
-#endif
-
-#ifndef NO_THREAD_SAFETY_ANALYSIS
-#define NO_THREAD_SAFETY_ANALYSIS
 #endif
 
 #endif  // UTIL_UTIL_H_
