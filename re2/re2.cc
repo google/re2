@@ -668,9 +668,9 @@ bool RE2::Match(const StringPiece& text,
                            Prog::kLongestMatch, &match, &dfa_failed, NULL)) {
         if (dfa_failed) {
           if (options_.log_errors())
-            LOG(ERROR) << "DFA out of memory: size " << prog_->size() << ", "
-                       << "bytemap range " << prog_->bytemap_range() << ", "
-                       << "list count " << prog_->list_count();
+            LOG(ERROR) << "DFA out of memory: size " << prog->size() << ", "
+                       << "bytemap range " << prog->bytemap_range() << ", "
+                       << "list count " << prog->list_count();
           // Fall back to NFA below.
           skipped_test = true;
           break;
