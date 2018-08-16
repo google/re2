@@ -35,7 +35,6 @@ RegexpTest simple_tests[] = {
   { "a", "aaaaaaa" },
   { "a*", "aaaaaaa" },
   { "a*", "" },
-  { "a*", NULL },
   { "ab|cd", "xabcdx" },
   { "a", "cab" },
   { "a*b", "cab" },
