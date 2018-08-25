@@ -65,7 +65,7 @@
 // Example: fails because string cannot be stored in integer
 //    CHECK(!RE2::FullMatch("ruby", "(.*)", &i));
 //
-// Example: fails because there aren't enough sub-patterns:
+// Example: fails because there aren't enough sub-patterns
 //    CHECK(!RE2::FullMatch("ruby:1234", "\\w+:\\d+", &s));
 //
 // Example: does not try to extract any extra sub-patterns
@@ -563,7 +563,7 @@ class RE2 {
     // can have two DFAs (one first match, one longest match).
     // That makes 4 DFAs:
     //
-    //   forward, first-match    - used for UNANCHORED or ANCHOR_LEFT searches
+    //   forward, first-match    - used for UNANCHORED or ANCHOR_START searches
     //                               if opt.longest_match() == false
     //   forward, longest-match  - used for all ANCHOR_BOTH searches,
     //                               and the other two kinds if
