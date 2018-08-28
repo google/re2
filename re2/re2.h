@@ -289,6 +289,40 @@ class RE2 {
   // to know about prefix_ and prefix_foldcase_.
   re2::Regexp* Regexp() const { return entire_regexp_; }
 
+  /***** Variable number of matched argument functions ******/
+  // The functions here have names ending in 'N' and are used to implement
+  // the functions whose names are the prefix before the 'N'. It is sometimes
+  // useful to invoke them directly, but the syntax is awkward, so the N-less
+  // versions should be preferred.
+  static bool FullMatchN(const StringPiece& text, const RE2& re,
+                         const Arg* const args[], int argc);
+  static bool PartialMatchN(const StringPiece& text, const RE2& re,
+                            const Arg* const args[], int argc);
+  static bool ConsumeN(StringPiece* input, const RE2& re,
+                       const Arg* const args[], int argc);
+  static bool FindAndConsumeN(StringPiece* input, const RE2& re,
+                              const Arg* const args[], int argc);
+
+#ifndef SWIG
+ private:
+  template <typename F, typename SP>
+  static inline bool Apply(F f, SP sp, const RE2& re) {
+    return f(sp, re, NULL, 0);
+  }
+
+  template <typename F, typename SP, typename... A>
+  static inline bool Apply(F f, SP sp, const RE2& re, const A&... a) {
+    const Arg* const args[] = {&a...};
+    const int argc = sizeof...(a);
+    return f(sp, re, args, argc);
+  }
+
+ public:
+  // In order to allow FullMatch() et al. to be called with a varying number
+  // of arguments of varying types, we use two layers of variadic templates.
+  // The first layer constructs the temporary Arg objects. The second layer
+  // (above) constructs the array of pointers to the temporary Arg objects.
+
   /***** The useful part: the matching interface *****/
 
   // Matches "text" against "re".  If pointer arguments are
@@ -319,62 +353,30 @@ class RE2 {
   // valid number):
   //    int number;
   //    RE2::FullMatch("abc", "[a-z]+(\\d+)?", &number);
-  static bool FullMatchN(const StringPiece& text, const RE2& re,
-                         const Arg* const args[], int argc);
-
-  // Exactly like FullMatch(), except that "re" is allowed to match
-  // a substring of "text".
-  static bool PartialMatchN(const StringPiece& text, const RE2& re,
-                            const Arg* const args[], int argc);
-
-  // Like FullMatch() and PartialMatch(), except that "re" has to match
-  // a prefix of the text, and "input" is advanced past the matched
-  // text.  Note: "input" is modified iff this routine returns true.
-  static bool ConsumeN(StringPiece* input, const RE2& re,
-                       const Arg* const args[], int argc);
-
-  // Like Consume(), but does not anchor the match at the beginning of
-  // the text.  That is, "re" need not start its match at the beginning
-  // of "input".  For example, "FindAndConsume(s, "(\\w+)", &word)" finds
-  // the next word in "s" and stores it in "word".
-  static bool FindAndConsumeN(StringPiece* input, const RE2& re,
-                              const Arg* const args[], int argc);
-
-#ifndef SWIG
- private:
-  template <typename F, typename SP>
-  static inline bool Apply(F f, SP sp, const RE2& re) {
-    return f(sp, re, NULL, 0);
-  }
-
-  template <typename F, typename SP, typename... A>
-  static inline bool Apply(F f, SP sp, const RE2& re, const A&... a) {
-    const Arg* const args[] = {&a...};
-    const int argc = sizeof...(a);
-    return f(sp, re, args, argc);
-  }
-
- public:
-  // In order to allow FullMatch() et al. to be called with a varying number
-  // of arguments of varying types, we use two layers of variadic templates.
-  // The first layer constructs the temporary Arg objects. The second layer
-  // (above) constructs the array of pointers to the temporary Arg objects.
-
   template <typename... A>
   static bool FullMatch(const StringPiece& text, const RE2& re, A&&... a) {
     return Apply(FullMatchN, text, re, Arg(std::forward<A>(a))...);
   }
 
+  // Exactly like FullMatch(), except that "re" is allowed to match
+  // a substring of "text".
   template <typename... A>
   static bool PartialMatch(const StringPiece& text, const RE2& re, A&&... a) {
     return Apply(PartialMatchN, text, re, Arg(std::forward<A>(a))...);
   }
 
+  // Like FullMatch() and PartialMatch(), except that "re" has to match
+  // a prefix of the text, and "input" is advanced past the matched
+  // text.  Note: "input" is modified iff this routine returns true.
   template <typename... A>
   static bool Consume(StringPiece* input, const RE2& re, A&&... a) {
     return Apply(ConsumeN, input, re, Arg(std::forward<A>(a))...);
   }
 
+  // Like Consume(), but does not anchor the match at the beginning of
+  // the text.  That is, "re" need not start its match at the beginning
+  // of "input".  For example, "FindAndConsume(s, "(\\w+)", &word)" finds
+  // the next word in "s" and stores it in "word".
   template <typename... A>
   static bool FindAndConsume(StringPiece* input, const RE2& re, A&&... a) {
     return Apply(FindAndConsumeN, input, re, Arg(std::forward<A>(a))...);
