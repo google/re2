@@ -76,6 +76,7 @@ BitState::BitState(Prog* prog)
     endmatch_(false),
     submatch_(NULL),
     nsubmatch_(0),
+    job_(256),  // allocates 4KiB when sizeof(Job) == 16 :)
     njob_(0) {
 }
 
@@ -83,7 +84,8 @@ BitState::BitState(Prog* prog)
 // If so, remember that it was visited so that the next time,
 // we don't repeat the visit.
 bool BitState::ShouldVisit(int id, const char* p) {
-  size_t n = id * (text_.size() + 1) + (p - text_.begin());
+  int n = id * static_cast<int>(text_.size()+1) +
+          static_cast<int>(p-text_.begin());
   if (visited_[n/VisitedBits] & (1 << (n & (VisitedBits-1))))
     return false;
   visited_[n/VisitedBits] |= 1 << (n & (VisitedBits-1));
@@ -319,9 +321,6 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
     ncap = 2;
   cap_ = PODArray<const char*>(ncap);
   memset(cap_.data(), 0, ncap*sizeof cap_[0]);
-
-  // When sizeof(Job) == 16, we start with a nice round 4KiB. :)
-  job_ = PODArray<Job>(256);
 
   // Anchored search must start at text.begin().
   if (anchored_) {
