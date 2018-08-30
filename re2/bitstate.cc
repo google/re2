@@ -20,8 +20,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <utility>
 
 #include "util/logging.h"
+#include "util/pod_array.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"
 
@@ -36,7 +38,6 @@ struct Job {
 class BitState {
  public:
   explicit BitState(Prog* prog);
-  ~BitState();
 
   // The usual Search prototype.
   // Can only call Search once per BitState.
@@ -47,7 +48,7 @@ class BitState {
  private:
   inline bool ShouldVisit(int id, const char* p);
   void Push(int id, const char* p, int arg);
-  bool GrowStack();
+  void GrowStack();
   bool TrySearch(int id, const char* p);
 
   // Search parameters
@@ -57,20 +58,15 @@ class BitState {
   bool anchored_;           // whether search is anchored at text.begin()
   bool longest_;            // whether search wants leftmost-longest match
   bool endmatch_;           // whether match must end at text.end()
-  StringPiece *submatch_;   // submatches to fill in
+  StringPiece* submatch_;   // submatches to fill in
   int nsubmatch_;           //   # of submatches to fill in
 
   // Search state
-  const char** cap_;        // capture registers
-  int ncap_;
-
   static const int VisitedBits = 32;
-  uint32_t *visited_;       // bitmap: (Inst*, char*) pairs already backtracked
-  size_t nvisited_;         //   # of words in bitmap
-
-  Job *job_;                // stack of text positions to explore
-  int njob_;
-  int maxjob_;
+  PODArray<uint32_t> visited_;  // bitmap: (Inst*, char*) pairs visited
+  PODArray<const char*> cap_;   // capture registers
+  PODArray<Job> job_;           // stack of text positions to explore
+  int njob_;                    // stack size
 };
 
 BitState::BitState(Prog* prog)
@@ -80,19 +76,7 @@ BitState::BitState(Prog* prog)
     endmatch_(false),
     submatch_(NULL),
     nsubmatch_(0),
-    cap_(NULL),
-    ncap_(0),
-    visited_(NULL),
-    nvisited_(0),
-    job_(NULL),
-    njob_(0),
-    maxjob_(0) {
-}
-
-BitState::~BitState() {
-  delete[] visited_;
-  delete[] job_;
-  delete[] cap_;
+    njob_(0) {
 }
 
 // Should the search visit the pair ip, p?
@@ -107,24 +91,22 @@ bool BitState::ShouldVisit(int id, const char* p) {
 }
 
 // Grow the stack.
-bool BitState::GrowStack() {
-  maxjob_ *= 2;
-  Job* newjob = new Job[maxjob_];
-  memmove(newjob, job_, njob_*sizeof job_[0]);
-  delete[] job_;
-  job_ = newjob;
-  if (njob_ >= maxjob_) {
-    LOG(DFATAL) << "Job stack overflow.";
-    return false;
-  }
-  return true;
+void BitState::GrowStack() {
+  PODArray<Job> tmp(2*job_.size());
+  memmove(tmp.data(), job_.data(), njob_*sizeof job_[0]);
+  job_ = std::move(tmp);
 }
 
 // Push the triple (id, p, arg) onto the stack, growing it if necessary.
 void BitState::Push(int id, const char* p, int arg) {
-  if (njob_ >= maxjob_) {
-    if (!GrowStack())
+  if (njob_ >= job_.size()) {
+    GrowStack();
+    if (njob_ >= job_.size()) {
+      LOG(DFATAL) << "GrowStack() failed: "
+                  << "njob_ = " << njob_ << ", "
+                  << "job_.size() = " << job_.size();
       return;
+    }
   }
   int op = prog_->inst(id)->opcode();
   if (op == kInstFail)
@@ -234,7 +216,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
             if (!ip->last())
               Push(id+1, p, 0);  // try the next when we're done
 
-            if (0 <= ip->cap() && ip->cap() < ncap_) {
+            if (0 <= ip->cap() && ip->cap() < cap_.size()) {
               // Capture p to register, but save old value.
               Push(id, cap_[ip->cap()], 1);  // come back when we're done
               cap_[ip->cap()] = p;
@@ -327,18 +309,19 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
     submatch_[i] = StringPiece();
 
   // Allocate scratch space.
-  nvisited_ = (prog_->size() * (text.size()+1) + VisitedBits-1) / VisitedBits;
-  visited_ = new uint32_t[nvisited_];
-  memset(visited_, 0, nvisited_*sizeof visited_[0]);
+  int nvisited = prog_->size() * static_cast<int>(text.size()+1);
+  nvisited = (nvisited + VisitedBits-1) / VisitedBits;
+  visited_ = PODArray<uint32_t>(nvisited);
+  memset(visited_.data(), 0, nvisited*sizeof visited_[0]);
 
-  ncap_ = 2*nsubmatch;
-  if (ncap_ < 2)
-    ncap_ = 2;
-  cap_ = new const char*[ncap_];
-  memset(cap_, 0, ncap_*sizeof cap_[0]);
+  int ncap = 2*nsubmatch;
+  if (ncap < 2)
+    ncap = 2;
+  cap_ = PODArray<const char*>(ncap);
+  memset(cap_.data(), 0, ncap*sizeof cap_[0]);
 
-  maxjob_ = 256;
-  job_ = new Job[maxjob_];
+  // When sizeof(Job) == 16, we start with a nice round 4KiB. :)
+  job_ = PODArray<Job>(256);
 
   // Anchored search must start at text.begin().
   if (anchored_) {
