@@ -612,12 +612,12 @@ bool PCRE::DoMatchImpl(const StringPiece& text,
                        int n,
                        int* vec,
                        int vecsize) const {
+  assert((1 + n) * 3 <= vecsize);  // results + PCRE workspace
   if (NumberOfCapturingGroups() < n) {
     // RE has fewer capturing groups than number of Arg pointers passed in.
     return false;
   }
 
-  assert((1 + n) * 3 <= vecsize);  // results + PCRE workspace
   int matches = TryMatch(text, 0, anchor, true, vec, vecsize);
   assert(matches >= 0);  // TryMatch never returns negatives
   if (matches == 0)
