@@ -83,6 +83,7 @@ HFILES=\
 	util/mix.h\
 	util/mutex.h\
 	util/pcre.h\
+	util/pod_array.h\
 	util/sparse_array.h\
 	util/sparse_set.h\
 	util/strutil.h\
