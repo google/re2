@@ -17,7 +17,7 @@ class PODArray {
                 "T must be POD");
 
   PODArray()
-      : ptr_(nullptr, Deleter()) {}
+      : ptr_() {}
   explicit PODArray(int len)
       : ptr_(std::allocator<T>().allocate(len), Deleter(len)) {}
 
