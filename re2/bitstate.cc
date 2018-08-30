@@ -76,7 +76,6 @@ BitState::BitState(Prog* prog)
     endmatch_(false),
     submatch_(NULL),
     nsubmatch_(0),
-    job_(256),  // allocates 4KiB when sizeof(Job) == 16 :)
     njob_(0) {
 }
 
@@ -321,6 +320,9 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
     ncap = 2;
   cap_ = PODArray<const char*>(ncap);
   memset(cap_.data(), 0, ncap*sizeof cap_[0]);
+
+  // When sizeof(Job) == 16, we start with a nice round 4KiB. :)
+  job_ = PODArray<Job>(256);
 
   // Anchored search must start at text.begin().
   if (anchored_) {
