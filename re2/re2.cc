@@ -557,7 +557,7 @@ bool RE2::Match(const StringPiece& text,
                 Anchor re_anchor,
                 StringPiece* submatch,
                 int nsubmatch) const {
-  if (!ok() || suffix_regexp_ == NULL) {
+  if (!ok()) {
     if (options_.log_errors())
       LOG(ERROR) << "Invalid RE2: " << *error_;
     return false;
@@ -784,6 +784,11 @@ bool RE2::DoMatch(const StringPiece& text,
     return false;
   }
 
+  if (NumberOfCapturingGroups() < n) {
+    // RE has fewer capturing groups than number of Arg pointers passed in.
+    return false;
+  }
+
   // Count number of capture groups needed.
   int nvec;
   if (n == 0 && consumed == NULL)
@@ -814,13 +819,6 @@ bool RE2::DoMatch(const StringPiece& text,
     // We are not interested in results
     delete[] heapvec;
     return true;
-  }
-
-  int ncap = NumberOfCapturingGroups();
-  if (ncap < n) {
-    // RE has fewer capturing groups than number of arg pointers passed in
-    delete[] heapvec;
-    return false;
   }
 
   // If we got here, we must have matched the whole pattern.
