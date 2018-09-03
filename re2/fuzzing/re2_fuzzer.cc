@@ -56,7 +56,7 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
 
 // Entry point for libFuzzer.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  if (size == 0 || size > 512)
+  if (size == 0 || size > 999)
     return 0;
 
   // Crudely limit the use of \p and \P.
@@ -67,10 +67,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // counted repetition is involved - whereas the marginal benefit is zero.
   int backslash_p = 0;
   for (size_t i = 0; i < size; i++) {
-    if (data[i] == '\\' && i+1 < size && (data[i+1] == 'p' || data[i+1] == 'P'))
+    if (data[i] != '\\')
+      continue;
+    i++;
+    if (i >= size)
+      break;
+    if (data[i] == 'p' || data[i] == 'P')
       backslash_p++;
   }
-  if (backslash_p > 10)
+  if (backslash_p > 1)
     return 0;
 
   // The one-at-a-time hash by Bob Jenkins.
