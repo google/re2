@@ -549,8 +549,9 @@ class RE2 {
     //                              with (?i) unless in posix_syntax mode)
     //
     // The following options are only consulted when posix_syntax == true.
-    // (When posix_syntax == false these features are always enabled and
-    // cannot be turned off.)
+    // When posix_syntax == false, these features are always enabled and
+    // cannot be turned off; to perform multi-line matching in that case,
+    // begin the regexp with (?m).
     //   perl_classes     (false) allow Perl's \d \s \w \D \S \W
     //   word_boundary    (false) allow Perl's \b \B (word boundary and not)
     //   one_line         (false) ^ and $ only match beginning and end of text
