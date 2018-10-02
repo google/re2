@@ -278,11 +278,13 @@ class RE2 {
   // Returns the program size, a very approximate measure of a regexp's "cost".
   // Larger numbers are more expensive than smaller numbers.
   int ProgramSize() const;
+  int ReverseProgramSize() const;
 
   // EXPERIMENTAL! SUBJECT TO CHANGE!
   // Outputs the program fanout as a histogram bucketed by powers of 2.
   // Returns the number of the largest non-empty bucket.
   int ProgramFanout(std::map<int, int>* histogram) const;
+  int ReverseProgramFanout(std::map<int, int>* histogram) const;
 
   // Returns the underlying Regexp; not for general use.
   // Returns entire_regexp_ so that callers don't need
