@@ -461,6 +461,10 @@ TEST(ProgramSize, BigProgram) {
   ASSERT_GT(re_simple.ProgramSize(), 0);
   ASSERT_GT(re_medium.ProgramSize(), re_simple.ProgramSize());
   ASSERT_GT(re_complex.ProgramSize(), re_medium.ProgramSize());
+
+  ASSERT_GT(re_simple.ReverseProgramSize(), 0);
+  ASSERT_GT(re_medium.ReverseProgramSize(), re_simple.ReverseProgramSize());
+  ASSERT_GT(re_complex.ReverseProgramSize(), re_medium.ReverseProgramSize());
 }
 
 TEST(ProgramFanout, BigProgram) {
@@ -486,6 +490,23 @@ TEST(ProgramFanout, BigProgram) {
   // 13 is the largest non-empty bucket and has 1000 elements.
   ASSERT_EQ(13, re1000.ProgramFanout(&histogram));
   ASSERT_EQ(1000, histogram[13]);
+
+  // 2 is the largest non-empty bucket and has 3 elements.
+  // This differs from the others due to how reverse `.' works.
+  ASSERT_EQ(2, re1.ReverseProgramFanout(&histogram));
+  ASSERT_EQ(3, histogram[2]);
+
+  // 5 is the largest non-empty bucket and has 10 elements.
+  ASSERT_EQ(5, re10.ReverseProgramFanout(&histogram));
+  ASSERT_EQ(10, histogram[5]);
+
+  // 9 is the largest non-empty bucket and has 100 elements.
+  ASSERT_EQ(9, re100.ReverseProgramFanout(&histogram));
+  ASSERT_EQ(100, histogram[9]);
+
+  // 12 is the largest non-empty bucket and has 1000 elements.
+  ASSERT_EQ(12, re1000.ReverseProgramFanout(&histogram));
+  ASSERT_EQ(1000, histogram[12]);
 }
 
 // Issue 956519: handling empty character sets was

@@ -262,11 +262,18 @@ int RE2::ProgramSize() const {
   return prog_->size();
 }
 
-int RE2::ProgramFanout(std::map<int, int>* histogram) const {
+int RE2::ReverseProgramSize() const {
   if (prog_ == NULL)
     return -1;
-  SparseArray<int> fanout(prog_->size());
-  prog_->Fanout(&fanout);
+  Prog* prog = ReverseProg();
+  if (prog == NULL)
+    return -1;
+  return prog->size();
+}
+
+static int Fanout(Prog* prog, std::map<int, int>* histogram) {
+  SparseArray<int> fanout(prog->size());
+  prog->Fanout(&fanout);
   histogram->clear();
   for (SparseArray<int>::iterator i = fanout.begin(); i != fanout.end(); ++i) {
     // TODO(junyer): Optimise this?
@@ -277,6 +284,21 @@ int RE2::ProgramFanout(std::map<int, int>* histogram) const {
     (*histogram)[bucket]++;
   }
   return histogram->rbegin()->first;
+}
+
+int RE2::ProgramFanout(std::map<int, int>* histogram) const {
+  if (prog_ == NULL)
+    return -1;
+  return Fanout(prog_, histogram);
+}
+
+int RE2::ReverseProgramFanout(std::map<int, int>* histogram) const {
+  if (prog_ == NULL)
+    return -1;
+  Prog* prog = ReverseProg();
+  if (prog == NULL)
+    return -1;
+  return Fanout(prog, histogram);
 }
 
 // Returns num_captures_, computing it if needed, or -1 if the
