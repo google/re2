@@ -23,14 +23,16 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
   // Don't waste time fuzzing high-size programs.
   // (They can cause bug reports due to fuzzer timeouts.)
   int size = re.ProgramSize();
-  if (size > 9999)
+  int rsize = re.ReverseProgramSize();
+  if (size > 9999 || rsize > 9999)
     return;
 
   // Don't waste time fuzzing high-fanout programs.
   // (They can also cause bug reports due to fuzzer timeouts.)
   std::map<int, int> histogram;
   int fanout = re.ProgramFanout(&histogram);
-  if (fanout > 9)
+  int rfanout = re.ReverseProgramFanout(&histogram);
+  if (fanout > 9 || rfanout > 9)
     return;
 
   StringPiece sp1, sp2, sp3, sp4;
