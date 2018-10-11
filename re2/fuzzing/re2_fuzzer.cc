@@ -33,10 +33,10 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
   // (They can also cause bug reports due to fuzzer timeouts.)
   std::map<int, int> histogram;
   int fanout = re.ProgramFanout(&histogram);
-  if (fanout > 9)
+  if (fanout > 8)
     return;
   int rfanout = re.ReverseProgramFanout(&histogram);
-  if (rfanout > 9)
+  if (rfanout > 8)
     return;
 
   StringPiece sp1, sp2, sp3, sp4;
