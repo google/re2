@@ -7,6 +7,8 @@
 #include <map>
 #include <string>
 
+#include "re2/prefilter.h"
+#include "re2/prefilter_tree.h"
 #include "re2/re2.h"
 
 using re2::StringPiece;
@@ -21,7 +23,7 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
     return;
 
   // Don't waste time fuzzing high-size programs.
-  // (They can cause bug reports due to fuzzer timeouts.)
+  // They can cause bug reports due to fuzzer timeouts.
   int size = re.ProgramSize();
   if (size > 9999)
     return;
@@ -30,13 +32,29 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
     return;
 
   // Don't waste time fuzzing high-fanout programs.
-  // (They can also cause bug reports due to fuzzer timeouts.)
+  // They can cause bug reports due to fuzzer timeouts.
   std::map<int, int> histogram;
   int fanout = re.ProgramFanout(&histogram);
-  if (fanout > 7)
+  if (fanout > 9)
     return;
   int rfanout = re.ReverseProgramFanout(&histogram);
-  if (rfanout > 7)
+  if (rfanout > 9)
+    return;
+
+  // Don't waste time fuzzing programs with large substrings.
+  // They can cause bug reports due to fuzzer timeouts when they
+  // are repetitions (e.g. hundreds of NUL bytes) and matching is
+  // unanchored. And they aren't interesting for fuzzing purposes.
+  // Prefilter and PrefilterTree are used because FilteredRE2 will
+  // compile its own RE2 object, which would be a waste of effort.
+  re2::PrefilterTree prefilter_tree(/*min_atom_len=*/10);  // > 9
+  re2::Prefilter* prefilter = re2::Prefilter::FromRE2(&re);
+  if (prefilter == NULL)
+    return;
+  prefilter_tree.Add(prefilter);  // takes ownership
+  std::vector<string> atoms;
+  prefilter_tree.Compile(&atoms);
+  if (!atoms.empty())
     return;
 
   StringPiece sp1, sp2, sp3, sp4;
