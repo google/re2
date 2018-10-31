@@ -138,6 +138,7 @@ bool PrefilterTree::KeepNode(Prefilter* node) const {
       return false;
 
     case Prefilter::ALL:
+    case Prefilter::NONE:
       return false;
 
     case Prefilter::ATOM:
