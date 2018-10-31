@@ -214,7 +214,7 @@ class Prefilter::Info {
   static Info* Quest(Info* a);
   static Info* EmptyString();
   static Info* NoMatch();
-  static Info* AnyChar();
+  static Info* AnyCharOrAnyByte();
   static Info* CClass(CharClass* cc, bool latin1);
   static Info* Literal(Rune r);
   static Info* LiteralLatin1(Rune r);
@@ -417,8 +417,8 @@ Prefilter::Info* Prefilter::Info::LiteralLatin1(Rune r) {
   return info;
 }
 
-// Constructs Info for dot (any character).
-Prefilter::Info* Prefilter::Info::AnyChar() {
+// Constructs Info for dot (any character) or \C (any byte).
+Prefilter::Info* Prefilter::Info::AnyCharOrAnyByte() {
   Prefilter::Info* info = new Prefilter::Info();
   info->match_ = new Prefilter(ALL);
   return info;
@@ -461,7 +461,7 @@ Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
 
   // If the class is too large, it's okay to overestimate.
   if (cc->size() > 10)
-    return AnyChar();
+    return AnyCharOrAnyByte();
 
   Prefilter::Info *a = new Prefilter::Info();
   for (CCIter i = cc->begin(); i != cc->end(); ++i)
@@ -622,8 +622,9 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
       break;
 
     case kRegexpAnyChar:
+    case kRegexpAnyByte:
       // Claim nothing, except that it's not empty.
-      info = AnyChar();
+      info = AnyCharOrAnyByte();
       break;
 
     case kRegexpCharClass:
