@@ -61,9 +61,9 @@
 //    CHECK(PCRE::FullMatch(utf8_string, re));
 //
 // -----------------------------------------------------------------------
-// MATCHING WITH SUB-STRING EXTRACTION:
+// MATCHING WITH SUBSTRING EXTRACTION:
 //
-// You can supply extra pointer arguments to extract matched subpieces.
+// You can supply extra pointer arguments to extract matched substrings.
 //
 // Example: extracts "ruby" into "s" and 1234 into "i"
 //    int i;
