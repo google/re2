@@ -53,9 +53,13 @@
 //    CHECK(RE2::FullMatch(latin1_string, RE2(latin1_pattern, RE2::Latin1)));
 //
 // -----------------------------------------------------------------------
-// MATCHING WITH SUB-STRING EXTRACTION:
+// MATCHING WITH SUBSTRING EXTRACTION:
 //
-// You can supply extra pointer arguments to extract matched subpieces.
+// You can supply extra pointer arguments to extract matched substrings.
+// If the match succeeds, the substrings will be converted (as necessary)
+// and their values will be assigned to their pointees. If the match fails
+// OR any conversion fails, the pointees will be in an indeterminate state.
+// (Note that the interface conflates match failure and conversion failure.)
 //
 // Example: extracts "ruby" into "s" and 1234 into "i"
 //    int i;
