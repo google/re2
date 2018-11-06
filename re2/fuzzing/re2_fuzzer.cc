@@ -5,10 +5,11 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <map>
+#include <memory>
+#include <queue>
 #include <string>
 
 #include "re2/prefilter.h"
-#include "re2/prefilter_tree.h"
 #include "re2/re2.h"
 
 using re2::StringPiece;
@@ -45,20 +46,22 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
   // They can cause bug reports due to fuzzer timeouts when they
   // are repetitions (e.g. hundreds of NUL bytes) and matching is
   // unanchored. And they aren't interesting for fuzzing purposes.
-  // Prefilter and PrefilterTree are used because FilteredRE2 will
-  // compile its own RE2 object, which would be a waste of effort.
-  // min_atom_len is as small as possible in order to avoid losing
-  // atoms, which happens when AND/OR nodes are not worth keeping.
-  re2::PrefilterTree prefilter_tree(/*min_atom_len=*/1);
-  re2::Prefilter* prefilter = re2::Prefilter::FromRE2(&re);
-  if (prefilter == NULL)
+  std::unique_ptr<re2::Prefilter> prefilter(re2::Prefilter::FromRE2(&re));
+  if (prefilter == nullptr)
     return;
-  prefilter_tree.Add(prefilter);  // takes ownership
-  std::vector<string> atoms;
-  prefilter_tree.Compile(&atoms);
-  for (const string& atom : atoms) {
-    if (atom.size() > 9)
-      return;
+  std::queue<re2::Prefilter*> nodes;
+  nodes.push(prefilter.get());
+  while (!nodes.empty()) {
+    re2::Prefilter* node = nodes.front();
+    nodes.pop();
+    if (node->op() == re2::Prefilter::ATOM) {
+      if (node->atom().size() > 9)
+        return;
+    } else if (node->op() == re2::Prefilter::AND ||
+               node->op() == re2::Prefilter::OR) {
+      for (re2::Prefilter* sub : *node->subs())
+        nodes.push(sub);
+    }
   }
 
   StringPiece sp1, sp2, sp3, sp4;
