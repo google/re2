@@ -47,15 +47,19 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
   // unanchored. And they aren't interesting for fuzzing purposes.
   // Prefilter and PrefilterTree are used because FilteredRE2 will
   // compile its own RE2 object, which would be a waste of effort.
-  re2::PrefilterTree prefilter_tree(/*min_atom_len=*/10);  // > 9
+  // min_atom_len is as small as possible in order to avoid losing
+  // atoms, which happens when AND/OR nodes are not worth keeping.
+  re2::PrefilterTree prefilter_tree(/*min_atom_len=*/1);
   re2::Prefilter* prefilter = re2::Prefilter::FromRE2(&re);
   if (prefilter == NULL)
     return;
   prefilter_tree.Add(prefilter);  // takes ownership
   std::vector<string> atoms;
   prefilter_tree.Compile(&atoms);
-  if (!atoms.empty())
-    return;
+  for (const string& atom : atoms) {
+    if (atom.size() > 9)
+      return;
+  }
 
   StringPiece sp1, sp2, sp3, sp4;
   string s1, s2, s3, s4;
