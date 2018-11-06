@@ -56,10 +56,16 @@
 // MATCHING WITH SUBSTRING EXTRACTION:
 //
 // You can supply extra pointer arguments to extract matched substrings.
-// If the match succeeds, the substrings will be converted (as necessary)
-// and their values will be assigned to their pointees. If the match fails
-// OR any conversion fails, the pointees will be in an indeterminate state.
-// (Note that the interface conflates match failure and conversion failure.)
+// On match failure, none of the pointees will have been modified.
+// On match success, the substrings will be converted (as necessary) and
+// their values will be assigned to their pointees until all conversions
+// have succeeded or one conversion has failed.
+// On conversion failure, the pointees will be in an indeterminate state
+// because the caller has no way of knowing which conversion failed.
+// However, conversion cannot fail for types like string and StringPiece
+// that do not inspect the substring contents. Hence, in the common case
+// where all of the pointees are of such types, failure is always due to
+// match failure and thus none of the pointees will have been modified.
 //
 // Example: extracts "ruby" into "s" and 1234 into "i"
 //    int i;
@@ -495,6 +501,7 @@ class RE2 {
   // I.e. matching RE2("(foo)|(bar)baz") on "barbazbla" will return true, with
   // submatch[0] = "barbaz", submatch[1].data() = NULL, submatch[2] = "bar",
   // submatch[3].data() = NULL, ..., up to submatch[nsubmatch-1].data() = NULL.
+  // Caveat: submatch[] may be clobbered even on match failure.
   //
   // Don't ask for more match information than you will use:
   // runs much faster with nsubmatch == 1 than nsubmatch > 1, and
