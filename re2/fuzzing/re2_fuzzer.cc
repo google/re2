@@ -64,24 +64,40 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
     }
   }
 
-  StringPiece sp1, sp2, sp3, sp4;
-  string s1, s2, s3, s4;
-  int i1, i2, i3, i4;
-  double d1, d2, d3, d4;
+  if (re.NumberOfCapturingGroups() == 0) {
+    // Avoid early return due to too many arguments.
+    StringPiece sp = text;
+    RE2::FullMatch(sp, re);
+    RE2::PartialMatch(sp, re);
+    RE2::Consume(&sp, re);
+    sp = text;  // Reset.
+    RE2::FindAndConsume(&sp, re);
+  } else {
+    // Okay, we have at least one capturing group...
+    // Try conversion for variously typed arguments.
+    StringPiece sp = text;
+    short s;
+    RE2::FullMatch(sp, re, &s);
+    long l;
+    RE2::PartialMatch(sp, re, &l);
+    float f;
+    RE2::Consume(&sp, re, &f);
+    sp = text;  // Reset.
+    double d;
+    RE2::FindAndConsume(&sp, re, &d);
+  }
 
-  RE2::FullMatch(text, re, &sp1, &sp2, &sp3, &sp4);
-  RE2::PartialMatch(text, re, &s1, &s2, &s3, &s4);
+  string s = string(text);
+  RE2::Replace(&s, re, "");
+  s = string(text);  // Reset.
+  RE2::GlobalReplace(&s, re, "");
 
-  sp1 = sp2 = text;
-  RE2::Consume(&sp1, re, &i1, &i2, &i3, &i4);
-  RE2::FindAndConsume(&sp2, re, &d1, &d2, &d3, &d4);
-
-  s3 = s4 = string(text);
-  RE2::Replace(&s3, re, "");
-  RE2::GlobalReplace(&s4, re, "");
+  string min, max;
+  re.PossibleMatchRange(&min, &max, /*maxlen=*/9);
 
   // Exercise some other API functionality.
-  dummy += re.NumberOfCapturingGroups();
+  dummy += re.NamedCapturingGroups().size();
+  dummy += re.CapturingGroupNames().size();
   dummy += RE2::QuoteMeta(pattern).size();
 }
 
