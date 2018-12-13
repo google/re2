@@ -75,7 +75,8 @@ static const bool ExtraDebug = false;
 // the comments in the sections that follow the DFA definition.
 class DFA {
  public:
-  DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem);
+  DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem,
+      bool shard_cache_mutex);
   ~DFA();
   bool ok() const { return !init_failed_; }
   Prog::MatchKind kind() { return kind_; }
@@ -435,7 +436,8 @@ class DFA::Workq : public SparseSet {
   Workq& operator=(const Workq&) = delete;
 };
 
-DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
+DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem,
+         bool shard_cache_mutex)
   : prog_(prog),
     kind_(kind),
     init_failed_(false),
@@ -1816,20 +1818,24 @@ DFA* Prog::GetDFA(MatchKind kind) {
   // "first match" searches.
   if (kind == kFirstMatch) {
     std::call_once(dfa_first_once_, [](Prog* prog) {
-      prog->dfa_first_ = new DFA(prog, kFirstMatch, prog->dfa_mem_ / 2);
+      prog->dfa_first_ = new DFA(
+          prog, kFirstMatch, prog->dfa_mem_ / 2, prog->shard_cache_mutex_);
     }, this);
     return dfa_first_;
   } else if (kind == kManyMatch) {
     std::call_once(dfa_first_once_, [](Prog* prog) {
-      prog->dfa_first_ = new DFA(prog, kManyMatch, prog->dfa_mem_);
+      prog->dfa_first_ = new DFA(
+          prog, kManyMatch, prog->dfa_mem_, prog->shard_cache_mutex_);
     }, this);
     return dfa_first_;
   } else {
     std::call_once(dfa_longest_once_, [](Prog* prog) {
       if (!prog->reversed_)
-        prog->dfa_longest_ = new DFA(prog, kLongestMatch, prog->dfa_mem_ / 2);
+        prog->dfa_longest_ = new DFA(
+            prog, kLongestMatch, prog->dfa_mem_ / 2, prog->shard_cache_mutex_);
       else
-        prog->dfa_longest_ = new DFA(prog, kLongestMatch, prog->dfa_mem_);
+        prog->dfa_longest_ = new DFA(
+            prog, kLongestMatch, prog->dfa_mem_, prog->shard_cache_mutex_);
     }, this);
     return dfa_longest_;
   }
