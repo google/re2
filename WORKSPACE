@@ -6,6 +6,8 @@
 
 workspace(name = "com_googlesource_code_re2")
 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 http_archive(
     name = "com_google_absl",
     strip_prefix = "abseil-cpp-master",
