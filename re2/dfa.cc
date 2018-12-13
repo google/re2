@@ -522,8 +522,10 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
 }
 
 DFA::~DFA() {
-  for (int i = 0; i < cache_mutex_count_; i++)
-    cache_mutex_[i].~AlignedMutex();
+  if (cache_mutex_storage_ != NULL) {
+    for (int i = 0; i < cache_mutex_count_; i++)
+      cache_mutex_[i].~AlignedMutex();
+  }
   delete[] cache_mutex_storage_;
   delete[] astack_;
   delete q1_;
