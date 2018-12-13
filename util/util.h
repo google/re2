@@ -21,6 +21,10 @@ using std::string;
 #endif
 #endif
 
+#ifndef CACHELINE_SIZE
+#define CACHELINE_SIZE 64
+#endif
+
 #ifndef FALLTHROUGH_INTENDED
 #if defined(__clang__)
 #define FALLTHROUGH_INTENDED [[clang::fallthrough]]
