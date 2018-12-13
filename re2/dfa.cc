@@ -45,6 +45,11 @@
 #include "re2/prog.h"
 #include "re2/stringpiece.h"
 
+#if defined(RE2_USE_NUMA)
+#include <numa.h>
+#include <sched.h>
+#endif
+
 // Silence "zero-sized array in struct/union" warning for DFA::State::next_.
 #ifdef _MSC_VER
 #pragma warning(disable: 4200)
@@ -338,6 +343,12 @@ class DFA {
     return prog_->bytemap()[c];
   }
 
+  // Determines how many ways to shard cache_mutex_.
+  int CacheMutexCount() const;
+
+  // Determines which shard of cache_mutex_ to use.
+  int WhichCacheMutex() const;
+
   // Constant after initialization.
   Prog* prog_;              // The regular expression program to run.
   Prog::MatchKind kind_;    // The kind of DFA.
@@ -459,7 +470,7 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
     astack_(NULL),
     mem_budget_(max_mem),
     cache_mutex_storage_(NULL),
-    cache_mutex_count_(1) {
+    cache_mutex_count_(CacheMutexCount()) {
   if (ExtraDebug)
     fprintf(stderr, "\nkind %d\n%s\n", (int)kind_, prog_->DumpUnanchored().c_str());
   int nmark = 0;
@@ -1157,7 +1168,8 @@ class DFA::RWLocker {
   RWLocker& operator=(const RWLocker&) = delete;
 };
 
-DFA::RWLocker::RWLocker(DFA* dfa) : dfa_(dfa), which_(0), writing_(false) {
+DFA::RWLocker::RWLocker(DFA* dfa)
+    : dfa_(dfa), which_(dfa_->WhichCacheMutex()), writing_(false) {
   dfa_->cache_mutex_[which_].ReaderLock();
 }
 
@@ -2169,6 +2181,56 @@ bool Prog::PossibleMatchRange(string* min, string* max, int maxlen) {
   // Have to use dfa_longest_ to get all strings for full matches.
   // For example, (a|aa) never matches aa in first-match mode.
   return GetDFA(kLongestMatch)->PossibleMatchRange(min, max, maxlen);
+}
+
+#if defined(RE2_USE_NUMA)
+static std::vector<int>* numa_cpu_map;
+static int numa_max_count;
+
+void InitNUMA() {
+  numa_cpu_map = new std::vector<int>;
+  if (numa_available() == -1)
+    return;
+  int nodes = numa_num_configured_nodes();
+  if (nodes < 1)
+    return;
+  int cpus = numa_num_configured_cpus();
+  if (cpus < 1)
+    return;
+  std::vector<int> count;
+  count.resize(nodes);
+  for (int cpu = 0; cpu < cpus; cpu++) {
+    int node = numa_node_of_cpu(cpu);
+    numa_cpu_map->emplace_back(count[node]++);
+  }
+  numa_max_count = *std::max_element(count.begin(), count.end());
+}
+#endif
+
+int DFA::CacheMutexCount() const {
+#if !defined(RE2_USE_NUMA)
+  return 1;
+#else
+  if (!prog_->shard_cache_mutex())
+    return 1;
+  static std::once_flag numa_once;
+  std::call_once(numa_once, &InitNUMA);
+  if (numa_cpu_map->empty())
+    return 1;
+  return numa_max_count;
+#endif
+}
+
+int DFA::WhichCacheMutex() const {
+#if !defined(RE2_USE_NUMA)
+  return 0;
+#else
+  if (!prog_->shard_cache_mutex())
+    return 0;
+  if (numa_cpu_map->empty())
+    return 0;
+  return (*numa_cpu_map)[sched_getcpu()];
+#endif
 }
 
 }  // namespace re2
