@@ -49,6 +49,7 @@ RE2::Options::Options(RE2::CannedOptions opt)
     dot_nl_(false),
     never_capture_(false),
     case_sensitive_(true),
+    shard_cache_mutex_(false),
     perl_classes_(false),
     word_boundary_(false),
     one_line_(false) {
@@ -210,7 +211,9 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
   // one third to the reverse prog, because the forward
   // Prog has two DFAs but the reverse prog has one.
   prog_ = suffix_regexp_->CompileToProg(options_.max_mem()*2/3);
-  if (prog_ == NULL) {
+  if (prog_ != NULL) {
+    prog_->set_shard_cache_mutex(options_.shard_cache_mutex());
+  } else {
     if (options_.log_errors())
       LOG(ERROR) << "Error compiling '" << trunc(pattern_) << "'";
     error_ = new string("pattern too large - compile failed");
@@ -231,7 +234,9 @@ re2::Prog* RE2::ReverseProg() const {
   std::call_once(rprog_once_, [](const RE2* re) {
     re->rprog_ =
         re->suffix_regexp_->CompileToReverseProg(re->options_.max_mem() / 3);
-    if (re->rprog_ == NULL) {
+    if (re->rprog_ != NULL) {
+      re->rprog_->set_shard_cache_mutex(re->options_.shard_cache_mutex());
+    } else {
       if (re->options_.log_errors())
         LOG(ERROR) << "Error reverse compiling '" << trunc(re->pattern_) << "'";
       re->error_ = new string("pattern too large - reverse compile failed");

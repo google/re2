@@ -115,6 +115,7 @@ Prog::Prog()
     inst_(NULL),
     onepass_nodes_(NULL),
     dfa_mem_(0),
+    shard_cache_mutex_(false),
     dfa_first_(NULL),
     dfa_longest_(NULL) {
 }
