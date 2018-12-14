@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <chrono>
+#include <thread>
 
 #include "util/util.h"
 #include "util/flags.h"
@@ -67,7 +68,7 @@ void BenchmarkMemoryUsage() {
 }
 
 int NumCPUs() {
-	return 1;
+	return static_cast<int>(std::thread::hardware_concurrency());
 }
 
 static void runN(Benchmark *b, int n, int siz) {
