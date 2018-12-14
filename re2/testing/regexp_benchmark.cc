@@ -1574,4 +1574,36 @@ BENCHMARK(PossibleMatchRange_Complex);
 BENCHMARK(PossibleMatchRange_Prefix);
 BENCHMARK(PossibleMatchRange_NoProg);
 
+static const RE2& GetShardCacheMutexRE(bool shard_cache_mutex) {
+  auto GetRE = [=]() {
+    RE2::Options options;
+    options.set_shard_cache_mutex(shard_cache_mutex);
+    return new RE2("foo*bar+qux?", options);
+  };
+  if (!shard_cache_mutex) {
+    static const auto* const re = GetRE();
+    return *re;
+  } else {
+    static const auto* const re = GetRE();
+    return *re;
+  }
+}
+
+void ShardCacheMutex_False(int n) {
+  const RE2& re = GetShardCacheMutexRE(false);
+  for (int i = 0; i < n; i++) {
+    RE2::PartialMatch("", re);
+  }
+}
+
+void ShardCacheMutex_True(int n) {
+  const RE2& re = GetShardCacheMutexRE(true);
+  for (int i = 0; i < n; i++) {
+    RE2::PartialMatch("", re);
+  }
+}
+
+BENCHMARK(ShardCacheMutex_False)->ThreadRange(1, NumCPUs());
+BENCHMARK(ShardCacheMutex_True)->ThreadRange(1, NumCPUs());
+
 }  // namespace re2
