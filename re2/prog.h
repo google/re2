@@ -18,6 +18,7 @@
 
 #include "util/util.h"
 #include "util/logging.h"
+#include "util/pod_array.h"
 #include "util/sparse_array.h"
 #include "util/sparse_set.h"
 #include "re2/re2.h"
@@ -77,7 +78,7 @@ class Prog {
     void InitFail();
 
     // Getters
-    int id(Prog* p) { return static_cast<int>(this - p->inst_); }
+    int id(Prog* p) { return static_cast<int>(this - p->inst_.data()); }
     InstOp opcode() { return static_cast<InstOp>(out_opcode_&7); }
     int last()      { return (out_opcode_>>3)&1; }
     int out()       { return out_opcode_>>4; }
@@ -395,7 +396,7 @@ class Prog {
   int list_count_;            // count of lists (see above)
   int inst_count_[kNumInst];  // count of instructions by opcode
 
-  Inst* inst_;              // pointer to instruction array
+  PODArray<Inst> inst_;     // pointer to instruction array
   uint8_t* onepass_nodes_;  // data for OnePass nodes
 
   int64_t dfa_mem_;         // Maximum memory for DFAs.
