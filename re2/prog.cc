@@ -112,7 +112,6 @@ Prog::Prog()
     first_byte_(-1),
     flags_(0),
     list_count_(0),
-    inst_(NULL),
     onepass_nodes_(NULL),
     dfa_mem_(0),
     dfa_first_(NULL),
@@ -123,7 +122,6 @@ Prog::~Prog() {
   DeleteDFA(dfa_longest_);
   DeleteDFA(dfa_first_);
   delete[] onepass_nodes_;
-  delete[] inst_;
 }
 
 typedef SparseSet Workq;
@@ -628,9 +626,8 @@ void Prog::Flatten() {
 
   // Finally, replace the old instructions with the new instructions.
   size_ = static_cast<int>(flat.size());
-  delete[] inst_;
-  inst_ = new Inst[size_];
-  memmove(inst_, flat.data(), size_ * sizeof *inst_);
+  inst_ = PODArray<Inst>(size_);
+  memmove(inst_.data(), flat.data(), size_*sizeof(inst_[0]));
 }
 
 void Prog::MarkSuccessors(SparseArray<int>* rootmap,
