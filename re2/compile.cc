@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "util/logging.h"
+#include "util/pod_array.h"
 #include "util/utf.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
@@ -238,9 +239,8 @@ class Compiler : public Regexp::Walker<Frag> {
 
   int max_inst_;       // Maximum number of instructions.
 
-  Prog::Inst* inst_;   // Pointer to first instruction.
+  PODArray<Prog::Inst> inst_;
   int inst_len_;       // Number of instructions used.
-  int inst_cap_;       // Number of instructions allocated.
 
   int64_t max_mem_;    // Total memory budget.
 
@@ -258,9 +258,7 @@ Compiler::Compiler() {
   failed_ = false;
   encoding_ = kEncodingUTF8;
   reversed_ = false;
-  inst_ = NULL;
   inst_len_ = 0;
-  inst_cap_ = 0;
   max_inst_ = 1;  // make AllocInst for fail instruction okay
   max_mem_ = 0;
   int fail = AllocInst(1);
@@ -270,7 +268,6 @@ Compiler::Compiler() {
 
 Compiler::~Compiler() {
   delete prog_;
-  delete[] inst_;
 }
 
 int Compiler::AllocInst(int n) {
@@ -279,17 +276,18 @@ int Compiler::AllocInst(int n) {
     return -1;
   }
 
-  if (inst_len_ + n > inst_cap_) {
-    if (inst_cap_ == 0)
-      inst_cap_ = 8;
-    while (inst_len_ + n > inst_cap_)
-      inst_cap_ *= 2;
-    Prog::Inst* ip = new Prog::Inst[inst_cap_];
-    if (inst_ != NULL)
-      memmove(ip, inst_, inst_len_ * sizeof ip[0]);
-    memset(ip + inst_len_, 0, (inst_cap_ - inst_len_) * sizeof ip[0]);
-    delete[] inst_;
-    inst_ = ip;
+  int capacity = inst_.size();
+  if (inst_len_ + n > capacity) {
+    if (capacity == 0)
+      capacity = 8;
+    while (inst_len_ + n > capacity)
+      capacity *= 2;
+
+    PODArray<Prog::Inst> ip(capacity);
+    if (inst_.data() != nullptr)
+      memmove(ip.data(), inst_.data(), inst_len_ * sizeof ip[0]);
+    memset(ip.data() + inst_len_, 0, (capacity - inst_len_) * sizeof ip[0]);
+    inst_ = std::move(ip);
   }
   int id = inst_len_;
   inst_len_ += n;
@@ -320,17 +318,18 @@ Frag Compiler::Cat(Frag a, Frag b) {
   if (begin->opcode() == kInstNop &&
       a.end.p == (a.begin << 1) &&
       begin->out() == 0) {
-    PatchList::Patch(inst_, a.end, b.begin);  // in case refs to a somewhere
+    // in case refs to a somewhere
+    PatchList::Patch(inst_.data(), a.end, b.begin);
     return b;
   }
 
   // To run backward over string, reverse all concatenations.
   if (reversed_) {
-    PatchList::Patch(inst_, b.end, a.begin);
+    PatchList::Patch(inst_.data(), b.end, a.begin);
     return Frag(b.begin, a.end);
   }
 
-  PatchList::Patch(inst_, a.end, b.begin);
+  PatchList::Patch(inst_.data(), a.end, b.begin);
   return Frag(a.begin, b.end);
 }
 
@@ -347,7 +346,7 @@ Frag Compiler::Alt(Frag a, Frag b) {
     return NoMatch();
 
   inst_[id].InitAlt(a.begin, b.begin);
-  return Frag(id, PatchList::Append(inst_, a.end, b.end));
+  return Frag(id, PatchList::Append(inst_.data(), a.end, b.end));
 }
 
 // When capturing submatches in like-Perl mode, a kOpAlt Inst
@@ -363,7 +362,7 @@ Frag Compiler::Star(Frag a, bool nongreedy) {
   if (id < 0)
     return NoMatch();
   inst_[id].InitAlt(0, 0);
-  PatchList::Patch(inst_, a.end, id);
+  PatchList::Patch(inst_.data(), a.end, id);
   if (nongreedy) {
     inst_[id].out1_ = a.begin;
     return Frag(id, PatchList::Mk(id << 1));
@@ -395,7 +394,7 @@ Frag Compiler::Quest(Frag a, bool nongreedy) {
     inst_[id].InitAlt(a.begin, 0);
     pl = PatchList::Mk((id << 1) | 1);
   }
-  return Frag(id, PatchList::Append(inst_, pl, a.end));
+  return Frag(id, PatchList::Append(inst_.data(), pl, a.end));
 }
 
 // Returns a fragment for the byte range lo-hi.
@@ -443,7 +442,7 @@ Frag Compiler::Capture(Frag a, int n) {
     return NoMatch();
   inst_[id].InitCapture(2*n, a.begin);
   inst_[id+1].InitCapture(2*n+1, 0);
-  PatchList::Patch(inst_, a.end, id+1);
+  PatchList::Patch(inst_.data(), a.end, id+1);
 
   return Frag(id, PatchList::Mk((id+1) << 1));
 }
@@ -477,9 +476,9 @@ int Compiler::UncachedRuneByteSuffix(uint8_t lo, uint8_t hi, bool foldcase,
                                      int next) {
   Frag f = ByteRange(lo, hi, foldcase);
   if (next != 0) {
-    PatchList::Patch(inst_, f.end, next);
+    PatchList::Patch(inst_.data(), f.end, next);
   } else {
-    rune_range_.end = PatchList::Append(inst_, rune_range_.end, f.end);
+    rune_range_.end = PatchList::Append(inst_.data(), rune_range_.end, f.end);
   }
   return f.begin;
 }
@@ -1196,9 +1195,8 @@ Prog* Compiler::Finish() {
   }
 
   // Hand off the array to Prog.
-  prog_->inst_ = inst_;
+  prog_->inst_ = std::move(inst_);
   prog_->size_ = inst_len_;
-  inst_ = NULL;
 
   prog_->Optimize();
   prog_->Flatten();
