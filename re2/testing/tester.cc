@@ -499,7 +499,7 @@ static bool ResultOkay(const Result& r, const Result& correct) {
 
 // Runs a single test.
 bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
-                           Prog::Anchor anchor) {
+                           Prog::Anchor anchor, const ExpectMatch expect_match) {
   // Backtracking is the gold standard.
   Result correct;
   RunSearch(kEngineBacktrack, text, context, anchor, &correct);
@@ -519,6 +519,13 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
 
   // Compare the others.
   bool all_okay = true;
+  if (expect_match == ExpectMatch::Never && correct.matched) {
+    LOG(INFO) << "   Should not match (but does).";
+    all_okay = false;
+  } else if (expect_match == ExpectMatch::Always && !correct.matched) {
+    LOG(INFO) << "   Should match (but does not).";
+    all_okay = false;
+  }
   for (Engine i = kEngineBacktrack+1; i < kEngineMax; i++) {
     if (!(Engines() & (1<<i)))
       continue;
@@ -551,6 +558,13 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
         LOG(INFO) << "   Should match (but does not).";
         continue;
       }
+    }
+    if (expect_match == ExpectMatch::Never && r.matched) {
+      LOG(INFO) << "   Should not match (but does).";
+      all_okay = false;
+    } else if (expect_match == ExpectMatch::Always && !r.matched) {
+      LOG(INFO) << "   Should match (but does not).";
+      all_okay = false;
     }
     for (int i = 0; i < 1+num_captures_; i++) {
       if (r.submatch[i].begin() != correct.submatch[i].begin() ||
@@ -624,10 +638,10 @@ Tester::~Tester() {
 }
 
 bool Tester::TestCase(const StringPiece& text, const StringPiece& context,
-                         Prog::Anchor anchor) {
+                         Prog::Anchor anchor, const ExpectMatch expect_match) {
   bool okay = true;
   for (size_t i = 0; i < v_.size(); i++)
-    okay &= (!v_[i]->error() && v_[i]->RunCase(text, context, anchor));
+    okay &= (!v_[i]->error() && v_[i]->RunCase(text, context, anchor, expect_match));
   return okay;
 }
 
@@ -636,32 +650,34 @@ static Prog::Anchor anchors[] = {
   Prog::kUnanchored
 };
 
-bool Tester::TestInput(const StringPiece& text) {
-  bool okay = TestInputInContext(text, text);
+bool Tester::TestInput(const StringPiece& text, const ExpectMatch expect_match) {
+  bool okay = TestInputInContext(text, text, expect_match);
   if (text.size() > 0) {
     StringPiece sp;
     sp = text;
     sp.remove_prefix(1);
-    okay &= TestInputInContext(sp, text);
+    okay &= TestInputInContext(sp, text, ExpectMatch::Varies);
     sp = text;
     sp.remove_suffix(1);
-    okay &= TestInputInContext(sp, text);
+    okay &= TestInputInContext(sp, text, ExpectMatch::Varies);
   }
   return okay;
 }
 
 bool Tester::TestInputInContext(const StringPiece& text,
-                                const StringPiece& context) {
+                                const StringPiece& context,
+                                const ExpectMatch expect_match) {
   bool okay = true;
   for (int i = 0; i < arraysize(anchors); i++)
-    okay &= TestCase(text, context, anchors[i]);
+    okay &= TestCase(text, context, anchors[i], expect_match);
   return okay;
 }
 
 bool TestRegexpOnText(const StringPiece& regexp,
-                      const StringPiece& text) {
+                      const StringPiece& text,
+                      const ExpectMatch expect_match) {
   Tester t(regexp);
-  return t.TestInput(text);
+  return t.TestInput(text, expect_match);
 }
 
 }  // namespace re2

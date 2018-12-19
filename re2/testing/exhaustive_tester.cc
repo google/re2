@@ -132,7 +132,7 @@ void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
   int bad_inputs = 0;
   while (strgen_.HasNext()) {
     tests_++;
-    if (!tester.TestInput(strgen_.Next())) {
+    if (!tester.TestInput(strgen_.Next(), ExpectMatch::Varies)) {
       failures_++;
       if (++bad_inputs >= FLAGS_max_bad_regexp_inputs)
         break;

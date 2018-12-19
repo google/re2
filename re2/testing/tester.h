@@ -34,6 +34,8 @@ enum Engine {
   kEngineMax,
 };
 
+enum class ExpectMatch { Always, Never, Varies };
+
 // Make normal math on the enum preserve the type.
 // By default, C++ doesn't define ++ on enum, and e+1 has type int.
 static inline void operator++(Engine& e, int unused) {
@@ -60,7 +62,7 @@ class TestInstance {
   // Runs a single test case: search in text, which is in context,
   // using the given anchoring.
   bool RunCase(const StringPiece& text, const StringPiece& context,
-               Prog::Anchor anchor);
+               Prog::Anchor anchor, const ExpectMatch expect_match);
 
  private:
   // Runs a single search using the named engine type.
@@ -99,13 +101,13 @@ class Tester {
   // Runs a single test case: search in text, which is in context,
   // using the given anchoring.
   bool TestCase(const StringPiece& text, const StringPiece& context,
-                Prog::Anchor anchor);
+                Prog::Anchor anchor, const ExpectMatch expect_match);
 
   // Run TestCase(text, text, anchor) for all anchoring modes.
-  bool TestInput(const StringPiece& text);
+  bool TestInput(const StringPiece& text, const ExpectMatch expect_match);
 
   // Run TestCase(text, context, anchor) for all anchoring modes.
-  bool TestInputInContext(const StringPiece& text, const StringPiece& context);
+  bool TestInputInContext(const StringPiece& text, const StringPiece& context, const ExpectMatch expect_match);
 
  private:
   bool error_;
@@ -116,7 +118,7 @@ class Tester {
 };
 
 // Run all possible tests using regexp and text.
-bool TestRegexpOnText(const StringPiece& regexp, const StringPiece& text);
+bool TestRegexpOnText(const StringPiece& regexp, const StringPiece& text, const ExpectMatch expect_match);
 
 }  // namespace re2
 
