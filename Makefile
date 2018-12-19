@@ -7,11 +7,6 @@
 # CCICU=$(shell pkg-config icu-uc --cflags) -DRE2_USE_ICU
 # LDICU=$(shell pkg-config icu-uc --libs)
 
-# To use NUMA topology to shard the DFA state cache mutex,
-# uncomment the next two lines:
-# CCNUMA=-DRE2_USE_NUMA
-# LDNUMA=-lnuma
-
 # To build against PCRE for testing or benchmarking,
 # uncomment the next two lines:
 # CCPCRE=-I/usr/local/include -DUSEPCRE
@@ -22,8 +17,8 @@ CXX?=g++
 CXXFLAGS?=-O3 -g
 LDFLAGS?=
 # required
-RE2_CXXFLAGS?=-std=c++11 -pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCNUMA) $(CCPCRE)
-RE2_LDFLAGS?=-pthread $(LDICU) $(LDNUMA) $(LDPCRE)
+RE2_CXXFLAGS?=-std=c++11 -pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCPCRE)
+RE2_LDFLAGS?=-pthread $(LDICU) $(LDPCRE)
 AR?=ar
 ARFLAGS?=rsc
 NM?=nm
@@ -292,7 +287,7 @@ testinstall: static-testinstall shared-testinstall
 	@echo
 
 static-testinstall: CXXFLAGS:=-std=c++11 -pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
-static-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -l:libre2.a $(LDICU) $(LDNUMA) $(LDFLAGS)
+static-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -l:libre2.a $(LDICU) $(LDFLAGS)
 static-testinstall:
 	@mkdir -p obj
 	@cp testinstall.cc obj
@@ -306,7 +301,7 @@ else
 endif
 
 shared-testinstall: CXXFLAGS:=-std=c++11 -pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
-shared-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -lre2 $(LDICU) $(LDNUMA) $(LDFLAGS)
+shared-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -lre2 $(LDICU) $(LDFLAGS)
 shared-testinstall:
 	@mkdir -p obj
 	@cp testinstall.cc obj

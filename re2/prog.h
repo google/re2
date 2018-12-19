@@ -200,8 +200,6 @@ class Prog {
   int inst_count(InstOp op) { return inst_count_[op]; }
   void set_dfa_mem(int64_t dfa_mem) { dfa_mem_ = dfa_mem; }
   int64_t dfa_mem() { return dfa_mem_; }
-  void set_shard_cache_mutex(bool b) { shard_cache_mutex_ = b; }
-  bool shard_cache_mutex() { return shard_cache_mutex_; }
   int flags() { return flags_; }
   void set_flags(int flags) { flags_ = flags; }
   bool anchor_start() { return anchor_start_; }
@@ -401,7 +399,6 @@ class Prog {
   uint8_t* onepass_nodes_;  // data for OnePass nodes
 
   int64_t dfa_mem_;         // Maximum memory for DFAs.
-  bool shard_cache_mutex_;  // shard the DFA state cache mutex
   DFA* dfa_first_;          // DFA cached for kFirstMatch/kManyMatch
   DFA* dfa_longest_;        // DFA cached for kLongestMatch/kFullMatch
 
