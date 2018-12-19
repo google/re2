@@ -560,7 +560,6 @@ class RE2 {
     //   never_capture    (false) parse all parens as non-capturing
     //   case_sensitive   (true)  match is case-sensitive (regexp can override
     //                              with (?i) unless in posix_syntax mode)
-    //   shard_cache_mutex (false) shard the DFA state cache mutex (see below)
     //
     // The following options are only consulted when posix_syntax == true.
     // When posix_syntax == false, these features are always enabled and
@@ -597,11 +596,6 @@ class RE2 {
     //
     // Once a DFA fills its budget, it flushes its cache and starts over.
     // If this happens too often, RE2 falls back on the NFA implementation.
-    //
-    // The shard_cache_mutex option causes RE2 to shard the DFA state cache
-    // mutex N ways; N will be determined automatically. This increases the
-    // memory footprint somewhat, so it should not be used unless profiling
-    // shows that reader lock contention is incurring substantial overhead.
 
     // For now, make the default budget something close to Code Search.
     static const int kDefaultMaxMem = 8<<20;
@@ -622,7 +616,6 @@ class RE2 {
       dot_nl_(false),
       never_capture_(false),
       case_sensitive_(true),
-      shard_cache_mutex_(false),
       perl_classes_(false),
       word_boundary_(false),
       one_line_(false) {
@@ -671,9 +664,6 @@ class RE2 {
     bool case_sensitive() const { return case_sensitive_; }
     void set_case_sensitive(bool b) { case_sensitive_ = b; }
 
-    bool shard_cache_mutex() const { return shard_cache_mutex_; }
-    void set_shard_cache_mutex(bool b) { shard_cache_mutex_ = b; }
-
     bool perl_classes() const { return perl_classes_; }
     void set_perl_classes(bool b) { perl_classes_ = b; }
 
@@ -700,7 +690,6 @@ class RE2 {
     bool dot_nl_;
     bool never_capture_;
     bool case_sensitive_;
-    bool shard_cache_mutex_;
     bool perl_classes_;
     bool word_boundary_;
     bool one_line_;

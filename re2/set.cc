@@ -99,8 +99,6 @@ bool RE2::Set::Compile() {
   delete[] sub;
 
   prog_ = Prog::CompileSet(re, anchor_, options_.max_mem());
-  if (prog_ != NULL)
-    prog_->set_shard_cache_mutex(options_.shard_cache_mutex());
   re->Decref();
   return prog_ != NULL;
 }
