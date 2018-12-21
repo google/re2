@@ -1018,12 +1018,11 @@ static bool IsAnchorStart(Regexp** pre, int depth) {
       if (re->nsub() > 0) {
         sub = re->sub()[0]->Incref();
         if (IsAnchorStart(&sub, depth+1)) {
-          Regexp** subcopy = new Regexp*[re->nsub()];
+          PODArray<Regexp*> subcopy(re->nsub());
           subcopy[0] = sub;  // already have reference
           for (int i = 1; i < re->nsub(); i++)
             subcopy[i] = re->sub()[i]->Incref();
-          *pre = Regexp::Concat(subcopy, re->nsub(), re->parse_flags());
-          delete[] subcopy;
+          *pre = Regexp::Concat(subcopy.data(), re->nsub(), re->parse_flags());
           re->Decref();
           return true;
         }
@@ -1066,12 +1065,11 @@ static bool IsAnchorEnd(Regexp** pre, int depth) {
       if (re->nsub() > 0) {
         sub = re->sub()[re->nsub() - 1]->Incref();
         if (IsAnchorEnd(&sub, depth+1)) {
-          Regexp** subcopy = new Regexp*[re->nsub()];
+          PODArray<Regexp*> subcopy(re->nsub());
           subcopy[re->nsub() - 1] = sub;  // already have reference
           for (int i = 0; i < re->nsub() - 1; i++)
             subcopy[i] = re->sub()[i]->Incref();
-          *pre = Regexp::Concat(subcopy, re->nsub(), re->parse_flags());
-          delete[] subcopy;
+          *pre = Regexp::Concat(subcopy.data(), re->nsub(), re->parse_flags());
           re->Decref();
           return true;
         }
