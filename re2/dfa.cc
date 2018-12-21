@@ -347,8 +347,7 @@ class DFA {
   // Scratch areas, protected by mutex_.
   Workq* q0_;             // Two pre-allocated work queues.
   Workq* q1_;
-  int* astack_;         // Pre-allocated stack for AddToQueue
-  int nastack_;
+  PODArray<int> astack_;  // Pre-allocated stack for AddToQueue
 
   // State* cache.  Many threads use and add to the cache simultaneously,
   // holding cache_mutex_ for reading and mutex_ (above) when adding.
@@ -441,7 +440,6 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
     init_failed_(false),
     q0_(NULL),
     q1_(NULL),
-    astack_(NULL),
     mem_budget_(max_mem) {
   if (ExtraDebug)
     fprintf(stderr, "\nkind %d\n%s\n", (int)kind_, prog_->DumpUnanchored().c_str());
@@ -449,16 +447,16 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
   if (kind_ == Prog::kLongestMatch)
     nmark = prog_->size();
   // See DFA::AddToQueue() for why this is so.
-  nastack_ = prog_->inst_count(kInstCapture) +
-             prog_->inst_count(kInstEmptyWidth) +
-             prog_->inst_count(kInstNop) +
-             nmark + 1;  // + 1 for start inst
+  int nastack = prog_->inst_count(kInstCapture) +
+                prog_->inst_count(kInstEmptyWidth) +
+                prog_->inst_count(kInstNop) +
+                nmark + 1;  // + 1 for start inst
 
   // Account for space needed for DFA, q0, q1, astack.
   mem_budget_ -= sizeof(DFA);
   mem_budget_ -= (prog_->size() + nmark) *
                  (sizeof(int)+sizeof(int)) * 2;  // q0, q1
-  mem_budget_ -= nastack_ * sizeof(int);  // astack
+  mem_budget_ -= nastack * sizeof(int);  // astack
   if (mem_budget_ < 0) {
     init_failed_ = true;
     return;
@@ -482,13 +480,12 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
 
   q0_ = new Workq(prog_->size(), nmark);
   q1_ = new Workq(prog_->size(), nmark);
-  astack_ = new int[nastack_];
+  astack_ = PODArray<int>(nastack);
 }
 
 DFA::~DFA() {
   delete q0_;
   delete q1_;
-  delete[] astack_;
   ClearCache();
 }
 
@@ -835,12 +832,12 @@ void DFA::AddToQueue(Workq* q, int id, uint32_t flag) {
   // perform. (Each instruction can be processed at most once.)
   // When using marks, we also added nmark == prog_->size().
   // (Otherwise, nmark == 0.)
-  int* stk = astack_;
+  int* stk = astack_.data();
   int nstk = 0;
 
   stk[nstk++] = id;
   while (nstk > 0) {
-    DCHECK_LE(nstk, nastack_);
+    DCHECK_LE(nstk, astack_.size());
     id = stk[--nstk];
 
   Loop:
