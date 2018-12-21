@@ -27,6 +27,7 @@
 
 #include "util/util.h"
 #include "util/logging.h"
+#include "util/pod_array.h"
 #include "util/strutil.h"
 #include "util/utf.h"
 #include "re2/regexp.h"
@@ -1217,7 +1218,7 @@ void Regexp::ParseState::DoCollapse(RegexpOp op) {
     return;
 
   // Construct op (alternation or concatenation), flattening op of op.
-  Regexp** subs = new Regexp*[n];
+  PODArray<Regexp*> subs(n);
   next = NULL;
   int i = n;
   for (sub = stacktop_; sub != NULL && !IsMarker(sub->op()); sub = next) {
@@ -1232,8 +1233,7 @@ void Regexp::ParseState::DoCollapse(RegexpOp op) {
     }
   }
 
-  Regexp* re = ConcatOrAlternate(op, subs, n, flags_, true);
-  delete[] subs;
+  Regexp* re = ConcatOrAlternate(op, subs.data(), n, flags_, true);
   re->simple_ = re->ComputeSimple();
   re->down_ = next;
   stacktop_ = re;
