@@ -59,6 +59,7 @@
 
 #include "util/util.h"
 #include "util/logging.h"
+#include "util/pod_array.h"
 #include "util/sparse_set.h"
 #include "util/strutil.h"
 #include "util/utf.h"
@@ -403,11 +404,11 @@ bool Prog::IsOnePass() {
   int stacksize = inst_count(kInstCapture) +
                   inst_count(kInstEmptyWidth) +
                   inst_count(kInstNop) + 1;  // + 1 for start inst
-  InstCond* stack = new InstCond[stacksize];
+  PODArray<InstCond> stack(stacksize);
 
   int size = this->size();
-  int* nodebyid = new int[size];  // indexed by ip
-  memset(nodebyid, 0xFF, size*sizeof nodebyid[0]);
+  PODArray<int> nodebyid(size);  // indexed by ip
+  memset(nodebyid.data(), 0xFF, size*sizeof nodebyid[0]);
 
   // Originally, nodes was a uint8_t[maxnodes*statesize], but that was
   // unnecessarily optimistic: why allocate a large amount of memory
@@ -613,14 +614,9 @@ bool Prog::IsOnePass() {
   dfa_mem_ -= nalloc*statesize;
   onepass_nodes_ = new uint8_t[nalloc*statesize];
   memmove(onepass_nodes_, nodes.data(), nalloc*statesize);
-
-  delete[] stack;
-  delete[] nodebyid;
   return true;
 
 fail:
-  delete[] stack;
-  delete[] nodebyid;
   return false;
 }
 

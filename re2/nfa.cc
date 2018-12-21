@@ -34,6 +34,7 @@
 #include "re2/prog.h"
 #include "re2/regexp.h"
 #include "util/logging.h"
+#include "util/pod_array.h"
 #include "util/sparse_array.h"
 #include "util/sparse_set.h"
 #include "util/strutil.h"
@@ -115,20 +116,18 @@ class NFA {
 
   inline void CopyCapture(const char** dst, const char** src);
 
-  Prog* prog_;          // underlying program
-  int start_;           // start instruction in program
-  int ncapture_;        // number of submatches to track
-  bool longest_;        // whether searching for longest match
-  bool endmatch_;       // whether match must end at text.end()
-  const char* btext_;   // beginning of text being matched (for FormatSubmatch)
-  const char* etext_;   // end of text being matched (for endmatch_)
-  Threadq q0_, q1_;     // pre-allocated for Search.
-  const char** match_;  // best match so far
-  bool matched_;        // any match so far?
-  AddState* astack_;    // pre-allocated for AddToThreadq
-  int nastack_;
-
-  Thread* free_threads_;  // free list
+  Prog* prog_;                // underlying program
+  int start_;                 // start instruction in program
+  int ncapture_;              // number of submatches to track
+  bool longest_;              // whether searching for longest match
+  bool endmatch_;             // whether match must end at text.end()
+  const char* btext_;         // beginning of text being matched (for FormatSubmatch)
+  const char* etext_;         // end of text being matched (for endmatch_)
+  Threadq q0_, q1_;           // pre-allocated for Search.
+  PODArray<AddState> stack_;  // pre-allocated for AddToThreadq
+  Thread* free_threads_;      // free list
+  const char** match_;        // best match so far
+  bool matched_;              // any match so far?
 
   NFA(const NFA&) = delete;
   NFA& operator=(const NFA&) = delete;
@@ -145,18 +144,17 @@ NFA::NFA(Prog* prog) {
   q0_.resize(prog_->size());
   q1_.resize(prog_->size());
   // See NFA::AddToThreadq() for why this is so.
-  nastack_ = 2*prog_->inst_count(kInstCapture) +
-             prog_->inst_count(kInstEmptyWidth) +
-             prog_->inst_count(kInstNop) + 1;  // + 1 for start inst
-  astack_ = new AddState[nastack_];
+  int nstack = 2*prog_->inst_count(kInstCapture) +
+               prog_->inst_count(kInstEmptyWidth) +
+               prog_->inst_count(kInstNop) + 1;  // + 1 for start inst
+  stack_ = PODArray<AddState>(nstack);
+  free_threads_ = NULL;
   match_ = NULL;
   matched_ = false;
-  free_threads_ = NULL;
 }
 
 NFA::~NFA() {
   delete[] match_;
-  delete[] astack_;
   Thread* next;
   for (Thread* t = free_threads_; t; t = next) {
     next = t->next;
@@ -211,19 +209,19 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, const StringPiece& context,
   if (id0 == 0)
     return;
 
-  // Use astack_ to hold our stack of instructions yet to process.
+  // Use stack_ to hold our stack of instructions yet to process.
   // It was preallocated as follows:
   //   two entries per Capture;
   //   one entry per EmptyWidth; and
   //   one entry per Nop.
   // This reflects the maximum number of stack pushes that each can
   // perform. (Each instruction can be processed at most once.)
-  AddState* stk = astack_;
+  AddState* stk = stack_.data();
   int nstk = 0;
 
   stk[nstk++] = AddState(id0);
   while (nstk > 0) {
-    DCHECK_LE(nstk, nastack_);
+    DCHECK_LE(nstk, stack_.size());
     AddState a = stk[--nstk];
 
   Loop:
