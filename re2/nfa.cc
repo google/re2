@@ -76,13 +76,6 @@ class NFA {
   struct AddState {
     int id;     // Inst to process
     Thread* t;  // if not null, set t0 = t before processing id
-
-    AddState()
-        : id(0), t(NULL) {}
-    explicit AddState(int id)
-        : id(id), t(NULL) {}
-    AddState(int id, Thread* t)
-        : id(id), t(t) {}
   };
 
   // Threadq is a list of threads.  The list is sorted by the order
@@ -219,7 +212,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, const StringPiece& context,
   AddState* stk = stack_.data();
   int nstk = 0;
 
-  stk[nstk++] = AddState(id0);
+  stk[nstk++] = {id0, NULL};
   while (nstk > 0) {
     DCHECK_LE(nstk, stack_.size());
     AddState a = stk[--nstk];
@@ -264,25 +257,25 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, const StringPiece& context,
       *tp = t;
 
       DCHECK(!ip->last());
-      a = AddState(id+1);
+      a = {id+1, NULL};
       goto Loop;
 
     case kInstNop:
       if (!ip->last())
-        stk[nstk++] = AddState(id+1);
+        stk[nstk++] = {id+1, NULL};
 
       // Continue on.
-      a = AddState(ip->out());
+      a = {ip->out(), NULL};
       goto Loop;
 
     case kInstCapture:
       if (!ip->last())
-        stk[nstk++] = AddState(id+1);
+        stk[nstk++] = {id+1, NULL};
 
       if ((j=ip->cap()) < ncapture_) {
         // Push a dummy whose only job is to restore t0
         // once we finish exploring this possibility.
-        stk[nstk++] = AddState(0, t0);
+        stk[nstk++] = {0, t0};
 
         // Record capture.
         t = AllocThread();
@@ -290,7 +283,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, const StringPiece& context,
         t->capture[j] = p;
         t0 = t;
       }
-      a = AddState(ip->out());
+      a = {ip->out(), NULL};
       goto Loop;
 
     case kInstByteRange:
@@ -308,17 +301,17 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, const StringPiece& context,
     Next:
       if (ip->last())
         break;
-      a = AddState(id+1);
+      a = {id+1, NULL};
       goto Loop;
 
     case kInstEmptyWidth:
       if (!ip->last())
-        stk[nstk++] = AddState(id+1);
+        stk[nstk++] = {id+1, NULL};
 
       // Continue on if we have all the right flag bits.
       if (ip->empty() & ~Prog::EmptyFlags(context, p))
         break;
-      a = AddState(ip->out());
+      a = {ip->out(), NULL};
       goto Loop;
     }
   }
