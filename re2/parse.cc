@@ -900,7 +900,7 @@ struct Frame {
   int nsub;
   int round;
   std::vector<Splice> splices;
-  std::vector<Splice>::iterator spliceiter;
+  int spliceidx;
 };
 
 // Bundled into a class for friend access to Regexp without needing to declare
@@ -938,15 +938,15 @@ int Regexp::FactorAlternation(Regexp** sub, int nsub, ParseFlags flags) {
     auto& nsub = stk.back().nsub;
     auto& round = stk.back().round;
     auto& splices = stk.back().splices;
-    auto& spliceiter = stk.back().spliceiter;
+    auto& spliceidx = stk.back().spliceidx;
 
     if (splices.empty()) {
       // Advance to the next round of factoring. Note that this covers
       // the initialised state: when splices is empty and round is 0.
       round++;
-    } else if (spliceiter != splices.end()) {
+    } else if (spliceidx < static_cast<int>(splices.size())) {
       // We have at least one more Splice to factor. Recurse logically.
-      stk.emplace_back(spliceiter->sub, spliceiter->nsub);
+      stk.emplace_back(splices[spliceidx].sub, splices[spliceidx].nsub);
       continue;
     } else {
       // We have no more Splices to factor. Apply them.
@@ -1007,8 +1007,8 @@ int Regexp::FactorAlternation(Regexp** sub, int nsub, ParseFlags flags) {
           // (Note that references will be invalidated!)
           int nsuffix = nsub;
           stk.pop_back();
-          stk.back().spliceiter->nsuffix = nsuffix;
-          ++stk.back().spliceiter;
+          stk.back().splices[stk.back().spliceidx].nsuffix = nsuffix;
+          ++stk.back().spliceidx;
           continue;
         }
       default:
@@ -1016,11 +1016,11 @@ int Regexp::FactorAlternation(Regexp** sub, int nsub, ParseFlags flags) {
         break;
     }
 
-    // Set spliceiter depending on whether we have Splices to factor.
+    // Set spliceidx depending on whether we have Splices to factor.
     if (splices.empty() || round == 3) {
-      spliceiter = splices.end();
+      spliceidx = static_cast<int>(splices.size());
     } else {
-      spliceiter = splices.begin();
+      spliceidx = 0;
     }
   }
 }
