@@ -62,6 +62,8 @@
 #include <memory>
 #include <utility>
 
+#include "util/pod_array.h"
+
 namespace re2 {
 
 template<typename Value>
@@ -86,17 +88,17 @@ class SparseSetT {
 
   // Iterate over the set.
   iterator begin() {
-    return dense_.get();
+    return dense_.data();
   }
   iterator end() {
-    return dense_.get() + size_;
+    return dense_.data() + size_;
   }
 
   const_iterator begin() const {
-    return dense_.get();
+    return dense_.data();
   }
   const_iterator end() const {
-    return dense_.get() + size_;
+    return dense_.data() + size_;
   }
 
   // Change the maximum size of the set.
@@ -106,7 +108,7 @@ class SparseSetT {
   // Return the maximum size of the set.
   // Indices can be in the range [0, max_size).
   int max_size() const {
-    return max_size_;
+    return dense_.size();
   }
 
   // Clear the set.
@@ -138,7 +140,7 @@ class SparseSetT {
  private:
   iterator InsertInternal(bool allow_existing, int i) {
     DebugCheckInvariants();
-    if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
+    if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(dense_.size())) {
       assert(false && "illegal index");
       // Semantically, end() would be better here, but we already know
       // the user did something stupid, so begin() insulates them from
@@ -153,7 +155,7 @@ class SparseSetT {
         create_index(i);
     }
     DebugCheckInvariants();
-    return dense_.get() + sparse_[i];
+    return dense_.data() + sparse_[i];
   }
 
   // Add the index i to the set.
@@ -170,7 +172,7 @@ class SparseSetT {
   // Initializes memory for elements [min, max).
   void MaybeInitializeMemory(int min, int max) {
 #if __has_feature(memory_sanitizer)
-    __msan_unpoison(sparse_.get() + min, (max - min) * sizeof sparse_[0]);
+    __msan_unpoison(sparse_.data() + min, (max - min) * sizeof sparse_[0]);
 #elif defined(RE2_ON_VALGRIND)
     for (int i = min; i < max; i++) {
       sparse_[i] = 0xababababU;
@@ -179,9 +181,8 @@ class SparseSetT {
   }
 
   int size_ = 0;
-  int max_size_ = 0;
-  std::unique_ptr<int[]> sparse_;
-  std::unique_ptr<int[]> dense_;
+  PODArray<int> sparse_;
+  PODArray<int> dense_;
 };
 
 template<typename Value>
@@ -192,24 +193,26 @@ SparseSetT<Value>::SparseSetT() = default;
 template<typename Value>
 void SparseSetT<Value>::resize(int max_size) {
   DebugCheckInvariants();
-  if (max_size > max_size_) {
-    std::unique_ptr<int[]> a(new int[max_size]);
-    if (sparse_) {
-      std::copy_n(sparse_.get(), max_size_, a.get());
+  const int old_max_size = dense_.size();
+  if (max_size > old_max_size) {
+    PODArray<int> a(max_size);
+    if (sparse_.data() != NULL) {
+      std::copy_n(sparse_.data(), old_max_size, a.data());
     }
+
     sparse_ = std::move(a);
 
-    std::unique_ptr<int[]> b(new int[max_size]);
-    if (dense_) {
-      std::copy_n(dense_.get(), max_size_, b.get());
+    PODArray<int> b(max_size);
+    if (dense_.data() != NULL) {
+      std::copy_n(dense_.data(), old_max_size, b.data());
     }
+
     dense_ = std::move(b);
 
-    MaybeInitializeMemory(max_size_, max_size);
+    MaybeInitializeMemory(old_max_size, max_size);
   }
-  max_size_ = max_size;
-  if (size_ > max_size_)
-    size_ = max_size_;
+  if (size_ > max_size)
+    size_ = max_size;
   DebugCheckInvariants();
 }
 
@@ -217,8 +220,8 @@ void SparseSetT<Value>::resize(int max_size) {
 template<typename Value>
 bool SparseSetT<Value>::contains(int i) const {
   assert(i >= 0);
-  assert(i < max_size_);
-  if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
+  assert(i < dense_.size());
+  if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(dense_.size())) {
     return false;
   }
   // Unsigned comparison avoids checking sparse_[i] < 0.
@@ -229,18 +232,15 @@ bool SparseSetT<Value>::contains(int i) const {
 template<typename Value>
 void SparseSetT<Value>::create_index(int i) {
   assert(!contains(i));
-  assert(size_ < max_size_);
+  assert(size_ < dense_.size());
   sparse_[i] = size_;
   dense_[size_] = i;
   size_++;
 }
 
-template<typename Value> SparseSetT<Value>::SparseSetT(int max_size) {
-  sparse_.reset(new int[max_size]);
-  dense_.reset(new int[max_size]);
-  size_ = 0;
+template<typename Value> SparseSetT<Value>::SparseSetT(int max_size) :
+    sparse_(max_size), dense_(max_size) {
   MaybeInitializeMemory(size_, max_size);
-  max_size_ = max_size;
   DebugCheckInvariants();
 }
 
@@ -250,8 +250,9 @@ template<typename Value> SparseSetT<Value>::~SparseSetT() {
 
 template<typename Value> void SparseSetT<Value>::DebugCheckInvariants() const {
   assert(0 <= size_);
-  assert(size_ <= max_size_);
-  assert(size_ == 0 || sparse_ != NULL);
+  assert(size_ <= dense_.size());
+  assert(sparse_.size() == dense_.size());
+  assert(size_ == 0 || dense_.data() != NULL);
 }
 
 // Comparison function for sorting.
