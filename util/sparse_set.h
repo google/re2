@@ -207,6 +207,7 @@ void SparseSetT<Value>::resize(int max_size) {
       std::copy_n(dense_.data(), old_max_size, b.data());
     }
 
+    sparse_ = std::move(a);
     dense_ = std::move(b);
 
     MaybeInitializeMemory(old_max_size, max_size);
