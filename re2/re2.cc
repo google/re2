@@ -283,7 +283,7 @@ static int Fanout(Prog* prog, std::map<int, int>* histogram) {
   for (SparseArray<int>::iterator i = fanout.begin(); i != fanout.end(); ++i) {
     // TODO(junyer): Optimise this?
     int bucket = 0;
-    while (1 << bucket < i->second) {
+    while (1 << bucket < i->value()) {
       bucket++;
     }
     (*histogram)[bucket]++;

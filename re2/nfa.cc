@@ -238,8 +238,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, const StringPiece& context,
     // or we might not.  Even if not, it is necessary to have it,
     // so that we don't revisit id0 during the recursion.
     q->set_new(id, NULL);
-
-    Thread** tp = &q->find(id)->second;
+    Thread** tp = &q->get_existing(id);
     int j;
     Thread* t;
     Prog::Inst* ip = prog_->inst(id);
@@ -329,7 +328,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, const StringPiece& context,
   nextq->clear();
 
   for (Threadq::iterator i = runq->begin(); i != runq->end(); ++i) {
-    Thread* t = i->second;
+    Thread* t = i->value();
     if (t == NULL)
       continue;
 
@@ -364,7 +363,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, const StringPiece& context,
 
           Decref(t);
           for (++i; i != runq->end(); ++i)
-            Decref(i->second);
+            Decref(i->value());
           runq->clear();
           if (ip->greedy(prog_))
             return ip->out1();
@@ -403,7 +402,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, const StringPiece& context,
           // rest of the current Threadq.
           Decref(t);
           for (++i; i != runq->end(); ++i)
-            Decref(i->second);
+            Decref(i->value());
           runq->clear();
           return 0;
         }
@@ -505,7 +504,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
 
       fprintf(stderr, "%c:", c);
       for (Threadq::iterator i = runq->begin(); i != runq->end(); ++i) {
-        Thread* t = i->second;
+        Thread* t = i->value();
         if (t == NULL)
           continue;
         fprintf(stderr, " %d%s", i->index(), FormatCapture(t->capture).c_str());
@@ -586,7 +585,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
   }
 
   for (Threadq::iterator i = runq->begin(); i != runq->end(); ++i)
-    Decref(i->second);
+    Decref(i->value());
 
   if (matched_) {
     for (int i = 0; i < nsubmatch; i++)
@@ -697,7 +696,7 @@ void Prog::Fanout(SparseArray<int>* fanout) {
   fanout->clear();
   fanout->set_new(start(), 0);
   for (SparseArray<int>::iterator i = fanout->begin(); i != fanout->end(); ++i) {
-    int* count = &i->second;
+    int* count = &i->value();
     reachable.clear();
     reachable.insert(i->index());
     for (SparseSet::iterator j = reachable.begin(); j != reachable.end(); ++j) {
