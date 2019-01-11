@@ -431,12 +431,13 @@ void SparseArray<Value>::resize(int max_size) {
     if (sparse_) {
       std::copy_n(sparse_.get(), max_size_, a.get());
     }
-    sparse_ = std::move(a);
 
     std::unique_ptr<IndexValue[]> b(new IndexValue[max_size]);
     if (dense_) {
       std::copy_n(dense_.get(), max_size_, b.get());
     }
+
+    sparse_ = std::move(a);
     dense_ = std::move(b);
 
     MaybeInitializeMemory(max_size_, max_size);

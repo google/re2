@@ -193,8 +193,9 @@ SparseSetT<Value>::SparseSetT() = default;
 template<typename Value>
 void SparseSetT<Value>::resize(int max_size) {
   DebugCheckInvariants();
-  const int old_max_size = dense_.size();
-  if (max_size > old_max_size) {
+  if (max_size > dense_.size()) {
+    const int old_max_size = dense_.size();
+
     PODArray<int> a(max_size);
     if (sparse_.data() != NULL) {
       std::copy_n(sparse_.data(), old_max_size, a.data());
