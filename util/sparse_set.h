@@ -54,7 +54,6 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <string.h>
 #if __has_feature(memory_sanitizer)
 #include <sanitizer/msan_interface.h>
 #endif

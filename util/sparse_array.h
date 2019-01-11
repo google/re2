@@ -55,7 +55,7 @@
 
 // IMPLEMENTATION
 //
-// SparseArray is an array dense_ and an array sparse_, both of size max_size_.
+// SparseArray is an array dense_ and an array sparse_ of identical size.
 // At any point, the number of elements in the sparse array is size_.
 //
 // The array dense_ contains the size_ elements in the sparse array (with
@@ -95,14 +95,14 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <string.h>
 #if __has_feature(memory_sanitizer)
 #include <sanitizer/msan_interface.h>
 #endif
 #include <algorithm>
 #include <memory>
-#include <type_traits>
 #include <utility>
+
+#include "util/pod_array.h"
 
 namespace re2 {
 
@@ -115,8 +115,6 @@ class SparseArray {
 
   // IndexValue pairs: exposed in SparseArray::iterator.
   class IndexValue;
-  static_assert(std::is_trivially_destructible<IndexValue>::value,
-                "IndexValue must be trivially destructible");
 
   typedef IndexValue* iterator;
   typedef const IndexValue* const_iterator;
@@ -139,17 +137,17 @@ class SparseArray {
 
   // Iterate over the array.
   iterator begin() {
-    return dense_.get();
+    return dense_.data();
   }
   iterator end() {
-    return dense_.get() + size_;
+    return dense_.data() + size_;
   }
 
   const_iterator begin() const {
-    return dense_.get();
+    return dense_.data();
   }
   const_iterator end() const {
-    return dense_.get() + size_;
+    return dense_.data() + size_;
   }
 
   // Change the maximum size of the array.
@@ -159,7 +157,7 @@ class SparseArray {
   // Return the maximum size of the array.
   // Indices can be in the range [0, max_size).
   int max_size() const {
-    return max_size_;
+    return dense_.size();
   }
 
   // Clear the array.
@@ -208,7 +206,7 @@ class SparseArray {
  private:
   iterator SetInternal(bool allow_existing, int i, const Value& v) {
     DebugCheckInvariants();
-    if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
+    if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(dense_.size())) {
       assert(false && "illegal index");
       // Semantically, end() would be better here, but we already know
       // the user did something stupid, so begin() insulates them from
@@ -230,7 +228,7 @@ class SparseArray {
     assert(has_index(i));
     dense_[sparse_[i]].value_ = v;
     DebugCheckInvariants();
-    return dense_.get() + sparse_[i];
+    return dense_.data() + sparse_[i];
   }
 
   // Add the index i to the array.
@@ -248,7 +246,7 @@ class SparseArray {
   // Initializes memory for elements [min, max).
   void MaybeInitializeMemory(int min, int max) {
 #if __has_feature(memory_sanitizer)
-    __msan_unpoison(sparse_.get() + min, (max - min) * sizeof sparse_[0]);
+    __msan_unpoison(sparse_.data() + min, (max - min) * sizeof sparse_[0]);
 #elif defined(RE2_ON_VALGRIND)
     for (int i = min; i < max; i++) {
       sparse_[i] = 0xababababU;
@@ -257,9 +255,8 @@ class SparseArray {
   }
 
   int size_ = 0;
-  int max_size_ = 0;
-  std::unique_ptr<int[]> sparse_;
-  std::unique_ptr<IndexValue[]> dense_;
+  PODArray<int> sparse_;
+  PODArray<IndexValue> dense_;
 };
 
 template<typename Value>
@@ -268,45 +265,40 @@ SparseArray<Value>::SparseArray() = default;
 template<typename Value>
 SparseArray<Value>::SparseArray(const SparseArray& src)
     : size_(src.size_),
-      max_size_(src.max_size_),
-      sparse_(new int[max_size_]),
-      dense_(new IndexValue[max_size_]) {
-  std::copy_n(src.sparse_.get(), max_size_, sparse_.get());
-  std::copy_n(src.dense_.get(), max_size_, dense_.get());
+      sparse_(src.sparse_.size()),
+      dense_(src.dense_.size()) {
+  std::copy_n(src.sparse_.data(), src.sparse_.size(), sparse_.data());
+  std::copy_n(src.dense_.data(), src.dense_.size(), dense_.data());
 }
 
 template<typename Value>
 SparseArray<Value>::SparseArray(SparseArray&& src)
     : size_(src.size_),
-      max_size_(src.max_size_),
       sparse_(std::move(src.sparse_)),
       dense_(std::move(src.dense_)) {
   src.size_ = 0;
-  src.max_size_ = 0;
 }
 
 template<typename Value>
 SparseArray<Value>& SparseArray<Value>::operator=(const SparseArray& src) {
+  // Construct these first for exception safety.
+  PODArray<int> a(src.sparse_.size());
+  PODArray<IndexValue> b(src.dense_.size());
+
   size_ = src.size_;
-  max_size_ = src.max_size_;
-  std::unique_ptr<int[]> a(new int[max_size_]);
-  std::copy_n(src.sparse_.get(), src.max_size_, a.get());
   sparse_ = std::move(a);
-  std::unique_ptr<IndexValue[]> b(new IndexValue[max_size_]);
-  std::copy_n(src.dense_.get(), src.max_size_, b.get());
   dense_ = std::move(b);
+  std::copy_n(src.sparse_.data(), src.sparse_.size(), sparse_.data());
+  std::copy_n(src.dense_.data(), src.dense_.size(), dense_.data());
   return *this;
 }
 
 template<typename Value>
 SparseArray<Value>& SparseArray<Value>::operator=(SparseArray&& src) {
   size_ = src.size_;
-  max_size_ = src.max_size_;
   sparse_ = std::move(src.sparse_);
   dense_ = std::move(src.dense_);
-  // clear out the source
   src.size_ = 0;
-  src.max_size_ = 0;
   return *this;
 }
 
@@ -329,25 +321,26 @@ class SparseArray<Value>::IndexValue {
 template<typename Value>
 void SparseArray<Value>::resize(int max_size) {
   DebugCheckInvariants();
-  if (max_size > max_size_) {
-    std::unique_ptr<int[]> a(new int[max_size]);
-    if (sparse_) {
-      std::copy_n(sparse_.get(), max_size_, a.get());
+  if (max_size > dense_.size()) {
+    const int old_max_size = dense_.size();
+
+    PODArray<int> a(max_size);
+    if (sparse_.data() != NULL) {
+      std::copy_n(sparse_.data(), old_max_size, a.data());
     }
 
-    std::unique_ptr<IndexValue[]> b(new IndexValue[max_size]);
-    if (dense_) {
-      std::copy_n(dense_.get(), max_size_, b.get());
+    PODArray<IndexValue> b(max_size);
+    if (dense_.data() != NULL) {
+      std::copy_n(dense_.data(), old_max_size, b.data());
     }
 
     sparse_ = std::move(a);
     dense_ = std::move(b);
 
-    MaybeInitializeMemory(max_size_, max_size);
+    MaybeInitializeMemory(old_max_size, max_size);
   }
-  max_size_ = max_size;
-  if (size_ > max_size_)
-    size_ = max_size_;
+  if (size_ > max_size)
+    size_ = max_size;
   DebugCheckInvariants();
 }
 
@@ -355,8 +348,8 @@ void SparseArray<Value>::resize(int max_size) {
 template<typename Value>
 bool SparseArray<Value>::has_index(int i) const {
   assert(i >= 0);
-  assert(i < max_size_);
-  if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
+  assert(i < dense_.size());
+  if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(dense_.size())) {
     return false;
   }
   // Unsigned comparison avoids checking sparse_[i] < 0.
@@ -367,18 +360,15 @@ bool SparseArray<Value>::has_index(int i) const {
 template<typename Value>
 void SparseArray<Value>::create_index(int i) {
   assert(!has_index(i));
-  assert(size_ < max_size_);
+  assert(size_ < dense_.size());
   sparse_[i] = size_;
   dense_[size_].index_ = i;
   size_++;
 }
 
-template<typename Value> SparseArray<Value>::SparseArray(int max_size) {
-  sparse_.reset(new int[max_size]);
-  dense_.reset(new IndexValue[max_size]);
-  size_ = 0;
+template<typename Value> SparseArray<Value>::SparseArray(int max_size) :
+    sparse_(max_size), dense_(max_size) {
   MaybeInitializeMemory(size_, max_size);
-  max_size_ = max_size;
   DebugCheckInvariants();
 }
 
@@ -388,8 +378,9 @@ template<typename Value> SparseArray<Value>::~SparseArray() {
 
 template<typename Value> void SparseArray<Value>::DebugCheckInvariants() const {
   assert(0 <= size_);
-  assert(size_ <= max_size_);
-  assert(size_ == 0 || sparse_ != NULL);
+  assert(size_ <= dense_.size());
+  assert(sparse_.size() == dense_.size());
+  assert(size_ == 0 || dense_.data() != NULL);
 }
 
 // Comparison function for sorting.
