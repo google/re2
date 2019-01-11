@@ -80,15 +80,11 @@
 // To insert a new entry, set sparse_[i] to size_,
 // initialize dense_[size_], and then increment size_.
 //
-// Deletion of specific values from the array is implemented by
-// swapping dense_[size_-1] and the dense_ being deleted and then
-// updating the appropriate sparse_ entries.
-//
 // To make the sparse array as efficient as possible for non-primitive types,
 // elements may or may not be destroyed when they are deleted from the sparse
-// array through a call to erase(), erase_existing() or resize(). They
-// immediately become inaccessible, but they are only guaranteed to be
-// destroyed when the SparseArray destructor is called.
+// array through a call to resize(). They immediately become inaccessible, but
+// they are only guaranteed to be destroyed when the SparseArray destructor is
+// called.
 //
 // A moved-from SparseArray will be empty.
 
@@ -122,17 +118,14 @@ class SparseArray {
   static_assert(std::is_trivially_destructible<IndexValue>::value,
                 "IndexValue must be trivially destructible");
 
-  typedef IndexValue value_type;
   typedef IndexValue* iterator;
   typedef const IndexValue* const_iterator;
 
   SparseArray(const SparseArray& src);
-  SparseArray(SparseArray&& src) /*noexcept*/;
+  SparseArray(SparseArray&& src);
 
   SparseArray& operator=(const SparseArray& src);
-  SparseArray& operator=(SparseArray&& src) /*noexcept*/;
-
-  const IndexValue& iv(int i) const;
+  SparseArray& operator=(SparseArray&& src);
 
   // Return the number of entries in the array.
   int size() const {
@@ -188,97 +181,32 @@ class SparseArray {
   iterator set(int i, const Value& v) {
     return SetInternal(true, i, v);
   }
-  iterator set(int i, Value&& v) {  // NOLINT
-    return SetInternal(true, i, std::move(v));
-  }
 
-  std::pair<iterator, bool> insert(const value_type& v) {
-    return InsertInternal(v);
-  }
-  std::pair<iterator, bool> insert(value_type&& v) {  // NOLINT
-    return InsertInternal(std::move(v));
-  }
-
-  template <typename... Args>
-  std::pair<iterator, bool> emplace(Args&&... args) {  // NOLINT
-    return InsertInternal(value_type(std::forward<Args>(args)...));
-  }
-
-  iterator find(int i) {
-    if (has_index(i))
-      return dense_.get() + sparse_[i];
-    return end();
-  }
-
-  const_iterator find(int i) const {
-    if (has_index(i))
-      return dense_.get() + sparse_[i];
-    return end();
-  }
-
-  // Change the value at index i to v.
-  // Fast but unsafe: only use if has_index(i) is true.
-  iterator set_existing(int i, const Value& v) {
-    return SetExistingInternal(i, v);
-  }
-  iterator set_existing(int i, Value&& v) {  // NOLINT
-    return SetExistingInternal(i, std::move(v));
-  }
-
-  // Set the value at the new index i to v.
+  // Set the value at new index i to v.
   // Fast but unsafe: only use if has_index(i) is false.
   iterator set_new(int i, const Value& v) {
     return SetInternal(false, i, v);
   }
-  iterator set_new(int i, Value&& v) {  // NOLINT
-    return SetInternal(false, i, std::move(v));
+
+  // Set the value at index i to v.
+  // Fast but unsafe: only use if has_index(i) is true.
+  iterator set_existing(int i, const Value& v) {
+    return SetExistingInternal(i, v);
   }
 
-  // Get the value at index i from the array..
+  // Get the value at index i.
   // Fast but unsafe: only use if has_index(i) is true.
-  const Value& get_existing(int i) const;
-
-  // Erasing items from the array during iteration is in general
-  // NOT safe.  There is one special case, which is that the current
-  // index-value pair can be erased as long as the iterator is then
-  // checked for being at the end before being incremented.
-  // For example:
-  //
-  //   for (i = m.begin(); i != m.end(); ++i) {
-  //     if (ShouldErase(i->index(), i->value())) {
-  //       m.erase(i->index());
-  //       --i;
-  //     }
-  //   }
-  //
-  // Except in the specific case just described, elements must
-  // not be erased from the array (including clearing the array)
-  // while iterators are walking over the array.  Otherwise,
-  // the iterators could walk past the end of the array.
-
-  // Erases the element at index i from the array.
-  void erase(int i);
-
-  // Erases the element at index i from the array.
-  // Fast but unsafe: only use if has_index(i) is true.
-  void erase_existing(int i);
+  Value& get_existing(int i) {
+    assert(has_index(i));
+    return dense_[sparse_[i]].value_;
+  }
+  const Value& get_existing(int i) const {
+    assert(has_index(i));
+    return dense_[sparse_[i]].value_;
+  }
 
  private:
-  template <typename U>
-  std::pair<iterator, bool> InsertInternal(U&& v) {
-    DebugCheckInvariants();
-    std::pair<iterator, bool> p;
-    if (has_index(v.index_)) {
-      p = {dense_.get() + sparse_[v.index_], false};
-    } else {
-      p = {set_new(std::forward<U>(v).index_, std::forward<U>(v).second), true};
-    }
-    DebugCheckInvariants();
-    return p;
-  }
-
-  template <typename U>
-  iterator SetInternal(bool allow_overwrite, int i, U&& v) {  // NOLINT
+  iterator SetInternal(bool allow_existing, int i, const Value& v) {
     DebugCheckInvariants();
     if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
       assert(false && "illegal index");
@@ -287,21 +215,20 @@ class SparseArray {
       // dereferencing an invalid pointer.
       return begin();
     }
-    if (!allow_overwrite) {
+    if (!allow_existing) {
       assert(!has_index(i));
       create_index(i);
     } else {
       if (!has_index(i))
         create_index(i);
     }
-    return set_existing(i, std::forward<U>(v));  // NOLINT
+    return SetExistingInternal(i, v);
   }
 
-  template <typename U>
-  iterator SetExistingInternal(int i, U&& v) {  // NOLINT
+  iterator SetExistingInternal(int i, const Value& v) {
     DebugCheckInvariants();
     assert(has_index(i));
-    dense_[sparse_[i]].value() = std::forward<U>(v);
+    dense_[sparse_[i]].value_ = v;
     DebugCheckInvariants();
     return dense_.get() + sparse_[i];
   }
@@ -349,7 +276,7 @@ SparseArray<Value>::SparseArray(const SparseArray& src)
 }
 
 template<typename Value>
-SparseArray<Value>::SparseArray(SparseArray&& src) /*noexcept*/  // NOLINT
+SparseArray<Value>::SparseArray(SparseArray&& src)
     : size_(src.size_),
       max_size_(src.max_size_),
       sparse_(std::move(src.sparse_)),
@@ -372,8 +299,7 @@ SparseArray<Value>& SparseArray<Value>::operator=(const SparseArray& src) {
 }
 
 template<typename Value>
-SparseArray<Value>& SparseArray<Value>::operator=(
-    SparseArray&& src) /*noexcept*/ {  // NOLINT
+SparseArray<Value>& SparseArray<Value>::operator=(SparseArray&& src) {
   size_ = src.size_;
   max_size_ = src.max_size_;
   sparse_ = std::move(src.sparse_);
@@ -387,39 +313,16 @@ SparseArray<Value>& SparseArray<Value>::operator=(
 // IndexValue pairs: exposed in SparseArray::iterator.
 template<typename Value>
 class SparseArray<Value>::IndexValue {
-  friend class SparseArray;
  public:
-  typedef int first_type;
-  typedef Value second_type;
-
-  IndexValue() {}
-  IndexValue(int i, const Value& v) : index_(i), second(v) {}
-  IndexValue(int i, Value&& v) : index_(i), second(std::move(v)) {}
-
   int index() const { return index_; }
-
-  Value& value() /*&*/ { return second; }
-  const Value& value() const /*&*/ { return second; }
-  //Value&& value() /*&&*/ { return std::move(second); }  // NOLINT
+  Value& value() { return value_; }
+  const Value& value() const { return value_; }
 
  private:
+  friend class SparseArray;
   int index_;
-
- public:
-  // Provide the data in the 'second' member so that the utilities
-  // in map-util work.
-  // TODO(billydonahue): 'second' is public for short-term compatibility.
-  // Users will be transitioned to using value() accessor.
-  Value second;
+  Value value_;
 };
-
-template<typename Value>
-const typename SparseArray<Value>::IndexValue&
-SparseArray<Value>::iv(int i) const {
-  assert(i >= 0);
-  assert(i < size_);
-  return dense_[i];
-}
 
 // Change the maximum size of the array.
 // Invalidates all iterators.
@@ -459,33 +362,6 @@ bool SparseArray<Value>::has_index(int i) const {
   // Unsigned comparison avoids checking sparse_[i] < 0.
   return (uint32_t)sparse_[i] < (uint32_t)size_ &&
          dense_[sparse_[i]].index_ == i;
-}
-
-template<typename Value>
-const Value& SparseArray<Value>::get_existing(int i) const {
-  assert(has_index(i));
-  return dense_[sparse_[i]].second;
-}
-
-template<typename Value>
-void SparseArray<Value>::erase(int i) {
-  DebugCheckInvariants();
-  if (has_index(i))
-    erase_existing(i);
-  DebugCheckInvariants();
-}
-
-template<typename Value>
-void SparseArray<Value>::erase_existing(int i) {
-  DebugCheckInvariants();
-  assert(has_index(i));
-  int di = sparse_[i];
-  if (di < size_ - 1) {
-    dense_[di] = std::move(dense_[size_ - 1]);
-    sparse_[dense_[di].index_] = di;
-  }
-  size_--;
-  DebugCheckInvariants();
 }
 
 template<typename Value>
