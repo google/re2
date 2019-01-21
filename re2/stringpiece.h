@@ -51,6 +51,10 @@ class StringPiece {
       : data_(NULL), size_(0) {}
   StringPiece(const std::string& str)
       : data_(str.data()), size_(str.size()) {}
+#if __cpp_lib_string_view
+  StringPiece(std::string_view str)
+      : data_(str.data()), size_(str.size()) {}
+#endif
   StringPiece(const char* str)
       : data_(str), size_(str == NULL ? 0 : strlen(str)) {}
   StringPiece(const char* str, size_type len)
