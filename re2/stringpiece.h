@@ -19,12 +19,20 @@
 //
 // Arghh!  I wish C++ literals were "string".
 
+// Doing this simplifies the logic below.
+#ifndef __has_include
+#define __has_include(x) 0
+#endif
+
 #include <stddef.h>
 #include <string.h>
 #include <algorithm>
 #include <iosfwd>
 #include <iterator>
 #include <string>
+#if __has_include(<string_view>)
+#include <string_view>
+#endif
 
 namespace re2 {
 
@@ -49,6 +57,10 @@ class StringPiece {
   // expected.
   StringPiece()
       : data_(NULL), size_(0) {}
+#if __has_include(<string_view>)
+  StringPiece(const std::string_view& str)
+      : data_(str.data()), size_(str.size()) {}
+#endif
   StringPiece(const std::string& str)
       : data_(str.data()), size_(str.size()) {}
   StringPiece(const char* str)
