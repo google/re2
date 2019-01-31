@@ -1,2 +1,2 @@
-bash git/re2/kokoro/windows-bazel.sh
+bash git/re2/kokoro/bazel.sh
 EXIT /B %ERRORLEVEL%
