@@ -8,9 +8,9 @@ case "${KOKORO_JOB_NAME}" in
     CMAKE_G_A_FLAGS=('-G' 'Visual Studio 14 2015' '-A' 'x64')
     ;;
   *)
+    CMAKE_G_A_FLAGS=()
     # Work around a bug in older versions of bash. :/
     set +u
-    CMAKE_G_A_FLAGS=()
     ;;
 esac
 
