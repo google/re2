@@ -218,8 +218,9 @@ void SparseSetT<Value>::resize(int new_max_size) {
 // Check whether index i is in the set.
 template<typename Value>
 bool SparseSetT<Value>::contains(int i) const {
-  assert(i >= 0);
-  assert(i < max_size());
+  if (i < 0 || i >= max_size()) {
+    return false;
+  }
   if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size())) {
     return false;
   }
