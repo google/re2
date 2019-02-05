@@ -219,7 +219,6 @@ void SparseSetT<Value>::resize(int new_max_size) {
 template<typename Value>
 bool SparseSetT<Value>::contains(int i) const {
   assert(i >= 0);
-  assert(i < max_size());
   if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size())) {
     return false;
   }
