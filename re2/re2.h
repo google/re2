@@ -696,7 +696,7 @@ class RE2 {
   };
 
   // Returns the options set in the constructor.
-  const Options& options() const { return options_; };
+  const Options& options() const { return options_; }
 
   // Argument converters; see below.
   static inline Arg CRadix(short* x);
@@ -799,22 +799,22 @@ class RE2::Arg {
   Arg(type* p) : arg_(p), parser_(name) {} \
   Arg(type* p, Parser parser) : arg_(p), parser_(parser) {}
 
-  MAKE_PARSER(char,               parse_char);
-  MAKE_PARSER(signed char,        parse_schar);
-  MAKE_PARSER(unsigned char,      parse_uchar);
-  MAKE_PARSER(float,              parse_float);
-  MAKE_PARSER(double,             parse_double);
-  MAKE_PARSER(string,             parse_string);
-  MAKE_PARSER(StringPiece,        parse_stringpiece);
+  MAKE_PARSER(char,               parse_char)
+  MAKE_PARSER(signed char,        parse_schar)
+  MAKE_PARSER(unsigned char,      parse_uchar)
+  MAKE_PARSER(float,              parse_float)
+  MAKE_PARSER(double,             parse_double)
+  MAKE_PARSER(string,             parse_string)
+  MAKE_PARSER(StringPiece,        parse_stringpiece)
 
-  MAKE_PARSER(short,              parse_short);
-  MAKE_PARSER(unsigned short,     parse_ushort);
-  MAKE_PARSER(int,                parse_int);
-  MAKE_PARSER(unsigned int,       parse_uint);
-  MAKE_PARSER(long,               parse_long);
-  MAKE_PARSER(unsigned long,      parse_ulong);
-  MAKE_PARSER(long long,          parse_longlong);
-  MAKE_PARSER(unsigned long long, parse_ulonglong);
+  MAKE_PARSER(short,              parse_short)
+  MAKE_PARSER(unsigned short,     parse_ushort)
+  MAKE_PARSER(int,                parse_int)
+  MAKE_PARSER(unsigned int,       parse_uint)
+  MAKE_PARSER(long,               parse_long)
+  MAKE_PARSER(unsigned long,      parse_ulong)
+  MAKE_PARSER(long long,          parse_longlong)
+  MAKE_PARSER(unsigned long long, parse_ulonglong)
 
 #undef MAKE_PARSER
 
@@ -849,16 +849,16 @@ class RE2::Arg {
  public:                                                                   \
   static bool parse_##name##_hex(const char* str, size_t n, void* dest);   \
   static bool parse_##name##_octal(const char* str, size_t n, void* dest); \
-  static bool parse_##name##_cradix(const char* str, size_t n, void* dest)
+  static bool parse_##name##_cradix(const char* str, size_t n, void* dest);
 
-  DECLARE_INTEGER_PARSER(short);
-  DECLARE_INTEGER_PARSER(ushort);
-  DECLARE_INTEGER_PARSER(int);
-  DECLARE_INTEGER_PARSER(uint);
-  DECLARE_INTEGER_PARSER(long);
-  DECLARE_INTEGER_PARSER(ulong);
-  DECLARE_INTEGER_PARSER(longlong);
-  DECLARE_INTEGER_PARSER(ulonglong);
+  DECLARE_INTEGER_PARSER(short)
+  DECLARE_INTEGER_PARSER(ushort)
+  DECLARE_INTEGER_PARSER(int)
+  DECLARE_INTEGER_PARSER(uint)
+  DECLARE_INTEGER_PARSER(long)
+  DECLARE_INTEGER_PARSER(ulong)
+  DECLARE_INTEGER_PARSER(longlong)
+  DECLARE_INTEGER_PARSER(ulonglong)
 
 #undef DECLARE_INTEGER_PARSER
 
