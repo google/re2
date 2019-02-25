@@ -244,7 +244,7 @@ bool Prog::SearchOnePass(const StringPiece& text,
   if (anchor_end())
     kind = kFullMatch;
 
-  uint8_t* nodes = onepass_nodes_;
+  uint8_t* nodes = onepass_nodes_.data();
   int statesize = sizeof(OneState) + bytemap_range()*sizeof(uint32_t);
   // start() is always mapped to the zeroth OneState.
   OneState* state = IndexToNode(nodes, statesize, 0);
@@ -383,7 +383,7 @@ struct InstCond {
 // Constructs and saves corresponding one-pass NFA on success.
 bool Prog::IsOnePass() {
   if (did_onepass_)
-    return onepass_nodes_ != NULL;
+    return onepass_nodes_.size() > 0;
   did_onepass_ = true;
 
   if (start() == 0)  // no match
@@ -612,8 +612,8 @@ bool Prog::IsOnePass() {
   }
 
   dfa_mem_ -= nalloc*statesize;
-  onepass_nodes_ = new uint8_t[nalloc*statesize];
-  memmove(onepass_nodes_, nodes.data(), nalloc*statesize);
+  onepass_nodes_ = PODArray<uint8_t>(nalloc*statesize);
+  memmove(onepass_nodes_.data(), nodes.data(), nalloc*statesize);
   return true;
 
 fail:

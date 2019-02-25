@@ -112,7 +112,6 @@ Prog::Prog()
     first_byte_(-1),
     flags_(0),
     list_count_(0),
-    onepass_nodes_(NULL),
     dfa_mem_(0),
     dfa_first_(NULL),
     dfa_longest_(NULL) {
@@ -121,7 +120,6 @@ Prog::Prog()
 Prog::~Prog() {
   DeleteDFA(dfa_longest_);
   DeleteDFA(dfa_first_);
-  delete[] onepass_nodes_;
 }
 
 typedef SparseSet Workq;
