@@ -397,7 +397,7 @@ class Prog {
   int inst_count_[kNumInst];  // count of instructions by opcode
 
   PODArray<Inst> inst_;     // pointer to instruction array
-  uint8_t* onepass_nodes_;  // data for OnePass nodes
+  PODArray<uint8_t> onepass_nodes_;  // data for OnePass nodes
 
   int64_t dfa_mem_;         // Maximum memory for DFAs.
   DFA* dfa_first_;          // DFA cached for kFirstMatch/kManyMatch
