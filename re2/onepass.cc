@@ -383,7 +383,7 @@ struct InstCond {
 // Constructs and saves corresponding one-pass NFA on success.
 bool Prog::IsOnePass() {
   if (did_onepass_)
-    return onepass_nodes_.size() > 0;
+    return onepass_nodes_.data() != NULL;
   did_onepass_ = true;
 
   if (start() == 0)  // no match
