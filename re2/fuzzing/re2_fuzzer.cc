@@ -113,10 +113,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // in timeouts nonetheless. The marginal cost is high - even more so when
   // counted repetition is involved - whereas the marginal benefit is zero.
   // TODO(junyer): Handle [:isalnum:] et al. when they start to cause pain.
-  int cc = 0;
+  int char_class = 0;
+  int backslash_p = 0;  // very expensive, so handle specially
   for (size_t i = 0; i < size; i++) {
     if (data[i] == '.')
-      cc++;
+      char_class++;
     if (data[i] != '\\')
       continue;
     i++;
@@ -126,9 +127,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
         data[i] == 'd' || data[i] == 'D' ||
         data[i] == 's' || data[i] == 'S' ||
         data[i] == 'w' || data[i] == 'W')
-      cc++;
+      char_class++;
+    if (data[i] == 'p' || data[i] == 'P')
+      backslash_p++;
   }
-  if (cc > 9)
+  if (char_class > 9)
+    return 0;
+  if (backslash_p > 1)
     return 0;
 
   // The one-at-a-time hash by Bob Jenkins.
