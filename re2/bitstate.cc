@@ -31,7 +31,6 @@ namespace re2 {
 
 struct Job {
   int id;
-  int arg;
   const char* p;
 };
 
@@ -47,7 +46,7 @@ class BitState {
 
  private:
   inline bool ShouldVisit(int id, const char* p);
-  void Push(int id, const char* p, int arg);
+  void Push(int id, const char* p);
   void GrowStack();
   bool TrySearch(int id, const char* p);
 
@@ -98,8 +97,8 @@ void BitState::GrowStack() {
   job_ = std::move(tmp);
 }
 
-// Push the triple (id, p, arg) onto the stack, growing it if necessary.
-void BitState::Push(int id, const char* p, int arg) {
+// Push (id, p) onto the stack, growing it if necessary.
+void BitState::Push(int id, const char* p) {
   if (njob_ >= job_.size()) {
     GrowStack();
     if (njob_ >= job_.size()) {
@@ -109,49 +108,45 @@ void BitState::Push(int id, const char* p, int arg) {
       return;
     }
   }
-  int op = prog_->inst(id)->opcode();
-  if (op == kInstFail)
-    return;
 
-  // Only check ShouldVisit when arg == 0.
-  // When arg > 0, we are continuing a previous visit.
-  if (arg == 0 && !ShouldVisit(id, p))
+  // Only check ShouldVisit when id >= 0.
+  // When id < 0, it's undoing a Capture.
+  if (id >= 0 && !ShouldVisit(id, p))
     return;
 
   Job* j = &job_[njob_++];
   j->id = id;
   j->p = p;
-  j->arg = arg;
 }
 
 // Try a search from instruction id0 in state p0.
 // Return whether it succeeded.
 bool BitState::TrySearch(int id0, const char* p0) {
   bool matched = false;
-  bool inaltmatch = false;
   const char* end = text_.end();
   njob_ = 0;
-  Push(id0, p0, 0);
+  Push(id0, p0);
   while (njob_ > 0) {
     // Pop job off stack.
     --njob_;
     int id = job_[njob_].id;
     const char* p = job_[njob_].p;
-    int arg = job_[njob_].arg;
+
+    if (id < 0) {
+      // Undo the Capture.
+      cap_[prog_->inst(-id)->cap()] = p;
+      continue;
+    }
 
     // Optimization: rather than push and pop,
     // code that is going to Push and continue
-    // the loop simply updates ip, p, and arg
-    // and jumps to CheckAndLoop.  We have to
-    // do the ShouldVisit check that Push
-    // would have, but we avoid the stack
-    // manipulation.
+    // the loop simply updates (ip, p) and jumps
+    // to CheckAndLoop.  We have to do the
+    // ShouldVisit check that Push would have,
+    // but we avoid the stack manipulation.
     if (0) {
     Next:
-      // If the Match of a non-greedy AltMatch failed,
-      // we stop ourselves from trying the ByteRange,
-      // which would steer us off the short circuit.
-      if (prog_->inst(id)->last() || inaltmatch)
+      if (prog_->inst(id)->last())
         continue;
       id++;
 
@@ -164,38 +159,27 @@ bool BitState::TrySearch(int id0, const char* p0) {
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       default:
-        LOG(DFATAL) << "Unexpected opcode: " << ip->opcode() << " arg " << arg;
+        LOG(DFATAL) << "Unexpected opcode: " << ip->opcode();
         return false;
 
       case kInstFail:
         continue;
 
       case kInstAltMatch:
-        switch (arg) {
-          case 0:
-            inaltmatch = true;
-            Push(id, p, 1);  // come back when we're done
-
-            // One opcode is ByteRange; the other leads to Match
-            // (possibly via Nop or Capture).
-            if (ip->greedy(prog_)) {
-              // out1 is the match
-              Push(ip->out1(), p, 0);
-              id = ip->out1();
-              p = end;
-              goto CheckAndLoop;
-            }
-            // out is the match - non-greedy
-            Push(ip->out(), end, 0);
-            id = ip->out();
-            goto CheckAndLoop;
-
-          case 1:
-            inaltmatch = false;
-            continue;
+        if (ip->greedy(prog_)) {
+          // out1 is the Match instruction.
+          id = ip->out1();
+          p = end;
+          goto CheckAndLoop;
         }
-        LOG(DFATAL) << "Bad arg in kInstAltMatch: " << arg;
-        continue;
+        if (longest_) {
+          // ip must be non-greedy...
+          // out is the Match instruction.
+          id = ip->out();
+          p = end;
+          goto CheckAndLoop;
+        }
+        goto Next;
 
       case kInstByteRange: {
         int c = -1;
@@ -205,53 +189,42 @@ bool BitState::TrySearch(int id0, const char* p0) {
           goto Next;
 
         if (!ip->last())
-          Push(id+1, p, 0);  // try the next when we're done
+          Push(id+1, p);  // try the next when we're done
         id = ip->out();
         p++;
         goto CheckAndLoop;
       }
 
       case kInstCapture:
-        switch (arg) {
-          case 0:
-            if (!ip->last())
-              Push(id+1, p, 0);  // try the next when we're done
+        if (!ip->last())
+          Push(id+1, p);  // try the next when we're done
 
-            if (0 <= ip->cap() && ip->cap() < cap_.size()) {
-              // Capture p to register, but save old value.
-              Push(id, cap_[ip->cap()], 1);  // come back when we're done
-              cap_[ip->cap()] = p;
-            }
-
-            // Continue on.
-            id = ip->out();
-            goto CheckAndLoop;
-
-          case 1:
-            // Finished ip->out(); restore the old value.
-            cap_[ip->cap()] = p;
-            continue;
+        if (0 <= ip->cap() && ip->cap() < cap_.size()) {
+          // Capture p to register, but save old value first.
+          Push(-id, cap_[ip->cap()]);  // undo when we're done
+          cap_[ip->cap()] = p;
         }
-        LOG(DFATAL) << "Bad arg in kInstCapture: " << arg;
-        continue;
+
+        id = ip->out();
+        goto CheckAndLoop;
 
       case kInstEmptyWidth:
         if (ip->empty() & ~Prog::EmptyFlags(context_, p))
           goto Next;
 
         if (!ip->last())
-          Push(id+1, p, 0);  // try the next when we're done
+          Push(id+1, p);  // try the next when we're done
         id = ip->out();
         goto CheckAndLoop;
 
       case kInstNop:
         if (!ip->last())
-          Push(id+1, p, 0);  // try the next when we're done
+          Push(id+1, p);  // try the next when we're done
         id = ip->out();
         goto CheckAndLoop;
 
       case kInstMatch: {
-        if (endmatch_ && p != text_.end())
+        if (endmatch_ && p != end)
           goto Next;
 
         // We found a match.  If the caller doesn't care
@@ -277,7 +250,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
           return true;
 
         // If we used the entire text, no longer match is possible.
-        if (p == text_.end())
+        if (p == end)
           return true;
 
         // Otherwise, continue on in hope of a longer match.
