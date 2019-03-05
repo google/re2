@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <limits>
 #include <utility>
 
 #include "util/logging.h"
@@ -31,6 +32,7 @@ namespace re2 {
 
 struct Job {
   int id;
+  int rle;  // run length encoding
   const char* p;
 };
 
@@ -109,14 +111,25 @@ void BitState::Push(int id, const char* p) {
     }
   }
 
-  // Only check ShouldVisit when id >= 0.
-  // When id < 0, it's undoing a Capture.
-  if (id >= 0 && !ShouldVisit(id, p))
-    return;
+  // If id < 0, it's undoing a Capture,
+  // so we mustn't interfere with that.
+  if (id >= 0) {
+    if (!ShouldVisit(id, p))
+      return;
 
-  Job* j = &job_[njob_++];
-  j->id = id;
-  j->p = p;
+    Job* top = &job_[njob_-1];
+    if (id == top->id &&
+        p == top->p + top->rle + 1 &&
+        top->rle < std::numeric_limits<int>::max()) {
+      ++top->rle;
+      return;
+    }
+  }
+
+  Job* top = &job_[njob_++];
+  top->id = id;
+  top->rle = 0;
+  top->p = p;
 }
 
 // Try a search from instruction id0 in state p0.
@@ -130,12 +143,19 @@ bool BitState::TrySearch(int id0, const char* p0) {
     // Pop job off stack.
     --njob_;
     int id = job_[njob_].id;
+    int& rle = job_[njob_].rle;
     const char* p = job_[njob_].p;
 
     if (id < 0) {
       // Undo the Capture.
       cap_[prog_->inst(-id)->cap()] = p;
       continue;
+    }
+    if (rle > 0) {
+      p += rle;
+      // Revivify job on stack.
+      --rle;
+      ++njob_;
     }
 
     // Optimization: rather than push and pop,
@@ -294,8 +314,8 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
   cap_ = PODArray<const char*>(ncap);
   memset(cap_.data(), 0, ncap*sizeof cap_[0]);
 
-  // When sizeof(Job) == 16, we start with a nice round 4KiB. :)
-  job_ = PODArray<Job>(256);
+  // When sizeof(Job) == 16, we start with a nice round 1KiB. :)
+  job_ = PODArray<Job>(64);
 
   // Anchored search must start at text.begin().
   if (anchored_) {
