@@ -117,12 +117,14 @@ void BitState::Push(int id, const char* p) {
     if (!ShouldVisit(id, p))
       return;
 
-    Job* top = &job_[njob_-1];
-    if (id == top->id &&
-        p == top->p + top->rle + 1 &&
-        top->rle < std::numeric_limits<int>::max()) {
-      ++top->rle;
-      return;
+    if (njob_ > 0) {
+      Job* top = &job_[njob_-1];
+      if (id == top->id &&
+          p == top->p + top->rle + 1 &&
+          top->rle < std::numeric_limits<int>::max()) {
+        ++top->rle;
+        return;
+      }
     }
   }
 
