@@ -410,11 +410,10 @@ int RE2::GlobalReplace(string* str,
     if (vec[0].begin() == lastend && vec[0].size() == 0) {
       // Disallow empty match at end of last match: skip ahead.
       //
-      // fullrune() takes int, not size_t. However, it just looks
+      // fullrune() takes int, not ptrdiff_t. However, it just looks
       // at the leading byte and treats any length >= 4 the same.
       if (re.options().encoding() == RE2::Options::EncodingUTF8 &&
-          fullrune(p, static_cast<int>(std::min(static_cast<ptrdiff_t>(4),
-                                                ep - p)))) {
+          fullrune(p, static_cast<int>(std::min(ptrdiff_t{4}, ep - p)))) {
         // re is in UTF-8 mode and there is enough left of str
         // to allow us to advance by up to UTFmax bytes.
         Rune r;
