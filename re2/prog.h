@@ -87,6 +87,7 @@ class Prog {
     int lo()        { DCHECK_EQ(opcode(), kInstByteRange); return lo_; }
     int hi()        { DCHECK_EQ(opcode(), kInstByteRange); return hi_; }
     int foldcase()  { DCHECK_EQ(opcode(), kInstByteRange); return foldcase_; }
+    int hint()      { DCHECK_EQ(opcode(), kInstByteRange); return hint_; }
     int match_id()  { DCHECK_EQ(opcode(), kInstMatch); return match_id_; }
     EmptyOp empty() { DCHECK_EQ(opcode(), kInstEmptyWidth); return empty_; }
 
@@ -148,6 +149,11 @@ class Prog {
         uint8_t lo_;        //   byte range is lo_-hi_ inclusive
         uint8_t hi_;        //
         uint8_t foldcase_;  //   convert A-Z to a-z before checking range.
+        uint8_t hint_;      //   hint to execution engines: the delta to the
+                            //   next instruction (in the current list) worth
+                            //   exploring iff this instruction matched; 0
+                            //   means there are no remaining possibilities,
+                            //   which is most likely for character classes
       };
 
       EmptyOp empty_;       // opcode == kInstEmptyWidth
@@ -373,6 +379,9 @@ class Prog {
   void EmitList(int root, SparseArray<int>* rootmap,
                 std::vector<Inst>* flat,
                 SparseSet* reachable, std::vector<int>* stk);
+
+  // Computes hints for ByteRange instructions in [begin, end).
+  void ComputeHints(std::vector<Inst>* flat, int begin, int end);
 
  private:
   friend class Compiler;
