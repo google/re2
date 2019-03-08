@@ -19,6 +19,11 @@ namespace re2 {
 class Bitmap256 {
  public:
   Bitmap256() {
+    Clear();
+  }
+
+  // Clears all of the bits.
+  void Clear() {
     memset(words_, 0, sizeof words_);
   }
 
