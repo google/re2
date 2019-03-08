@@ -210,8 +210,8 @@ bool BitState::TrySearch(int id0, const char* p0) {
         if (!ip->Matches(c))
           goto Next;
 
-        if (!ip->last())
-          Push(id+1, p);  // try the next when we're done
+        if (!ip->last() && ip->hint() != 0)
+          Push(id+ip->hint(), p);  // try the next when we're done
         id = ip->out();
         p++;
         goto CheckAndLoop;

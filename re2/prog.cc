@@ -35,6 +35,7 @@ void Prog::Inst::InitByteRange(int lo, int hi, int foldcase, uint32_t out) {
   lo_ = lo & 0xFF;
   hi_ = hi & 0xFF;
   foldcase_ = foldcase & 0xFF;
+  hint_ = 0;
 }
 
 void Prog::Inst::InitCapture(int cap, uint32_t out) {
@@ -77,9 +78,9 @@ string Prog::Inst::Dump() {
       return StringPrintf("altmatch -> %d | %d", out(), out1_);
 
     case kInstByteRange:
-      return StringPrintf("byte%s [%02x-%02x] -> %d",
+      return StringPrintf("byte%s [%02x-%02x] %d -> %d",
                           foldcase_ ? "/i" : "",
-                          lo_, hi_, out());
+                          lo_, hi_, hint_, out());
 
     case kInstCapture:
       return StringPrintf("capture %d -> %d", cap_, out());
@@ -341,7 +342,6 @@ class ByteMapBuilder {
     // This will avoid problems during the second phase,
     // in which we assign byte classes numbered from 0.
     splits_.Set(255);
-    colors_.resize(256);
     colors_[255] = 256;
     nextcolor_ = 257;
   }
@@ -354,7 +354,7 @@ class ByteMapBuilder {
   int Recolor(int oldcolor);
 
   Bitmap256 splits_;
-  std::vector<int> colors_;
+  int colors_[256];
   int nextcolor_;
   std::vector<std::pair<int, int>> colormap_;
   std::vector<std::pair<int, int>> ranges_;
@@ -591,6 +591,9 @@ void Prog::Flatten() {
     flatmap[i->value()] = static_cast<int>(flat.size());
     EmitList(i->index(), &rootmap, &flat, &reachable, &stk);
     flat.back().set_last();
+    // We have the bounds of the "list", so this is the
+    // most convenient point at which to compute hints.
+    ComputeHints(&flat, flatmap[i->value()], static_cast<int>(flat.size()));
   }
 
   list_count_ = static_cast<int>(flatmap.size());
@@ -814,6 +817,71 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap,
         flat->emplace_back();
         memmove(&flat->back(), ip, sizeof *ip);
         break;
+    }
+  }
+}
+
+void Prog::ComputeHints(std::vector<Inst>* flat, int begin, int end) {
+  // Hello, Bitmap256, my old friend...
+  // This time around, "colors" are instructions. By iterating backwards over
+  // [begin, end) and recoloring ranges, the nearest conflict (if any) can be
+  // identified precisely - and this is achieved with only linear complexity.
+  Bitmap256 splits;
+  int colors[256];
+
+  bool dirty = false;
+  for (int id = end; id >= begin; --id) {
+    if (id == end ||
+        (*flat)[id].opcode() != kInstByteRange) {
+      if (dirty) {
+        dirty = false;
+        splits.Clear();
+      }
+      splits.Set(255);
+      colors[255] = id;
+      // At this point, the [0-255] range is colored with id.
+      // Thus, hints cannot point beyond id; and if id == end,
+      // hints that would have pointed to id will be 0 instead.
+      continue;
+    }
+    dirty = true;
+
+    // first ratchets backwards from end to the nearest conflict (if any).
+    int first = end;
+
+    Inst* ip = &(*flat)[id];
+    int lo = ip->lo()-1;
+    int hi = ip->hi();
+
+    if (0 <= lo && !splits.Test(lo)) {
+      splits.Set(lo);
+      int next = splits.FindNextSetBit(lo+1);
+      colors[lo] = colors[next];
+    }
+    if (!splits.Test(hi)) {
+      splits.Set(hi);
+      int next = splits.FindNextSetBit(hi+1);
+      colors[hi] = colors[next];
+    }
+
+    int c = lo+1;
+    while (c < 256) {
+      int next = splits.FindNextSetBit(c);
+      // Ratchet backwards...
+      first = std::min(first, colors[next]);
+      // Recolor with id - because it's the new nearest conflict!
+      colors[next] = id;
+      if (next == hi)
+        break;
+      c = next+1;
+    }
+
+    if (first == end) {
+      ip->hint_ = 0;
+    } else {
+      // The upper bound on the delta is 256. Although it's difficult
+      // to imagine how the compiler would ever emit such bytecode...
+      ip->hint_ = static_cast<uint8_t>(std::min(first - id, 255));
     }
   }
 }
