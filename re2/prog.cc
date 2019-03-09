@@ -905,8 +905,6 @@ void Prog::ComputeHints(std::vector<Inst>* flat, int begin, int end) {
     if (first == end) {
       ip->hint_ = 0;
     } else {
-      // The upper bound on the delta is 256. Although it's difficult
-      // to imagine how the compiler would ever emit such bytecode...
       ip->hint_ = static_cast<uint8_t>(std::min(first - id, 255));
     }
   }
