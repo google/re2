@@ -468,8 +468,11 @@ void Prog::ComputeByteMap() {
           foldlo = 'a';
         if (foldhi > 'z')
           foldhi = 'z';
-        if (foldlo <= foldhi)
-          builder.Mark(foldlo + 'A' - 'a', foldhi + 'A' - 'a');
+        if (foldlo <= foldhi) {
+          foldlo += 'A' - 'a';
+          foldhi += 'A' - 'a';
+          builder.Mark(foldlo, foldhi);
+        }
       }
       // If this Inst is not the last Inst in its list AND the next Inst is
       // also a ByteRange AND the Insts have the same out, defer the merge.
@@ -821,11 +824,15 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap,
   }
 }
 
+// For each ByteRange instruction in [begin, end), computes a hint to execution
+// engines: the delta to the next instruction (in flat) worth exploring iff the
+// current instruction matched.
+//
+// Implements a coloring algorithm related to ByteMapBuilder, but in this case,
+// colors are instructions and recoloring ranges precisely identifies conflicts
+// between instructions. Iterating backwards over [begin, end) is guaranteed to
+// identify the nearest conflict (if any) with only linear complexity.
 void Prog::ComputeHints(std::vector<Inst>* flat, int begin, int end) {
-  // Hello, Bitmap256, my old friend...
-  // This time around, "colors" are instructions. By iterating backwards over
-  // [begin, end) and recoloring ranges, the nearest conflict (if any) can be
-  // identified precisely - and this is achieved with only linear complexity.
   Bitmap256 splits;
   int colors[256];
 
@@ -846,34 +853,53 @@ void Prog::ComputeHints(std::vector<Inst>* flat, int begin, int end) {
     }
     dirty = true;
 
-    // first ratchets backwards from end to the nearest conflict (if any).
+    // We recolor the [lo-hi] range with id. Note that first ratchets backwards
+    // from end to the nearest conflict (if any) during recoloring.
     int first = end;
+    auto Recolor = [&](int lo, int hi) {
+      // Like ByteMapBuilder, we split at lo-1 and at hi.
+      --lo;
+
+      if (0 <= lo && !splits.Test(lo)) {
+        splits.Set(lo);
+        int next = splits.FindNextSetBit(lo+1);
+        colors[lo] = colors[next];
+      }
+      if (!splits.Test(hi)) {
+        splits.Set(hi);
+        int next = splits.FindNextSetBit(hi+1);
+        colors[hi] = colors[next];
+      }
+
+      int c = lo+1;
+      while (c < 256) {
+        int next = splits.FindNextSetBit(c);
+        // Ratchet backwards...
+        first = std::min(first, colors[next]);
+        // Recolor with id - because it's the new nearest conflict!
+        colors[next] = id;
+        if (next == hi)
+          break;
+        c = next+1;
+      }
+    };
 
     Inst* ip = &(*flat)[id];
-    int lo = ip->lo()-1;
+    int lo = ip->lo();
     int hi = ip->hi();
-
-    if (0 <= lo && !splits.Test(lo)) {
-      splits.Set(lo);
-      int next = splits.FindNextSetBit(lo+1);
-      colors[lo] = colors[next];
-    }
-    if (!splits.Test(hi)) {
-      splits.Set(hi);
-      int next = splits.FindNextSetBit(hi+1);
-      colors[hi] = colors[next];
-    }
-
-    int c = lo+1;
-    while (c < 256) {
-      int next = splits.FindNextSetBit(c);
-      // Ratchet backwards...
-      first = std::min(first, colors[next]);
-      // Recolor with id - because it's the new nearest conflict!
-      colors[next] = id;
-      if (next == hi)
-        break;
-      c = next+1;
+    Recolor(lo, hi);
+    if (ip->foldcase() && lo <= 'z' && hi >= 'a') {
+      int foldlo = lo;
+      int foldhi = hi;
+      if (foldlo < 'a')
+        foldlo = 'a';
+      if (foldhi > 'z')
+        foldhi = 'z';
+      if (foldlo <= foldhi) {
+        foldlo += 'A' - 'a';
+        foldhi += 'A' - 'a';
+        Recolor(foldlo, foldhi);
+      }
     }
 
     if (first == end) {
