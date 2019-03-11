@@ -153,6 +153,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
       cap_[prog_->inst(-id)->cap()] = p;
       continue;
     }
+
     if (rle > 0) {
       p += rle;
       // Revivify job on stack.
@@ -160,23 +161,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
       ++njob_;
     }
 
-    // Optimization: rather than push and pop,
-    // code that is going to Push and continue
-    // the loop simply updates (ip, p) and jumps
-    // to CheckAndLoop.  We have to do the
-    // ShouldVisit check that Push would have,
-    // but we avoid the stack manipulation.
-    if (0) {
-    Next:
-      if (prog_->inst(id)->last())
-        continue;
-      id++;
-
-    CheckAndLoop:
-      if (!ShouldVisit(id, p))
-        continue;
-    }
-
+  Loop:
     // Visit ip, p.
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
@@ -185,21 +170,21 @@ bool BitState::TrySearch(int id0, const char* p0) {
         return false;
 
       case kInstFail:
-        continue;
+        break;
 
       case kInstAltMatch:
         if (ip->greedy(prog_)) {
           // out1 is the Match instruction.
           id = ip->out1();
           p = end;
-          goto CheckAndLoop;
+          goto Loop;
         }
         if (longest_) {
           // ip must be non-greedy...
           // out is the Match instruction.
           id = ip->out();
           p = end;
-          goto CheckAndLoop;
+          goto Loop;
         }
         goto Next;
 
@@ -243,7 +228,20 @@ bool BitState::TrySearch(int id0, const char* p0) {
         if (!ip->last())
           Push(id+1, p);  // try the next when we're done
         id = ip->out();
-        goto CheckAndLoop;
+
+        // Optimization: rather than push and pop,
+        // code that is going to Push and continue
+        // the loop simply updates (ip, p) and jumps
+        // to CheckAndLoop.  We have to do the
+        // ShouldVisit check that Push would have,
+        // but we avoid the stack manipulation.
+      CheckAndLoop:
+        // id must be the head of its list, which must
+        // be the case if id-1 is the last of *its* list. :)
+        DCHECK(id == 0 || prog_->inst(id-1)->last());
+        if (ShouldVisit(id, p))
+          goto Loop;
+        break;
 
       case kInstMatch: {
         if (endmatch_ && p != end)
@@ -276,7 +274,14 @@ bool BitState::TrySearch(int id0, const char* p0) {
           return true;
 
         // Otherwise, continue on in hope of a longer match.
-        goto Next;
+        // Note the absence of the ShouldVisit check here
+        // due to execution remaining in the same list.
+      Next:
+        if (!ip->last()) {
+          id++;
+          goto Loop;
+        }
+        break;
       }
     }
   }
