@@ -80,7 +80,7 @@ BitState::BitState(Prog* prog)
     njob_(0) {
 }
 
-// Should the search visit the pair ip, p?
+// Should the search visit the (id, p) pair?
 // If so, remember that it was visited so that the next time,
 // we don't repeat the visit.
 bool BitState::ShouldVisit(int id, const char* p) {
@@ -113,18 +113,13 @@ void BitState::Push(int id, const char* p) {
 
   // If id < 0, it's undoing a Capture,
   // so we mustn't interfere with that.
-  if (id >= 0) {
-    if (!ShouldVisit(id, p))
+  if (id >= 0 && njob_ > 0) {
+    Job* top = &job_[njob_-1];
+    if (id == top->id &&
+        p == top->p + top->rle + 1 &&
+        top->rle < std::numeric_limits<int>::max()) {
+      ++top->rle;
       return;
-
-    if (njob_ > 0) {
-      Job* top = &job_[njob_-1];
-      if (id == top->id &&
-          p == top->p + top->rle + 1 &&
-          top->rle < std::numeric_limits<int>::max()) {
-        ++top->rle;
-        return;
-      }
     }
   }
 
@@ -140,7 +135,10 @@ bool BitState::TrySearch(int id0, const char* p0) {
   bool matched = false;
   const char* end = text_.end();
   njob_ = 0;
-  Push(id0, p0);
+  // Push() no longer checks ShouldVisit(),
+  // so we must perform the check ourselves.
+  if (ShouldVisit(id0, p0))
+    Push(id0, p0);
   while (njob_ > 0) {
     // Pop job off stack.
     --njob_;
@@ -162,7 +160,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
     }
 
   Loop:
-    // Visit ip, p.
+    // Visit id, p.
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       default:
@@ -229,14 +227,8 @@ bool BitState::TrySearch(int id0, const char* p0) {
           Push(id+1, p);  // try the next when we're done
         id = ip->out();
 
-        // Optimization: rather than push and pop,
-        // code that is going to Push and continue
-        // the loop simply updates (ip, p) and jumps
-        // to CheckAndLoop.  We have to do the
-        // ShouldVisit check that Push would have,
-        // but we avoid the stack manipulation.
       CheckAndLoop:
-        // id must be the head of its list, which must
+        // Sanity check: id is the head of its list, which must
         // be the case if id-1 is the last of *its* list. :)
         DCHECK(id == 0 || prog_->inst(id-1)->last());
         if (ShouldVisit(id, p))
@@ -274,7 +266,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
           return true;
 
         // Otherwise, continue on in hope of a longer match.
-        // Note the absence of the ShouldVisit check here
+        // Note the absence of the ShouldVisit() check here
         // due to execution remaining in the same list.
       Next:
         if (!ip->last()) {
