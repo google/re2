@@ -86,8 +86,8 @@ class Prog {
     int cap()       { DCHECK_EQ(opcode(), kInstCapture); return cap_; }
     int lo()        { DCHECK_EQ(opcode(), kInstByteRange); return lo_; }
     int hi()        { DCHECK_EQ(opcode(), kInstByteRange); return hi_; }
-    int foldcase()  { DCHECK_EQ(opcode(), kInstByteRange); return foldcase_; }
-    int hint()      { DCHECK_EQ(opcode(), kInstByteRange); return hint_; }
+    int foldcase()  { DCHECK_EQ(opcode(), kInstByteRange); return hint_foldcase_&1; }
+    int hint()      { DCHECK_EQ(opcode(), kInstByteRange); return hint_foldcase_>>1; }
     int match_id()  { DCHECK_EQ(opcode(), kInstMatch); return match_id_; }
     EmptyOp empty() { DCHECK_EQ(opcode(), kInstEmptyWidth); return empty_; }
 
@@ -101,7 +101,7 @@ class Prog {
     // Does this inst (an kInstByteRange) match c?
     inline bool Matches(int c) {
       DCHECK_EQ(opcode(), kInstByteRange);
-      if (foldcase_ && 'A' <= c && c <= 'Z')
+      if (foldcase() && 'A' <= c && c <= 'Z')
         c += 'a' - 'A';
       return lo_ <= c && c <= hi_;
     }
@@ -130,30 +130,31 @@ class Prog {
       out_opcode_ = (out<<4) | (last()<<3) | opcode;
     }
 
-    uint32_t out_opcode_;   // 28 bits: out, 1 bit: last, 3 (low) bits: opcode
-    union {                 // additional instruction arguments:
-      uint32_t out1_;       // opcode == kInstAlt
-                            //   alternate next instruction
+    uint32_t out_opcode_;  // 28 bits: out, 1 bit: last, 3 (low) bits: opcode
+    union {                // additional instruction arguments:
+      uint32_t out1_;      // opcode == kInstAlt
+                           //   alternate next instruction
 
-      int32_t cap_;         // opcode == kInstCapture
-                            //   Index of capture register (holds text
-                            //   position recorded by capturing parentheses).
-                            //   For \n (the submatch for the nth parentheses),
-                            //   the left parenthesis captures into register 2*n
-                            //   and the right one captures into register 2*n+1.
+      int32_t cap_;        // opcode == kInstCapture
+                           //   Index of capture register (holds text
+                           //   position recorded by capturing parentheses).
+                           //   For \n (the submatch for the nth parentheses),
+                           //   the left parenthesis captures into register 2*n
+                           //   and the right one captures into register 2*n+1.
 
-      int32_t match_id_;    // opcode == kInstMatch
-                            //   Match ID to identify this match (for re2::Set).
+      int32_t match_id_;   // opcode == kInstMatch
+                           //   Match ID to identify this match (for re2::Set).
 
-      struct {              // opcode == kInstByteRange
-        uint8_t lo_;        //   byte range is lo_-hi_ inclusive
-        uint8_t hi_;        //
-        uint8_t foldcase_;  //   convert A-Z to a-z before checking range.
-        uint8_t hint_;      //   hint to execution engines: the delta to the
-                            //   next instruction (in the current list) worth
-                            //   exploring iff this instruction matched; 0
-                            //   means there are no remaining possibilities,
-                            //   which is most likely for character classes
+      struct {             // opcode == kInstByteRange
+        uint8_t lo_;       //   byte range is lo_-hi_ inclusive
+        uint8_t hi_;       //
+        uint16_t hint_foldcase_;  // 15 bits: hint, 1 (low) bit: foldcase
+                           //   hint to execution engines: the delta to the
+                           //   next instruction (in the current list) worth
+                           //   exploring iff this instruction matched; 0
+                           //   means there are no remaining possibilities,
+                           //   which is most likely for character classes.
+                           //   foldcase: A-Z -> a-z before checking range.
       };
 
       EmptyOp empty_;       // opcode == kInstEmptyWidth

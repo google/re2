@@ -34,8 +34,7 @@ void Prog::Inst::InitByteRange(int lo, int hi, int foldcase, uint32_t out) {
   set_out_opcode(out, kInstByteRange);
   lo_ = lo & 0xFF;
   hi_ = hi & 0xFF;
-  foldcase_ = foldcase & 0xFF;
-  hint_ = 0;
+  hint_foldcase_ = foldcase&1;
 }
 
 void Prog::Inst::InitCapture(int cap, uint32_t out) {
@@ -79,8 +78,8 @@ string Prog::Inst::Dump() {
 
     case kInstByteRange:
       return StringPrintf("byte%s [%02x-%02x] %d -> %d",
-                          foldcase_ ? "/i" : "",
-                          lo_, hi_, hint_, out());
+                          foldcase() ? "/i" : "",
+                          lo_, hi_, hint(), out());
 
     case kInstCapture:
       return StringPrintf("capture %d -> %d", cap_, out());
@@ -902,10 +901,9 @@ void Prog::ComputeHints(std::vector<Inst>* flat, int begin, int end) {
       }
     }
 
-    if (first == end) {
-      ip->hint_ = 0;
-    } else {
-      ip->hint_ = static_cast<uint8_t>(std::min(first - id, 255));
+    if (first != end) {
+      uint16_t hint = static_cast<uint16_t>(std::min(first - id, 32767));
+      ip->hint_foldcase_ |= hint<<1;
     }
   }
 }
