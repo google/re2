@@ -288,14 +288,24 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, const StringPiece& context,
     case kInstByteRange:
       if (!ip->Matches(c))
         goto Next;
-      FALLTHROUGH_INTENDED;
+
+      // Save state; will pick up at next byte.
+      t = Incref(t0);
+      *tp = t;
+      if (ExtraDebug)
+        fprintf(stderr, " + %d%s\n", id, FormatCapture(t0->capture).c_str());
+
+      if (ip->hint() == 0)
+        break;
+      a = {id+ip->hint(), NULL};
+      goto Loop;
 
     case kInstMatch:
       // Save state; will pick up at next byte.
       t = Incref(t0);
       *tp = t;
       if (ExtraDebug)
-        fprintf(stderr, " + %d%s\n", id, FormatCapture(t0->capture).c_str());
+        fprintf(stderr, " ! %d%s\n", id, FormatCapture(t0->capture).c_str());
 
     Next:
       if (ip->last())
