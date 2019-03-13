@@ -193,7 +193,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
         if (!ip->Matches(c))
           goto Next;
 
-        if (!ip->last() && ip->hint() != 0)
+        if (ip->hint() != 0)
           Push(id+ip->hint(), p);  // try the next when we're done
         id = ip->out();
         p++;
