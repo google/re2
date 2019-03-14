@@ -5,10 +5,10 @@
 // Tested by search_test.cc, exhaustive_test.cc, tester.cc
 
 // Prog::SearchBitState is a regular expression search with submatch
-// tracking for small regular expressions and texts.  Like
-// testing/backtrack.cc, it allocates a bit vector with (length of
-// text) * (length of prog) bits, to make sure it never explores the
-// same (character position, instruction) state multiple times.  This
+// tracking for small regular expressions and texts.  Similarly to
+// testing/backtrack.cc, it allocates a bitmap with (count of
+// lists) * (length of prog) bits to make sure it never explores the
+// same (instruction list, character position) multiple times.  This
 // limits the search to run in time linear in the length of the text.
 //
 // Unlike testing/backtrack.cc, SearchBitState is not recursive
@@ -64,7 +64,7 @@ class BitState {
 
   // Search state
   static const int VisitedBits = 32;
-  PODArray<uint32_t> visited_;  // bitmap: (Inst*, char*) pairs visited
+  PODArray<uint32_t> visited_;  // bitmap: (list ID, char*) pairs visited
   PODArray<const char*> cap_;   // capture registers
   PODArray<Job> job_;           // stack of text positions to explore
   int njob_;                    // stack size
@@ -80,11 +80,12 @@ BitState::BitState(Prog* prog)
     njob_(0) {
 }
 
-// Should the search visit the (id, p) pair?
+// Given id, which *must* be a list head, we can look up its list ID.
+// Then the question is: Should the search visit the (list ID, p) pair?
 // If so, remember that it was visited so that the next time,
 // we don't repeat the visit.
 bool BitState::ShouldVisit(int id, const char* p) {
-  int n = id * static_cast<int>(text_.size()+1) +
+  int n = prog_->list_heads()[id] * static_cast<int>(text_.size()+1) +
           static_cast<int>(p-text_.begin());
   if (visited_[n/VisitedBits] & (1 << (n & (VisitedBits-1))))
     return false;
@@ -302,7 +303,7 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
     submatch_[i] = StringPiece();
 
   // Allocate scratch space.
-  int nvisited = prog_->size() * static_cast<int>(text.size()+1);
+  int nvisited = prog_->list_count() * static_cast<int>(text.size()+1);
   nvisited = (nvisited + VisitedBits-1) / VisitedBits;
   visited_ = PODArray<uint32_t>(nvisited);
   memset(visited_.data(), 0, nvisited*sizeof visited_[0]);

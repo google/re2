@@ -206,6 +206,7 @@ class Prog {
   void set_reversed(bool reversed) { reversed_ = reversed; }
   int list_count() { return list_count_; }
   int inst_count(InstOp op) { return inst_count_[op]; }
+  uint16_t* list_heads() { return list_heads_.data(); }
   void set_dfa_mem(int64_t dfa_mem) { dfa_mem_ = dfa_mem; }
   int64_t dfa_mem() { return dfa_mem_; }
   int flags() { return flags_; }
@@ -312,7 +313,8 @@ class Prog {
                      StringPiece* match, int nmatch);
 
   // Bit-state backtracking.  Fast on small cases but uses memory
-  // proportional to the product of the program size and the text size.
+  // proportional to the product of the list count and the text size.
+  bool CanBitState() { return list_heads_.data() != NULL; }
   bool SearchBitState(const StringPiece& text, const StringPiece& context,
                       Anchor anchor, MatchKind kind,
                       StringPiece* match, int nmatch);
@@ -403,10 +405,12 @@ class Prog {
   int first_byte_;          // required first byte for match, or -1 if none
   int flags_;               // regexp parse flags
 
-  int list_count_;            // count of lists (see above)
-  int inst_count_[kNumInst];  // count of instructions by opcode
+  int list_count_;                 // count of lists (see above)
+  int inst_count_[kNumInst];       // count of instructions by opcode
+  PODArray<uint16_t> list_heads_;  // sparse array enumerating list heads
+                                   // not populated if size_ is overly large
 
-  PODArray<Inst> inst_;     // pointer to instruction array
+  PODArray<Inst> inst_;              // pointer to instruction array
   PODArray<uint8_t> onepass_nodes_;  // data for OnePass nodes
 
   int64_t dfa_mem_;         // Maximum memory for DFAs.
