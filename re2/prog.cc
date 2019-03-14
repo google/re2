@@ -630,7 +630,17 @@ void Prog::Flatten() {
   // Finally, replace the old instructions with the new instructions.
   size_ = static_cast<int>(flat.size());
   inst_ = PODArray<Inst>(size_);
-  memmove(inst_.data(), flat.data(), size_*sizeof(inst_[0]));
+  memmove(inst_.data(), flat.data(), size_*sizeof inst_[0]);
+
+  // Populate the list heads for BitState.
+  // 512 instructions limits the memory footprint to 1KiB.
+  if (size_ <= 512) {
+    list_heads_ = PODArray<uint16_t>(size_);
+    // 0xFF makes it more obvious if we try to look up a non-head.
+    memset(list_heads_.data(), 0xFF, size_*sizeof list_heads_[0]);
+    for (int i = 0; i < list_count_; ++i)
+      list_heads_[flatmap[i]] = i;
+  }
 }
 
 void Prog::MarkSuccessors(SparseArray<int>* rootmap,
