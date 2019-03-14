@@ -34,6 +34,7 @@ void Test() {
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   CHECK(prog->IsOnePass());
+  CHECK(prog->CanBitState());
   const char* text = "650-253-0001";
   StringPiece sp[4];
   CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
@@ -61,6 +62,7 @@ void MemoryUsage() {
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     CHECK(prog->IsOnePass());
+    CHECK(prog->CanBitState());
     fprintf(stderr, "Prog:   %7lld bytes (peak=%lld)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
     mc.Reset();
 
@@ -932,6 +934,7 @@ void SearchBitState(int iters, const char* regexp, const StringPiece& text,
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
+    CHECK(prog->CanBitState());
     CHECK_EQ(prog->SearchBitState(text, text, anchor, Prog::kFirstMatch, NULL, 0),
              expect_match);
     delete prog;
@@ -1019,6 +1022,7 @@ void SearchCachedBitState(int iters, const char* regexp, const StringPiece& text
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
+  CHECK(prog->CanBitState());
   for (int i = 0; i < iters; i++)
     CHECK_EQ(prog->SearchBitState(text, text, anchor, Prog::kFirstMatch, NULL, 0),
              expect_match);
@@ -1088,6 +1092,7 @@ void Parse3BitState(int iters, const char* regexp, const StringPiece& text) {
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
+    CHECK(prog->CanBitState());
     StringPiece sp[4];  // 4 because sp[0] is whole match.
     CHECK(prog->SearchBitState(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
     delete prog;
@@ -1158,6 +1163,7 @@ void Parse3CachedBitState(int iters, const char* regexp, const StringPiece& text
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
+  CHECK(prog->CanBitState());
   StringPiece sp[4];  // 4 because sp[0] is whole match.
   for (int i = 0; i < iters; i++)
     CHECK(prog->SearchBitState(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
@@ -1233,6 +1239,7 @@ void Parse1BitState(int iters, const char* regexp, const StringPiece& text) {
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
+    CHECK(prog->CanBitState());
     StringPiece sp[2];  // 2 because sp[0] is whole match.
     CHECK(prog->SearchBitState(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 2));
     delete prog;
@@ -1290,6 +1297,7 @@ void Parse1CachedBitState(int iters, const char* regexp, const StringPiece& text
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
+  CHECK(prog->CanBitState());
   StringPiece sp[2];  // 2 because sp[0] is whole match.
   for (int i = 0; i < iters; i++)
     CHECK(prog->SearchBitState(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 2));

@@ -1202,7 +1202,10 @@ Prog* Compiler::Finish() {
   if (max_mem_ <= 0) {
     prog_->set_dfa_mem(1<<20);
   } else {
-    int64_t m = max_mem_ - sizeof(Prog) - prog_->size_*sizeof(Prog::Inst);
+    int64_t m = max_mem_ - sizeof(Prog);
+    m -= prog_->size_*sizeof(Prog::Inst);  // account for inst_
+    if (prog_->CanBitState())
+      m -= prog_->size_*sizeof(uint16_t);  // account for list_heads_
     if (m < 0)
       m = 0;
     prog_->set_dfa_mem(m);
