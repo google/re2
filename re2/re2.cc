@@ -645,15 +645,13 @@ bool RE2::Match(const StringPiece& text,
 
   bool can_one_pass = (is_one_pass_ && ncap <= Prog::kMaxOnePassCapture);
 
-  // SearchBitState allocates a bit vector of size prog_->size() * text.size().
+  // BitState allocates a bitmap of size prog_->list_count() * text.size().
   // It also allocates a stack of 3-word structures which could potentially
-  // grow as large as prog_->size() * text.size() but in practice is much
-  // smaller.
-  // Conditions for using SearchBitState:
-  const int MaxBitStateProg = 500;   // prog_->size() <= Max.
-  const int MaxBitStateVector = 256*1024;  // bit vector size <= Max (bits)
-  bool can_bit_state = prog_->size() <= MaxBitStateProg;
-  size_t bit_state_text_max = MaxBitStateVector / prog_->size();
+  // grow as large as prog_->list_count() * text.size(), but in practice is
+  // much smaller.
+  const int kMaxBitStateBitmapSize = 256*1024;  // bitmap size <= max (bits)
+  bool can_bit_state = prog_->CanBitState();
+  size_t bit_state_text_max = kMaxBitStateBitmapSize / prog_->list_count();
 
   bool dfa_failed = false;
   switch (re_anchor) {

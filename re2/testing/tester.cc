@@ -364,8 +364,8 @@ void TestInstance::RunSearch(Engine type,
 
     case kEngineOnePass:
       if (prog_ == NULL ||
-          anchor == Prog::kUnanchored ||
           !prog_->IsOnePass() ||
+          anchor == Prog::kUnanchored ||
           nsubmatch > Prog::kMaxOnePassCapture) {
         result->skipped = true;
         break;
@@ -376,7 +376,8 @@ void TestInstance::RunSearch(Engine type,
       break;
 
     case kEngineBitState:
-      if (prog_ == NULL) {
+      if (prog_ == NULL ||
+          !prog_->CanBitState()) {
         result->skipped = true;
         break;
       }
