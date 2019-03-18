@@ -42,7 +42,7 @@ class RE2::Set {
   // Indices are assigned in sequential order starting from 0.
   // Errors do not increment the index; if error is not NULL, *error will hold
   // the error message from the parser.
-  int Add(const StringPiece& pattern, string* error);
+  int Add(const StringPiece& pattern, std::string* error);
 
   // Compiles the set in preparation for matching.
   // Returns false if the compiler runs out of memory.
@@ -62,7 +62,7 @@ class RE2::Set {
              ErrorInfo* error_info) const;
 
  private:
-  typedef std::pair<string, re2::Regexp*> Elem;
+  typedef std::pair<std::string, re2::Regexp*> Elem;
 
   RE2::Options options_;
   RE2::Anchor anchor_;

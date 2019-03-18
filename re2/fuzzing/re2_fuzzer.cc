@@ -13,7 +13,6 @@
 #include "re2/re2.h"
 
 using re2::StringPiece;
-using std::string;
 
 // NOT static, NOT signed.
 uint8_t dummy = 0;
@@ -87,12 +86,12 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
     RE2::FindAndConsume(&sp, re, &d);
   }
 
-  string s = string(text);
+  std::string s = std::string(text);
   RE2::Replace(&s, re, "");
-  s = string(text);  // Reset.
+  s = std::string(text);  // Reset.
   RE2::GlobalReplace(&s, re, "");
 
-  string min, max;
+  std::string min, max;
   re.PossibleMatchRange(&min, &max, /*maxlen=*/9);
 
   // Exercise some other API functionality.

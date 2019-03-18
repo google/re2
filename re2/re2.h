@@ -69,7 +69,7 @@
 //
 // Example: extracts "ruby" into "s" and 1234 into "i"
 //    int i;
-//    string s;
+//    std::string s;
 //    CHECK(RE2::FullMatch("ruby:1234", "(\\w+):(\\d+)", &s, &i));
 //
 // Example: fails because string cannot be stored in integer
@@ -131,10 +131,10 @@
 // which represents a sub-range of a real string.
 //
 // Example: read lines of the form "var = value" from a string.
-//      string contents = ...;          // Fill string somehow
+//      std::string contents = ...;     // Fill string somehow
 //      StringPiece input(contents);    // Wrap a StringPiece around it
 //
-//      string var;
+//      std::string var;
 //      int value;
 //      while (RE2::Consume(&input, "(\\w+) = (\\d+)\n", &var, &value)) {
 //        ...;
@@ -205,9 +205,6 @@ class Regexp;
 
 namespace re2 {
 
-// TODO(junyer): Get rid of this.
-using std::string;
-
 // Interface for regular expression matching.  Also corresponds to a
 // pre-compiled regular expression.  An "RE2" object is safe for
 // concurrent use by multiple threads.
@@ -254,12 +251,12 @@ class RE2 {
     Quiet // do not log about regexp parse errors
   };
 
-  // Need to have the const char* and const string& forms for implicit
+  // Need to have the const char* and const std::string& forms for implicit
   // conversions when passing string literals to FullMatch and PartialMatch.
   // Otherwise the StringPiece form would be sufficient.
 #ifndef SWIG
   RE2(const char* pattern);
-  RE2(const string& pattern);
+  RE2(const std::string& pattern);
 #endif
   RE2(const StringPiece& pattern);
   RE2(const StringPiece& pattern, const Options& options);
@@ -271,11 +268,11 @@ class RE2 {
   // The string specification for this RE2.  E.g.
   //   RE2 re("ab*c?d+");
   //   re.pattern();    // "ab*c?d+"
-  const string& pattern() const { return pattern_; }
+  const std::string& pattern() const { return pattern_; }
 
   // If RE2 could not be created properly, returns an error string.
   // Else returns the empty string.
-  const string& error() const { return *error_; }
+  const std::string& error() const { return *error_; }
 
   // If RE2 could not be created properly, returns an error code.
   // Else returns RE2::NoError (== 0).
@@ -283,7 +280,7 @@ class RE2 {
 
   // If RE2 could not be created properly, returns the offending
   // portion of the regexp.
-  const string& error_arg() const { return error_arg_; }
+  const std::string& error_arg() const { return error_arg_; }
 
   // Returns the program size, a very approximate measure of a regexp's "cost".
   // Larger numbers are more expensive than smaller numbers.
@@ -341,12 +338,12 @@ class RE2 {
   // Matches "text" against "re".  If pointer arguments are
   // supplied, copies matched sub-patterns into them.
   //
-  // You can pass in a "const char*" or a "string" for "text".
-  // You can pass in a "const char*" or a "string" or a "RE2" for "re".
+  // You can pass in a "const char*" or a "std::string" for "text".
+  // You can pass in a "const char*" or a "std::string" or a "RE2" for "re".
   //
   // The provided pointer arguments can be pointers to any scalar numeric
   // type, or one of:
-  //    string          (matched piece is copied to string)
+  //    std::string     (matched piece is copied to string)
   //    StringPiece     (StringPiece is mutated to point to matched piece)
   //    T               (where "bool T::ParseFrom(const char*, size_t)" exists)
   //    (void*)NULL     (the corresponding matched sub-pattern is not copied)
@@ -402,21 +399,21 @@ class RE2 {
   // from the pattern.  \0 in "rewrite" refers to the entire matching
   // text.  E.g.,
   //
-  //   string s = "yabba dabba doo";
+  //   std::string s = "yabba dabba doo";
   //   CHECK(RE2::Replace(&s, "b+", "d"));
   //
   // will leave "s" containing "yada dabba doo"
   //
   // Returns true if the pattern matches and a replacement occurs,
   // false otherwise.
-  static bool Replace(string* str,
+  static bool Replace(std::string* str,
                       const RE2& re,
                       const StringPiece& rewrite);
 
   // Like Replace(), except replaces successive non-overlapping occurrences
   // of the pattern in the string with the rewrite. E.g.
   //
-  //   string s = "yabba dabba doo";
+  //   std::string s = "yabba dabba doo";
   //   CHECK(RE2::GlobalReplace(&s, "b+", "d"));
   //
   // will leave "s" containing "yada dada doo"
@@ -426,7 +423,7 @@ class RE2 {
   // replacing "ana" within "banana" makes only one replacement, not two.
   //
   // Returns the number of replacements made.
-  static int GlobalReplace(string* str,
+  static int GlobalReplace(std::string* str,
                            const RE2& re,
                            const StringPiece& rewrite);
 
@@ -441,7 +438,7 @@ class RE2 {
   static bool Extract(const StringPiece& text,
                       const RE2& re,
                       const StringPiece& rewrite,
-                      string* out);
+                      std::string* out);
 
   // Escapes all potentially meaningful regexp characters in
   // 'unquoted'.  The returned string, used as a regular expression,
@@ -449,7 +446,7 @@ class RE2 {
   //           1.5-2.0?
   // may become:
   //           1\.5\-2\.0\?
-  static string QuoteMeta(const StringPiece& unquoted);
+  static std::string QuoteMeta(const StringPiece& unquoted);
 
   // Computes range for any strings matching regexp. The min and max can in
   // some cases be arbitrarily precise, so the caller gets to specify the
@@ -465,7 +462,8 @@ class RE2 {
   // do not compile down to infinite repetitions.
   //
   // Returns true on success, false on error.
-  bool PossibleMatchRange(string* min, string* max, int maxlen) const;
+  bool PossibleMatchRange(std::string* min, std::string* max,
+                          int maxlen) const;
 
   // Generic matching interface
 
@@ -485,12 +483,12 @@ class RE2 {
   // The map records the index of the leftmost group
   // with the given name.
   // Only valid until the re is deleted.
-  const std::map<string, int>& NamedCapturingGroups() const;
+  const std::map<std::string, int>& NamedCapturingGroups() const;
 
   // Return a map from capturing indices to names.
   // The map has no entries for unnamed groups.
   // Only valid until the re is deleted.
-  const std::map<int, string>& CapturingGroupNames() const;
+  const std::map<int, std::string>& CapturingGroupNames() const;
 
   // General matching routine.
   // Match against text starting at offset startpos
@@ -528,7 +526,8 @@ class RE2 {
   //     '\' followed by anything other than a digit or '\'.
   // A true return value guarantees that Replace() and Extract() won't
   // fail because of a bad rewrite string.
-  bool CheckRewriteString(const StringPiece& rewrite, string* error) const;
+  bool CheckRewriteString(const StringPiece& rewrite,
+                          std::string* error) const;
 
   // Returns the maximum submatch needed for the rewrite to be done by
   // Replace(). E.g. if rewrite == "foo \\2,\\1", returns 2.
@@ -539,7 +538,7 @@ class RE2 {
   // Returns true on success.  This method can fail because of a malformed
   // rewrite string.  CheckRewriteString guarantees that the rewrite will
   // be sucessful.
-  bool Rewrite(string* out,
+  bool Rewrite(std::string* out,
                const StringPiece& rewrite,
                const StringPiece* vec,
                int veclen) const;
@@ -737,9 +736,9 @@ class RE2 {
 
   re2::Prog* ReverseProg() const;
 
-  string        pattern_;          // string regular expression
+  std::string   pattern_;          // string regular expression
   Options       options_;          // option flags
-  string        prefix_;           // required prefix (before regexp_)
+  std::string   prefix_;           // required prefix (before regexp_)
   bool          prefix_foldcase_;  // prefix is ASCII case-insensitive
   re2::Regexp*  entire_regexp_;    // parsed regular expression
   re2::Regexp*  suffix_regexp_;    // parsed regular expression, prefix removed
@@ -747,17 +746,17 @@ class RE2 {
   int           num_captures_;     // Number of capturing groups
   bool          is_one_pass_;      // can use prog_->SearchOnePass?
 
-  mutable re2::Prog*     rprog_;         // reverse program for regexp
-  mutable const string*  error_;         // Error indicator
+  mutable re2::Prog*          rprog_;    // reverse program for regexp
+  mutable const std::string*  error_;    // Error indicator
                                          // (or points to empty string)
   mutable ErrorCode      error_code_;    // Error code
-  mutable string         error_arg_;     // Fragment of regexp showing error
+  mutable std::string    error_arg_;     // Fragment of regexp showing error
 
   // Map from capture names to indices
-  mutable const std::map<string, int>* named_groups_;
+  mutable const std::map<std::string, int>* named_groups_;
 
   // Map from capture indices to names
-  mutable const std::map<int, string>* group_names_;
+  mutable const std::map<int, std::string>* group_names_;
 
   // Onces for lazy computations.
   mutable std::once_flag rprog_once_;
@@ -804,7 +803,7 @@ class RE2::Arg {
   MAKE_PARSER(unsigned char,      parse_uchar)
   MAKE_PARSER(float,              parse_float)
   MAKE_PARSER(double,             parse_double)
-  MAKE_PARSER(string,             parse_string)
+  MAKE_PARSER(std::string,        parse_string)
   MAKE_PARSER(StringPiece,        parse_stringpiece)
 
   MAKE_PARSER(short,              parse_short)
