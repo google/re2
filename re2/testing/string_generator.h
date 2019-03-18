@@ -21,7 +21,7 @@ namespace re2 {
 
 class StringGenerator {
  public:
-  StringGenerator(int maxlen, const std::vector<string>& alphabet);
+  StringGenerator(int maxlen, const std::vector<std::string>& alphabet);
   ~StringGenerator() {}
 
   const StringPiece& Next();
@@ -41,12 +41,12 @@ class StringGenerator {
   bool RandomDigits();
 
   // Global state.
-  int maxlen_;                    // Maximum length string to generate.
-  std::vector<string> alphabet_;  // Alphabet, one string per letter.
+  int maxlen_;                         // Maximum length string to generate.
+  std::vector<std::string> alphabet_;  // Alphabet, one string per letter.
 
   // Iteration state.
   StringPiece sp_;           // Last StringPiece returned by Next().
-  string s_;                 // String data in last StringPiece returned by Next().
+  std::string s_;            // String data in last StringPiece returned by Next().
   bool hasnext_;             // Whether Next() can be called again.
   std::vector<int> digits_;  // Alphabet indices for next string.
   bool generate_null_;       // Whether to generate a NULL StringPiece next.
