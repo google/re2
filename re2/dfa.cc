@@ -106,7 +106,7 @@ class DFA {
 
   // Computes min and max for matching strings.  Won't return strings
   // bigger than maxlen.
-  bool PossibleMatchRange(string* min, string* max, int maxlen);
+  bool PossibleMatchRange(std::string* min, std::string* max, int maxlen);
 
   // These data structures are logically private, but C++ makes it too
   // difficult to mark them as such.
@@ -241,10 +241,10 @@ class DFA {
   void AddToQueue(Workq* q, int id, uint32_t flag);
 
   // For debugging, returns a text representation of State.
-  static string DumpState(State* state);
+  static std::string DumpState(State* state);
 
   // For debugging, returns a text representation of a Workq.
-  static string DumpWorkq(Workq* q);
+  static std::string DumpWorkq(Workq* q);
 
   // Search parameters
   struct SearchParams {
@@ -505,8 +505,8 @@ DFA::~DFA() {
 // Debugging printouts
 
 // For debugging, returns a string representation of the work queue.
-string DFA::DumpWorkq(Workq* q) {
-  string s;
+std::string DFA::DumpWorkq(Workq* q) {
+  std::string s;
   const char* sep = "";
   for (Workq::iterator it = q->begin(); it != q->end(); ++it) {
     if (q->is_mark(*it)) {
@@ -521,14 +521,14 @@ string DFA::DumpWorkq(Workq* q) {
 }
 
 // For debugging, returns a string representation of the state.
-string DFA::DumpState(State* state) {
+std::string DFA::DumpState(State* state) {
   if (state == NULL)
     return "_";
   if (state == DeadState)
     return "X";
   if (state == FullMatchState)
     return "*";
-  string s;
+  std::string s;
   const char* sep = "";
   StringAppendF(&s, "(%p)", state);
   for (int i = 0; i < state->ninst_; i++) {
@@ -1769,7 +1769,7 @@ bool DFA::Search(const StringPiece& text,
   if (ExtraDebug) {
     fprintf(stderr, "\nprogram:\n%s\n", prog_->DumpUnanchored().c_str());
     fprintf(stderr, "text %s anchored=%d earliest=%d fwd=%d kind %d\n",
-            string(text).c_str(), anchored, want_earliest_match,
+            std::string(text).c_str(), anchored, want_earliest_match,
             run_forward, kind_);
   }
 
@@ -1995,7 +1995,7 @@ void Prog::TEST_dfa_should_bail_when_slow(bool b) {
 
 // Computes min and max for matching string.
 // Won't return strings bigger than maxlen.
-bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
+bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
   if (!ok())
     return false;
 
@@ -2132,7 +2132,7 @@ bool DFA::PossibleMatchRange(string* min, string* max, int maxlen) {
 }
 
 // PossibleMatchRange for a Prog.
-bool Prog::PossibleMatchRange(string* min, string* max, int maxlen) {
+bool Prog::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
   // Have to use dfa_longest_ to get all strings for full matches.
   // For example, (a|aa) never matches aa in first-match mode.
   return GetDFA(kLongestMatch)->PossibleMatchRange(min, max, maxlen);

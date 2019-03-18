@@ -107,7 +107,7 @@ class Prog {
     }
 
     // Returns string representation for debugging.
-    string Dump();
+    std::string Dump();
 
     // Maximum instruction id.
     // (Must fit in out_opcode_. PatchList/last steal another bit.)
@@ -222,9 +222,9 @@ class Prog {
   int first_byte();
 
   // Returns string representation of program for debugging.
-  string Dump();
-  string DumpUnanchored();
-  string DumpByteMap();
+  std::string Dump();
+  std::string DumpUnanchored();
+  std::string DumpByteMap();
 
   // Returns the set of kEmpty flags that are in effect at
   // position p within context.
@@ -346,7 +346,7 @@ class Prog {
   // do not compile down to infinite repetitions.
   //
   // Returns true on success, false on error.
-  bool PossibleMatchRange(string* min, string* max, int maxlen);
+  bool PossibleMatchRange(std::string* min, std::string* max, int maxlen);
 
   // EXPERIMENTAL! SUBJECT TO CHANGE!
   // Outputs the program fanout into the given sparse array.
