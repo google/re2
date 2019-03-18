@@ -18,7 +18,7 @@
 namespace re2 {
 
 StringGenerator::StringGenerator(int maxlen,
-                                 const std::vector<string>& alphabet)
+                                 const std::vector<std::string>& alphabet)
     : maxlen_(maxlen), alphabet_(alphabet),
       generate_null_(false),
       random_(false), nrandom_(0) {

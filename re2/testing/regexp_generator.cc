@@ -38,7 +38,7 @@
 namespace re2 {
 
 // Returns a vector of the egrep regexp operators.
-const std::vector<string>& RegexpGenerator::EgrepOps() {
+const std::vector<std::string>& RegexpGenerator::EgrepOps() {
   static const char *ops[] = {
     "%s%s",
     "%s|%s",
@@ -47,13 +47,13 @@ const std::vector<string>& RegexpGenerator::EgrepOps() {
     "%s?",
     "%s\\C*",
   };
-  static std::vector<string> v(ops, ops + arraysize(ops));
+  static std::vector<std::string> v(ops, ops + arraysize(ops));
   return v;
 }
 
 RegexpGenerator::RegexpGenerator(int maxatoms, int maxops,
-                                 const std::vector<string>& atoms,
-                                 const std::vector<string>& ops)
+                                 const std::vector<std::string>& atoms,
+                                 const std::vector<std::string>& ops)
     : maxatoms_(maxatoms), maxops_(maxops), atoms_(atoms), ops_(ops) {
   // Degenerate case.
   if (atoms_.empty())
@@ -65,7 +65,7 @@ RegexpGenerator::RegexpGenerator(int maxatoms, int maxops,
 // Generates all possible regular expressions (within the parameters),
 // calling HandleRegexp for each one.
 void RegexpGenerator::Generate() {
-  std::vector<string> postfix;
+  std::vector<std::string> postfix;
   GeneratePostfix(&postfix, 0, 0, 0);
 }
 
@@ -74,13 +74,13 @@ void RegexpGenerator::GenerateRandom(int32_t seed, int n) {
   rng_.seed(seed);
 
   for (int i = 0; i < n; i++) {
-    std::vector<string> postfix;
+    std::vector<std::string> postfix;
     GenerateRandomPostfix(&postfix, 0, 0, 0);
   }
 }
 
 // Counts and returns the number of occurrences of "%s" in s.
-static int CountArgs(const string& s) {
+static int CountArgs(const std::string& s) {
   const char *p = s.c_str();
   int n = 0;
   while ((p = strstr(p, "%s")) != NULL) {
@@ -103,8 +103,8 @@ static int CountArgs(const string& s) {
 //
 // The initial call should be GeneratePostfix([empty vector], 0, 0, 0).
 //
-void RegexpGenerator::GeneratePostfix(std::vector<string>* post, int nstk,
-                                      int ops, int atoms) {
+void RegexpGenerator::GeneratePostfix(std::vector<std::string>* post,
+                                      int nstk, int ops, int atoms) {
   if (nstk == 1)
     RunPostfix(*post);
 
@@ -126,7 +126,7 @@ void RegexpGenerator::GeneratePostfix(std::vector<string>* post, int nstk,
   // Add operators if there are enough arguments.
   if (ops < maxops_) {
     for (size_t i = 0; i < ops_.size(); i++) {
-      const string& fmt = ops_[i];
+      const std::string& fmt = ops_[i];
       int nargs = CountArgs(fmt);
       if (nargs <= nstk) {
         post->push_back(fmt);
@@ -139,8 +139,8 @@ void RegexpGenerator::GeneratePostfix(std::vector<string>* post, int nstk,
 
 // Generates a random postfix command sequence.
 // Stops and returns true once a single sequence has been generated.
-bool RegexpGenerator::GenerateRandomPostfix(std::vector<string>* post, int nstk,
-                                            int ops, int atoms) {
+bool RegexpGenerator::GenerateRandomPostfix(std::vector<std::string>* post,
+                                            int nstk, int ops, int atoms) {
   std::uniform_int_distribution<int> random_stop(0, maxatoms_ - atoms);
   std::uniform_int_distribution<int> random_bit(0, 1);
   std::uniform_int_distribution<int> random_ops_index(
@@ -163,7 +163,7 @@ bool RegexpGenerator::GenerateRandomPostfix(std::vector<string>* post, int nstk,
 
     // Add operators if there are enough arguments.
     if (ops < maxops_ && random_bit(rng_) == 0) {
-      const string& fmt = ops_[random_ops_index(rng_)];
+      const std::string& fmt = ops_[random_ops_index(rng_)];
       int nargs = CountArgs(fmt);
       if (nargs <= nstk) {
         post->push_back(fmt);
@@ -189,8 +189,8 @@ bool RegexpGenerator::GenerateRandomPostfix(std::vector<string>* post, int nstk,
 // Interprets the postfix command sequence to create a regular expression
 // passed to HandleRegexp.  The results of operators like %s|%s are wrapped
 // in (?: ) to avoid needing to maintain a precedence table.
-void RegexpGenerator::RunPostfix(const std::vector<string>& post) {
-  std::stack<string> regexps;
+void RegexpGenerator::RunPostfix(const std::vector<std::string>& post) {
+  std::stack<std::string> regexps;
   for (size_t i = 0; i < post.size(); i++) {
     switch (CountArgs(post[i])) {
       default:
@@ -199,15 +199,15 @@ void RegexpGenerator::RunPostfix(const std::vector<string>& post) {
         regexps.push(post[i]);
         break;
       case 1: {
-        string a = regexps.top();
+        std::string a = regexps.top();
         regexps.pop();
         regexps.push("(?:" + StringPrintf(post[i].c_str(), a.c_str()) + ")");
         break;
       }
       case 2: {
-        string b = regexps.top();
+        std::string b = regexps.top();
         regexps.pop();
-        string a = regexps.top();
+        std::string a = regexps.top();
         regexps.pop();
         regexps.push("(?:" +
                      StringPrintf(post[i].c_str(), a.c_str(), b.c_str()) +
@@ -238,14 +238,14 @@ void RegexpGenerator::RunPostfix(const std::vector<string>& post) {
 }
 
 // Split s into an vector of strings, one for each UTF-8 character.
-std::vector<string> Explode(const StringPiece& s) {
-  std::vector<string> v;
+std::vector<std::string> Explode(const StringPiece& s) {
+  std::vector<std::string> v;
 
   for (const char *q = s.begin(); q < s.end(); ) {
     const char* p = q;
     Rune r;
     q += chartorune(&r, q);
-    v.push_back(string(p, q - p));
+    v.push_back(std::string(p, q - p));
   }
 
   return v;
@@ -253,8 +253,8 @@ std::vector<string> Explode(const StringPiece& s) {
 
 // Split string everywhere a substring is found, returning
 // vector of pieces.
-std::vector<string> Split(const StringPiece& sep, const StringPiece& s) {
-  std::vector<string> v;
+std::vector<std::string> Split(const StringPiece& sep, const StringPiece& s) {
+  std::vector<std::string> v;
 
   if (sep.size() == 0)
     return Explode(s);
@@ -262,14 +262,14 @@ std::vector<string> Split(const StringPiece& sep, const StringPiece& s) {
   const char *p = s.begin();
   for (const char *q = s.begin(); q + sep.size() <= s.end(); q++) {
     if (StringPiece(q, sep.size()) == sep) {
-      v.push_back(string(p, q - p));
+      v.push_back(std::string(p, q - p));
       p = q + sep.size();
       q = p - 1;  // -1 for ++ in loop
       continue;
     }
   }
   if (p < s.end())
-    v.push_back(string(p, s.end() - p));
+    v.push_back(std::string(p, s.end() - p));
   return v;
 }
 
