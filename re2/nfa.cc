@@ -105,7 +105,7 @@ class NFA {
            const char* p);
 
   // Returns text version of capture information, for debugging.
-  string FormatCapture(const char** capture);
+  std::string FormatCapture(const char** capture);
 
   inline void CopyCapture(const char** dst, const char** src);
 
@@ -425,9 +425,8 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, const StringPiece& context,
   return 0;
 }
 
-string NFA::FormatCapture(const char** capture) {
-  string s;
-
+std::string NFA::FormatCapture(const char** capture) {
+  std::string s;
   for (int i = 0; i < ncapture_; i+=2) {
     if (capture[i] == NULL)
       StringAppendF(&s, "(?,?)");
@@ -492,7 +491,8 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
 
   if (ExtraDebug)
     fprintf(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
-            string(text).c_str(), string(context).c_str(), anchored, longest);
+            std::string(text).c_str(), std::string(context).c_str(), anchored,
+            longest);
 
   // Set up search.
   Threadq* runq = &q0_;
