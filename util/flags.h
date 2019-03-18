@@ -20,10 +20,10 @@
 
 #define DEFINE_bool(name, deflt, desc) DEFINE_flag(bool, name, deflt, desc)
 #define DEFINE_int32(name, deflt, desc) DEFINE_flag(int32_t, name, deflt, desc)
-#define DEFINE_string(name, deflt, desc) DEFINE_flag(string, name, deflt, desc)
+#define DEFINE_string(name, deflt, desc) DEFINE_flag(std::string, name, deflt, desc)
 
 #define DECLARE_bool(name) DECLARE_flag(bool, name)
 #define DECLARE_int32(name) DECLARE_flag(int32_t, name)
-#define DECLARE_string(name) DECLARE_flag(string, name)
+#define DECLARE_string(name) DECLARE_flag(std::string, name)
 
 #endif  // UTIL_FLAGS_H_
