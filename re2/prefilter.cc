@@ -21,8 +21,8 @@ namespace re2 {
 
 static const bool ExtraDebug = false;
 
-typedef std::set<string>::iterator SSIter;
-typedef std::set<string>::const_iterator ConstSSIter;
+typedef std::set<std::string>::iterator SSIter;
+typedef std::set<std::string>::const_iterator ConstSSIter;
 
 // Initializes a Prefilter, allocating subs_ as necessary.
 Prefilter::Prefilter(Op op) {
@@ -140,7 +140,7 @@ Prefilter* Prefilter::Or(Prefilter* a, Prefilter* b) {
   return AndOr(OR, a, b);
 }
 
-static void SimplifyStringSet(std::set<string> *ss) {
+static void SimplifyStringSet(std::set<std::string> *ss) {
   // Now make sure that the strings aren't redundant.  For example, if
   // we know "ab" is a required string, then it doesn't help at all to
   // know that "abc" is also a required string, so delete "abc". This
@@ -155,13 +155,13 @@ static void SimplifyStringSet(std::set<string> *ss) {
       // Increment j early so that we can erase the element it points to.
       SSIter old_j = j;
       ++j;
-      if (old_j->find(*i) != string::npos)
+      if (old_j->find(*i) != std::string::npos)
         ss->erase(old_j);
     }
   }
 }
 
-Prefilter* Prefilter::OrStrings(std::set<string>* ss) {
+Prefilter* Prefilter::OrStrings(std::set<std::string>* ss) {
   SimplifyStringSet(ss);
   Prefilter* or_prefilter = NULL;
   if (!ss->empty()) {
@@ -191,7 +191,7 @@ static Rune ToLowerRuneLatin1(Rune r) {
   return r;
 }
 
-Prefilter* Prefilter::FromString(const string& str) {
+Prefilter* Prefilter::FromString(const std::string& str) {
   Prefilter* m = new Prefilter(Prefilter::ATOM);
   m->atom_ = str;
   return m;
@@ -221,19 +221,19 @@ class Prefilter::Info {
   static Info* AnyMatch();
 
   // Format Info as a string.
-  string ToString();
+  std::string ToString();
 
   // Caller takes ownership of the Prefilter.
   Prefilter* TakeMatch();
 
-  std::set<string>& exact() { return exact_; }
+  std::set<std::string>& exact() { return exact_; }
 
   bool is_exact() const { return is_exact_; }
 
   class Walker;
 
  private:
-  std::set<string> exact_;
+  std::set<std::string> exact_;
 
   // When is_exact_ is true, the strings that match
   // are placed in exact_. When it is no longer an exact
@@ -268,13 +268,11 @@ Prefilter* Prefilter::Info::TakeMatch() {
 }
 
 // Format a Info in string form.
-string Prefilter::Info::ToString() {
+std::string Prefilter::Info::ToString() {
   if (is_exact_) {
     int n = 0;
-    string s;
-    for (std::set<string>::iterator i = exact_.begin();
-         i != exact_.end();
-         ++i) {
+    std::string s;
+    for (SSIter i = exact_.begin(); i != exact_.end(); ++i) {
       if (n++ > 0)
         s += ",";
       s += *i;
@@ -289,17 +287,17 @@ string Prefilter::Info::ToString() {
 }
 
 // Add the strings from src to dst.
-static void CopyIn(const std::set<string>& src,
-                   std::set<string>* dst) {
+static void CopyIn(const std::set<std::string>& src,
+                   std::set<std::string>* dst) {
   for (ConstSSIter i = src.begin(); i != src.end(); ++i)
     dst->insert(*i);
 }
 
 // Add the cross-product of a and b to dst.
 // (For each string i in a and j in b, add i+j.)
-static void CrossProduct(const std::set<string>& a,
-                         const std::set<string>& b,
-                         std::set<string>* dst) {
+static void CrossProduct(const std::set<std::string>& a,
+                         const std::set<std::string>& b,
+                         std::set<std::string>* dst) {
   for (ConstSSIter i = a.begin(); i != a.end(); ++i)
     for (ConstSSIter j = b.begin(); j != b.end(); ++j)
       dst->insert(*i + *j);
@@ -390,15 +388,15 @@ Prefilter::Info* Prefilter::Info::Plus(Info *a) {
   return ab;
 }
 
-static string RuneToString(Rune r) {
+static std::string RuneToString(Rune r) {
   char buf[UTFmax];
   int n = runetochar(buf, &r);
-  return string(buf, n);
+  return std::string(buf, n);
 }
 
-static string RuneToStringLatin1(Rune r) {
+static std::string RuneToStringLatin1(Rune r) {
   char c = r & 0xff;
-  return string(&c, 1);
+  return std::string(&c, 1);
 }
 
 // Constructs Info for literal rune.
@@ -662,7 +660,7 @@ Prefilter* Prefilter::FromRegexp(Regexp* re) {
   return m;
 }
 
-string Prefilter::DebugString() const {
+std::string Prefilter::DebugString() const {
   switch (op_) {
     default:
       LOG(DFATAL) << "Bad op in Prefilter::DebugString: " << op_;
@@ -674,7 +672,7 @@ string Prefilter::DebugString() const {
     case ALL:
       return "";
     case AND: {
-      string s = "";
+      std::string s = "";
       for (size_t i = 0; i < subs_->size(); i++) {
         if (i > 0)
           s += " ";
@@ -684,7 +682,7 @@ string Prefilter::DebugString() const {
       return s;
     }
     case OR: {
-      string s = "(";
+      std::string s = "(";
       for (size_t i = 0; i < subs_->size(); i++) {
         if (i > 0)
           s += "|";
