@@ -590,7 +590,7 @@ bool Prog::IsOnePass() {
       if (nodebyid[i] != -1)
         idmap[nodebyid[i]] = i;
 
-    string dump;
+    std::string dump;
     for (Instq::iterator it = tovisit.begin(); it != tovisit.end(); ++it) {
       int id = *it;
       int nodeindex = nodebyid[id];
