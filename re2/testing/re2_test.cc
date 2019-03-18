@@ -176,10 +176,10 @@ TEST(RE2, Replace) {
   };
 
   for (const ReplaceTest* t = tests; t->original != NULL; t++) {
-    string one(t->original);
+    std::string one(t->original);
     ASSERT_TRUE(RE2::Replace(&one, t->regexp, t->rewrite));
     ASSERT_EQ(one, t->single);
-    string all(t->original);
+    std::string all(t->original);
     ASSERT_EQ(RE2::GlobalReplace(&all, t->regexp, t->rewrite), t->greplace_count)
       << "Got: " << all;
     ASSERT_EQ(all, t->global);
@@ -188,7 +188,7 @@ TEST(RE2, Replace) {
 
 static void TestCheckRewriteString(const char* regexp, const char* rewrite,
                               bool expect_ok) {
-  string error;
+  std::string error;
   RE2 exp(regexp);
   bool actual_ok = exp.CheckRewriteString(rewrite, &error);
   EXPECT_EQ(expect_ok, actual_ok) << " for " << rewrite << " error: " << error;
@@ -211,7 +211,7 @@ TEST(CheckRewriteString, all) {
 }
 
 TEST(RE2, Extract) {
-  string s;
+  std::string s;
 
   ASSERT_TRUE(RE2::Extract("boris@kremvax.ru", "(.*)@([^.]*)", "\\2!\\1", &s));
   ASSERT_EQ(s, "kremvax!boris");
@@ -225,9 +225,9 @@ TEST(RE2, Extract) {
 
 TEST(RE2, Consume) {
   RE2 r("\\s*(\\w+)");    // matches a word, possibly proceeded by whitespace
-  string word;
+  std::string word;
 
-  string s("   aaa b!@#$@#$cccc");
+  std::string s("   aaa b!@#$@#$cccc");
   StringPiece input(s);
 
   ASSERT_TRUE(RE2::Consume(&input, r, &word));
@@ -238,7 +238,7 @@ TEST(RE2, Consume) {
 }
 
 TEST(RE2, ConsumeN) {
-  const string s(" one two three 4");
+  const std::string s(" one two three 4");
   StringPiece input(s);
 
   RE2::Arg argv[2];
@@ -248,7 +248,7 @@ TEST(RE2, ConsumeN) {
   EXPECT_TRUE(RE2::ConsumeN(&input, "\\s*(\\w+)", args, 0));  // Skips "one".
 
   // 1 arg
-  string word;
+  std::string word;
   argv[0] = &word;
   EXPECT_TRUE(RE2::ConsumeN(&input, "\\s*(\\w+)", args, 1));
   EXPECT_EQ("two", word);
@@ -263,9 +263,9 @@ TEST(RE2, ConsumeN) {
 
 TEST(RE2, FindAndConsume) {
   RE2 r("(\\w+)");      // matches a word
-  string word;
+  std::string word;
 
-  string s("   aaa b!@#$@#$cccc");
+  std::string s("   aaa b!@#$@#$cccc");
   StringPiece input(s);
 
   ASSERT_TRUE(RE2::FindAndConsume(&input, r, &word));
@@ -285,7 +285,7 @@ TEST(RE2, FindAndConsume) {
 }
 
 TEST(RE2, FindAndConsumeN) {
-  const string s(" one two three 4");
+  const std::string s(" one two three 4");
   StringPiece input(s);
 
   RE2::Arg argv[2];
@@ -295,7 +295,7 @@ TEST(RE2, FindAndConsumeN) {
   EXPECT_TRUE(RE2::FindAndConsumeN(&input, "(\\w+)", args, 0));  // Skips "one".
 
   // 1 arg
-  string word;
+  std::string word;
   argv[0] = &word;
   EXPECT_TRUE(RE2::FindAndConsumeN(&input, "(\\w+)", args, 1));
   EXPECT_EQ("two", word);
@@ -310,9 +310,9 @@ TEST(RE2, FindAndConsumeN) {
 
 TEST(RE2, MatchNumberPeculiarity) {
   RE2 r("(foo)|(bar)|(baz)");
-  string word1;
-  string word2;
-  string word3;
+  std::string word1;
+  std::string word2;
+  std::string word3;
 
   ASSERT_TRUE(RE2::PartialMatch("foo", r, &word1, &word2, &word3));
   ASSERT_EQ(word1, "foo");
@@ -328,7 +328,7 @@ TEST(RE2, MatchNumberPeculiarity) {
   ASSERT_EQ(word3, "baz");
   ASSERT_FALSE(RE2::PartialMatch("f", r, &word1, &word2, &word3));
 
-  string a;
+  std::string a;
   ASSERT_TRUE(RE2::FullMatch("hello", "(foo)|hello", &a));
   ASSERT_EQ(a, "");
 }
@@ -351,7 +351,7 @@ TEST(RE2, Match) {
   ASSERT_EQ(group[2], "chrisr");
   ASSERT_EQ(group[3], "9000");
 
-  string all, host;
+  std::string all, host;
   int port;
   ASSERT_TRUE(RE2::PartialMatch("a chrisr:9000 here", re, &all, &host, &port));
   ASSERT_EQ(all, "chrisr:9000");
@@ -361,7 +361,7 @@ TEST(RE2, Match) {
 
 static void TestRecursion(int size, const char* pattern) {
   // Fill up a string repeating the pattern given
-  string domain;
+  std::string domain;
   domain.resize(size);
   size_t patlen = strlen(pattern);
   for (int i = 0; i < size; i++) {
@@ -374,9 +374,9 @@ static void TestRecursion(int size, const char* pattern) {
 
 // A meta-quoted string, interpreted as a pattern, should always match
 // the original unquoted string.
-static void TestQuoteMeta(const string& unquoted,
+static void TestQuoteMeta(const std::string& unquoted,
                           const RE2::Options& options = RE2::DefaultOptions) {
-  string quoted = RE2::QuoteMeta(unquoted);
+  std::string quoted = RE2::QuoteMeta(unquoted);
   RE2 re(quoted, options);
   EXPECT_TRUE(RE2::FullMatch(unquoted, re))
       << "Unquoted='" << unquoted << "', quoted='" << quoted << "'.";
@@ -385,9 +385,9 @@ static void TestQuoteMeta(const string& unquoted,
 // A meta-quoted string, interpreted as a pattern, should always match
 // the original unquoted string.
 static void NegativeTestQuoteMeta(
-    const string& unquoted, const string& should_not_match,
+    const std::string& unquoted, const std::string& should_not_match,
     const RE2::Options& options = RE2::DefaultOptions) {
-  string quoted = RE2::QuoteMeta(unquoted);
+  std::string quoted = RE2::QuoteMeta(unquoted);
   RE2 re(quoted, options);
   EXPECT_FALSE(RE2::FullMatch(should_not_match, re))
       << "Unquoted='" << unquoted << "', quoted='" << quoted << "'.";
@@ -440,7 +440,7 @@ TEST(QuoteMeta, UTF8) {
 }
 
 TEST(QuoteMeta, HasNull) {
-  string has_null;
+  std::string has_null;
 
   // string with one null character
   has_null += '\0';
@@ -543,14 +543,14 @@ TEST(Capture, NamedGroups) {
   {
     RE2 re("(hello world)");
     ASSERT_EQ(re.NumberOfCapturingGroups(), 1);
-    const std::map<string, int>& m = re.NamedCapturingGroups();
+    const std::map<std::string, int>& m = re.NamedCapturingGroups();
     ASSERT_EQ(m.size(), 0);
   }
 
   {
     RE2 re("(?P<A>expr(?P<B>expr)(?P<C>expr))((expr)(?P<D>expr))");
     ASSERT_EQ(re.NumberOfCapturingGroups(), 6);
-    const std::map<string, int>& m = re.NamedCapturingGroups();
+    const std::map<std::string, int>& m = re.NamedCapturingGroups();
     ASSERT_EQ(m.size(), 4);
     ASSERT_EQ(m.find("A")->second, 1);
     ASSERT_EQ(m.find("B")->second, 2);
@@ -563,7 +563,7 @@ TEST(RE2, CapturedGroupTest) {
   RE2 re("directions from (?P<S>.*) to (?P<D>.*)");
   int num_groups = re.NumberOfCapturingGroups();
   EXPECT_EQ(2, num_groups);
-  string args[4];
+  std::string args[4];
   RE2::Arg arg0(&args[0]);
   RE2::Arg arg1(&args[1]);
   RE2::Arg arg2(&args[2]);
@@ -572,7 +572,7 @@ TEST(RE2, CapturedGroupTest) {
   const RE2::Arg* const matches[4] = {&arg0, &arg1, &arg2, &arg3};
   EXPECT_TRUE(RE2::FullMatchN("directions from mountain view to san jose",
                               re, matches, num_groups));
-  const std::map<string, int>& named_groups = re.NamedCapturingGroups();
+  const std::map<std::string, int>& named_groups = re.NamedCapturingGroups();
   EXPECT_TRUE(named_groups.find("S") != named_groups.end());
   EXPECT_TRUE(named_groups.find("D") != named_groups.end());
 
@@ -619,7 +619,7 @@ TEST(RE2, PartialMatchN) {
   EXPECT_FALSE(RE2::PartialMatchN("three", "(\\d+)", args, 1));
 
   // Multi-arg
-  string s;
+  std::string s;
   argv[1] = &s;
   EXPECT_TRUE(RE2::PartialMatchN("answer: 42:life", "(\\d+):(\\w+)", args, 2));
   EXPECT_EQ(42, i);
@@ -662,10 +662,10 @@ TEST(RE2, FullMatchIntegerArg) {
 }
 
 TEST(RE2, FullMatchStringArg) {
-  string s;
+  std::string s;
   // String-arg
   ASSERT_TRUE(RE2::FullMatch("hello", "h(.*)o", &s));
-  ASSERT_EQ(s, string("ell"));
+  ASSERT_EQ(s, std::string("ell"));
 }
 
 TEST(RE2, FullMatchStringPieceArg) {
@@ -680,10 +680,10 @@ TEST(RE2, FullMatchStringPieceArg) {
 
 TEST(RE2, FullMatchMultiArg) {
   int i;
-  string s;
+  std::string s;
   // Multi-arg
   ASSERT_TRUE(RE2::FullMatch("ruby:1234", "(\\w+):(\\d+)", &s, &i));
-  ASSERT_EQ(s, string("ruby"));
+  ASSERT_EQ(s, std::string("ruby"));
   ASSERT_EQ(i, 1234);
 }
 
@@ -703,7 +703,7 @@ TEST(RE2, FullMatchN) {
   EXPECT_FALSE(RE2::FullMatchN("three", "(\\d+)", args, 1));
 
   // Multi-arg
-  string s;
+  std::string s;
   argv[1] = &s;
   EXPECT_TRUE(RE2::FullMatchN("42:life", "(\\d+):(\\w+)", args, 2));
   EXPECT_EQ(42, i);
@@ -713,26 +713,26 @@ TEST(RE2, FullMatchN) {
 
 TEST(RE2, FullMatchIgnoredArg) {
   int i;
-  string s;
+  std::string s;
 
   // Old-school NULL should be ignored.
   ASSERT_TRUE(
       RE2::FullMatch("ruby:1234", "(\\w+)(:)(\\d+)", &s, (void*)NULL, &i));
-  ASSERT_EQ(s, string("ruby"));
+  ASSERT_EQ(s, std::string("ruby"));
   ASSERT_EQ(i, 1234);
 
   // C++11 nullptr should also be ignored.
   ASSERT_TRUE(RE2::FullMatch("rubz:1235", "(\\w+)(:)(\\d+)", &s, nullptr, &i));
-  ASSERT_EQ(s, string("rubz"));
+  ASSERT_EQ(s, std::string("rubz"));
   ASSERT_EQ(i, 1235);
 }
 
 TEST(RE2, FullMatchTypedNullArg) {
-  string s;
+  std::string s;
 
   // Ignore non-void* NULL arg
   ASSERT_TRUE(RE2::FullMatch("hello", "he(.*)lo", (char*)NULL));
-  ASSERT_TRUE(RE2::FullMatch("hello", "h(.*)o", (string*)NULL));
+  ASSERT_TRUE(RE2::FullMatch("hello", "h(.*)o", (std::string*)NULL));
   ASSERT_TRUE(RE2::FullMatch("hello", "h(.*)o", (StringPiece*)NULL));
   ASSERT_TRUE(RE2::FullMatch("1234", "(.*)", (int*)NULL));
   ASSERT_TRUE(RE2::FullMatch("1234567890123456", "(.*)", (long long*)NULL));
@@ -775,7 +775,7 @@ TEST(RE2, NULTerminated) {
 
 TEST(RE2, FullMatchTypeTests) {
   // Type tests
-  string zeros(1000, '0');
+  std::string zeros(1000, '0');
   {
     char c;
     ASSERT_TRUE(RE2::FullMatch("Hello", "(H)ello", &c));
@@ -837,7 +837,7 @@ TEST(RE2, FullMatchTypeTests) {
     int64_t v;
     static const int64_t max = INT64_C(0x7fffffffffffffff);
     static const int64_t min = -max - 1;
-    string str;
+    std::string str;
 
     ASSERT_TRUE(RE2::FullMatch("100",  "(-?\\d+)", &v)); ASSERT_EQ(v, 100);
     ASSERT_TRUE(RE2::FullMatch("-100", "(-?\\d+)", &v)); ASSERT_EQ(v, -100);
@@ -862,7 +862,7 @@ TEST(RE2, FullMatchTypeTests) {
     uint64_t v;
     int64_t v2;
     static const uint64_t max = UINT64_C(0xffffffffffffffff);
-    string str;
+    std::string str;
 
     ASSERT_TRUE(RE2::FullMatch("100",  "(-?\\d+)", &v));  ASSERT_EQ(v, 100);
     ASSERT_TRUE(RE2::FullMatch("-100", "(-?\\d+)", &v2)); ASSERT_EQ(v2, -100);
@@ -877,7 +877,7 @@ TEST(RE2, FullMatchTypeTests) {
 }
 
 TEST(RE2, FloatingPointFullMatchTypes) {
-  string zeros(1000, '0');
+  std::string zeros(1000, '0');
   {
     float v;
     ASSERT_TRUE(RE2::FullMatch("100",   "(.*)", &v)); ASSERT_EQ(v, 100);
@@ -1056,7 +1056,7 @@ TEST(RE2, FullMatchArgCount) {
 TEST(RE2, Accessors) {
   // Check the pattern() accessor
   {
-    const string kPattern = "http://([^/]+)/.*";
+    const std::string kPattern = "http://([^/]+)/.*";
     const RE2 re(kPattern);
     ASSERT_EQ(kPattern, re.pattern());
   }
@@ -1094,13 +1094,13 @@ TEST(RE2, UTF8) {
 
   // Check that '.' matches one byte or UTF-8 character
   // according to the mode.
-  string s;
+  std::string s;
   RE2 re_test3("(.)", RE2::Latin1);
   ASSERT_TRUE(RE2::PartialMatch(utf8_string, re_test3, &s));
-  ASSERT_EQ(s, string("\xe6"));
+  ASSERT_EQ(s, std::string("\xe6"));
   RE2 re_test4("(.)");
   ASSERT_TRUE(RE2::PartialMatch(utf8_string, re_test4, &s));
-  ASSERT_EQ(s, string("\xe6\x97\xa5"));
+  ASSERT_EQ(s, std::string("\xe6\x97\xa5"));
 
   // Check that string matches itself in either mode
   RE2 re_test5(utf8_string, RE2::Latin1);
@@ -1121,7 +1121,7 @@ TEST(RE2, UngreedyUTF8) {
   {
     // This code always worked.
     const char* pattern = "\\w+X";
-    const string target = "a aX";
+    const std::string target = "a aX";
     RE2 match_sentence(pattern, RE2::Latin1);
     RE2 match_sentence_re(pattern);
 
@@ -1130,7 +1130,7 @@ TEST(RE2, UngreedyUTF8) {
   }
   {
     const char* pattern = "(?U)\\w+X";
-    const string target = "a aX";
+    const std::string target = "a aX";
     RE2 match_sentence(pattern, RE2::Latin1);
     ASSERT_EQ(match_sentence.error(), "");
     RE2 match_sentence_re(pattern);
@@ -1185,7 +1185,7 @@ TEST(RE2, NoCrash) {
   {
     RE2 re(".{512}x", RE2::Quiet);
     ASSERT_TRUE(re.ok());
-    string s;
+    std::string s;
     s.append(515, 'c');
     s.append("x");
     ASSERT_TRUE(RE2::PartialMatch(s, re));
@@ -1210,7 +1210,7 @@ TEST(RE2, BigCountedRepetition) {
 
   RE2 re(".{512}x", opt);
   ASSERT_TRUE(re.ok());
-  string s;
+  std::string s;
   s.append(515, 'c');
   s.append("x");
   ASSERT_TRUE(RE2::PartialMatch(s, re));
@@ -1221,8 +1221,8 @@ TEST(RE2, DeepRecursion) {
   // segmentation violation due to stack overflow before pcre was
   // patched.
   // Again, a PCRE legacy test.  RE2 doesn't recurse.
-  string comment("x*");
-  string a(131072, 'a');
+  std::string comment("x*");
+  std::string a(131072, 'a');
   comment += a;
   comment += "*x";
   RE2 re("((?:\\s|xx.*\n|x[*](?:\n|.)*?[*]x)*)");
@@ -1232,8 +1232,8 @@ TEST(RE2, DeepRecursion) {
 // Suggested by Josh Hyman.  Failed when SearchOnePass was
 // not implementing case-folding.
 TEST(CaseInsensitive, MatchAndConsume) {
-  string result;
-  string text = "A fish named *Wanda*";
+  std::string result;
+  std::string text = "A fish named *Wanda*";
   StringPiece sp(text);
 
   EXPECT_TRUE(RE2::PartialMatch(sp, "(?i)([wand]{5})", &result));
@@ -1243,7 +1243,7 @@ TEST(CaseInsensitive, MatchAndConsume) {
 // RE2 should permit implicit conversions from string, StringPiece, const char*,
 // and C string literals.
 TEST(RE2, ImplicitConversions) {
-  string re_string(".");
+  std::string re_string(".");
   StringPiece re_stringpiece(".");
   const char* re_cstring = ".";
   EXPECT_TRUE(RE2::PartialMatch("e", re_string));
@@ -1255,12 +1255,12 @@ TEST(RE2, ImplicitConversions) {
 // Bugs introduced by 8622304
 TEST(RE2, CL8622304) {
   // reported by ingow
-  string dir;
+  std::string dir;
   EXPECT_TRUE(RE2::FullMatch("D", "([^\\\\])"));  // ok
   EXPECT_TRUE(RE2::FullMatch("D", "([^\\\\])", &dir));  // fails
 
   // reported by jacobsa
-  string key, val;
+  std::string key, val;
   EXPECT_TRUE(RE2::PartialMatch("bar:1,0x2F,030,4,5;baz:true;fooby:false,true",
               "(\\w+)(?::((?:[^;\\\\]|\\\\.)*))?;?",
               &key,
@@ -1364,8 +1364,8 @@ TEST(RE2, BitstateCaptureBug) {
 
 // C++ version of bug 609710.
 TEST(RE2, UnicodeClasses) {
-  const string str = "ABCDEFGHI譚永鋒";
-  string a, b, c;
+  const std::string str = "ABCDEFGHI譚永鋒";
+  std::string a, b, c;
 
   EXPECT_TRUE(RE2::FullMatch("A", "\\p{L}"));
   EXPECT_TRUE(RE2::FullMatch("A", "\\p{Lu}"));
@@ -1490,7 +1490,7 @@ TEST(RE2, NullVsEmptyStringSubmatches) {
 TEST(RE2, Bug1816809) {
   RE2 re("(((((llx((-3)|(4)))(;(llx((-3)|(4))))*))))");
   StringPiece piece("llx-3;llx4");
-  string x;
+  std::string x;
   EXPECT_TRUE(RE2::Consume(&piece, re, &x));
 }
 
@@ -1507,8 +1507,8 @@ TEST(RE2, CapturingGroupNames) {
   //      12    3        45   6         7
   RE2 re("((abc)(?P<G2>)|((e+)(?P<G2>.*)(?P<G1>u+)))");
   EXPECT_TRUE(re.ok());
-  const std::map<int, string>& have = re.CapturingGroupNames();
-  std::map<int, string> want;
+  const std::map<int, std::string>& have = re.CapturingGroupNames();
+  std::map<int, std::string> want;
   want[3] = "G2";
   want[6] = "G2";
   want[7] = "G1";
@@ -1582,7 +1582,7 @@ TEST(RE2, Bug18523943) {
 
   RE2 re((const char*)b, opt);
   ASSERT_TRUE(re.ok());
-  string s1;
+  std::string s1;
   ASSERT_TRUE(RE2::PartialMatch((const char*)a, re, &s1));
 }
 
@@ -1606,7 +1606,7 @@ TEST(RE2, Bug26356109) {
   RE2 re("a\\C*?c|a\\C*?b");
   ASSERT_TRUE(re.ok());
 
-  string s = "abc";
+  std::string s = "abc";
   StringPiece m;
 
   ASSERT_TRUE(re.Match(s, 0, s.size(), RE2::UNANCHORED, &m, 1));
@@ -1620,7 +1620,7 @@ TEST(RE2, Issue104) {
   // RE2::GlobalReplace always advanced by one byte when the empty string was
   // matched, which would clobber any rune that is longer than one byte.
 
-  string s = "bc";
+  std::string s = "bc";
   ASSERT_EQ(3, RE2::GlobalReplace(&s, "a*", "d"));
   ASSERT_EQ("dbdcd", s);
 

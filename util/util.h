@@ -5,10 +5,6 @@
 #ifndef UTIL_UTIL_H_
 #define UTIL_UTIL_H_
 
-// TODO(junyer): Get rid of this.
-#include <string>
-using std::string;
-
 #define arraysize(array) (int)(sizeof(array)/sizeof((array)[0]))
 
 #ifndef ATTRIBUTE_NORETURN
