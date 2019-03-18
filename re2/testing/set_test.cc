@@ -204,7 +204,7 @@ TEST(Set, Prefix) {
 TEST(Set, OutOfMemory) {
   RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
 
-  string a(10000, 'a');
+  std::string a(10000, 'a');
   ASSERT_EQ(s.Add(a, NULL), 0);
   ASSERT_EQ(s.Compile(), true);
 
