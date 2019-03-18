@@ -49,7 +49,7 @@ RE2::ErrorCode FilteredRE2::Add(const StringPiece& pattern,
   return code;
 }
 
-void FilteredRE2::Compile(std::vector<string>* atoms) {
+void FilteredRE2::Compile(std::vector<std::string>* atoms) {
   if (compiled_) {
     LOG(ERROR) << "Compile called already.";
     return;
