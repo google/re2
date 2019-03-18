@@ -33,7 +33,7 @@ static void DoBuild(Prog* prog) {
 
 TEST(Multithreaded, BuildEntireDFA) {
   // Create regexp with 2^FLAGS_size states in DFA.
-  string s = "a";
+  std::string s = "a";
   for (int i = 0; i < FLAGS_size; i++)
     s += "[ab]";
   s += "b";
@@ -116,7 +116,7 @@ TEST(SingleThreaded, BuildEntireDFA) {
 // DeBruijn string causes the DFA to need to create a new state at every
 // position in the input, never reusing any states until it gets to the
 // end of the string.  This is the worst possible case for DFA execution.
-static string DeBruijnString(int n) {
+static std::string DeBruijnString(int n) {
   CHECK_LT(n, static_cast<int>(8*sizeof(int)));
   CHECK_GT(n, 0);
 
@@ -124,7 +124,7 @@ static string DeBruijnString(int n) {
   for (int i = 0; i < 1<<n; i++)
     did[i] = false;
 
-  string s;
+  std::string s;
   for (int i = 0; i < n-1; i++)
     s.append("0");
   int bits = 0;
@@ -180,8 +180,8 @@ TEST(SingleThreaded, SearchDFA) {
 
   // The De Bruijn string for n ends with a 1 followed by n 0s in a row,
   // which is not a match for 0[01]{n}$.  Adding one more 0 is a match.
-  string no_match = DeBruijnString(n);
-  string match = no_match + "0";
+  std::string no_match = DeBruijnString(n);
+  std::string match = no_match + "0";
 
   int64_t usage;
   int64_t peak_usage;
@@ -243,8 +243,8 @@ TEST(Multithreaded, SearchDFA) {
   Regexp* re = Regexp::Parse(StringPrintf("0[01]{%d}$", n),
                              Regexp::LikePerl, NULL);
   ASSERT_TRUE(re != NULL);
-  string no_match = DeBruijnString(n);
-  string match = no_match + "0";
+  std::string no_match = DeBruijnString(n);
+  std::string match = no_match + "0";
 
   // Check that single-threaded code works.
   {
@@ -356,7 +356,7 @@ TEST(DFA, Callback) {
     ASSERT_TRUE(re != NULL);
     Prog* prog = re->CompileToProg(0);
     ASSERT_TRUE(prog != NULL);
-    string dump;
+    std::string dump;
     prog->BuildEntireDFA(Prog::kLongestMatch, [&](const int* next, bool match) {
       ASSERT_TRUE(next != NULL);
       if (!dump.empty())

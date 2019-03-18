@@ -19,7 +19,7 @@ struct FilterTestVars {
   FilterTestVars() {}
   explicit FilterTestVars(int min_atom_len) : f(min_atom_len) {}
 
-  std::vector<string> atoms;
+  std::vector<std::string> atoms;
   std::vector<int> atom_indices;
   std::vector<int> matches;
   RE2::Options opts;
@@ -157,7 +157,7 @@ bool CheckExpectedAtoms(const char* atoms[],
                         int n,
                         const char* testname,
                         struct FilterTestVars* v) {
-  std::vector<string> expected;
+  std::vector<std::string> expected;
   for (int i = 0; i < n; i++)
     expected.push_back(atoms[i]);
 
@@ -200,8 +200,8 @@ TEST(FilteredRE2Test, AtomTests) {
   EXPECT_EQ(0, nfail);
 }
 
-void FindAtomIndices(const std::vector<string>& atoms,
-                     const std::vector<string>& matched_atoms,
+void FindAtomIndices(const std::vector<std::string>& atoms,
+                     const std::vector<std::string>& matched_atoms,
                      std::vector<int>* atom_indices) {
   atom_indices->clear();
   for (size_t i = 0; i < matched_atoms.size(); i++) {
@@ -220,13 +220,13 @@ TEST(FilteredRE2Test, MatchEmptyPattern) {
   // We are using the regexps used in one of the atom tests
   // for this test. Adding the EXPECT here to make sure
   // the index we use for the test is for the correct test.
-  EXPECT_EQ("CheckEmptyPattern", string(t->testname));
+  EXPECT_EQ("CheckEmptyPattern", std::string(t->testname));
   int nregexp;
   for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
     if (t->regexps[nregexp] == NULL)
       break;
   AddRegexpsAndCompile(t->regexps, nregexp, &v);
-  string text = "0123";
+  std::string text = "0123";
   std::vector<int> atom_ids;
   std::vector<int> matching_regexps;
   EXPECT_EQ(0, v.f.FirstMatch(text, atom_ids));
@@ -237,17 +237,17 @@ TEST(FilteredRE2Test, MatchTests) {
   AtomTest* t = &atom_tests[2];
   // We are using the regexps used in one of the atom tests
   // for this test.
-  EXPECT_EQ("SubstrAtomRemovesSuperStrInOr", string(t->testname));
+  EXPECT_EQ("SubstrAtomRemovesSuperStrInOr", std::string(t->testname));
   int nregexp;
   for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
     if (t->regexps[nregexp] == NULL)
       break;
   AddRegexpsAndCompile(t->regexps, nregexp, &v);
 
-  string text = "abc121212xyz";
+  std::string text = "abc121212xyz";
   // atoms = abc
   std::vector<int> atom_ids;
-  std::vector<string> atoms;
+  std::vector<std::string> atoms;
   atoms.push_back("abc");
   FindAtomIndices(v.atoms, atoms, &atom_ids);
   std::vector<int> matching_regexps;

@@ -320,7 +320,7 @@ TEST(Regexp, SearchTests) {
     if (LOGGING) {
       // Build a dummy ExhaustiveTest call that will trigger just
       // this one test, so that we log the test case.
-      std::vector<string> atom, alpha, ops;
+      std::vector<std::string> atom, alpha, ops;
       atom.push_back(t.regexp);
       alpha.push_back(t.text);
       ExhaustiveTest(1, 0, atom, ops, 1, alpha, "", "");
