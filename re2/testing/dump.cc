@@ -57,7 +57,7 @@ static const char* kOpcodeNames[] = {
 
 // Create string representation of regexp with explicit structure.
 // Nothing pretty, just for testing.
-static void DumpRegexpAppending(Regexp* re, string* s) {
+static void DumpRegexpAppending(Regexp* re, std::string* s) {
   if (re->op() < 0 || re->op() >= arraysize(kOpcodeNames)) {
     StringAppendF(s, "op%d", re->op());
   } else {
@@ -136,7 +136,7 @@ static void DumpRegexpAppending(Regexp* re, string* s) {
       DumpRegexpAppending(re->sub()[0], s);
       break;
     case kRegexpCharClass: {
-      string sep;
+      std::string sep;
       for (CharClass::iterator it = re->cc()->begin();
            it != re->cc()->end(); ++it) {
         RuneRange rr = *it;
@@ -153,8 +153,8 @@ static void DumpRegexpAppending(Regexp* re, string* s) {
   s->append("}");
 }
 
-string Regexp::Dump() {
-  string s;
+std::string Regexp::Dump() {
+  std::string s;
 
   // Make sure being called from a unit test.
   if (FLAGS_test_tmpdir.empty()) {

@@ -49,18 +49,18 @@ TEST(RequiredPrefix, SimpleTests) {
       Regexp* re = Regexp::Parse(t.regexp, flags, NULL);
       ASSERT_TRUE(re != NULL) << " " << t.regexp;
 
-      string p;
+      std::string p;
       bool f;
       Regexp* s;
       ASSERT_EQ(t.return_value, re->RequiredPrefix(&p, &f, &s))
         << " " << t.regexp << " " << (j==0 ? "latin1" : "utf")
         << " " << re->Dump();
       if (t.return_value) {
-        ASSERT_EQ(p, string(t.prefix))
+        ASSERT_EQ(p, std::string(t.prefix))
           << " " << t.regexp << " " << (j==0 ? "latin1" : "utf");
         ASSERT_EQ(f, t.foldcase)
           << " " << t.regexp << " " << (j==0 ? "latin1" : "utf");
-        ASSERT_EQ(s->ToString(), string(t.suffix))
+        ASSERT_EQ(s->ToString(), std::string(t.suffix))
           << " " << t.regexp << " " << (j==0 ? "latin1" : "utf");
         s->Decref();
       }

@@ -24,8 +24,8 @@ TEST(EmptyString, Exhaustive) {
 
 // Test escaped versions of regexp syntax.
 TEST(Punctuation, Literals) {
-  std::vector<string> alphabet = Explode("()*+?{}[]\\^$.");
-  std::vector<string> escaped = alphabet;
+  std::vector<std::string> alphabet = Explode("()*+?{}[]\\^$.");
+  std::vector<std::string> escaped = alphabet;
   for (size_t i = 0; i < escaped.size(); i++)
     escaped[i] = "\\" + escaped[i];
   ExhaustiveTest(1, 1, escaped, RegexpGenerator::EgrepOps(),
@@ -63,7 +63,7 @@ TEST(LineEnds, Exhaustive) {
 // provides a mechanism, and RE2 could add new syntax if needed.
 //
 // TEST(Newlines, Exhaustive) {
-//   std::vector<string> empty_vector;
+//   std::vector<std::string> empty_vector;
 //   ExhaustiveTest(1, 1, Split(" ", "\\n . a [^a]"),
 //                  RegexpGenerator::EgrepOps(),
 //                  4, Explode("a\n"), "");
