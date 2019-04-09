@@ -22,25 +22,6 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
   if (!re.ok())
     return;
 
-  // Don't waste time fuzzing high-size programs.
-  // They can cause bug reports due to fuzzer timeouts.
-  int size = re.ProgramSize();
-  if (size > 9999)
-    return;
-  int rsize = re.ReverseProgramSize();
-  if (rsize > 9999)
-    return;
-
-  // Don't waste time fuzzing high-fanout programs.
-  // They can cause bug reports due to fuzzer timeouts.
-  std::map<int, int> histogram;
-  int fanout = re.ProgramFanout(&histogram);
-  if (fanout > 9)
-    return;
-  int rfanout = re.ReverseProgramFanout(&histogram);
-  if (rfanout > 9)
-    return;
-
   // Don't waste time fuzzing programs with large substrings.
   // They can cause bug reports due to fuzzer timeouts when they
   // are repetitions (e.g. hundreds of NUL bytes) and matching is
@@ -62,6 +43,25 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
         nodes.push(sub);
     }
   }
+
+  // Don't waste time fuzzing high-size programs.
+  // They can cause bug reports due to fuzzer timeouts.
+  int size = re.ProgramSize();
+  if (size > 9999)
+    return;
+  int rsize = re.ReverseProgramSize();
+  if (rsize > 9999)
+    return;
+
+  // Don't waste time fuzzing high-fanout programs.
+  // They can cause bug reports due to fuzzer timeouts.
+  std::map<int, int> histogram;
+  int fanout = re.ProgramFanout(&histogram);
+  if (fanout > 9)
+    return;
+  int rfanout = re.ReverseProgramFanout(&histogram);
+  if (rfanout > 9)
+    return;
 
   if (re.NumberOfCapturingGroups() == 0) {
     // Avoid early return due to too many arguments.
