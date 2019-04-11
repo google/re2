@@ -377,7 +377,8 @@ class RE2 {
 
   // Like FullMatch() and PartialMatch(), except that "re" has to match
   // a prefix of the text, and "input" is advanced past the matched
-  // text.  Note: "input" is modified iff this routine returns true.
+  // text.  Note: "input" is modified iff this routine returns true
+  // and "re" matched a non-empty substring of "text".
   template <typename... A>
   static bool Consume(StringPiece* input, const RE2& re, A&&... a) {
     return Apply(ConsumeN, input, re, Arg(std::forward<A>(a))...);
