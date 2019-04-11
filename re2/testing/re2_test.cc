@@ -237,6 +237,18 @@ TEST(RE2, Consume) {
   ASSERT_FALSE(RE2::Consume(&input, r, &word)) << " input: " << input;
 }
 
+TEST(RE2, ConsumeEmptyGroup) {
+  RE2 r("()");
+  std::string capture("overwrite me");
+
+  std::string s("Hello, world!");
+  StringPiece input(s);
+
+  ASSERT_TRUE(RE2::Consume(&input, r, &capture));
+  ASSERT_EQ(capture, "") << " input: " << input;
+  ASSERT_EQ(input, s) << "Consume must not modify input if match is empty.";
+}
+
 TEST(RE2, ConsumeN) {
   const std::string s(" one two three 4");
   StringPiece input(s);
