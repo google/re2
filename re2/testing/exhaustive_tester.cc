@@ -32,7 +32,7 @@ DEFINE_int32(max_bad_regexp_inputs, 1,
 
 namespace re2 {
 
-static char* escape(const StringPiece& sp) {
+static char* escape(absl::string_view sp) {
   static char buf[512];
   char* p = buf;
   *p++ = '\"';
@@ -54,7 +54,8 @@ static char* escape(const StringPiece& sp) {
   return buf;
 }
 
-static void PrintResult(const RE2& re, const StringPiece& input, RE2::Anchor anchor, StringPiece *m, int n) {
+static void PrintResult(const RE2& re, absl::string_view input,
+                        RE2::Anchor anchor, absl::string_view* m, int n) {
   if (!re.Match(input, 0, input.size(), anchor, m, n)) {
     printf("-");
     return;
@@ -103,11 +104,11 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
     longest.set_longest_match(true);
     RE2 relongest(regexp, longest);
     int ngroup = re.NumberOfCapturingGroups()+1;
-    StringPiece* group = new StringPiece[ngroup];
+    absl::string_view* group = new absl::string_view[ngroup];
 
     strgen_.Reset();
     while (strgen_.HasNext()) {
-      StringPiece input = strgen_.Next();
+      absl::string_view input = strgen_.Next();
       PrintResult(re, input, RE2::ANCHOR_BOTH, group, ngroup);
       printf(";");
       PrintResult(re, input, RE2::UNANCHORED, group, ngroup);

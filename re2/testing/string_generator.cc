@@ -81,11 +81,11 @@ bool StringGenerator::RandomDigits() {
 // currently described by digits_.  Calls IncrementDigits
 // after computing the string, so that it knows the answer
 // for subsequent HasNext() calls.
-const StringPiece& StringGenerator::Next() {
+absl::string_view StringGenerator::Next() {
   CHECK(hasnext_);
   if (generate_null_) {
     generate_null_ = false;
-    sp_ = StringPiece();
+    sp_ = absl::string_view();
     return sp_;
   }
   s_.clear();

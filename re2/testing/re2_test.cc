@@ -228,7 +228,7 @@ TEST(RE2, Consume) {
   std::string word;
 
   std::string s("   aaa b!@#$@#$cccc");
-  StringPiece input(s);
+  absl::string_view input(s);
 
   ASSERT_TRUE(RE2::Consume(&input, r, &word));
   ASSERT_EQ(word, "aaa") << " input: " << input;
@@ -239,7 +239,7 @@ TEST(RE2, Consume) {
 
 TEST(RE2, ConsumeN) {
   const std::string s(" one two three 4");
-  StringPiece input(s);
+  absl::string_view input(s);
 
   RE2::Arg argv[2];
   const RE2::Arg* const args[2] = { &argv[0], &argv[1] };
@@ -266,7 +266,7 @@ TEST(RE2, FindAndConsume) {
   std::string word;
 
   std::string s("   aaa b!@#$@#$cccc");
-  StringPiece input(s);
+  absl::string_view input(s);
 
   ASSERT_TRUE(RE2::FindAndConsume(&input, r, &word));
   ASSERT_EQ(word, "aaa");
@@ -286,7 +286,7 @@ TEST(RE2, FindAndConsume) {
 
 TEST(RE2, FindAndConsumeN) {
   const std::string s(" one two three 4");
-  StringPiece input(s);
+  absl::string_view input(s);
 
   RE2::Arg argv[2];
   const RE2::Arg* const args[2] = { &argv[0], &argv[1] };
@@ -335,10 +335,10 @@ TEST(RE2, MatchNumberPeculiarity) {
 
 TEST(RE2, Match) {
   RE2 re("((\\w+):([0-9]+))");   // extracts host and port
-  StringPiece group[4];
+  absl::string_view group[4];
 
   // No match.
-  StringPiece s = "zyzzyva";
+  absl::string_view s = "zyzzyva";
   ASSERT_FALSE(
       re.Match(s, 0, s.size(), RE2::UNANCHORED, group, arraysize(group)));
 
@@ -533,7 +533,7 @@ TEST(EmptyCharset, BitstateAssumptions) {
     "((((()))))" "([^\\S\\s]|[^\\S\\s])?",
     "((((()))))" "(([^\\S\\s]|[^\\S\\s])|)"
   };
-  StringPiece group[6];
+  absl::string_view group[6];
   for (int i = 0; i < arraysize(nop_empties); i++)
     ASSERT_TRUE(RE2(nop_empties[i]).Match("", 0, 0, RE2::UNANCHORED, group, 6));
 }
@@ -663,15 +663,15 @@ TEST(RE2, FullMatchIntegerArg) {
 
 TEST(RE2, FullMatchStringArg) {
   std::string s;
-  // String-arg
+  // string-arg
   ASSERT_TRUE(RE2::FullMatch("hello", "h(.*)o", &s));
   ASSERT_EQ(s, std::string("ell"));
 }
 
-TEST(RE2, FullMatchStringPieceArg) {
+TEST(RE2, FullMatchStringViewArg) {
   int i;
-  // StringPiece-arg
-  StringPiece sp;
+  absl::string_view sp;
+  // string_view-arg
   ASSERT_TRUE(RE2::FullMatch("ruby:1234", "(\\w+):(\\d+)", &sp, &i));
   ASSERT_EQ(sp.size(), 4);
   ASSERT_TRUE(memcmp(sp.data(), "ruby", 4) == 0);
@@ -733,7 +733,7 @@ TEST(RE2, FullMatchTypedNullArg) {
   // Ignore non-void* NULL arg
   ASSERT_TRUE(RE2::FullMatch("hello", "he(.*)lo", (char*)NULL));
   ASSERT_TRUE(RE2::FullMatch("hello", "h(.*)o", (std::string*)NULL));
-  ASSERT_TRUE(RE2::FullMatch("hello", "h(.*)o", (StringPiece*)NULL));
+  ASSERT_TRUE(RE2::FullMatch("hello", "h(.*)o", (absl::string_view*)NULL));
   ASSERT_TRUE(RE2::FullMatch("1234", "(.*)", (int*)NULL));
   ASSERT_TRUE(RE2::FullMatch("1234567890123456", "(.*)", (long long*)NULL));
   ASSERT_TRUE(RE2::FullMatch("123.4567890123456", "(.*)", (double*)NULL));
@@ -768,7 +768,8 @@ TEST(RE2, NULTerminated) {
   v[pagesize - 1] = '1';
 
   x = 0;
-  ASSERT_TRUE(RE2::FullMatch(StringPiece(v + pagesize - 1, 1), "(.*)", &x));
+  ASSERT_TRUE(
+      RE2::FullMatch(absl::string_view(v + pagesize - 1, 1), "(.*)", &x));
   ASSERT_EQ(x, 1);
 #endif
 }
@@ -1234,21 +1235,21 @@ TEST(RE2, DeepRecursion) {
 TEST(CaseInsensitive, MatchAndConsume) {
   std::string result;
   std::string text = "A fish named *Wanda*";
-  StringPiece sp(text);
+  absl::string_view sp(text);
 
   EXPECT_TRUE(RE2::PartialMatch(sp, "(?i)([wand]{5})", &result));
   EXPECT_TRUE(RE2::FindAndConsume(&sp, "(?i)([wand]{5})", &result));
 }
 
-// RE2 should permit implicit conversions from string, StringPiece, const char*,
+// RE2 should permit implicit conversions from string, string_view, const char*,
 // and C string literals.
 TEST(RE2, ImplicitConversions) {
   std::string re_string(".");
-  StringPiece re_stringpiece(".");
-  const char* re_cstring = ".";
+  absl::string_view re_string_view(".");
+  const char* re_c_string = ".";
   EXPECT_TRUE(RE2::PartialMatch("e", re_string));
-  EXPECT_TRUE(RE2::PartialMatch("e", re_stringpiece));
-  EXPECT_TRUE(RE2::PartialMatch("e", re_cstring));
+  EXPECT_TRUE(RE2::PartialMatch("e", re_string_view));
+  EXPECT_TRUE(RE2::PartialMatch("e", re_c_string));
   EXPECT_TRUE(RE2::PartialMatch("e", "."));
 }
 
@@ -1325,7 +1326,7 @@ TEST(RE2, NeverNewline) {
     if (t.match == NULL) {
       EXPECT_FALSE(re.PartialMatch(t.text, re));
     } else {
-      StringPiece m;
+      absl::string_view m;
       EXPECT_TRUE(re.PartialMatch(t.text, re, &m));
       EXPECT_EQ(m, t.match);
     }
@@ -1358,7 +1359,7 @@ TEST(RE2, BitstateCaptureBug) {
   RE2::Options opt;
   opt.set_max_mem(20000);
   RE2 re("(_________$)", opt);
-  StringPiece s = "xxxxxxxxxxxxxxxxxxxxxxxxxx_________x";
+  absl::string_view s = "xxxxxxxxxxxxxxxxxxxxxxxxxx_________x";
   EXPECT_FALSE(re.Match(s, 0, s.size(), RE2::UNANCHORED, NULL, 0));
 }
 
@@ -1437,10 +1438,10 @@ TEST(RE2, NullVsEmptyString) {
   RE2 re(".*");
   EXPECT_TRUE(re.ok());
 
-  StringPiece null;
+  absl::string_view null;
   EXPECT_TRUE(RE2::FullMatch(null, re));
 
-  StringPiece empty("");
+  absl::string_view empty("");
   EXPECT_TRUE(RE2::FullMatch(empty, re));
 }
 
@@ -1452,16 +1453,16 @@ TEST(RE2, NullVsEmptyStringSubmatches) {
   EXPECT_TRUE(re.ok());
 
   // matches[0] is overall match, [1] is (), [2] is (foo), [3] is nonexistent.
-  StringPiece matches[4];
+  absl::string_view matches[4];
 
   for (int i = 0; i < arraysize(matches); i++)
     matches[i] = "bar";
 
-  StringPiece null;
+  absl::string_view null;
   EXPECT_TRUE(re.Match(null, 0, null.size(), RE2::UNANCHORED,
                        matches, arraysize(matches)));
   for (int i = 0; i < arraysize(matches); i++) {
-    EXPECT_TRUE(matches[i] == StringPiece());
+    EXPECT_TRUE(matches[i] == absl::string_view());
     EXPECT_TRUE(matches[i].data() == NULL);  // always null
     EXPECT_TRUE(matches[i] == "");
   }
@@ -1469,19 +1470,19 @@ TEST(RE2, NullVsEmptyStringSubmatches) {
   for (int i = 0; i < arraysize(matches); i++)
     matches[i] = "bar";
 
-  StringPiece empty("");
+  absl::string_view empty("");
   EXPECT_TRUE(re.Match(empty, 0, empty.size(), RE2::UNANCHORED,
                        matches, arraysize(matches)));
-  EXPECT_TRUE(matches[0] == StringPiece());
+  EXPECT_TRUE(matches[0] == absl::string_view());
   EXPECT_TRUE(matches[0].data() != NULL);  // empty, not null
   EXPECT_TRUE(matches[0] == "");
-  EXPECT_TRUE(matches[1] == StringPiece());
+  EXPECT_TRUE(matches[1] == absl::string_view());
   EXPECT_TRUE(matches[1].data() != NULL);  // empty, not null
   EXPECT_TRUE(matches[1] == "");
-  EXPECT_TRUE(matches[2] == StringPiece());
+  EXPECT_TRUE(matches[2] == absl::string_view());
   EXPECT_TRUE(matches[2].data() == NULL);
   EXPECT_TRUE(matches[2] == "");
-  EXPECT_TRUE(matches[3] == StringPiece());
+  EXPECT_TRUE(matches[3] == absl::string_view());
   EXPECT_TRUE(matches[3].data() == NULL);
   EXPECT_TRUE(matches[3] == "");
 }
@@ -1489,7 +1490,7 @@ TEST(RE2, NullVsEmptyStringSubmatches) {
 // Issue 1816809
 TEST(RE2, Bug1816809) {
   RE2 re("(((((llx((-3)|(4)))(;(llx((-3)|(4))))*))))");
-  StringPiece piece("llx-3;llx4");
+  absl::string_view piece("llx-3;llx4");
   std::string x;
   EXPECT_TRUE(RE2::Consume(&piece, re, &x));
 }
@@ -1607,7 +1608,7 @@ TEST(RE2, Bug26356109) {
   ASSERT_TRUE(re.ok());
 
   std::string s = "abc";
-  StringPiece m;
+  absl::string_view m;
 
   ASSERT_TRUE(re.Match(s, 0, s.size(), RE2::UNANCHORED, &m, 1));
   ASSERT_EQ(m, s) << " (UNANCHORED) got m='" << m << "', want '" << s << "'";

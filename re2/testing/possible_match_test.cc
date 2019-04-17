@@ -218,7 +218,7 @@ void PossibleMatchTester::HandleRegexp(const std::string& regexp) {
 
   strgen_.Reset();
   while (strgen_.HasNext()) {
-    const StringPiece& s = strgen_.Next();
+    absl::string_view s = strgen_.Next();
     tests_++;
     if (!RE2::FullMatch(s, re))
       continue;

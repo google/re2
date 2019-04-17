@@ -90,15 +90,15 @@ struct TestInstance::Result {
   bool untrusted;       // don't really trust the answer
   bool have_submatch;   // computed all submatch info
   bool have_submatch0;  // computed just submatch[0]
-  StringPiece submatch[kMaxSubmatch];
+  absl::string_view submatch[kMaxSubmatch];
 };
 
 typedef TestInstance::Result Result;
 
 // Formats a single capture range s in text in the form (a,b)
 // where a and b are the starting and ending offsets of s in text.
-static std::string FormatCapture(const StringPiece& text,
-                                 const StringPiece& s) {
+static std::string FormatCapture(absl::string_view text,
+                                 absl::string_view s) {
   if (s.begin() == NULL)
     return "(?,?)";
   return StringPrintf("(%td,%td)",
@@ -106,7 +106,7 @@ static std::string FormatCapture(const StringPiece& text,
 }
 
 // Returns whether text contains non-ASCII (>= 0x80) bytes.
-static bool NonASCII(const StringPiece& text) {
+static bool NonASCII(absl::string_view text) {
   for (size_t i = 0; i < text.size(); i++)
     if ((uint8_t)text[i] >= 0x80)
       return true;
@@ -166,7 +166,7 @@ static std::string FormatMode(Regexp::ParseFlags flags) {
 
 // Constructs and saves all the matching engines that
 // will be required for the given tests.
-TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
+TestInstance::TestInstance(absl::string_view regexp_str, Prog::MatchKind kind,
                            Regexp::ParseFlags flags)
   : regexp_str_(regexp_str),
     kind_(kind),
@@ -285,11 +285,9 @@ TestInstance::~TestInstance() {
 // Runs a single search using the named engine type.
 // This interface hides all the irregularities of the various
 // engine interfaces from the rest of this file.
-void TestInstance::RunSearch(Engine type,
-                             const StringPiece& orig_text,
-                             const StringPiece& orig_context,
-                             Prog::Anchor anchor,
-                             Result* result) {
+void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
+                             absl::string_view orig_context,
+                             Prog::Anchor anchor, Result* result) {
   // Result is not trivial, so we cannot freely clear it with memset(3),
   // but zeroing objects like so is safe and expedient for our purposes.
   memset(reinterpret_cast<void*>(result), 0, sizeof *result);
@@ -301,8 +299,8 @@ void TestInstance::RunSearch(Engine type,
   if (nsubmatch > kMaxSubmatch)
     nsubmatch = kMaxSubmatch;
 
-  StringPiece text = orig_text;
-  StringPiece context = orig_context;
+  absl::string_view text = orig_text;
+  absl::string_view context = orig_context;
 
   switch (type) {
     default:
@@ -425,19 +423,19 @@ void TestInstance::RunSearch(Engine type,
       // whitespace, not just vertical tab. Regexp::MimicsPCRE() is
       // unable to handle all cases of this, unfortunately, so just
       // catch them here. :(
-      if (regexp_str_.find("\\v") != StringPiece::npos &&
-          (text.find('\n') != StringPiece::npos ||
-           text.find('\f') != StringPiece::npos ||
-           text.find('\r') != StringPiece::npos)) {
+      if (regexp_str_.find("\\v") != absl::string_view::npos &&
+          (text.find('\n') != absl::string_view::npos ||
+           text.find('\f') != absl::string_view::npos ||
+           text.find('\r') != absl::string_view::npos)) {
         result->skipped = true;
         break;
       }
 
       // PCRE 8.34 or so started allowing vertical tab to match \s,
       // following a change made in Perl 5.18. RE2 does not.
-      if ((regexp_str_.find("\\s") != StringPiece::npos ||
-           regexp_str_.find("\\S") != StringPiece::npos) &&
-          text.find('\v') != StringPiece::npos) {
+      if ((regexp_str_.find("\\s") != absl::string_view::npos ||
+           regexp_str_.find("\\S") != absl::string_view::npos) &&
+          text.find('\v') != absl::string_view::npos) {
         result->skipped = true;
         break;
       }
@@ -500,7 +498,7 @@ static bool ResultOkay(const Result& r, const Result& correct) {
 }
 
 // Runs a single test.
-bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
+bool TestInstance::RunCase(absl::string_view text, absl::string_view context,
                            Prog::Anchor anchor) {
   // Backtracking is the gold standard.
   Result correct;
@@ -579,7 +577,7 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
 }
 
 void TestInstance::LogMatch(const char* prefix, Engine e,
-                            const StringPiece& text, const StringPiece& context,
+                            absl::string_view text, absl::string_view context,
                             Prog::Anchor anchor) {
   LOG(INFO) << prefix
     << EngineName(e)
@@ -608,7 +606,7 @@ static Prog::MatchKind kinds[] = {
 };
 
 // Test all possible match kinds and parse modes.
-Tester::Tester(const StringPiece& regexp) {
+Tester::Tester(absl::string_view regexp) {
   error_ = false;
   for (int i = 0; i < arraysize(kinds); i++) {
     for (int j = 0; j < arraysize(parse_modes); j++) {
@@ -625,8 +623,8 @@ Tester::~Tester() {
     delete v_[i];
 }
 
-bool Tester::TestCase(const StringPiece& text, const StringPiece& context,
-                         Prog::Anchor anchor) {
+bool Tester::TestCase(absl::string_view text, absl::string_view context,
+                      Prog::Anchor anchor) {
   bool okay = true;
   for (size_t i = 0; i < v_.size(); i++)
     okay &= (!v_[i]->error() && v_[i]->RunCase(text, context, anchor));
@@ -638,10 +636,10 @@ static Prog::Anchor anchors[] = {
   Prog::kUnanchored
 };
 
-bool Tester::TestInput(const StringPiece& text) {
+bool Tester::TestInput(absl::string_view text) {
   bool okay = TestInputInContext(text, text);
   if (text.size() > 0) {
-    StringPiece sp;
+    absl::string_view sp;
     sp = text;
     sp.remove_prefix(1);
     okay &= TestInputInContext(sp, text);
@@ -652,16 +650,16 @@ bool Tester::TestInput(const StringPiece& text) {
   return okay;
 }
 
-bool Tester::TestInputInContext(const StringPiece& text,
-                                const StringPiece& context) {
+bool Tester::TestInputInContext(absl::string_view text,
+                                absl::string_view context) {
   bool okay = true;
   for (int i = 0; i < arraysize(anchors); i++)
     okay &= TestCase(text, context, anchors[i]);
   return okay;
 }
 
-bool TestRegexpOnText(const StringPiece& regexp,
-                      const StringPiece& text) {
+bool TestRegexpOnText(absl::string_view regexp,
+                      absl::string_view text) {
   Tester t(regexp);
   return t.TestInput(text);
 }

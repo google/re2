@@ -36,7 +36,7 @@ void Test() {
   CHECK(prog->IsOnePass());
   CHECK(prog->CanBitState());
   const char* text = "650-253-0001";
-  StringPiece sp[4];
+  absl::string_view sp[4];
   CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
   CHECK_EQ(sp[0], "650-253-0001");
   CHECK_EQ(sp[1], "650");
@@ -66,7 +66,7 @@ void MemoryUsage() {
     fprintf(stderr, "Prog:   %7lld bytes (peak=%lld)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
     mc.Reset();
 
-    StringPiece sp[4];
+    absl::string_view sp[4];
     CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
     fprintf(stderr, "Search: %7lld bytes (peak=%lld)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
     delete prog;
@@ -109,7 +109,7 @@ void MemoryUsage() {
 // Defined at bottom of file, but they are repetitive
 // and not interesting.
 
-typedef void SearchImpl(int iters, const char* regexp, const StringPiece& text,
+typedef void SearchImpl(int iters, const char* regexp, absl::string_view text,
              Prog::Anchor anchor, bool expect_match);
 
 SearchImpl SearchDFA, SearchNFA, SearchOnePass, SearchBitState,
@@ -117,7 +117,7 @@ SearchImpl SearchDFA, SearchNFA, SearchOnePass, SearchBitState,
            SearchCachedDFA, SearchCachedNFA, SearchCachedOnePass, SearchCachedBitState,
            SearchCachedPCRE, SearchCachedRE2;
 
-typedef void ParseImpl(int iters, const char* regexp, const StringPiece& text);
+typedef void ParseImpl(int iters, const char* regexp, absl::string_view text);
 
 ParseImpl Parse1NFA, Parse1OnePass, Parse1BitState,
           Parse1PCRE, Parse1RE2,
@@ -297,8 +297,8 @@ void FindAndConsume(int iters, int nbytes) {
   StartBenchmarkTiming();
   RE2 re("((Hello World))");
   for (int i = 0; i < iters; i++) {
-    StringPiece t = s;
-    StringPiece u;
+    absl::string_view t = s;
+    absl::string_view u;
     CHECK(RE2::FindAndConsume(&t, re, &u));
     CHECK_EQ(u, "Hello World");
   }
@@ -428,7 +428,7 @@ BENCHMARK_RANGE(Search_AltMatch_CachedRE2,      8, 16<<20)->ThreadRange(1, NumCP
 // Benchmark: use regexp to find phone number.
 
 void SearchDigits(int iters, SearchImpl* search) {
-  StringPiece s("650-253-0001");
+  absl::string_view s("650-253-0001");
   BenchmarkMemoryUsage();
   search(iters, "([0-9]+)-([0-9]+)-([0-9]+)", s, Prog::kAnchored, true);
   SetBenchmarkItemsProcessed(iters);
@@ -453,7 +453,7 @@ BENCHMARK(Search_Digits_BitState)->ThreadRange(1, NumCPUs());
 // Benchmark: use regexp to parse digit fields in phone number.
 
 void Parse3Digits(int iters,
-               void (*parse3)(int, const char*, const StringPiece&)) {
+               void (*parse3)(int, const char*, absl::string_view)) {
   BenchmarkMemoryUsage();
   parse3(iters, "([0-9]+)-([0-9]+)-([0-9]+)", "650-253-0001");
   SetBenchmarkItemsProcessed(iters);
@@ -492,7 +492,7 @@ BENCHMARK(Parse_CachedDigits_RE2)->ThreadRange(1, NumCPUs());
 BENCHMARK(Parse_CachedDigits_BitState)->ThreadRange(1, NumCPUs());
 
 void Parse3DigitDs(int iters,
-               void (*parse3)(int, const char*, const StringPiece&)) {
+               void (*parse3)(int, const char*, absl::string_view)) {
   BenchmarkMemoryUsage();
   parse3(iters, "(\\d+)-(\\d+)-(\\d+)", "650-253-0001");
   SetBenchmarkItemsProcessed(iters);
@@ -533,7 +533,7 @@ BENCHMARK(Parse_CachedDigitDs_BitState)->ThreadRange(1, NumCPUs());
 // Benchmark: splitting off leading number field.
 
 void Parse1Split(int iters,
-              void (*parse1)(int, const char*, const StringPiece&)) {
+              void (*parse1)(int, const char*, absl::string_view)) {
   BenchmarkMemoryUsage();
   parse1(iters, "[0-9]+-(.*)", "650-253-0001");
   SetBenchmarkItemsProcessed(iters);
@@ -570,7 +570,7 @@ BENCHMARK(Parse_CachedSplit_BitState)->ThreadRange(1, NumCPUs());
 // Benchmark: splitting off leading number field but harder (ambiguous regexp).
 
 void Parse1SplitHard(int iters,
-                  void (*run)(int, const char*, const StringPiece&)) {
+                  void (*run)(int, const char*, absl::string_view)) {
   BenchmarkMemoryUsage();
   run(iters, "[0-9]+.(.*)", "650-253-0001");
   SetBenchmarkItemsProcessed(iters);
@@ -605,7 +605,7 @@ BENCHMARK(Parse_CachedSplitHard_Backtrack)->ThreadRange(1, NumCPUs());
 // Benchmark: Parse1SplitHard, big text, small match.
 
 void Parse1SplitBig1(int iters,
-                  void (*run)(int, const char*, const StringPiece&)) {
+                  void (*run)(int, const char*, absl::string_view)) {
   std::string s;
   s.append(100000, 'x');
   s.append("650-253-0001");
@@ -625,7 +625,7 @@ BENCHMARK(Parse_CachedSplitBig1_RE2)->ThreadRange(1, NumCPUs());
 // Benchmark: Parse1SplitHard, big text, big match.
 
 void Parse1SplitBig2(int iters,
-                  void (*run)(int, const char*, const StringPiece&)) {
+                  void (*run)(int, const char*, absl::string_view)) {
   std::string s;
   s.append("650-253-");
   s.append(100000, '0');
@@ -881,7 +881,7 @@ DO24(MY_BENCHMARK_WITH_ARG, CacheFillDFA)
 // Expect_match says whether the regexp should be found.
 // Anchored says whether to run an anchored search.
 
-void SearchDFA(int iters, const char* regexp, const StringPiece& text,
+void SearchDFA(int iters, const char* regexp, absl::string_view text,
             Prog::Anchor anchor, bool expect_match) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
@@ -889,8 +889,8 @@ void SearchDFA(int iters, const char* regexp, const StringPiece& text,
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     bool failed = false;
-    CHECK_EQ(prog->SearchDFA(text, StringPiece(), anchor, Prog::kFirstMatch,
-                             NULL, &failed, NULL),
+    CHECK_EQ(prog->SearchDFA(text, absl::string_view(), anchor,
+                             Prog::kFirstMatch, NULL, &failed, NULL),
              expect_match);
     CHECK(!failed);
     delete prog;
@@ -898,22 +898,22 @@ void SearchDFA(int iters, const char* regexp, const StringPiece& text,
   }
 }
 
-void SearchNFA(int iters, const char* regexp, const StringPiece& text,
+void SearchNFA(int iters, const char* regexp, absl::string_view text,
             Prog::Anchor anchor, bool expect_match) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
-    CHECK_EQ(prog->SearchNFA(text, StringPiece(), anchor, Prog::kFirstMatch,
-                             NULL, 0),
+    CHECK_EQ(prog->SearchNFA(text, absl::string_view(), anchor,
+                             Prog::kFirstMatch, NULL, 0),
              expect_match);
     delete prog;
     re->Decref();
   }
 }
 
-void SearchOnePass(int iters, const char* regexp, const StringPiece& text,
+void SearchOnePass(int iters, const char* regexp, absl::string_view text,
             Prog::Anchor anchor, bool expect_match) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
@@ -928,7 +928,7 @@ void SearchOnePass(int iters, const char* regexp, const StringPiece& text,
   }
 }
 
-void SearchBitState(int iters, const char* regexp, const StringPiece& text,
+void SearchBitState(int iters, const char* regexp, absl::string_view text,
             Prog::Anchor anchor, bool expect_match) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
@@ -943,7 +943,7 @@ void SearchBitState(int iters, const char* regexp, const StringPiece& text,
   }
 }
 
-void SearchPCRE(int iters, const char* regexp, const StringPiece& text,
+void SearchPCRE(int iters, const char* regexp, absl::string_view text,
                 Prog::Anchor anchor, bool expect_match) {
   for (int i = 0; i < iters; i++) {
     PCRE re(regexp, PCRE::UTF8);
@@ -955,7 +955,7 @@ void SearchPCRE(int iters, const char* regexp, const StringPiece& text,
   }
 }
 
-void SearchRE2(int iters, const char* regexp, const StringPiece& text,
+void SearchRE2(int iters, const char* regexp, absl::string_view text,
                Prog::Anchor anchor, bool expect_match) {
   for (int i = 0; i < iters; i++) {
     RE2 re(regexp);
@@ -971,7 +971,7 @@ void SearchRE2(int iters, const char* regexp, const StringPiece& text,
 // regexp parsing and compiling once.  This lets us measure
 // search time without the per-regexp overhead.
 
-void SearchCachedDFA(int iters, const char* regexp, const StringPiece& text,
+void SearchCachedDFA(int iters, const char* regexp, absl::string_view text,
                      Prog::Anchor anchor, bool expect_match) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
@@ -979,8 +979,8 @@ void SearchCachedDFA(int iters, const char* regexp, const StringPiece& text,
   CHECK(prog);
   for (int i = 0; i < iters; i++) {
     bool failed = false;
-    CHECK_EQ(prog->SearchDFA(text, StringPiece(), anchor, Prog::kFirstMatch,
-                             NULL, &failed, NULL),
+    CHECK_EQ(prog->SearchDFA(text, absl::string_view(), anchor,
+                             Prog::kFirstMatch, NULL, &failed, NULL),
              expect_match);
     CHECK(!failed);
   }
@@ -988,22 +988,22 @@ void SearchCachedDFA(int iters, const char* regexp, const StringPiece& text,
   re->Decref();
 }
 
-void SearchCachedNFA(int iters, const char* regexp, const StringPiece& text,
+void SearchCachedNFA(int iters, const char* regexp, absl::string_view text,
                      Prog::Anchor anchor, bool expect_match) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   for (int i = 0; i < iters; i++) {
-    CHECK_EQ(prog->SearchNFA(text, StringPiece(), anchor, Prog::kFirstMatch,
-                             NULL, 0),
+    CHECK_EQ(prog->SearchNFA(text, absl::string_view(), anchor,
+                             Prog::kFirstMatch, NULL, 0),
              expect_match);
   }
   delete prog;
   re->Decref();
 }
 
-void SearchCachedOnePass(int iters, const char* regexp, const StringPiece& text,
+void SearchCachedOnePass(int iters, const char* regexp, absl::string_view text,
                      Prog::Anchor anchor, bool expect_match) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
@@ -1017,7 +1017,7 @@ void SearchCachedOnePass(int iters, const char* regexp, const StringPiece& text,
   re->Decref();
 }
 
-void SearchCachedBitState(int iters, const char* regexp, const StringPiece& text,
+void SearchCachedBitState(int iters, const char* regexp, absl::string_view text,
                      Prog::Anchor anchor, bool expect_match) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
@@ -1031,7 +1031,7 @@ void SearchCachedBitState(int iters, const char* regexp, const StringPiece& text
   re->Decref();
 }
 
-void SearchCachedPCRE(int iters, const char* regexp, const StringPiece& text,
+void SearchCachedPCRE(int iters, const char* regexp, absl::string_view text,
                      Prog::Anchor anchor, bool expect_match) {
   PCRE re(regexp, PCRE::UTF8);
   CHECK_EQ(re.error(), "");
@@ -1043,7 +1043,7 @@ void SearchCachedPCRE(int iters, const char* regexp, const StringPiece& text,
   }
 }
 
-void SearchCachedRE2(int iters, const char* regexp, const StringPiece& text,
+void SearchCachedRE2(int iters, const char* regexp, absl::string_view text,
                      Prog::Anchor anchor, bool expect_match) {
   RE2 re(regexp);
   CHECK_EQ(re.error(), "");
@@ -1059,144 +1059,144 @@ void SearchCachedRE2(int iters, const char* regexp, const StringPiece& text,
 // Runs implementation to full match regexp against text,
 // extracting three submatches.  Expects match always.
 
-void Parse3NFA(int iters, const char* regexp, const StringPiece& text) {
+void Parse3NFA(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
-    StringPiece sp[4];  // 4 because sp[0] is whole match.
-    CHECK(prog->SearchNFA(text, StringPiece(), Prog::kAnchored,
+    absl::string_view sp[4];  // 4 because sp[0] is whole match.
+    CHECK(prog->SearchNFA(text, absl::string_view(), Prog::kAnchored,
                           Prog::kFullMatch, sp, 4));
     delete prog;
     re->Decref();
   }
 }
 
-void Parse3OnePass(int iters, const char* regexp, const StringPiece& text) {
+void Parse3OnePass(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     CHECK(prog->IsOnePass());
-    StringPiece sp[4];  // 4 because sp[0] is whole match.
+    absl::string_view sp[4];  // 4 because sp[0] is whole match.
     CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
     delete prog;
     re->Decref();
   }
 }
 
-void Parse3BitState(int iters, const char* regexp, const StringPiece& text) {
+void Parse3BitState(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     CHECK(prog->CanBitState());
-    StringPiece sp[4];  // 4 because sp[0] is whole match.
+    absl::string_view sp[4];  // 4 because sp[0] is whole match.
     CHECK(prog->SearchBitState(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
     delete prog;
     re->Decref();
   }
 }
 
-void Parse3Backtrack(int iters, const char* regexp, const StringPiece& text) {
+void Parse3Backtrack(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
-    StringPiece sp[4];  // 4 because sp[0] is whole match.
+    absl::string_view sp[4];  // 4 because sp[0] is whole match.
     CHECK(prog->UnsafeSearchBacktrack(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
     delete prog;
     re->Decref();
   }
 }
 
-void Parse3PCRE(int iters, const char* regexp, const StringPiece& text) {
+void Parse3PCRE(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     PCRE re(regexp, PCRE::UTF8);
     CHECK_EQ(re.error(), "");
-    StringPiece sp1, sp2, sp3;
+    absl::string_view sp1, sp2, sp3;
     CHECK(PCRE::FullMatch(text, re, &sp1, &sp2, &sp3));
   }
 }
 
-void Parse3RE2(int iters, const char* regexp, const StringPiece& text) {
+void Parse3RE2(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     RE2 re(regexp);
     CHECK_EQ(re.error(), "");
-    StringPiece sp1, sp2, sp3;
+    absl::string_view sp1, sp2, sp3;
     CHECK(RE2::FullMatch(text, re, &sp1, &sp2, &sp3));
   }
 }
 
-void Parse3CachedNFA(int iters, const char* regexp, const StringPiece& text) {
+void Parse3CachedNFA(int iters, const char* regexp, absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
-  StringPiece sp[4];  // 4 because sp[0] is whole match.
+  absl::string_view sp[4];  // 4 because sp[0] is whole match.
   for (int i = 0; i < iters; i++) {
-    CHECK(prog->SearchNFA(text, StringPiece(), Prog::kAnchored,
+    CHECK(prog->SearchNFA(text, absl::string_view(), Prog::kAnchored,
                           Prog::kFullMatch, sp, 4));
   }
   delete prog;
   re->Decref();
 }
 
-void Parse3CachedOnePass(int iters, const char* regexp, const StringPiece& text) {
+void Parse3CachedOnePass(int iters, const char* regexp, absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   CHECK(prog->IsOnePass());
-  StringPiece sp[4];  // 4 because sp[0] is whole match.
+  absl::string_view sp[4];  // 4 because sp[0] is whole match.
   for (int i = 0; i < iters; i++)
     CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
   delete prog;
   re->Decref();
 }
 
-void Parse3CachedBitState(int iters, const char* regexp, const StringPiece& text) {
+void Parse3CachedBitState(int iters, const char* regexp, absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   CHECK(prog->CanBitState());
-  StringPiece sp[4];  // 4 because sp[0] is whole match.
+  absl::string_view sp[4];  // 4 because sp[0] is whole match.
   for (int i = 0; i < iters; i++)
     CHECK(prog->SearchBitState(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
   delete prog;
   re->Decref();
 }
 
-void Parse3CachedBacktrack(int iters, const char* regexp, const StringPiece& text) {
+void Parse3CachedBacktrack(int iters, const char* regexp, absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
-  StringPiece sp[4];  // 4 because sp[0] is whole match.
+  absl::string_view sp[4];  // 4 because sp[0] is whole match.
   for (int i = 0; i < iters; i++)
     CHECK(prog->UnsafeSearchBacktrack(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
   delete prog;
   re->Decref();
 }
 
-void Parse3CachedPCRE(int iters, const char* regexp, const StringPiece& text) {
+void Parse3CachedPCRE(int iters, const char* regexp, absl::string_view text) {
   PCRE re(regexp, PCRE::UTF8);
   CHECK_EQ(re.error(), "");
-  StringPiece sp1, sp2, sp3;
+  absl::string_view sp1, sp2, sp3;
   for (int i = 0; i < iters; i++) {
     CHECK(PCRE::FullMatch(text, re, &sp1, &sp2, &sp3));
   }
 }
 
-void Parse3CachedRE2(int iters, const char* regexp, const StringPiece& text) {
+void Parse3CachedRE2(int iters, const char* regexp, absl::string_view text) {
   RE2 re(regexp);
   CHECK_EQ(re.error(), "");
-  StringPiece sp1, sp2, sp3;
+  absl::string_view sp1, sp2, sp3;
   for (int i = 0; i < iters; i++) {
     CHECK(RE2::FullMatch(text, re, &sp1, &sp2, &sp3));
   }
@@ -1206,172 +1206,172 @@ void Parse3CachedRE2(int iters, const char* regexp, const StringPiece& text) {
 // Runs implementation to full match regexp against text,
 // extracting three submatches.  Expects match always.
 
-void Parse1NFA(int iters, const char* regexp, const StringPiece& text) {
+void Parse1NFA(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
-    StringPiece sp[2];  // 2 because sp[0] is whole match.
-    CHECK(prog->SearchNFA(text, StringPiece(), Prog::kAnchored,
+    absl::string_view sp[2];  // 2 because sp[0] is whole match.
+    CHECK(prog->SearchNFA(text, absl::string_view(), Prog::kAnchored,
                           Prog::kFullMatch, sp, 2));
     delete prog;
     re->Decref();
   }
 }
 
-void Parse1OnePass(int iters, const char* regexp, const StringPiece& text) {
+void Parse1OnePass(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     CHECK(prog->IsOnePass());
-    StringPiece sp[2];  // 2 because sp[0] is whole match.
+    absl::string_view sp[2];  // 2 because sp[0] is whole match.
     CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 2));
     delete prog;
     re->Decref();
   }
 }
 
-void Parse1BitState(int iters, const char* regexp, const StringPiece& text) {
+void Parse1BitState(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     CHECK(prog->CanBitState());
-    StringPiece sp[2];  // 2 because sp[0] is whole match.
+    absl::string_view sp[2];  // 2 because sp[0] is whole match.
     CHECK(prog->SearchBitState(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 2));
     delete prog;
     re->Decref();
   }
 }
 
-void Parse1PCRE(int iters, const char* regexp, const StringPiece& text) {
+void Parse1PCRE(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     PCRE re(regexp, PCRE::UTF8);
     CHECK_EQ(re.error(), "");
-    StringPiece sp1;
+    absl::string_view sp1;
     CHECK(PCRE::FullMatch(text, re, &sp1));
   }
 }
 
-void Parse1RE2(int iters, const char* regexp, const StringPiece& text) {
+void Parse1RE2(int iters, const char* regexp, absl::string_view text) {
   for (int i = 0; i < iters; i++) {
     RE2 re(regexp);
     CHECK_EQ(re.error(), "");
-    StringPiece sp1;
+    absl::string_view sp1;
     CHECK(RE2::FullMatch(text, re, &sp1));
   }
 }
 
-void Parse1CachedNFA(int iters, const char* regexp, const StringPiece& text) {
+void Parse1CachedNFA(int iters, const char* regexp, absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
-  StringPiece sp[2];  // 2 because sp[0] is whole match.
+  absl::string_view sp[2];  // 2 because sp[0] is whole match.
   for (int i = 0; i < iters; i++) {
-    CHECK(prog->SearchNFA(text, StringPiece(), Prog::kAnchored,
+    CHECK(prog->SearchNFA(text, absl::string_view(), Prog::kAnchored,
                           Prog::kFullMatch, sp, 2));
   }
   delete prog;
   re->Decref();
 }
 
-void Parse1CachedOnePass(int iters, const char* regexp, const StringPiece& text) {
+void Parse1CachedOnePass(int iters, const char* regexp, absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   CHECK(prog->IsOnePass());
-  StringPiece sp[2];  // 2 because sp[0] is whole match.
+  absl::string_view sp[2];  // 2 because sp[0] is whole match.
   for (int i = 0; i < iters; i++)
     CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 2));
   delete prog;
   re->Decref();
 }
 
-void Parse1CachedBitState(int iters, const char* regexp, const StringPiece& text) {
+void Parse1CachedBitState(int iters, const char* regexp, absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   CHECK(prog->CanBitState());
-  StringPiece sp[2];  // 2 because sp[0] is whole match.
+  absl::string_view sp[2];  // 2 because sp[0] is whole match.
   for (int i = 0; i < iters; i++)
     CHECK(prog->SearchBitState(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 2));
   delete prog;
   re->Decref();
 }
 
-void Parse1CachedBacktrack(int iters, const char* regexp, const StringPiece& text) {
+void Parse1CachedBacktrack(int iters, const char* regexp, absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
-  StringPiece sp[2];  // 2 because sp[0] is whole match.
+  absl::string_view sp[2];  // 2 because sp[0] is whole match.
   for (int i = 0; i < iters; i++)
     CHECK(prog->UnsafeSearchBacktrack(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 2));
   delete prog;
   re->Decref();
 }
 
-void Parse1CachedPCRE(int iters, const char* regexp, const StringPiece& text) {
+void Parse1CachedPCRE(int iters, const char* regexp, absl::string_view text) {
   PCRE re(regexp, PCRE::UTF8);
   CHECK_EQ(re.error(), "");
-  StringPiece sp1;
+  absl::string_view sp1;
   for (int i = 0; i < iters; i++) {
     CHECK(PCRE::FullMatch(text, re, &sp1));
   }
 }
 
-void Parse1CachedRE2(int iters, const char* regexp, const StringPiece& text) {
+void Parse1CachedRE2(int iters, const char* regexp, absl::string_view text) {
   RE2 re(regexp);
   CHECK_EQ(re.error(), "");
-  StringPiece sp1;
+  absl::string_view sp1;
   for (int i = 0; i < iters; i++) {
     CHECK(RE2::FullMatch(text, re, &sp1));
   }
 }
 
 void SearchParse2CachedPCRE(int iters, const char* regexp,
-                            const StringPiece& text) {
+                            absl::string_view text) {
   PCRE re(regexp, PCRE::UTF8);
   CHECK_EQ(re.error(), "");
   for (int i = 0; i < iters; i++) {
-    StringPiece sp1, sp2;
+    absl::string_view sp1, sp2;
     CHECK(PCRE::PartialMatch(text, re, &sp1, &sp2));
   }
 }
 
 void SearchParse2CachedRE2(int iters, const char* regexp,
-                           const StringPiece& text) {
+                           absl::string_view text) {
   RE2 re(regexp);
   CHECK_EQ(re.error(), "");
   for (int i = 0; i < iters; i++) {
-    StringPiece sp1, sp2;
+    absl::string_view sp1, sp2;
     CHECK(RE2::PartialMatch(text, re, &sp1, &sp2));
   }
 }
 
 void SearchParse1CachedPCRE(int iters, const char* regexp,
-                            const StringPiece& text) {
+                            absl::string_view text) {
   PCRE re(regexp, PCRE::UTF8);
   CHECK_EQ(re.error(), "");
   for (int i = 0; i < iters; i++) {
-    StringPiece sp1;
+    absl::string_view sp1;
     CHECK(PCRE::PartialMatch(text, re, &sp1));
   }
 }
 
 void SearchParse1CachedRE2(int iters, const char* regexp,
-                           const StringPiece& text) {
+                           absl::string_view text) {
   RE2 re(regexp);
   CHECK_EQ(re.error(), "");
   for (int i = 0; i < iters; i++) {
-    StringPiece sp1;
+    absl::string_view sp1;
     CHECK(RE2::PartialMatch(text, re, &sp1));
   }
 }
@@ -1417,7 +1417,7 @@ static std::string http_text =
   "alksdjfhasdlkfhasdlkjfhasdljkfhadsjklf HTTP/1.1";
 
 void HTTPPartialMatchPCRE(int n) {
-  StringPiece a;
+  absl::string_view a;
   PCRE re("(?-s)^(?:GET|POST) +([^ ]+) HTTP");
   for (int i = 0; i < n; i++) {
     PCRE::PartialMatch(http_text, re, &a);
@@ -1425,7 +1425,7 @@ void HTTPPartialMatchPCRE(int n) {
 }
 
 void HTTPPartialMatchRE2(int n) {
-  StringPiece a;
+  absl::string_view a;
   RE2 re("(?-s)^(?:GET|POST) +([^ ]+) HTTP");
   for (int i = 0; i < n; i++) {
     RE2::PartialMatch(http_text, re, &a);
@@ -1441,7 +1441,7 @@ static std::string smallhttp_text =
   "GET /abc HTTP/1.1";
 
 void SmallHTTPPartialMatchPCRE(int n) {
-  StringPiece a;
+  absl::string_view a;
   PCRE re("(?-s)^(?:GET|POST) +([^ ]+) HTTP");
   for (int i = 0; i < n; i++) {
     PCRE::PartialMatch(smallhttp_text, re, &a);
@@ -1449,7 +1449,7 @@ void SmallHTTPPartialMatchPCRE(int n) {
 }
 
 void SmallHTTPPartialMatchRE2(int n) {
-  StringPiece a;
+  absl::string_view a;
   RE2 re("(?-s)^(?:GET|POST) +([^ ]+) HTTP");
   for (int i = 0; i < n; i++) {
     RE2::PartialMatch(smallhttp_text, re, &a);
@@ -1462,7 +1462,7 @@ BENCHMARK(SmallHTTPPartialMatchPCRE)->ThreadRange(1, NumCPUs());
 BENCHMARK(SmallHTTPPartialMatchRE2)->ThreadRange(1, NumCPUs());
 
 void DotMatchPCRE(int n) {
-  StringPiece a;
+  absl::string_view a;
   PCRE re("(?-s)^(.+)");
   for (int i = 0; i < n; i++) {
     PCRE::PartialMatch(http_text, re, &a);
@@ -1470,7 +1470,7 @@ void DotMatchPCRE(int n) {
 }
 
 void DotMatchRE2(int n) {
-  StringPiece a;
+  absl::string_view a;
   RE2 re("(?-s)^(.+)");
   for (int i = 0; i < n; i++) {
     RE2::PartialMatch(http_text, re, &a);
@@ -1483,7 +1483,7 @@ BENCHMARK(DotMatchPCRE)->ThreadRange(1, NumCPUs());
 BENCHMARK(DotMatchRE2)->ThreadRange(1, NumCPUs());
 
 void ASCIIMatchPCRE(int n) {
-  StringPiece a;
+  absl::string_view a;
   PCRE re("(?-s)^([ -~]+)");
   for (int i = 0; i < n; i++) {
     PCRE::PartialMatch(http_text, re, &a);
@@ -1491,7 +1491,7 @@ void ASCIIMatchPCRE(int n) {
 }
 
 void ASCIIMatchRE2(int n) {
-  StringPiece a;
+  absl::string_view a;
   RE2 re("(?-s)^([ -~]+)");
   for (int i = 0; i < n; i++) {
     RE2::PartialMatch(http_text, re, &a);
