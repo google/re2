@@ -43,7 +43,6 @@
 #include "util/sparse_set.h"
 #include "util/strutil.h"
 #include "re2/prog.h"
-#include "re2/stringpiece.h"
 
 // Silence "zero-sized array in struct/union" warning for DFA::State::next_.
 #ifdef _MSC_VER
@@ -94,9 +93,9 @@ class DFA {
   //   returning the leftmost end of the match instead of the rightmost one.
   // If the DFA cannot complete the search (for example, if it is out of
   //   memory), it sets *failed and returns false.
-  bool Search(const StringPiece& text, const StringPiece& context,
-              bool anchored, bool want_earliest_match, bool run_forward,
-              bool* failed, const char** ep, SparseSet* matches);
+  bool Search(absl::string_view text, absl::string_view context, bool anchored,
+              bool want_earliest_match, bool run_forward, bool* failed,
+              const char** ep, SparseSet* matches);
 
   // Builds out all states for the entire DFA.
   // If cb is not empty, it receives one callback per state built.
@@ -248,7 +247,7 @@ class DFA {
 
   // Search parameters
   struct SearchParams {
-    SearchParams(const StringPiece& text, const StringPiece& context,
+    SearchParams(absl::string_view text, absl::string_view context,
                  RWLocker* cache_lock)
       : text(text), context(context),
         anchored(false),
@@ -261,8 +260,8 @@ class DFA {
         ep(NULL),
         matches(NULL) { }
 
-    StringPiece text;
-    StringPiece context;
+    absl::string_view text;
+    absl::string_view context;
     bool anchored;
     bool want_earliest_match;
     bool run_forward;
@@ -1633,8 +1632,8 @@ bool DFA::FastSearchLoop(SearchParams* params) {
 // state for the DFA search loop.  Fills in params and returns true on success.
 // Returns false on failure.
 bool DFA::AnalyzeSearch(SearchParams* params) {
-  const StringPiece& text = params->text;
-  const StringPiece& context = params->context;
+  absl::string_view text = params->text;
+  absl::string_view context = params->context;
 
   // Sanity check: make sure that text lies within context.
   if (text.begin() < context.begin() || text.end() > context.end()) {
@@ -1751,14 +1750,9 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
 }
 
 // The actual DFA search: calls AnalyzeSearch and then FastSearchLoop.
-bool DFA::Search(const StringPiece& text,
-                 const StringPiece& context,
-                 bool anchored,
-                 bool want_earliest_match,
-                 bool run_forward,
-                 bool* failed,
-                 const char** epp,
-                 SparseSet* matches) {
+bool DFA::Search(absl::string_view text, absl::string_view context,
+                 bool anchored, bool want_earliest_match, bool run_forward,
+                 bool* failed, const char** epp, SparseSet* matches) {
   *epp = NULL;
   if (!ok()) {
     *failed = true;
@@ -1847,12 +1841,11 @@ void Prog::DeleteDFA(DFA* dfa) {
 //
 // This is the only external interface (class DFA only exists in this file).
 //
-bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
-                     Anchor anchor, MatchKind kind, StringPiece* match0,
+bool Prog::SearchDFA(absl::string_view text, absl::string_view context,
+                     Anchor anchor, MatchKind kind, absl::string_view* match0,
                      bool* failed, SparseSet* matches) {
   *failed = false;
 
-  StringPiece context = const_context;
   if (context.begin() == NULL)
     context = text;
   bool carat = anchor_start();
@@ -1908,10 +1901,11 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   // as the beginning.
   if (match0) {
     if (reversed_)
-      *match0 = StringPiece(ep, static_cast<size_t>(text.end() - ep));
+      *match0 = absl::string_view(ep,
+                                  static_cast<size_t>(text.end() - ep));
     else
-      *match0 =
-          StringPiece(text.begin(), static_cast<size_t>(ep - text.begin()));
+      *match0 = absl::string_view(text.begin(),
+                                  static_cast<size_t>(ep - text.begin()));
   }
   return true;
 }
@@ -1924,7 +1918,7 @@ int DFA::BuildAllStates(const Prog::DFAStateCallback& cb) {
   // Pick out start state for unanchored search
   // at beginning of text.
   RWLocker l(&cache_mutex_);
-  SearchParams params(StringPiece(), StringPiece(), &l);
+  SearchParams params(absl::string_view(), absl::string_view(), &l);
   params.anchored = false;
   if (!AnalyzeSearch(&params) ||
       params.start == NULL ||
@@ -2016,7 +2010,7 @@ bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
 
   // Pick out start state for anchored search at beginning of text.
   RWLocker l(&cache_mutex_);
-  SearchParams params(StringPiece(), StringPiece(), &l);
+  SearchParams params(absl::string_view(), absl::string_view(), &l);
   params.anchored = true;
   if (!AnalyzeSearch(&params))
     return false;
