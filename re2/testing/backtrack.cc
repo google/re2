@@ -74,7 +74,7 @@ class Backtracker {
   bool anchored_;                // whether search is anchored at text.begin()
   bool longest_;                 // whether search wants leftmost-longest match
   bool endmatch_;                // whether search must end at text.end()
-  absl::string_view *submatch_;  // submatches to fill in
+  absl::string_view* submatch_;  // submatches to fill in
   int nsubmatch_;                // # of submatches to fill in
 
   // Search state
