@@ -64,7 +64,6 @@
 #include "util/strutil.h"
 #include "util/utf.h"
 #include "re2/prog.h"
-#include "re2/stringpiece.h"
 
 // Silence "zero-sized array in struct/union" warning for OneState::action.
 #ifdef _MSC_VER
@@ -189,7 +188,7 @@ void OnePass_Checks() {
                 "kMaxCap disagrees with kMaxOnePassCapture");
 }
 
-static bool Satisfy(uint32_t cond, const StringPiece& context, const char* p) {
+static bool Satisfy(uint32_t cond, absl::string_view context, const char* p) {
   uint32_t satisfied = Prog::EmptyFlags(context, p);
   if (cond & kEmptyAllFlags & ~satisfied)
     return false;
@@ -211,10 +210,9 @@ static inline OneState* IndexToNode(uint8_t* nodes, int statesize,
   return reinterpret_cast<OneState*>(nodes + statesize*nodeindex);
 }
 
-bool Prog::SearchOnePass(const StringPiece& text,
-                         const StringPiece& const_context,
+bool Prog::SearchOnePass(absl::string_view text, absl::string_view context,
                          Anchor anchor, MatchKind kind,
-                         StringPiece* match, int nmatch) {
+                         absl::string_view* match, int nmatch) {
   if (anchor != kAnchored && kind != kFullMatch) {
     LOG(DFATAL) << "Cannot use SearchOnePass for unanchored matches.";
     return false;
@@ -234,7 +232,6 @@ bool Prog::SearchOnePass(const StringPiece& text,
   for (int i = 0; i < ncap; i++)
     matchcap[i] = NULL;
 
-  StringPiece context = const_context;
   if (context.begin() == NULL)
     context = text;
   if (anchor_start() && context.begin() != text.begin())
@@ -339,12 +336,11 @@ done:
   if (!matched)
     return false;
   for (int i = 0; i < nmatch; i++)
-    match[i] =
-        StringPiece(matchcap[2 * i],
-                    static_cast<size_t>(matchcap[2 * i + 1] - matchcap[2 * i]));
+    match[i] = absl::string_view(
+        matchcap[2 * i],
+        static_cast<size_t>(matchcap[2 * i + 1] - matchcap[2 * i]));
   return true;
 }
-
 
 // Analysis to determine whether a given regexp program is one-pass.
 

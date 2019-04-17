@@ -11,7 +11,6 @@
 #include "util/util.h"
 #include "util/logging.h"
 #include "util/pod_array.h"
-#include "re2/stringpiece.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
@@ -33,7 +32,7 @@ RE2::Set::~Set() {
   delete prog_;
 }
 
-int RE2::Set::Add(const StringPiece& pattern, std::string* error) {
+int RE2::Set::Add(absl::string_view pattern, std::string* error) {
   if (compiled_) {
     LOG(DFATAL) << "RE2::Set::Add() called after compiling";
     return -1;
@@ -102,11 +101,11 @@ bool RE2::Set::Compile() {
   return prog_ != NULL;
 }
 
-bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
+bool RE2::Set::Match(absl::string_view text, std::vector<int>* v) const {
   return Match(text, v, NULL);
 }
 
-bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v,
+bool RE2::Set::Match(absl::string_view text, std::vector<int>* v,
                      ErrorInfo* error_info) const {
   if (!compiled_) {
     LOG(DFATAL) << "RE2::Set::Match() called before compiling";

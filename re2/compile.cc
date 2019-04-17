@@ -1261,7 +1261,7 @@ Prog* Compiler::CompileSet(Regexp* re, RE2::Anchor anchor, int64_t max_mem) {
   // Make sure DFA has enough memory to operate,
   // since we're not going to fall back to the NFA.
   bool dfa_failed = false;
-  StringPiece sp = "hello, world";
+  absl::string_view sp = "hello, world";
   prog->SearchDFA(sp, sp, Prog::kAnchored, Prog::kManyMatch,
                   NULL, &dfa_failed, NULL);
   if (dfa_failed) {

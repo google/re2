@@ -17,7 +17,6 @@
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "re2/bitmap256.h"
-#include "re2/stringpiece.h"
 
 namespace re2 {
 
@@ -284,7 +283,7 @@ static bool IsMatch(Prog* prog, Prog::Inst* ip) {
   }
 }
 
-uint32_t Prog::EmptyFlags(const StringPiece& text, const char* p) {
+uint32_t Prog::EmptyFlags(absl::string_view text, const char* p) {
   int flags = 0;
 
   // ^ and \A
