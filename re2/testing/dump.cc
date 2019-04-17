@@ -22,7 +22,6 @@
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "util/utf.h"
-#include "re2/stringpiece.h"
 #include "re2/regexp.h"
 
 // Cause a link error if this file is used outside of testing.

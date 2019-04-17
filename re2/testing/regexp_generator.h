@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "util/util.h"
-#include "re2/stringpiece.h"
 
 namespace re2 {
 
@@ -66,11 +66,11 @@ class RegexpGenerator {
 // Helpers for preparing arguments to RegexpGenerator constructor.
 
 // Returns one string for each character in s.
-std::vector<std::string> Explode(const StringPiece& s);
+std::vector<std::string> Explode(absl::string_view s);
 
 // Splits string everywhere sep is found, returning
 // vector of pieces.
-std::vector<std::string> Split(const StringPiece& sep, const StringPiece& s);
+std::vector<std::string> Split(absl::string_view sep, absl::string_view s);
 
 }  // namespace re2
 

@@ -197,7 +197,6 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "re2/stringpiece.h"  // TODO(junyer): Remove this.
 
 namespace re2 {
 class Prog;

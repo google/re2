@@ -238,7 +238,7 @@ void RegexpGenerator::RunPostfix(const std::vector<std::string>& post) {
 }
 
 // Split s into an vector of strings, one for each UTF-8 character.
-std::vector<std::string> Explode(const StringPiece& s) {
+std::vector<std::string> Explode(absl::string_view s) {
   std::vector<std::string> v;
 
   for (const char *q = s.begin(); q < s.end(); ) {
@@ -253,7 +253,7 @@ std::vector<std::string> Explode(const StringPiece& s) {
 
 // Split string everywhere a substring is found, returning
 // vector of pieces.
-std::vector<std::string> Split(const StringPiece& sep, const StringPiece& s) {
+std::vector<std::string> Split(absl::string_view sep, absl::string_view s) {
   std::vector<std::string> v;
 
   if (sep.size() == 0)
@@ -261,7 +261,7 @@ std::vector<std::string> Split(const StringPiece& sep, const StringPiece& s) {
 
   const char *p = s.begin();
   for (const char *q = s.begin(); q + sep.size() <= s.end(); q++) {
-    if (StringPiece(q, sep.size()) == sep) {
+    if (absl::string_view(q, sep.size()) == sep) {
       v.push_back(std::string(p, q - p));
       p = q + sep.size();
       q = p - 1;  // -1 for ++ in loop

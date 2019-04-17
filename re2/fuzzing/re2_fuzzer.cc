@@ -12,12 +12,11 @@
 #include "re2/prefilter.h"
 #include "re2/re2.h"
 
-using re2::StringPiece;
-
 // NOT static, NOT signed.
 uint8_t dummy = 0;
 
-void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
+void Test(absl::string_view pattern, const RE2::Options& options,
+          absl::string_view text) {
   RE2 re(pattern, options);
   if (!re.ok())
     return;
@@ -65,7 +64,7 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
 
   if (re.NumberOfCapturingGroups() == 0) {
     // Avoid early return due to too many arguments.
-    StringPiece sp = text;
+    absl::string_view sp = text;
     RE2::FullMatch(sp, re);
     RE2::PartialMatch(sp, re);
     RE2::Consume(&sp, re);
@@ -74,7 +73,7 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
   } else {
     // Okay, we have at least one capturing group...
     // Try conversion for variously typed arguments.
-    StringPiece sp = text;
+    absl::string_view sp = text;
     short s;
     RE2::FullMatch(sp, re, &s);
     long l;
@@ -165,8 +164,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   const char* ptr = reinterpret_cast<const char*>(data);
   int len = static_cast<int>(size);
 
-  StringPiece pattern(ptr, len);
-  StringPiece text(ptr, len);
+  absl::string_view pattern(ptr, len);
+  absl::string_view text(ptr, len);
   Test(pattern, options, text);
 
   return 0;
