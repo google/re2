@@ -7,12 +7,12 @@
 
 #include <string>
 
-#include "re2/stringpiece.h"
+#include "absl/strings/string_view.h"
 #include "util/util.h"
 
 namespace re2 {
 
-std::string CEscape(const StringPiece& src);
+std::string CEscape(absl::string_view src);
 void PrefixSuccessor(std::string* prefix);
 std::string StringPrintf(const char* format, ...);
 void SStringPrintf(std::string* dst, const char* format, ...);
