@@ -305,13 +305,13 @@ class RE2 {
   // useful to invoke them directly, but the syntax is awkward, so the 'N'-less
   // versions should be preferred.
   static bool FullMatchN(const StringPiece& text, const RE2& re,
-                         const Arg* const args[], int argc);
+                         const Arg* const args[], int n);
   static bool PartialMatchN(const StringPiece& text, const RE2& re,
-                            const Arg* const args[], int argc);
+                            const Arg* const args[], int n);
   static bool ConsumeN(StringPiece* input, const RE2& re,
-                       const Arg* const args[], int argc);
+                       const Arg* const args[], int n);
   static bool FindAndConsumeN(StringPiece* input, const RE2& re,
-                              const Arg* const args[], int argc);
+                              const Arg* const args[], int n);
 
 #ifndef SWIG
  private:
@@ -323,8 +323,8 @@ class RE2 {
   template <typename F, typename SP, typename... A>
   static inline bool Apply(F f, SP sp, const RE2& re, const A&... a) {
     const Arg* const args[] = {&a...};
-    const int argc = sizeof...(a);
-    return f(sp, re, args, argc);
+    const int n = sizeof...(a);
+    return f(sp, re, args, n);
   }
 
  public:
