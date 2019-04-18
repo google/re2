@@ -1462,9 +1462,8 @@ TEST(RE2, NullVsEmptyStringSubmatches) {
   EXPECT_TRUE(re.Match(null, 0, null.size(), RE2::UNANCHORED,
                        matches, arraysize(matches)));
   for (int i = 0; i < arraysize(matches); i++) {
-    EXPECT_TRUE(matches[i] == absl::string_view());
     EXPECT_TRUE(matches[i].data() == NULL);  // always null
-    EXPECT_TRUE(matches[i] == "");
+    EXPECT_TRUE(matches[i].empty());
   }
 
   for (int i = 0; i < arraysize(matches); i++)
@@ -1473,18 +1472,14 @@ TEST(RE2, NullVsEmptyStringSubmatches) {
   absl::string_view empty("");
   EXPECT_TRUE(re.Match(empty, 0, empty.size(), RE2::UNANCHORED,
                        matches, arraysize(matches)));
-  EXPECT_TRUE(matches[0] == absl::string_view());
   EXPECT_TRUE(matches[0].data() != NULL);  // empty, not null
-  EXPECT_TRUE(matches[0] == "");
-  EXPECT_TRUE(matches[1] == absl::string_view());
+  EXPECT_TRUE(matches[0].empty());
   EXPECT_TRUE(matches[1].data() != NULL);  // empty, not null
-  EXPECT_TRUE(matches[1] == "");
-  EXPECT_TRUE(matches[2] == absl::string_view());
+  EXPECT_TRUE(matches[1].empty());
   EXPECT_TRUE(matches[2].data() == NULL);
-  EXPECT_TRUE(matches[2] == "");
-  EXPECT_TRUE(matches[3] == absl::string_view());
+  EXPECT_TRUE(matches[2].empty());
   EXPECT_TRUE(matches[3].data() == NULL);
-  EXPECT_TRUE(matches[3] == "");
+  EXPECT_TRUE(matches[3].empty());
 }
 
 // Issue 1816809
