@@ -84,6 +84,7 @@ set(RE2_SOURCES
     )
 
 add_library(re2 ${RE2_SOURCES})
+add_library(re2::re2 ALIAS re2)
 
 if(RE2_BUILD_TESTING)
   set(TESTING_SOURCES
@@ -148,4 +149,4 @@ set(RE2_HEADERS
 
 install(FILES ${RE2_HEADERS} DESTINATION include/re2)
 install(TARGETS re2 EXPORT re2Config ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin INCLUDES DESTINATION include)
-install(EXPORT re2Config DESTINATION lib/cmake/re2)
+install(EXPORT re2Config DESTINATION lib/cmake/re2 NAMESPACE re2::)
