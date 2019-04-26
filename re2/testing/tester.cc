@@ -9,6 +9,7 @@
 #include <string.h>
 #include <string>
 
+#include "absl/strings/escaping.h"
 #include "util/util.h"
 #include "util/flags.h"
 #include "util/logging.h"
@@ -179,14 +180,14 @@ TestInstance::TestInstance(absl::string_view regexp_str, Prog::MatchKind kind,
     re_(NULL),
     re2_(NULL) {
 
-  VLOG(1) << CEscape(regexp_str);
+  VLOG(1) << absl::CEscape(regexp_str);
 
   // Compile regexp to prog.
   // Always required - needed for backtracking (reference implementation).
   RegexpStatus status;
   regexp_ = Regexp::Parse(regexp_str, flags, &status);
   if (regexp_ == NULL) {
-    LOG(INFO) << "Cannot parse: " << CEscape(regexp_str_)
+    LOG(INFO) << "Cannot parse: " << absl::CEscape(regexp_str_)
               << " mode: " << FormatMode(flags);
     error_ = true;
     return;
@@ -194,14 +195,14 @@ TestInstance::TestInstance(absl::string_view regexp_str, Prog::MatchKind kind,
   num_captures_ = regexp_->NumCaptures();
   prog_ = regexp_->CompileToProg(0);
   if (prog_ == NULL) {
-    LOG(INFO) << "Cannot compile: " << CEscape(regexp_str_);
+    LOG(INFO) << "Cannot compile: " << absl::CEscape(regexp_str_);
     error_ = true;
     return;
   }
   if (FLAGS_dump_prog) {
     LOG(INFO) << "Prog for "
               << " regexp "
-              << CEscape(regexp_str_)
+              << absl::CEscape(regexp_str_)
               << " (" << FormatKind(kind_)
               << ", " << FormatMode(flags_)
               << ")\n"
@@ -212,7 +213,7 @@ TestInstance::TestInstance(absl::string_view regexp_str, Prog::MatchKind kind,
   if (Engines() & ((1<<kEngineDFA)|(1<<kEngineDFA1))) {
     rprog_ = regexp_->CompileToReverseProg(0);
     if (rprog_ == NULL) {
-      LOG(INFO) << "Cannot reverse compile: " << CEscape(regexp_str_);
+      LOG(INFO) << "Cannot reverse compile: " << absl::CEscape(regexp_str_);
       error_ = true;
       return;
     }
@@ -240,7 +241,7 @@ TestInstance::TestInstance(absl::string_view regexp_str, Prog::MatchKind kind,
       options.set_longest_match(true);
     re2_ = new RE2(re, options);
     if (!re2_->error().empty()) {
-      LOG(INFO) << "Cannot RE2: " << CEscape(re);
+      LOG(INFO) << "Cannot RE2: " << absl::CEscape(re);
       error_ = true;
       return;
     }
@@ -266,7 +267,7 @@ TestInstance::TestInstance(absl::string_view regexp_str, Prog::MatchKind kind,
     // add one more layer of parens.
     re_ = new PCRE("("+re+")", o);
     if (!re_->error().empty()) {
-      LOG(INFO) << "Cannot PCRE: " << CEscape(re);
+      LOG(INFO) << "Cannot PCRE: " << absl::CEscape(re);
       error_ = true;
       return;
     }
@@ -353,8 +354,8 @@ void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
                                result->submatch,
                                &result->skipped, NULL)) {
           LOG(ERROR) << "Reverse DFA inconsistency: "
-                     << CEscape(regexp_str_)
-                     << " on " << CEscape(text);
+                     << absl::CEscape(regexp_str_)
+                     << " on " << absl::CEscape(text);
           result->matched = false;
         }
       }
@@ -506,12 +507,12 @@ bool TestInstance::RunCase(absl::string_view text, absl::string_view context,
   if (correct.skipped) {
     if (regexp_ == NULL)
       return true;
-    LOG(ERROR) << "Skipped backtracking! " << CEscape(regexp_str_)
+    LOG(ERROR) << "Skipped backtracking! " << absl::CEscape(regexp_str_)
                << " " << FormatMode(flags_);
     return false;
   }
-  VLOG(1) << "Try: regexp " << CEscape(regexp_str_)
-          << " text " << CEscape(text)
+  VLOG(1) << "Try: regexp " << absl::CEscape(regexp_str_)
+          << " text " << absl::CEscape(text)
           << " (" << FormatKind(kind_)
           << ", " << FormatAnchor(anchor)
           << ", " << FormatMode(flags_)
@@ -582,17 +583,17 @@ void TestInstance::LogMatch(const char* prefix, Engine e,
   LOG(INFO) << prefix
     << EngineName(e)
     << " regexp "
-    << CEscape(regexp_str_)
+    << absl::CEscape(regexp_str_)
     << " "
-    << CEscape(regexp_->ToString())
+    << absl::CEscape(regexp_->ToString())
     << " text "
-    << CEscape(text)
+    << absl::CEscape(text)
     << " ("
     << text.begin() - context.begin()
     << ","
     << text.end() - context.begin()
     << ") of context "
-    << CEscape(context)
+    << absl::CEscape(context)
     << " (" << FormatKind(kind_)
     << ", " << FormatAnchor(anchor)
     << ", " << FormatMode(flags_)

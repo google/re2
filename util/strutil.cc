@@ -14,67 +14,6 @@
 
 namespace re2 {
 
-// ----------------------------------------------------------------------
-// CEscapeString()
-//    Copies 'src' to 'dest', escaping dangerous characters using
-//    C-style escape sequences.  'src' and 'dest' should not overlap.
-//    Returns the number of bytes written to 'dest' (not including the \0)
-//    or (size_t)-1 if there was insufficient space.
-// ----------------------------------------------------------------------
-static size_t CEscapeString(const char* src, size_t src_len,
-                            char* dest, size_t dest_len) {
-  const char* src_end = src + src_len;
-  size_t used = 0;
-
-  for (; src < src_end; src++) {
-    if (dest_len - used < 2)   // space for two-character escape
-      return (size_t)-1;
-
-    unsigned char c = *src;
-    switch (c) {
-      case '\n': dest[used++] = '\\'; dest[used++] = 'n';  break;
-      case '\r': dest[used++] = '\\'; dest[used++] = 'r';  break;
-      case '\t': dest[used++] = '\\'; dest[used++] = 't';  break;
-      case '\"': dest[used++] = '\\'; dest[used++] = '\"'; break;
-      case '\'': dest[used++] = '\\'; dest[used++] = '\''; break;
-      case '\\': dest[used++] = '\\'; dest[used++] = '\\'; break;
-      default:
-        // Note that if we emit \xNN and the src character after that is a hex
-        // digit then that digit must be escaped too to prevent it being
-        // interpreted as part of the character code by C.
-        if (c < ' ' || c > '~') {
-          if (dest_len - used < 5)   // space for four-character escape + \0
-            return (size_t)-1;
-          snprintf(dest + used, 5, "\\%03o", c);
-          used += 4;
-        } else {
-          dest[used++] = c; break;
-        }
-    }
-  }
-
-  if (dest_len - used < 1)   // make sure that there is room for \0
-    return (size_t)-1;
-
-  dest[used] = '\0';   // doesn't count towards return value though
-  return used;
-}
-
-// ----------------------------------------------------------------------
-// CEscape()
-//    Copies 'src' to result, escaping dangerous characters using
-//    C-style escape sequences.  'src' and 'dest' should not overlap.
-// ----------------------------------------------------------------------
-std::string CEscape(absl::string_view src) {
-  const size_t dest_len = src.size() * 4 + 1; // Maximum possible expansion
-  char* dest = new char[dest_len];
-  const size_t used = CEscapeString(src.data(), src.size(),
-                                    dest, dest_len);
-  std::string s = std::string(dest, used);
-  delete[] dest;
-  return s;
-}
-
 void PrefixSuccessor(std::string* prefix) {
   // We can increment the last character in the string and be done
   // unless that character is 255, in which case we have to erase the
