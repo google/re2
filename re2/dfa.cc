@@ -28,12 +28,12 @@
 #include <algorithm>
 #include <atomic>
 #include <deque>
-#include <mutex>
 #include <new>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/base/call_once.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -1808,17 +1808,17 @@ DFA* Prog::GetDFA(MatchKind kind) {
   // "longest match" DFA, because RE2 never does reverse
   // "first match" searches.
   if (kind == kFirstMatch) {
-    std::call_once(dfa_first_once_, [](Prog* prog) {
+    absl::call_once(dfa_first_once_, [](Prog* prog) {
       prog->dfa_first_ = new DFA(prog, kFirstMatch, prog->dfa_mem_ / 2);
     }, this);
     return dfa_first_;
   } else if (kind == kManyMatch) {
-    std::call_once(dfa_first_once_, [](Prog* prog) {
+    absl::call_once(dfa_first_once_, [](Prog* prog) {
       prog->dfa_first_ = new DFA(prog, kManyMatch, prog->dfa_mem_);
     }, this);
     return dfa_first_;
   } else {
-    std::call_once(dfa_longest_once_, [](Prog* prog) {
+    absl::call_once(dfa_longest_once_, [](Prog* prog) {
       if (!prog->reversed_)
         prog->dfa_longest_ = new DFA(prog, kLongestMatch, prog->dfa_mem_ / 2);
       else
