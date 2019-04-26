@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/container/fixed_array.h"
 #include "util/util.h"
 #include "util/logging.h"
 #include "util/sparse_array.h"
@@ -812,19 +813,10 @@ bool RE2::DoMatch(absl::string_view text,
   else
     nvec = n+1;
 
-  absl::string_view* vec;
-  absl::string_view stkvec[kVecSize];
-  absl::string_view* heapvec = NULL;
-
-  if (nvec <= arraysize(stkvec)) {
-    vec = stkvec;
-  } else {
-    vec = new absl::string_view[nvec];
-    heapvec = vec;
-  }
+  absl::FixedArray<absl::string_view, kVecSize> vec_storage(nvec);
+  absl::string_view* vec = vec_storage.data();
 
   if (!Match(text, 0, text.size(), re_anchor, vec, nvec)) {
-    delete[] heapvec;
     return false;
   }
 
@@ -833,7 +825,6 @@ bool RE2::DoMatch(absl::string_view text,
 
   if (n == 0 || args == NULL) {
     // We are not interested in results
-    delete[] heapvec;
     return true;
   }
 
@@ -842,12 +833,10 @@ bool RE2::DoMatch(absl::string_view text,
     absl::string_view s = vec[i+1];
     if (!args[i]->Parse(s.data(), s.size())) {
       // TODO: Should we indicate what the error was?
-      delete[] heapvec;
       return false;
     }
   }
 
-  delete[] heapvec;
   return true;
 }
 
