@@ -36,9 +36,10 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 #include "util/logging.h"
 #include "util/mix.h"
-#include "util/mutex.h"
 #include "util/pod_array.h"
 #include "util/sparse_set.h"
 #include "util/strutil.h"
@@ -342,7 +343,7 @@ class DFA {
   Prog::MatchKind kind_;    // The kind of DFA.
   bool init_failed_;        // initialization failed (out of memory)
 
-  Mutex mutex_;  // mutex_ >= cache_mutex_.r
+  absl::Mutex mutex_;  // mutex_ >= cache_mutex_.r
 
   // Scratch areas, protected by mutex_.
   Workq* q0_;             // Two pre-allocated work queues.
@@ -355,7 +356,7 @@ class DFA {
   // while holding cache_mutex_ for writing, to avoid interrupting other
   // readers.  Any State* pointers are only valid while cache_mutex_
   // is held.
-  Mutex cache_mutex_;
+  absl::Mutex cache_mutex_;
   int64_t mem_budget_;     // Total memory budget for all States.
   int64_t state_budget_;   // Amount of memory remaining for new States.
   StateSet state_cache_;   // All States computed so far.
@@ -989,7 +990,7 @@ void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
 DFA::State* DFA::RunStateOnByteUnlocked(State* state, int c) {
   // Keep only one RunStateOnByte going
   // even if the DFA is being run by multiple threads.
-  MutexLock l(&mutex_);
+  absl::MutexLock l(&mutex_);
   return RunStateOnByte(state, c);
 }
 
@@ -1108,7 +1109,7 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
 
 class DFA::RWLocker {
  public:
-  explicit RWLocker(Mutex* mu);
+  explicit RWLocker(absl::Mutex* mu);
   ~RWLocker();
 
   // If the lock is only held for reading right now,
@@ -1118,14 +1119,14 @@ class DFA::RWLocker {
   void LockForWriting();
 
  private:
-  Mutex* mu_;
+  absl::Mutex* mu_;
   bool writing_;
 
   RWLocker(const RWLocker&) = delete;
   RWLocker& operator=(const RWLocker&) = delete;
 };
 
-DFA::RWLocker::RWLocker(Mutex* mu) : mu_(mu), writing_(false) {
+DFA::RWLocker::RWLocker(absl::Mutex* mu) : mu_(mu), writing_(false) {
   mu_->ReaderLock();
 }
 
@@ -1238,7 +1239,7 @@ DFA::StateSaver::~StateSaver() {
 DFA::State* DFA::StateSaver::Restore() {
   if (is_special_)
     return special_;
-  MutexLock l(&dfa_->mutex_);
+  absl::MutexLock l(&dfa_->mutex_);
   State* s = dfa_->CachedState(inst_, ninst_, flag_);
   if (s == NULL)
     LOG(DFATAL) << "StateSaver failed to restore state.";
@@ -1709,7 +1710,7 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
   if (fb != kFbUnknown)
     return true;
 
-  MutexLock l(&mutex_);
+  absl::MutexLock l(&mutex_);
   fb = info->first_byte.load(std::memory_order_relaxed);
   if (fb != kFbUnknown)
     return true;
@@ -2050,7 +2051,7 @@ bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
   // Build minimum prefix.
   State* s = params.start;
   min->clear();
-  MutexLock lock(&mutex_);
+  absl::MutexLock lock(&mutex_);
   for (int i = 0; i < maxlen; i++) {
     if (previously_visited_states[s] > kMaxEltRepetitions)
       break;

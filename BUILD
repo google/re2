@@ -56,7 +56,6 @@ cc_library(
         "util/flags.h",
         "util/logging.h",
         "util/mix.h",
-        "util/mutex.h",
         "util/pod_array.h",
         "util/rune.cc",
         "util/sparse_array.h",
@@ -87,7 +86,9 @@ cc_library(
     }),
     visibility = ["//visibility:public"],
     deps = [
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 

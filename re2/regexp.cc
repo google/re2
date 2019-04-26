@@ -16,9 +16,9 @@
 #include <string>
 #include <vector>
 
+#include "absl/synchronization/mutex.h"
 #include "util/util.h"
 #include "util/logging.h"
-#include "util/mutex.h"
 #include "util/utf.h"
 #include "re2/walker-inl.h"
 
@@ -73,14 +73,14 @@ bool Regexp::QuickDestroy() {
 }
 
 // Lazily allocated.
-static Mutex* ref_mutex;
+static absl::Mutex* ref_mutex;
 static std::map<Regexp*, int>* ref_map;
 
 int Regexp::Ref() {
   if (ref_ < kMaxRef)
     return ref_;
 
-  MutexLock l(ref_mutex);
+  absl::MutexLock l(ref_mutex);
   return (*ref_map)[this];
 }
 
@@ -89,12 +89,12 @@ Regexp* Regexp::Incref() {
   if (ref_ >= kMaxRef-1) {
     static std::once_flag ref_once;
     std::call_once(ref_once, []() {
-      ref_mutex = new Mutex;
+      ref_mutex = new absl::Mutex;
       ref_map = new std::map<Regexp*, int>;
     });
 
     // Store ref count in overflow map.
-    MutexLock l(ref_mutex);
+    absl::MutexLock l(ref_mutex);
     if (ref_ == kMaxRef) {
       // already overflowed
       (*ref_map)[this]++;
@@ -114,7 +114,7 @@ Regexp* Regexp::Incref() {
 void Regexp::Decref() {
   if (ref_ == kMaxRef) {
     // Ref count is stored in overflow map.
-    MutexLock l(ref_mutex);
+    absl::MutexLock l(ref_mutex);
     int r = (*ref_map)[this] - 1;
     if (r < kMaxRef) {
       ref_ = static_cast<uint16_t>(r);
