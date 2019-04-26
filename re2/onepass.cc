@@ -57,6 +57,8 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/fixed_array.h"
+#include "absl/container/inlined_vector.h"
 #include "util/util.h"
 #include "util/logging.h"
 #include "util/pod_array.h"
@@ -400,16 +402,17 @@ bool Prog::IsOnePass() {
   int stacksize = inst_count(kInstCapture) +
                   inst_count(kInstEmptyWidth) +
                   inst_count(kInstNop) + 1;  // + 1 for start inst
-  PODArray<InstCond> stack(stacksize);
+  absl::FixedArray<InstCond, 64> stack_storage(stacksize);
+  InstCond* stack = stack_storage.data();
 
   int size = this->size();
-  PODArray<int> nodebyid(size);  // indexed by ip
-  memset(nodebyid.data(), 0xFF, size*sizeof nodebyid[0]);
+  absl::FixedArray<int, 128> nodebyid_storage(size, -1);  // indexed by ip
+  int* nodebyid = nodebyid_storage.data();
 
   // Originally, nodes was a uint8_t[maxnodes*statesize], but that was
   // unnecessarily optimistic: why allocate a large amount of memory
   // upfront for a large program when it is unlikely to be one-pass?
-  std::vector<uint8_t> nodes;
+  absl::InlinedVector<uint8_t, 2048> nodes;
 
   Instq tovisit(size), workq(size);
   AddQ(&tovisit, start());
