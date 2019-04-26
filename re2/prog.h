@@ -11,11 +11,11 @@
 
 #include <stdint.h>
 #include <functional>
-#include <mutex>
 #include <string>
 #include <vector>
 #include <type_traits>
 
+#include "absl/base/call_once.h"
 #include "absl/strings/string_view.h"
 #include "util/util.h"
 #include "util/logging.h"
@@ -419,9 +419,9 @@ class Prog {
 
   uint8_t bytemap_[256];    // map from input bytes to byte classes
 
-  std::once_flag first_byte_once_;
-  std::once_flag dfa_first_once_;
-  std::once_flag dfa_longest_once_;
+  absl::once_flag first_byte_once_;
+  absl::once_flag dfa_first_once_;
+  absl::once_flag dfa_longest_once_;
 
   Prog(const Prog&) = delete;
   Prog& operator=(const Prog&) = delete;

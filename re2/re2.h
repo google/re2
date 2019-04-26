@@ -193,9 +193,9 @@
 #include <stdint.h>
 #include <algorithm>
 #include <map>
-#include <mutex>
 #include <string>
 
+#include "absl/base/call_once.h"
 #include "absl/strings/string_view.h"
 
 namespace re2 {
@@ -760,9 +760,9 @@ class RE2 {
   mutable const std::map<int, std::string>* group_names_;
 
   // Onces for lazy computations.
-  mutable std::once_flag rprog_once_;
-  mutable std::once_flag named_groups_once_;
-  mutable std::once_flag group_names_once_;
+  mutable absl::once_flag rprog_once_;
+  mutable absl::once_flag named_groups_once_;
+  mutable absl::once_flag group_names_once_;
 
   RE2(const RE2&) = delete;
   RE2& operator=(const RE2&) = delete;
@@ -930,7 +930,7 @@ class LazyRE2 {
 
   // Named accessor/initializer:
   RE2* get() const {
-    std::call_once(once_, &LazyRE2::Init, this);
+    absl::call_once(once_, &LazyRE2::Init, this);
     return ptr_;
   }
 
@@ -940,7 +940,7 @@ class LazyRE2 {
   NoArg barrier_against_excess_initializers_;
 
   mutable RE2* ptr_;
-  mutable std::once_flag once_;
+  mutable absl::once_flag once_;
 
  private:
   static void Init(const LazyRE2* lazy_re2) {

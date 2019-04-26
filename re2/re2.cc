@@ -17,7 +17,6 @@
 #include <string.h>
 #include <algorithm>
 #include <iterator>
-#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -166,8 +165,8 @@ int RE2::Options::ParseFlags() const {
 }
 
 void RE2::Init(absl::string_view pattern, const Options& options) {
-  static std::once_flag empty_once;
-  std::call_once(empty_once, []() {
+  static absl::once_flag empty_once;
+  absl::call_once(empty_once, []() {
     empty_string = new std::string;
     empty_named_groups = new std::map<std::string, int>;
     empty_group_names = new std::map<int, std::string>;
@@ -221,7 +220,7 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
 
   // We used to compute this lazily, but it's used during the
   // typical control flow for a match call, so we now compute
-  // it eagerly, which avoids the overhead of std::once_flag.
+  // it eagerly, which avoids the overhead of absl::once_flag.
   num_captures_ = suffix_regexp_->NumCaptures();
 
   // Could delay this until the first match call that
@@ -234,7 +233,7 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
 
 // Returns rprog_, computing it if needed.
 re2::Prog* RE2::ReverseProg() const {
-  std::call_once(rprog_once_, [](const RE2* re) {
+  absl::call_once(rprog_once_, [](const RE2* re) {
     re->rprog_ =
         re->suffix_regexp_->CompileToReverseProg(re->options_.max_mem() / 3);
     if (re->rprog_ == NULL) {
@@ -310,7 +309,7 @@ int RE2::ReverseProgramFanout(std::map<int, int>* histogram) const {
 
 // Returns named_groups_, computing it if needed.
 const std::map<std::string, int>& RE2::NamedCapturingGroups() const {
-  std::call_once(named_groups_once_, [](const RE2* re) {
+  absl::call_once(named_groups_once_, [](const RE2* re) {
     if (re->suffix_regexp_ != NULL)
       re->named_groups_ = re->suffix_regexp_->NamedCaptures();
     if (re->named_groups_ == NULL)
@@ -321,7 +320,7 @@ const std::map<std::string, int>& RE2::NamedCapturingGroups() const {
 
 // Returns group_names_, computing it if needed.
 const std::map<int, std::string>& RE2::CapturingGroupNames() const {
-  std::call_once(group_names_once_, [](const RE2* re) {
+  absl::call_once(group_names_once_, [](const RE2* re) {
     if (re->suffix_regexp_ != NULL)
       re->group_names_ = re->suffix_regexp_->CaptureNames();
     if (re->group_names_ == NULL)

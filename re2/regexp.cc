@@ -12,10 +12,10 @@
 #include <string.h>
 #include <algorithm>
 #include <map>
-#include <mutex>
 #include <string>
 #include <vector>
 
+#include "absl/base/call_once.h"
 #include "absl/synchronization/mutex.h"
 #include "util/util.h"
 #include "util/logging.h"
@@ -87,8 +87,8 @@ int Regexp::Ref() {
 // Increments reference count, returns object as convenience.
 Regexp* Regexp::Incref() {
   if (ref_ >= kMaxRef-1) {
-    static std::once_flag ref_once;
-    std::call_once(ref_once, []() {
+    static absl::once_flag ref_once;
+    absl::call_once(ref_once, []() {
       ref_mutex = new absl::Mutex;
       ref_map = new std::map<Regexp*, int>;
     });
