@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/escaping.h"
 #include "util/test.h"
 #include "util/logging.h"
 #include "util/strutil.h"
@@ -221,11 +222,11 @@ void RegexpGenerator::RunPostfix(const std::vector<std::string>& post) {
     // Internal error - should never happen.
     printf("Bad regexp program:\n");
     for (size_t i = 0; i < post.size(); i++) {
-      printf("  %s\n", CEscape(post[i]).c_str());
+      printf("  %s\n", absl::CEscape(post[i]).c_str());
     }
     printf("Stack after running program:\n");
     while (!regexps.empty()) {
-      printf("  %s\n", CEscape(regexps.top()).c_str());
+      printf("  %s\n", absl::CEscape(regexps.top()).c_str());
       regexps.pop();
     }
     LOG(FATAL) << "Bad regexp program.";
