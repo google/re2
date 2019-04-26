@@ -27,8 +27,4 @@
 #endif
 #endif
 
-#ifndef NO_THREAD_SAFETY_ANALYSIS
-#define NO_THREAD_SAFETY_ANALYSIS
-#endif
-
 #endif  // UTIL_UTIL_H_
