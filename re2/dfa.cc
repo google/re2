@@ -31,15 +31,15 @@
 #include <mutex>
 #include <new>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
 #include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
+#include "absl/types/span.h"
 #include "util/logging.h"
-#include "util/mix.h"
 #include "util/pod_array.h"
 #include "util/sparse_set.h"
 #include "util/strutil.h"
@@ -121,6 +121,18 @@ class DFA {
     inline bool IsMatch() const { return (flag_ & kFlagMatch) != 0; }
     void SaveMatch(std::vector<int>* v);
 
+    template <typename H>
+    friend H AbslHashValue(H h, const State& a) {
+      const absl::Span<const int> ainst(a.inst_, a.ninst_);
+      return H::combine(std::move(h), a.flag_, ainst);
+    }
+
+    friend bool operator==(const State& a, const State& b) {
+      const absl::Span<const int> ainst(a.inst_, a.ninst_);
+      const absl::Span<const int> binst(b.inst_, b.ninst_);
+      return &a == &b || (a.flag_ == b.flag_ && ainst == binst);
+    }
+
     int* inst_;         // Instruction pointers in the state.
     int ninst_;         // # of inst_ pointers.
     uint32_t flag_;     // Empty string bitfield flags in effect on the way
@@ -150,11 +162,7 @@ class DFA {
   struct StateHash {
     size_t operator()(const State* a) const {
       DCHECK(a != NULL);
-      HashMix mix(a->flag_);
-      for (int i = 0; i < a->ninst_; i++)
-        mix.Mix(a->inst_[i]);
-      mix.Mix(0);
-      return mix.get();
+      return absl::Hash<State>()(*a);
     }
   };
 
@@ -162,20 +170,11 @@ class DFA {
     bool operator()(const State* a, const State* b) const {
       DCHECK(a != NULL);
       DCHECK(b != NULL);
-      if (a == b)
-        return true;
-      if (a->flag_ != b->flag_)
-        return false;
-      if (a->ninst_ != b->ninst_)
-        return false;
-      for (int i = 0; i < a->ninst_; i++)
-        if (a->inst_[i] != b->inst_[i])
-          return false;
-      return true;
+      return *a == *b;
     }
   };
 
-  typedef std::unordered_set<State*, StateHash, StateEqual> StateSet;
+  typedef absl::flat_hash_set<State*, StateHash, StateEqual> StateSet;
 
  private:
   // Special "first_byte" values for a state.  (Values >= 0 denote actual bytes.)
@@ -755,9 +754,10 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint32_t flag) {
 
   // Must have enough memory for new state.
   // In addition to what we're going to allocate,
-  // the state cache hash table seems to incur about 40 bytes per
-  // State*, empirically.
-  const int kStateCacheOverhead = 40;
+  // the state cache hash table seems to incur about 18 bytes per
+  // State*. Worst case for non-small sets is it being half full, where each
+  // value present takes up 1 byte hash sample plus the pointer itself.
+  const int kStateCacheOverhead = 18;
   int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
   int mem = sizeof(State) + nnext*sizeof(std::atomic<State*>) +
             ninst*sizeof(int);
@@ -1929,7 +1929,7 @@ int DFA::BuildAllStates(const Prog::DFAStateCallback& cb) {
   // Add start state to work queue.
   // Note that any State* that we handle here must point into the cache,
   // so we can simply depend on pointer-as-a-number hashing and equality.
-  std::unordered_map<State*, int> m;
+  absl::flat_hash_map<State*, int> m;
   std::deque<State*> q;
   m.emplace(params.start, static_cast<int>(m.size()));
   q.push_back(params.start);
@@ -2007,7 +2007,7 @@ bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
   // Also note that previously_visited_states[UnseenStatePtr] will, in the STL
   // tradition, implicitly insert a '0' value at first use. We take advantage
   // of that property below.
-  std::unordered_map<State*, int> previously_visited_states;
+  absl::flat_hash_map<State*, int> previously_visited_states;
 
   // Pick out start state for anchored search at beginning of text.
   RWLocker l(&cache_mutex_);
