@@ -217,6 +217,10 @@ static Test tests[] = {
     Regexp::PerlClasses | Regexp::NeverNL },
   { "\\S", "cc{0-0x8 0xb 0xe-0x1f 0x21-0x10ffff}",
     Regexp::PerlClasses | Regexp::NeverNL | Regexp::FoldCase },
+
+  // Bug in Regexp::ToString() that emitted [^], which
+  // would (obviously) fail to parse when fed back in.
+  { "[\\s\\S]", "cc{0-0x10ffff}" },
 };
 
 bool RegexpEqualTestingOnly(Regexp* a, Regexp* b) {
