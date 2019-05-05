@@ -269,9 +269,9 @@ int ToStringWalker::PostVisit(Regexp* re, int parent_arg, int pre_arg,
       }
       t_->append("[");
       // Heuristic: show class as negated if it contains the
-      // non-character 0xFFFE.
+      // non-character 0xFFFE and yet somehow isn't full.
       CharClass* cc = re->cc();
-      if (cc->Contains(0xFFFE)) {
+      if (cc->Contains(0xFFFE) && !cc->full()) {
         cc = cc->Negate();
         t_->append("^");
       }
