@@ -1415,9 +1415,11 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
         // byte runs at about 0.2 MB/s, while the NFA (nfa.cc) can do the
         // same at about 2 MB/s.  Unless we're processing an average
         // of 10 bytes per state computation, fail so that RE2 can
-        // fall back to the NFA.
+        // fall back to the NFA.  However, RE2::Set cannot fall back,
+        // so we just have to keep on keeping on in that case.
         if (dfa_should_bail_when_slow && resetp != NULL &&
-            static_cast<size_t>(p - resetp) < 10*state_cache_.size()) {
+            static_cast<size_t>(p - resetp) < 10*state_cache_.size() &&
+            kind_ != Prog::kManyMatch) {
           params->failed = true;
           return false;
         }
