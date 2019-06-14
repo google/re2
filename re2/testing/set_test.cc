@@ -201,18 +201,4 @@ TEST(Set, Prefix) {
   ASSERT_EQ(v[0], 0);
 }
 
-TEST(Set, OutOfMemory) {
-  RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
-
-  std::string a(10000, 'a');
-  ASSERT_EQ(s.Add(a, NULL), 0);
-  ASSERT_EQ(s.Compile(), true);
-
-  std::vector<int> v;
-  RE2::Set::ErrorInfo ei;
-  ASSERT_EQ(s.Match(a, &v, &ei), false);
-  ASSERT_EQ(v.size(), 0);
-  ASSERT_EQ(ei.kind, RE2::Set::kOutOfMemory);
-}
-
 }  // namespace re2
