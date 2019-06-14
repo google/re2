@@ -80,11 +80,10 @@ class FilteredRE2 {
   // The number of regexps added.
   int NumRegexps() const { return static_cast<int>(re2_vec_.size()); }
 
+  // Get the individual RE2 objects.
+  const RE2& GetRE2(int regexpid) const { return *re2_vec_[regexpid]; }
+
  private:
-
-  // Get the individual RE2 objects. Useful for testing.
-  RE2* GetRE2(int regexpid) const { return re2_vec_[regexpid]; }
-
   // Print prefilter.
   void PrintPrefilter(int regexpid);
 
