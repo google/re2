@@ -7,7 +7,7 @@
 
 // The PrefilterTree class is used to form an AND-OR tree of strings
 // that would trigger each regexp. The 'prefilter' of each regexp is
-// added tp PrefilterTree, and then PrefilterTree is used to find all
+// added to PrefilterTree, and then PrefilterTree is used to find all
 // the unique strings across the prefilters. During search, by using
 // matches from a string matching engine, PrefilterTree deduces the
 // set of regexps that are to be triggered. The 'string matching
