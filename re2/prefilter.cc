@@ -145,10 +145,13 @@ static void SimplifyStringSet(std::set<std::string> *ss) {
   // we know "ab" is a required string, then it doesn't help at all to
   // know that "abc" is also a required string, so delete "abc". This
   // is because, when we are performing a string search to filter
-  // regexps, matching ab will already allow this regexp to be a
-  // candidate for match, so further matching abc is redundant.
-
+  // regexps, matching "ab" will already allow this regexp to be a
+  // candidate for match, so further matching "abc" is redundant.
+  // Note that we must ignore "" because find() would find it at the
+  // start of everything and thus we would end up erasing everything.
   for (SSIter i = ss->begin(); i != ss->end(); ++i) {
+    if (i->empty())
+      continue;
     SSIter j = i;
     ++j;
     while (j != ss->end()) {
