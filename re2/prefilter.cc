@@ -140,27 +140,31 @@ Prefilter* Prefilter::Or(Prefilter* a, Prefilter* b) {
   return AndOr(OR, a, b);
 }
 
-static void SimplifyStringSet(std::set<std::string> *ss) {
+static void SimplifyStringSet(std::set<std::string>* ss) {
   // Now make sure that the strings aren't redundant.  For example, if
   // we know "ab" is a required string, then it doesn't help at all to
   // know that "abc" is also a required string, so delete "abc". This
   // is because, when we are performing a string search to filter
   // regexps, matching "ab" will already allow this regexp to be a
   // candidate for match, so further matching "abc" is redundant.
-  // Note that we must ignore "" because find() would find it at the
+  // Note that we must erase "" because find() would find it at the
   // start of everything and thus we would end up erasing everything.
-  for (SSIter i = ss->begin(); i != ss->end(); ++i) {
-    if (i->empty())
+  SSIter i = ss->begin();
+  while (i != ss->end()) {
+    if (i->empty()) {
+      i = ss->erase(i);
       continue;
+    }
     SSIter j = i;
     ++j;
     while (j != ss->end()) {
-      // Increment j early so that we can erase the element it points to.
-      SSIter old_j = j;
+      if (j->find(*i) != std::string::npos) {
+        j = ss->erase(j);
+        continue;
+      }
       ++j;
-      if (old_j->find(*i) != std::string::npos)
-        ss->erase(old_j);
     }
+    ++i;
   }
 }
 
