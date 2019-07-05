@@ -103,9 +103,11 @@ AtomTest atom_tests[] = {
   }, {
     // Test to make sure that any atoms that have another atom as a
     // substring in an OR are removed; that is, only the shortest
-    // substring is kept.
+    // substring is kept. The (|... tests that "" does not cause the
+    // removal of every other atom in the OR, which used to happen
+    // for two separate reasons.
     "SubstrAtomRemovesSuperStrInOr", {
-      "(abc123|abc|ghi789|abc1234).*[x-z]+",
+      "(|abc123|abc|ghi789|abc1234).*[x-z]+",
       "abcd..yyy..yyyzzz",
       "mnmnpp[a-z]+PPP"
     }, {
