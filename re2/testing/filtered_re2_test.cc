@@ -103,11 +103,9 @@ AtomTest atom_tests[] = {
   }, {
     // Test to make sure that any atoms that have another atom as a
     // substring in an OR are removed; that is, only the shortest
-    // substring is kept. The (|... tests that "" does not cause the
-    // removal of every other atom in the OR, which used to happen
-    // for two separate reasons.
+    // substring is kept.
     "SubstrAtomRemovesSuperStrInOr", {
-      "(|abc123|abc|ghi789|abc1234).*[x-z]+",
+      "(abc123|abc|ghi789|abc1234).*[x-z]+",
       "abcd..yyy..yyyzzz",
       "mnmnpp[a-z]+PPP"
     }, {
@@ -277,6 +275,20 @@ TEST(FilteredRE2Test, MatchTests) {
     LOG(INFO) << "i: " << i << " : " << atom_ids[i];
   v.f.AllMatches(text, atom_ids, &matching_regexps);
   EXPECT_EQ(2, matching_regexps.size());
+}
+
+TEST(FilteredRE2Test, EmptyStringInStringSetBug) {
+  // Bug due to find() finding "" at the start of everything in a string
+  // set and thus SimplifyStringSet() would end up erasing everything.
+  // In order to test this, we have to keep PrefilterTree from discarding
+  // the OR entirely, so we have to make the minimum atom length zero.
+
+  FilterTestVars v(0);  // override the minimum atom length
+  const char* regexps[] = {"-R.+(|ADD=;AA){12}}"};
+  const char* atoms[] = {"", "-r", "add=;aa", "}"};
+  AddRegexpsAndCompile(regexps, arraysize(regexps), &v);
+  EXPECT_TRUE(CheckExpectedAtoms(atoms, arraysize(atoms),
+                                 "EmptyStringInStringSetBug", &v));
 }
 
 }  //  namespace re2
