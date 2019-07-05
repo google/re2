@@ -102,12 +102,12 @@ bool RE2::Set::Compile() {
   return prog_ != NULL;
 }
 
-bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
-  return Match(text, v, NULL);
+bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v, StringPiece* match0) const {
+  return Match(text, v, NULL, match0);
 }
 
 bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v,
-                     ErrorInfo* error_info) const {
+                     ErrorInfo* error_info, StringPiece* match0) const {
   if (!compiled_) {
     LOG(DFATAL) << "RE2::Set::Match() called before compiling";
     if (error_info != NULL)
@@ -121,7 +121,7 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v,
     v->clear();
   }
   bool ret = prog_->SearchDFA(text, text, Prog::kAnchored, Prog::kManyMatch,
-                              NULL, &dfa_failed, matches.get());
+                              match0, &dfa_failed, matches.get());
   if (dfa_failed) {
     if (options_.log_errors())
       LOG(ERROR) << "DFA out of memory: size " << prog_->size() << ", "

@@ -53,13 +53,17 @@ class RE2::Set {
   // Returns true if text matches at least one of the regexps in the set.
   // Fills v (if not NULL) with the indices of the matching regexps.
   // Callers must not expect v to be sorted.
-  bool Match(const StringPiece& text, std::vector<int>* v) const;
+  // If a match is found, fills in match0->end() to point at the end of the match
+  // and sets match0->begin() to text.begin(). This won't work unless you specify v
+  // because otherwise Set reports the earliest match possible and it can be shorter
+  // then what would actually be read out from the text.
+  bool Match(const StringPiece& text, std::vector<int>* v, StringPiece* match0 = NULL) const;
 
   // As above, but populates error_info (if not NULL) when none of the regexps
   // in the set matched. This can inform callers when DFA execution fails, for
   // example, because they might wish to handle that case differently.
   bool Match(const StringPiece& text, std::vector<int>* v,
-             ErrorInfo* error_info) const;
+             ErrorInfo* error_info, StringPiece* match0 = NULL) const;
 
  private:
   typedef std::pair<std::string, re2::Regexp*> Elem;

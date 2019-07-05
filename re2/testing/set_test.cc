@@ -201,4 +201,25 @@ TEST(Set, Prefix) {
   ASSERT_EQ(v[0], 0);
 }
 
+TEST(Set, MatchLength) {
+	RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_START);
+
+	ASSERT_EQ(s.Add("[a-z]+", NULL), 0);
+	ASSERT_EQ(s.Compile(), true);
+
+	std::vector<int> v;
+	std::vector<StringPiece> match(3);
+	ASSERT_EQ(s.Match("   ", &v, &match[0]), false);
+	ASSERT_EQ(s.Match("abc", &v, &match[1]), true);
+	ASSERT_EQ(s.Match("abcdef  ", &v, &match[2]), true);
+
+	ASSERT_EQ(match[0].size(), 0);
+
+	ASSERT_EQ(match[1].size(), 3);
+	ASSERT_EQ(match[1].as_string(), "abc");
+
+	ASSERT_EQ(match[2].size(), 6);
+	ASSERT_EQ(match[2].as_string(), "abcdef");
+}
+
 }  // namespace re2
