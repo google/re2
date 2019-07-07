@@ -119,7 +119,6 @@ class DFA {
   // byte c, the next state should be s->next_[c].
   struct State {
     inline bool IsMatch() const { return (flag_ & kFlagMatch) != 0; }
-    void SaveMatch(std::vector<int>* v);
 
     template <typename H>
     friend H AbslHashValue(H h, const State& a) {
@@ -711,6 +710,15 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
         markp++;
       ip = markp;
     }
+  }
+
+  // If we're in many match mode, canonicalize for similar reasons:
+  // we have an unordered set of states (i.e. we don't have Marks)
+  // and sorting will reduce the number of distinct sets stored.
+  if (kind_ == Prog::kManyMatch) {
+    int* ip = inst;
+    int* ep = ip + n;
+    std::sort(ip, ep);
   }
 
   // Append MatchSep and the match IDs in mq if necessary.
