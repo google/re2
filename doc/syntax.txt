@@ -264,6 +264,7 @@ Dogra
 Duployan
 Egyptian_Hieroglyphs
 Elbasan
+Elymaic
 Ethiopic
 Georgian
 Glagolitic
@@ -321,10 +322,12 @@ Mro
 Multani
 Myanmar
 Nabataean
+Nandinagari
 New_Tai_Lue
 Newa
 Nko
 Nushu
+Nyiakeng_Puachue_Hmong
 Ogham
 Ol_Chiki
 Old_Hungarian
@@ -375,6 +378,7 @@ Tifinagh
 Tirhuta
 Ugaritic
 Vai
+Wancho
 Warang_Citi
 Yi
 Zanabazar_Square
