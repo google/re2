@@ -5,6 +5,10 @@
 
 """Generate C++ tables for Unicode Script and Category groups."""
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import sys
 import unicode
 
@@ -41,17 +45,17 @@ def MakeRanges(codes):
 
 def PrintRanges(type, name, ranges):
   """Print the ranges as an array of type named name."""
-  print "static const %s %s[] = {" % (type, name,)
+  print("static const %s %s[] = {" % (type, name))
   for lo, hi in ranges:
-    print "\t{ %d, %d }," % (lo, hi)
-  print "};"
+    print("\t{ %d, %d }," % (lo, hi))
+  print("};")
 
 # def PrintCodes(type, name, codes):
 #   """Print the codes as an array of type named name."""
-#   print "static %s %s[] = {" % (type, name,)
+#   print("static %s %s[] = {" % (type, name))
 #   for c in codes:
-#     print "\t%d," % (c,)
-#   print "};"
+#     print("\t%d," % (c,))
+#   print("};")
 
 def PrintGroup(name, codes):
   """Print the data structures for the group of codes.
@@ -92,20 +96,22 @@ def PrintGroup(name, codes):
   return ugroup
 
 def main():
-  print _header
+  categories = unicode.Categories()
+  scripts = unicode.Scripts()
+  print(_header)
   ugroups = []
-  for name, codes in unicode.Categories().iteritems():
-    ugroups.append(PrintGroup(name, codes))
-  for name, codes in unicode.Scripts().iteritems():
-    ugroups.append(PrintGroup(name, codes))
-  print "// %d 16-bit ranges, %d 32-bit ranges" % (n16, n32)
-  print "const UGroup unicode_groups[] = {";
+  for name in sorted(categories):
+    ugroups.append(PrintGroup(name, categories[name]))
+  for name in sorted(scripts):
+    ugroups.append(PrintGroup(name, scripts[name]))
+  print("// %d 16-bit ranges, %d 32-bit ranges" % (n16, n32))
+  print("const UGroup unicode_groups[] = {")
   ugroups.sort()
   for ug in ugroups:
-    print "\t%s," % (ug,)
-  print "};"
-  print "const int num_unicode_groups = %d;" % (len(ugroups),)
-  print _trailer
+    print("\t%s," % (ug,))
+  print("};")
+  print("const int num_unicode_groups = %d;" % (len(ugroups),))
+  print(_trailer)
 
 if __name__ == '__main__':
   main()
