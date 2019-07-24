@@ -155,7 +155,7 @@ def ReadUnicodeTable(filename, nfields, doline):
     if filename.startswith("https://"):
       fil = urllib.request.urlopen(filename)
     else:
-      fil = open(filename, "r")
+      fil = open(filename, "rb")
   else:
     fil = filename
 
