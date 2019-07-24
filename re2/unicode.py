@@ -4,9 +4,13 @@
 
 """Parser for Unicode data files (as distributed by unicode.org)."""
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import re
-import urllib2
+from six.moves import urllib
 
 # Directory or URL where Unicode tables reside.
 _UNICODE_DIR = "https://www.unicode.org/Public/12.1.0/ucd"
@@ -149,7 +153,7 @@ def ReadUnicodeTable(filename, nfields, doline):
 
   if type(filename) == str:
     if filename.startswith("https://"):
-      fil = urllib2.urlopen(filename)
+      fil = urllib.request.urlopen(filename)
     else:
       fil = open(filename, "r")
   else:
@@ -161,6 +165,8 @@ def ReadUnicodeTable(filename, nfields, doline):
   for line in fil:
     lineno += 1
     try:
+      line = line.decode('latin1')
+
       # Chop # comments and white space; ignore empty lines.
       sharp = line.find("#")
       if sharp >= 0:
@@ -207,8 +213,8 @@ def ReadUnicodeTable(filename, nfields, doline):
 
       doline(codes, fields)
 
-    except Exception, e:
-      print "%s:%d: %s" % (filename, lineno, e)
+    except Exception as e:
+      print("%s:%d: %s" % (filename, lineno, e))
       raise
 
   if expect_last is not None:
@@ -243,7 +249,7 @@ def CaseGroups(unicode_dir=_UNICODE_DIR):
 
   ReadUnicodeTable(unicode_dir+"/CaseFolding.txt", 4, DoLine)
 
-  groups = togroup.values()
+  groups = list(togroup.values())
   for g in groups:
     g.sort()
   groups.sort()

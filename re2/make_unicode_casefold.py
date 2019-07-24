@@ -9,6 +9,10 @@
 
 """Generate C++ table for Unicode case folding."""
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import sys
 import unicode
 
@@ -57,8 +61,8 @@ def _AddDelta(a, delta):
       return a+1
     else:
       return a-1
-  print >>sys.stderr, "Bad Delta: ", delta
-  raise "Bad Delta"
+  print("Bad Delta:", delta, file=sys.stderr)
+  raise unicode.Error("Bad Delta")
 
 def _MakeRanges(pairs):
   """Turn a list like [(65,97), (66, 98), ..., (90,122)]
@@ -122,7 +126,7 @@ def main():
       foldpairs.append([c[i-1], c[i]])
 
   lowerpairs = []
-  for lower, group in lowergroups.iteritems():
+  for lower, group in lowergroups.items():
     for g in group:
       if g != lower:
         lowerpairs.append([g, lower])
@@ -130,18 +134,18 @@ def main():
   def printpairs(name, foldpairs):
     foldpairs.sort()
     foldranges = _MakeRanges(foldpairs)
-    print "// %d groups, %d pairs, %d ranges" % (len(casegroups), len(foldpairs), len(foldranges))
-    print "const CaseFold unicode_%s[] = {" % (name,)
+    print("// %d groups, %d pairs, %d ranges" % (len(casegroups), len(foldpairs), len(foldranges)))
+    print("const CaseFold unicode_%s[] = {" % (name,))
     for lo, hi, delta in foldranges:
-      print "\t{ %d, %d, %s }," % (lo, hi, delta)
-    print "};"
-    print "const int num_unicode_%s = %d;" % (name, len(foldranges),)
-    print ""
+      print("\t{ %d, %d, %s }," % (lo, hi, delta))
+    print("};")
+    print("const int num_unicode_%s = %d;" % (name, len(foldranges)))
+    print("")
 
-  print _header
+  print(_header)
   printpairs("casefold", foldpairs)
   printpairs("tolower", lowerpairs)
-  print _trailer
+  print(_trailer)
 
 if __name__ == '__main__':
   main()
