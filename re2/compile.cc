@@ -695,7 +695,7 @@ static struct ByteRangeProg {
 
 void Compiler::Add_80_10ffff() {
   int inst[arraysize(prog_80_10ffff)] = { 0 }; // does not need to be initialized; silences gcc warning
-  for (int i = 0; i < arraysize(prog_80_10ffff); i++) {
+  for (size_t i = 0; i < arraysize(prog_80_10ffff); i++) {
     const ByteRangeProg& p = prog_80_10ffff[i];
     int next = 0;
     if (p.next >= 0)

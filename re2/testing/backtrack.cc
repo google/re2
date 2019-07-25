@@ -116,7 +116,7 @@ bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
   endmatch_ = prog_->anchor_end();
   submatch_ = submatch;
   nsubmatch_ = nsubmatch;
-  CHECK(2*nsubmatch_ < arraysize(cap_));
+  CHECK_LT(2*nsubmatch_, static_cast<int>(arraysize(cap_)));
   memset(cap_, 0, sizeof cap_);
 
   // We use submatch_[0] for our own bookkeeping,
@@ -201,7 +201,8 @@ bool Backtracker::Try(int id, const char* p) {
       return false;
 
     case kInstCapture:
-      if (0 <= ip->cap() && ip->cap() < arraysize(cap_)) {
+      if (0 <= ip->cap() &&
+          ip->cap() < static_cast<int>(arraysize(cap_))) {
         // Capture p to register, but save old value.
         const char* q = cap_[ip->cap()];
         cap_[ip->cap()] = p;

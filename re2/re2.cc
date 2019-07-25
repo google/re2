@@ -368,7 +368,7 @@ bool RE2::Replace(std::string* str,
                   const StringPiece& rewrite) {
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > arraysize(vec))
+  if (nvec > static_cast<int>(arraysize(vec)))
     return false;
   if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
     return false;
@@ -388,7 +388,7 @@ int RE2::GlobalReplace(std::string* str,
                        const StringPiece& rewrite) {
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > arraysize(vec))
+  if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
   const char* p = str->data();
@@ -460,7 +460,7 @@ bool RE2::Extract(const StringPiece& text,
                   std::string* out) {
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > arraysize(vec))
+  if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
   if (!re.Match(text, 0, text.size(), UNANCHORED, vec, nvec))
@@ -816,7 +816,7 @@ bool RE2::DoMatch(const StringPiece& text,
   StringPiece stkvec[kVecSize];
   StringPiece* heapvec = NULL;
 
-  if (nvec <= arraysize(stkvec)) {
+  if (nvec <= static_cast<int>(arraysize(stkvec))) {
     vec = stkvec;
   } else {
     vec = new StringPiece[nvec];

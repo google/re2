@@ -144,9 +144,9 @@ AtomTest atom_tests[] = {
 };
 
 void AddRegexpsAndCompile(const char* regexps[],
-                          int n,
+                          size_t n,
                           struct FilterTestVars* v) {
-  for (int i = 0; i < n; i++) {
+  for (size_t i = 0; i < n; i++) {
     int id;
     v->f.Add(regexps[i], v->opts, &id);
   }
@@ -154,18 +154,18 @@ void AddRegexpsAndCompile(const char* regexps[],
 }
 
 bool CheckExpectedAtoms(const char* atoms[],
-                        int n,
+                        size_t n,
                         const char* testname,
                         struct FilterTestVars* v) {
   std::vector<std::string> expected;
-  for (int i = 0; i < n; i++)
+  for (size_t i = 0; i < n; i++)
     expected.push_back(atoms[i]);
 
   bool pass = expected.size() == v->atoms.size();
 
   std::sort(v->atoms.begin(), v->atoms.end());
   std::sort(expected.begin(), expected.end());
-  for (int i = 0; pass && i < n; i++)
+  for (size_t i = 0; pass && i < n; i++)
       pass = pass && expected[i] == v->atoms[i];
 
   if (!pass) {
@@ -183,10 +183,10 @@ bool CheckExpectedAtoms(const char* atoms[],
 
 TEST(FilteredRE2Test, AtomTests) {
   int nfail = 0;
-  for (int i = 0; i < arraysize(atom_tests); i++) {
+  for (size_t i = 0; i < arraysize(atom_tests); i++) {
     FilterTestVars v;
     AtomTest* t = &atom_tests[i];
-    int natom, nregexp;
+    size_t nregexp, natom;
     for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
       if (t->regexps[nregexp] == NULL)
         break;
@@ -221,7 +221,7 @@ TEST(FilteredRE2Test, MatchEmptyPattern) {
   // for this test. Adding the EXPECT here to make sure
   // the index we use for the test is for the correct test.
   EXPECT_EQ("CheckEmptyPattern", std::string(t->testname));
-  int nregexp;
+  size_t nregexp;
   for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
     if (t->regexps[nregexp] == NULL)
       break;
@@ -238,7 +238,7 @@ TEST(FilteredRE2Test, MatchTests) {
   // We are using the regexps used in one of the atom tests
   // for this test.
   EXPECT_EQ("SubstrAtomRemovesSuperStrInOr", std::string(t->testname));
-  int nregexp;
+  size_t nregexp;
   for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
     if (t->regexps[nregexp] == NULL)
       break;

@@ -312,7 +312,7 @@ RegexpTest simple_tests[] = {
 
 TEST(Regexp, SearchTests) {
   int failures = 0;
-  for (int i = 0; i < arraysize(simple_tests); i++) {
+  for (size_t i = 0; i < arraysize(simple_tests); i++) {
     const RegexpTest& t = simple_tests[i];
     if (!TestRegexpOnText(t.regexp, t.text))
       failures++;
