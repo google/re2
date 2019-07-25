@@ -427,20 +427,20 @@ const char* only_posix[] = {
 
 // Test that parser rejects bad regexps.
 TEST(TestParse, InvalidRegexps) {
-  for (int i = 0; i < arraysize(badtests); i++) {
+  for (size_t i = 0; i < arraysize(badtests); i++) {
     ASSERT_TRUE(Regexp::Parse(badtests[i], Regexp::PerlX, NULL) == NULL)
       << " " << badtests[i];
     ASSERT_TRUE(Regexp::Parse(badtests[i], Regexp::NoParseFlags, NULL) == NULL)
       << " " << badtests[i];
   }
-  for (int i = 0; i < arraysize(only_posix); i++) {
+  for (size_t i = 0; i < arraysize(only_posix); i++) {
     ASSERT_TRUE(Regexp::Parse(only_posix[i], Regexp::PerlX, NULL) == NULL)
       << " " << only_posix[i];
     Regexp* re = Regexp::Parse(only_posix[i], Regexp::NoParseFlags, NULL);
     ASSERT_TRUE(re != NULL) << " " << only_posix[i];
     re->Decref();
   }
-  for (int i = 0; i < arraysize(only_perl); i++) {
+  for (size_t i = 0; i < arraysize(only_perl); i++) {
     ASSERT_TRUE(Regexp::Parse(only_perl[i], Regexp::NoParseFlags, NULL) == NULL)
       << " " << only_perl[i];
     Regexp* re = Regexp::Parse(only_perl[i], Regexp::PerlX, NULL);
@@ -451,7 +451,7 @@ TEST(TestParse, InvalidRegexps) {
 
 // Test that ToString produces original regexp or equivalent one.
 TEST(TestToString, EquivalentParse) {
-  for (int i = 0; i < arraysize(tests); i++) {
+  for (size_t i = 0; i < arraysize(tests); i++) {
     RegexpStatus status;
     Regexp::ParseFlags f = kTestFlags;
     if (tests[i].flags != 0) {

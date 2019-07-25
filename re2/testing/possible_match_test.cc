@@ -107,8 +107,8 @@ static PrefixTest tests[] = {
 };
 
 TEST(PossibleMatchRange, HandWritten) {
-  for (int i = 0; i < arraysize(tests); i++) {
-    for (int j = 0; j < 2; j++) {
+  for (size_t i = 0; i < arraysize(tests); i++) {
+    for (size_t j = 0; j < 2; j++) {
       const PrefixTest& t = tests[i];
       std::string min, max;
       if (j == 0) {

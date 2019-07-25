@@ -801,7 +801,7 @@ void Regexp::RemoveLeadingString(Regexp* re, int n) {
   // limit on the size of a concatenation, so we should never
   // see more than two here.
   Regexp* stk[4];
-  int d = 0;
+  size_t d = 0;
   while (re->op() == kRegexpConcat) {
     if (d < arraysize(stk))
       stk[d++] = re;
@@ -832,8 +832,8 @@ void Regexp::RemoveLeadingString(Regexp* re, int n) {
   }
 
   // If re is now empty, concatenations might simplify too.
-  while (d-- > 0) {
-    re = stk[d];
+  while (d > 0) {
+    re = stk[--d];
     Regexp** sub = re->sub();
     if (sub[0]->op() == kRegexpEmptyMatch) {
       sub[0]->Decref();
