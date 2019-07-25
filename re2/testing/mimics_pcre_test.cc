@@ -58,9 +58,9 @@ static PCRETest tests[] = {
 };
 
 TEST(MimicsPCRE, SimpleTests) {
-  for (int i = 0; i < arraysize(tests); i++) {
+  for (size_t i = 0; i < arraysize(tests); i++) {
     const PCRETest& t = tests[i];
-    for (int j = 0; j < 2; j++) {
+    for (size_t j = 0; j < 2; j++) {
       Regexp::ParseFlags flags = Regexp::LikePerl;
       if (j == 0)
         flags = flags | Regexp::Latin1;
@@ -68,7 +68,7 @@ TEST(MimicsPCRE, SimpleTests) {
       ASSERT_TRUE(re != NULL) << " " << t.regexp;
       ASSERT_EQ(t.should_match, re->MimicsPCRE())
         << " " << t.regexp << " "
-        << (j==0 ? "latin1" : "utf");
+        << (j == 0 ? "latin1" : "utf");
       re->Decref();
     }
   }

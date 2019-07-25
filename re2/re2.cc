@@ -368,7 +368,7 @@ bool RE2::Replace(std::string* str,
                   absl::string_view rewrite) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > arraysize(vec))
+  if (nvec > static_cast<int>(arraysize(vec)))
     return false;
   if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
     return false;
@@ -388,7 +388,7 @@ int RE2::GlobalReplace(std::string* str,
                        absl::string_view rewrite) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > arraysize(vec))
+  if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
   const char* p = str->data();
@@ -460,7 +460,7 @@ bool RE2::Extract(absl::string_view text,
                   std::string* out) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > arraysize(vec))
+  if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
   if (!re.Match(text, 0, text.size(), UNANCHORED, vec, nvec))

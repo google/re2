@@ -159,7 +159,7 @@ static ParseMode parse_modes[] = {
 };
 
 static std::string FormatMode(Regexp::ParseFlags flags) {
-  for (int i = 0; i < arraysize(parse_modes); i++)
+  for (size_t i = 0; i < arraysize(parse_modes); i++)
     if (parse_modes[i].parse_flags == flags)
       return parse_modes[i].desc;
   return StringPrintf("%#x", static_cast<uint32_t>(flags));
@@ -609,8 +609,8 @@ static Prog::MatchKind kinds[] = {
 // Test all possible match kinds and parse modes.
 Tester::Tester(absl::string_view regexp) {
   error_ = false;
-  for (int i = 0; i < arraysize(kinds); i++) {
-    for (int j = 0; j < arraysize(parse_modes); j++) {
+  for (size_t i = 0; i < arraysize(kinds); i++) {
+    for (size_t j = 0; j < arraysize(parse_modes); j++) {
       TestInstance* t = new TestInstance(regexp, kinds[i],
                                          parse_modes[j].parse_flags);
       error_ |= t->error();
@@ -654,7 +654,7 @@ bool Tester::TestInput(absl::string_view text) {
 bool Tester::TestInputInContext(absl::string_view text,
                                 absl::string_view context) {
   bool okay = true;
-  for (int i = 0; i < arraysize(anchors); i++)
+  for (size_t i = 0; i < arraysize(anchors); i++)
     okay &= TestCase(text, context, anchors[i]);
   return okay;
 }
