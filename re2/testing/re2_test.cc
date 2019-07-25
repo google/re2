@@ -519,7 +519,7 @@ TEST(EmptyCharset, Fuzz) {
     "[^\\D\\d]",
     "[^\\D[:digit:]]"
   };
-  for (int i = 0; i < arraysize(empties); i++)
+  for (size_t i = 0; i < arraysize(empties); i++)
     ASSERT_FALSE(RE2(empties[i]).Match("abc", 0, 3, RE2::UNANCHORED, NULL, 0));
 }
 
@@ -533,8 +533,13 @@ TEST(EmptyCharset, BitstateAssumptions) {
     "((((()))))" "([^\\S\\s]|[^\\S\\s])?",
     "((((()))))" "(([^\\S\\s]|[^\\S\\s])|)"
   };
+<<<<<<< HEAD   (778b0c One more tweak for Python 3.)
   absl::string_view group[6];
   for (int i = 0; i < arraysize(nop_empties); i++)
+=======
+  StringPiece group[6];
+  for (size_t i = 0; i < arraysize(nop_empties); i++)
+>>>>>>> CHANGE (7e9d79 Don't make the arraysize() macro cast to int.)
     ASSERT_TRUE(RE2(nop_empties[i]).Match("", 0, 0, RE2::UNANCHORED, group, 6));
 }
 
@@ -1298,7 +1303,7 @@ static struct ErrorTest {
   { "zz(?P<name\377>abc)", "" },
 };
 TEST(RE2, ErrorArgs) {
-  for (int i = 0; i < arraysize(error_tests); i++) {
+  for (size_t i = 0; i < arraysize(error_tests); i++) {
     RE2 re(error_tests[i].regexp, RE2::Quiet);
     EXPECT_FALSE(re.ok());
     EXPECT_EQ(re.error_arg(), error_tests[i].error) << re.error();
@@ -1320,7 +1325,7 @@ static struct NeverTest {
 TEST(RE2, NeverNewline) {
   RE2::Options opt;
   opt.set_never_nl(true);
-  for (int i = 0; i < arraysize(never_tests); i++) {
+  for (size_t i = 0; i < arraysize(never_tests); i++) {
     const NeverTest& t = never_tests[i];
     RE2 re(t.regexp, opt);
     if (t.match == NULL) {
@@ -1455,18 +1460,18 @@ TEST(RE2, NullVsEmptyStringSubmatches) {
   // matches[0] is overall match, [1] is (), [2] is (foo), [3] is nonexistent.
   absl::string_view matches[4];
 
-  for (int i = 0; i < arraysize(matches); i++)
+  for (size_t i = 0; i < arraysize(matches); i++)
     matches[i] = "bar";
 
   absl::string_view null;
   EXPECT_TRUE(re.Match(null, 0, null.size(), RE2::UNANCHORED,
                        matches, arraysize(matches)));
-  for (int i = 0; i < arraysize(matches); i++) {
+  for (size_t i = 0; i < arraysize(matches); i++) {
     EXPECT_TRUE(matches[i].data() == NULL);  // always null
     EXPECT_TRUE(matches[i].empty());
   }
 
-  for (int i = 0; i < arraysize(matches); i++)
+  for (size_t i = 0; i < arraysize(matches); i++)
     matches[i] = "bar";
 
   absl::string_view empty("");

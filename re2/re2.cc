@@ -368,7 +368,7 @@ bool RE2::Replace(std::string* str,
                   absl::string_view rewrite) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > arraysize(vec))
+  if (nvec > static_cast<int>(arraysize(vec)))
     return false;
   if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
     return false;
@@ -388,7 +388,7 @@ int RE2::GlobalReplace(std::string* str,
                        absl::string_view rewrite) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > arraysize(vec))
+  if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
   const char* p = str->data();
@@ -460,7 +460,7 @@ bool RE2::Extract(absl::string_view text,
                   std::string* out) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > arraysize(vec))
+  if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
   if (!re.Match(text, 0, text.size(), UNANCHORED, vec, nvec))
@@ -812,8 +812,21 @@ bool RE2::DoMatch(absl::string_view text,
   else
     nvec = n+1;
 
+<<<<<<< HEAD   (778b0c One more tweak for Python 3.)
   absl::FixedArray<absl::string_view, kVecSize> vec_storage(nvec);
   absl::string_view* vec = vec_storage.data();
+=======
+  StringPiece* vec;
+  StringPiece stkvec[kVecSize];
+  StringPiece* heapvec = NULL;
+
+  if (nvec <= static_cast<int>(arraysize(stkvec))) {
+    vec = stkvec;
+  } else {
+    vec = new StringPiece[nvec];
+    heapvec = vec;
+  }
+>>>>>>> CHANGE (7e9d79 Don't make the arraysize() macro cast to int.)
 
   if (!Match(text, 0, text.size(), re_anchor, vec, nvec)) {
     return false;
