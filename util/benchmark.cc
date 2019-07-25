@@ -9,7 +9,6 @@
 #include <chrono>
 #include <thread>
 
-#include "util/util.h"
 #include "util/flags.h"
 #include "util/benchmark.h"
 #include "re2/re2.h"

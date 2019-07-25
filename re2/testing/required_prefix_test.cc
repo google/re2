@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "absl/base/macros.h"
 #include "util/test.h"
 #include "util/logging.h"
 #include "re2/regexp.h"
@@ -40,7 +41,7 @@ static PrefixTest tests[] = {
 };
 
 TEST(RequiredPrefix, SimpleTests) {
-  for (size_t i = 0; i < arraysize(tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(tests); i++) {
     const PrefixTest& t = tests[i];
     for (size_t j = 0; j < 2; j++) {
       Regexp::ParseFlags flags = Regexp::LikePerl;

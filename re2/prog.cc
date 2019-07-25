@@ -13,7 +13,7 @@
 #include <memory>
 #include <utility>
 
-#include "util/util.h"
+#include "absl/base/macros.h"
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "re2/bitmap256.h"
@@ -804,7 +804,7 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap,
         flat->back().set_opcode(kInstAltMatch);
         flat->back().set_out(static_cast<int>(flat->size()));
         flat->back().out1_ = static_cast<uint32_t>(flat->size())+1;
-        FALLTHROUGH_INTENDED;
+        ABSL_FALLTHROUGH_INTENDED;
 
       case kInstAlt:
         stk->push_back(ip->out1());

@@ -17,7 +17,6 @@
 
 #include "absl/base/call_once.h"
 #include "absl/strings/string_view.h"
-#include "util/util.h"
 #include "util/logging.h"
 #include "util/pod_array.h"
 #include "util/sparse_array.h"

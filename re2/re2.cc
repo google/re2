@@ -21,8 +21,8 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/macros.h"
 #include "absl/container/fixed_array.h"
-#include "util/util.h"
 #include "util/logging.h"
 #include "util/sparse_array.h"
 #include "util/strutil.h"
@@ -368,7 +368,7 @@ bool RE2::Replace(std::string* str,
                   absl::string_view rewrite) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > static_cast<int>(arraysize(vec)))
+  if (nvec > static_cast<int>(ABSL_ARRAYSIZE(vec)))
     return false;
   if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
     return false;
@@ -388,7 +388,7 @@ int RE2::GlobalReplace(std::string* str,
                        absl::string_view rewrite) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > static_cast<int>(arraysize(vec)))
+  if (nvec > static_cast<int>(ABSL_ARRAYSIZE(vec)))
     return false;
 
   const char* p = str->data();
@@ -460,7 +460,7 @@ bool RE2::Extract(absl::string_view text,
                   std::string* out) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > static_cast<int>(arraysize(vec)))
+  if (nvec > static_cast<int>(ABSL_ARRAYSIZE(vec)))
     return false;
 
   if (!re.Match(text, 0, text.size(), UNANCHORED, vec, nvec))

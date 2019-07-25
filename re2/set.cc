@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <memory>
 
-#include "util/util.h"
 #include "util/logging.h"
 #include "util/pod_array.h"
 #include "re2/prog.h"

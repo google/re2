@@ -17,6 +17,7 @@
 #include <unistd.h>  /* for sysconf */
 #endif
 
+#include "absl/base/macros.h"
 #include "util/test.h"
 #include "util/logging.h"
 #include "util/strutil.h"
@@ -340,12 +341,12 @@ TEST(RE2, Match) {
   // No match.
   absl::string_view s = "zyzzyva";
   ASSERT_FALSE(
-      re.Match(s, 0, s.size(), RE2::UNANCHORED, group, arraysize(group)));
+      re.Match(s, 0, s.size(), RE2::UNANCHORED, group, ABSL_ARRAYSIZE(group)));
 
   // Matches and extracts.
   s = "a chrisr:9000 here";
   ASSERT_TRUE(
-      re.Match(s, 0, s.size(), RE2::UNANCHORED, group, arraysize(group)));
+      re.Match(s, 0, s.size(), RE2::UNANCHORED, group, ABSL_ARRAYSIZE(group)));
   ASSERT_EQ(group[0], "chrisr:9000");
   ASSERT_EQ(group[1], "chrisr:9000");
   ASSERT_EQ(group[2], "chrisr");
@@ -519,7 +520,7 @@ TEST(EmptyCharset, Fuzz) {
     "[^\\D\\d]",
     "[^\\D[:digit:]]"
   };
-  for (size_t i = 0; i < arraysize(empties); i++)
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(empties); i++)
     ASSERT_FALSE(RE2(empties[i]).Match("abc", 0, 3, RE2::UNANCHORED, NULL, 0));
 }
 
@@ -534,7 +535,7 @@ TEST(EmptyCharset, BitstateAssumptions) {
     "((((()))))" "(([^\\S\\s]|[^\\S\\s])|)"
   };
   absl::string_view group[6];
-  for (size_t i = 0; i < arraysize(nop_empties); i++)
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(nop_empties); i++)
     ASSERT_TRUE(RE2(nop_empties[i]).Match("", 0, 0, RE2::UNANCHORED, group, 6));
 }
 
@@ -1298,7 +1299,7 @@ static struct ErrorTest {
   { "zz(?P<name\377>abc)", "" },
 };
 TEST(RE2, ErrorArgs) {
-  for (size_t i = 0; i < arraysize(error_tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(error_tests); i++) {
     RE2 re(error_tests[i].regexp, RE2::Quiet);
     EXPECT_FALSE(re.ok());
     EXPECT_EQ(re.error_arg(), error_tests[i].error) << re.error();
@@ -1320,7 +1321,7 @@ static struct NeverTest {
 TEST(RE2, NeverNewline) {
   RE2::Options opt;
   opt.set_never_nl(true);
-  for (size_t i = 0; i < arraysize(never_tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(never_tests); i++) {
     const NeverTest& t = never_tests[i];
     RE2 re(t.regexp, opt);
     if (t.match == NULL) {
@@ -1455,23 +1456,23 @@ TEST(RE2, NullVsEmptyStringSubmatches) {
   // matches[0] is overall match, [1] is (), [2] is (foo), [3] is nonexistent.
   absl::string_view matches[4];
 
-  for (size_t i = 0; i < arraysize(matches); i++)
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(matches); i++)
     matches[i] = "bar";
 
   absl::string_view null;
   EXPECT_TRUE(re.Match(null, 0, null.size(), RE2::UNANCHORED,
-                       matches, arraysize(matches)));
-  for (size_t i = 0; i < arraysize(matches); i++) {
+                       matches, ABSL_ARRAYSIZE(matches)));
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(matches); i++) {
     EXPECT_TRUE(matches[i].data() == NULL);  // always null
     EXPECT_TRUE(matches[i].empty());
   }
 
-  for (size_t i = 0; i < arraysize(matches); i++)
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(matches); i++)
     matches[i] = "bar";
 
   absl::string_view empty("");
   EXPECT_TRUE(re.Match(empty, 0, empty.size(), RE2::UNANCHORED,
-                       matches, arraysize(matches)));
+                       matches, ABSL_ARRAYSIZE(matches)));
   EXPECT_TRUE(matches[0].data() != NULL);  // empty, not null
   EXPECT_TRUE(matches[0].empty());
   EXPECT_TRUE(matches[1].data() != NULL);  // empty, not null

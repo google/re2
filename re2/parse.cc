@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include "util/util.h"
+#include "absl/base/macros.h"
 #include "util/logging.h"
 #include "util/pod_array.h"
 #include "util/strutil.h"
@@ -303,7 +303,7 @@ Rune ApplyFold(const CaseFold* f, Rune r) {
     case EvenOddSkip:  // even <-> odd but only applies to every other
       if ((r - f->lo) % 2)
         return r;
-      FALLTHROUGH_INTENDED;
+      ABSL_FALLTHROUGH_INTENDED;
     case EvenOdd:  // even <-> odd
       if (r%2 == 0)
         return r + 1;
@@ -312,7 +312,7 @@ Rune ApplyFold(const CaseFold* f, Rune r) {
     case OddEvenSkip:  // odd <-> even but only applies to every other
       if ((r - f->lo) % 2)
         return r;
-      FALLTHROUGH_INTENDED;
+      ABSL_FALLTHROUGH_INTENDED;
     case OddEven:  // odd <-> even
       if (r%2 == 1)
         return r + 1;
@@ -800,7 +800,7 @@ void Regexp::RemoveLeadingString(Regexp* re, int n) {
   Regexp* stk[4];
   size_t d = 0;
   while (re->op() == kRegexpConcat) {
-    if (d < arraysize(stk))
+    if (d < ABSL_ARRAYSIZE(stk))
       stk[d++] = re;
     re = re->sub()[0];
   }
@@ -1485,7 +1485,7 @@ static bool ParseEscape(absl::string_view* s, Rune* rp,
       // Single non-zero octal digit is a backreference; not supported.
       if (s->size() == 0 || (*s)[0] < '0' || (*s)[0] > '7')
         goto BadEscape;
-      FALLTHROUGH_INTENDED;
+      ABSL_FALLTHROUGH_INTENDED;
     case '0':
       // consume up to three octal digits; already have one.
       code = c - '0';

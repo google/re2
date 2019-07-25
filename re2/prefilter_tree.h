@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "util/util.h"
 #include "util/sparse_array.h"
 #include "re2/prefilter.h"
 

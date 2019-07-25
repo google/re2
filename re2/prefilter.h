@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 
-#include "util/util.h"
 #include "util/logging.h"
 
 namespace re2 {

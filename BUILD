@@ -62,7 +62,6 @@ cc_library(
         "util/strutil.cc",
         "util/strutil.h",
         "util/utf.h",
-        "util/util.h",
     ],
     hdrs = [
         "re2/filtered_re2.h",

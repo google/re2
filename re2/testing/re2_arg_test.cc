@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "absl/base/macros.h"
 #include "util/test.h"
 #include "re2/re2.h"
 
@@ -86,7 +87,7 @@ const SuccessTable kSuccessTable[] = {
 { "18446744073709551616", 0,    { false, false, false, false, false, false }},
 };
 
-const int kNumStrings = arraysize(kSuccessTable);
+const int kNumStrings = ABSL_ARRAYSIZE(kSuccessTable);
 
 // It's ugly to use a macro, but we apparently can't use the EXPECT_EQ
 // macro outside of a TEST block and this seems to be the only way to

@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 
+#include "absl/base/macros.h"
 #include "util/test.h"
 #include "util/logging.h"
 #include "util/strutil.h"
@@ -175,7 +176,7 @@ void EgrepTest(int maxatoms, int maxops, const std::string& alphabet,
                const std::string& wrapper) {
   const char* tops[] = { "", "^(?:%s)", "(?:%s)$", "^(?:%s)$" };
 
-  for (size_t i = 0; i < arraysize(tops); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(tops); i++) {
     ExhaustiveTest(maxatoms, maxops,
                    Split("", alphabet),
                    RegexpGenerator::EgrepOps(),

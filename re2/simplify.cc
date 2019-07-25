@@ -8,7 +8,6 @@
 
 #include <string>
 
-#include "util/util.h"
 #include "util/logging.h"
 #include "util/pod_array.h"
 #include "util/utf.h"

@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/macros.h"
 #include "absl/strings/escaping.h"
 #include "util/test.h"
 #include "util/logging.h"
@@ -108,7 +109,7 @@ static PrefixTest tests[] = {
 };
 
 TEST(PossibleMatchRange, HandWritten) {
-  for (size_t i = 0; i < arraysize(tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(tests); i++) {
     for (size_t j = 0; j < 2; j++) {
       const PrefixTest& t = tests[i];
       std::string min, max;

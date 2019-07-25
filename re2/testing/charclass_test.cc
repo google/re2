@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 
+#include "absl/base/macros.h"
 #include "util/test.h"
 #include "util/utf.h"
 #include "re2/regexp.h"
@@ -197,7 +198,7 @@ bool CorrectCC(CharClass *cc, CCTest *t, const char *desc) {
 
 TEST(TestCharClassBuilder, Adds) {
   int nfail = 0;
-  for (size_t i = 0; i < arraysize(tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(tests); i++) {
     CharClassBuilder ccb;
     CCTest* t = &tests[i];
     for (int j = 0; t->add[j].lo >= 0; j++)

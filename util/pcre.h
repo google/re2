@@ -162,7 +162,6 @@
 // will leave 64 in a, b, c, and d.
 
 #include "absl/strings/string_view.h"
-#include "util/util.h"
 
 #ifdef USEPCRE
 #include <pcre.h>
