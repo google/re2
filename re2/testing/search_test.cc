@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include "absl/base/macros.h"
 #include "util/test.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"
@@ -312,7 +313,7 @@ RegexpTest simple_tests[] = {
 
 TEST(Regexp, SearchTests) {
   int failures = 0;
-  for (size_t i = 0; i < arraysize(simple_tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(simple_tests); i++) {
     const RegexpTest& t = simple_tests[i];
     if (!TestRegexpOnText(t.regexp, t.text))
       failures++;

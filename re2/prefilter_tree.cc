@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include "util/util.h"
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "re2/prefilter.h"

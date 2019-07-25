@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "absl/base/macros.h"
 #include "util/test.h"
 #include "util/logging.h"
 #include "re2/regexp.h"
@@ -113,7 +114,7 @@ static Test tests[] = {
 
 TEST(TestRegexpCompileToProg, Simple) {
   int failed = 0;
-  for (size_t i = 0; i < arraysize(tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(tests); i++) {
     const re2::Test& t = tests[i];
     Regexp* re = Regexp::Parse(t.regexp, Regexp::PerlX|Regexp::Latin1, NULL);
     if (re == NULL) {

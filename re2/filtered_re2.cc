@@ -7,7 +7,6 @@
 #include <stddef.h>
 #include <string>
 
-#include "util/util.h"
 #include "util/logging.h"
 #include "re2/prefilter.h"
 #include "re2/prefilter_tree.h"

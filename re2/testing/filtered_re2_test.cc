@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/macros.h"
 #include "util/test.h"
 #include "util/logging.h"
 #include "re2/filtered_re2.h"
@@ -183,14 +184,14 @@ bool CheckExpectedAtoms(const char* atoms[],
 
 TEST(FilteredRE2Test, AtomTests) {
   int nfail = 0;
-  for (size_t i = 0; i < arraysize(atom_tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(atom_tests); i++) {
     FilterTestVars v;
     AtomTest* t = &atom_tests[i];
     size_t nregexp, natom;
-    for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
+    for (nregexp = 0; nregexp < ABSL_ARRAYSIZE(t->regexps); nregexp++)
       if (t->regexps[nregexp] == NULL)
         break;
-    for (natom = 0; natom < arraysize(t->atoms); natom++)
+    for (natom = 0; natom < ABSL_ARRAYSIZE(t->atoms); natom++)
       if (t->atoms[natom] == NULL)
         break;
     AddRegexpsAndCompile(t->regexps, nregexp, &v);
@@ -222,7 +223,7 @@ TEST(FilteredRE2Test, MatchEmptyPattern) {
   // the index we use for the test is for the correct test.
   EXPECT_EQ("CheckEmptyPattern", std::string(t->testname));
   size_t nregexp;
-  for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
+  for (nregexp = 0; nregexp < ABSL_ARRAYSIZE(t->regexps); nregexp++)
     if (t->regexps[nregexp] == NULL)
       break;
   AddRegexpsAndCompile(t->regexps, nregexp, &v);
@@ -239,7 +240,7 @@ TEST(FilteredRE2Test, MatchTests) {
   // for this test.
   EXPECT_EQ("SubstrAtomRemovesSuperStrInOr", std::string(t->testname));
   size_t nregexp;
-  for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
+  for (nregexp = 0; nregexp < ABSL_ARRAYSIZE(t->regexps); nregexp++)
     if (t->regexps[nregexp] == NULL)
       break;
   AddRegexpsAndCompile(t->regexps, nregexp, &v);
@@ -286,8 +287,8 @@ TEST(FilteredRE2Test, EmptyStringInStringSetBug) {
   FilterTestVars v(0);  // override the minimum atom length
   const char* regexps[] = {"-R.+(|ADD=;AA){12}}"};
   const char* atoms[] = {"", "-r", "add=;aa", "}"};
-  AddRegexpsAndCompile(regexps, arraysize(regexps), &v);
-  EXPECT_TRUE(CheckExpectedAtoms(atoms, arraysize(atoms),
+  AddRegexpsAndCompile(regexps, ABSL_ARRAYSIZE(regexps), &v);
+  EXPECT_TRUE(CheckExpectedAtoms(atoms, ABSL_ARRAYSIZE(atoms),
                                  "EmptyStringInStringSetBug", &v));
 }
 

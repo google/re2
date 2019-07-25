@@ -15,7 +15,6 @@
 #include <string>
 #include <utility>
 
-#include "util/util.h"
 #include "util/flags.h"
 #include "util/logging.h"
 #include "util/pcre.h"

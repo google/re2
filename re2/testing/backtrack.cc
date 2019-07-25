@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "util/util.h"
+#include "absl/base/macros.h"
 #include "util/logging.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"
@@ -115,7 +115,7 @@ bool Backtracker::Search(absl::string_view text, absl::string_view context,
   endmatch_ = prog_->anchor_end();
   submatch_ = submatch;
   nsubmatch_ = nsubmatch;
-  CHECK_LT(2*nsubmatch_, static_cast<int>(arraysize(cap_)));
+  CHECK_LT(2*nsubmatch_, static_cast<int>(ABSL_ARRAYSIZE(cap_)));
   memset(cap_, 0, sizeof cap_);
 
   // We use submatch_[0] for our own bookkeeping,
@@ -201,7 +201,7 @@ bool Backtracker::Try(int id, const char* p) {
 
     case kInstCapture:
       if (0 <= ip->cap() &&
-          ip->cap() < static_cast<int>(arraysize(cap_))) {
+          ip->cap() < static_cast<int>(ABSL_ARRAYSIZE(cap_))) {
         // Capture p to register, but save old value.
         const char* q = cap_[ip->cap()];
         cap_[ip->cap()] = p;

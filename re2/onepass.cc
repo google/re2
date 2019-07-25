@@ -59,7 +59,6 @@
 
 #include "absl/container/fixed_array.h"
 #include "absl/container/inlined_vector.h"
-#include "util/util.h"
 #include "util/logging.h"
 #include "util/pod_array.h"
 #include "util/sparse_set.h"

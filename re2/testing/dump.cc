@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "absl/base/macros.h"
 #include "util/test.h"
 #include "util/logging.h"
 #include "util/strutil.h"
@@ -57,7 +58,7 @@ static const char* kOpcodeNames[] = {
 // Create string representation of regexp with explicit structure.
 // Nothing pretty, just for testing.
 static void DumpRegexpAppending(Regexp* re, std::string* s) {
-  if (re->op() < 0 || re->op() >= arraysize(kOpcodeNames)) {
+  if (re->op() < 0 || re->op() >= ABSL_ARRAYSIZE(kOpcodeNames)) {
     StringAppendF(s, "op%d", re->op());
   } else {
     switch (re->op()) {

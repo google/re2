@@ -9,8 +9,8 @@
 #include <string.h>
 #include <string>
 
+#include "absl/base/macros.h"
 #include "absl/strings/escaping.h"
-#include "util/util.h"
 #include "util/flags.h"
 #include "util/logging.h"
 #include "util/strutil.h"
@@ -50,7 +50,7 @@ const char* engine_names[kEngineMax] = {
 // Returns the name of the engine.
 static const char* EngineName(Engine e) {
   CHECK_GE(e, 0);
-  CHECK_LT(e, arraysize(engine_names));
+  CHECK_LT(e, ABSL_ARRAYSIZE(engine_names));
   CHECK(engine_names[e] != NULL);
   return engine_names[e];
 }
@@ -159,7 +159,7 @@ static ParseMode parse_modes[] = {
 };
 
 static std::string FormatMode(Regexp::ParseFlags flags) {
-  for (size_t i = 0; i < arraysize(parse_modes); i++)
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(parse_modes); i++)
     if (parse_modes[i].parse_flags == flags)
       return parse_modes[i].desc;
   return StringPrintf("%#x", static_cast<uint32_t>(flags));
@@ -609,8 +609,8 @@ static Prog::MatchKind kinds[] = {
 // Test all possible match kinds and parse modes.
 Tester::Tester(absl::string_view regexp) {
   error_ = false;
-  for (size_t i = 0; i < arraysize(kinds); i++) {
-    for (size_t j = 0; j < arraysize(parse_modes); j++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(kinds); i++) {
+    for (size_t j = 0; j < ABSL_ARRAYSIZE(parse_modes); j++) {
       TestInstance* t = new TestInstance(regexp, kinds[i],
                                          parse_modes[j].parse_flags);
       error_ |= t->error();
@@ -654,7 +654,7 @@ bool Tester::TestInput(absl::string_view text) {
 bool Tester::TestInputInContext(absl::string_view text,
                                 absl::string_view context) {
   bool okay = true;
-  for (size_t i = 0; i < arraysize(anchors); i++)
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(anchors); i++)
     okay &= TestCase(text, context, anchors[i]);
   return okay;
 }

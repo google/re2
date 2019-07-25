@@ -16,8 +16,8 @@
 #include <vector>
 
 #include "absl/base/call_once.h"
+#include "absl/base/macros.h"
 #include "absl/synchronization/mutex.h"
-#include "util/util.h"
 #include "util/logging.h"
 #include "util/utf.h"
 #include "re2/walker-inl.h"
@@ -510,7 +510,7 @@ static const char *kErrorStrings[] = {
 };
 
 std::string RegexpStatus::CodeText(enum RegexpStatusCode code) {
-  if (code < 0 || code >= arraysize(kErrorStrings))
+  if (code < 0 || code >= ABSL_ARRAYSIZE(kErrorStrings))
     code = kRegexpInternalError;
   return kErrorStrings[code];
 }

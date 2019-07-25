@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "util/util.h"
 
 namespace re2 {
 

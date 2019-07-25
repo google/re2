@@ -92,7 +92,6 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "util/util.h"
 #include "util/logging.h"
 #include "util/utf.h"
 

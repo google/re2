@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/macros.h"
 #include "absl/strings/escaping.h"
 #include "util/test.h"
 #include "util/logging.h"
@@ -48,7 +49,7 @@ const std::vector<std::string>& RegexpGenerator::EgrepOps() {
     "%s?",
     "%s\\C*",
   };
-  static std::vector<std::string> v(ops, ops + arraysize(ops));
+  static std::vector<std::string> v(ops, ops + ABSL_ARRAYSIZE(ops));
   return v;
 }
 

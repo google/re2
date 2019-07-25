@@ -8,7 +8,6 @@
 #include <string.h>
 #include <string>
 
-#include "util/util.h"
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "util/utf.h"

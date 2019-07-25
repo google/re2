@@ -7,6 +7,7 @@
 #include <thread>
 #include <vector>
 
+#include "absl/base/macros.h"
 #include "util/test.h"
 #include "util/logging.h"
 #include "util/strutil.h"
@@ -299,7 +300,7 @@ ReverseTest reverse_tests[] = {
 
 TEST(DFA, ReverseMatch) {
   int nfail = 0;
-  for (size_t i = 0; i < arraysize(reverse_tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(reverse_tests); i++) {
     const ReverseTest& t = reverse_tests[i];
     Regexp* re = Regexp::Parse(t.regexp, Regexp::LikePerl, NULL);
     ASSERT_TRUE(re != NULL);
@@ -355,7 +356,7 @@ CallbackTest callback_tests[] = {
 
 TEST(DFA, Callback) {
   int nfail = 0;
-  for (size_t i = 0; i < arraysize(callback_tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(callback_tests); i++) {
     const CallbackTest& t = callback_tests[i];
     Regexp* re = Regexp::Parse(t.regexp, Regexp::LikePerl, NULL);
     ASSERT_TRUE(re != NULL);

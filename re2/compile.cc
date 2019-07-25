@@ -12,6 +12,7 @@
 #include <string.h>
 #include <utility>
 
+#include "absl/base/macros.h"
 #include "absl/container/flat_hash_map.h"
 #include "util/logging.h"
 #include "util/pod_array.h"
@@ -694,8 +695,8 @@ static struct ByteRangeProg {
 };
 
 void Compiler::Add_80_10ffff() {
-  int inst[arraysize(prog_80_10ffff)] = { 0 }; // does not need to be initialized; silences gcc warning
-  for (size_t i = 0; i < arraysize(prog_80_10ffff); i++) {
+  int inst[ABSL_ARRAYSIZE(prog_80_10ffff)] = { 0 }; // does not need to be initialized; silences gcc warning
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(prog_80_10ffff); i++) {
     const ByteRangeProg& p = prog_80_10ffff[i];
     int next = 0;
     if (p.next >= 0)
