@@ -332,10 +332,10 @@ static void AppendCCChar(std::string* t, Rune r) {
   }
 
   if (r < 0x100) {
-    StringAppendF(t, "\\x%02x", static_cast<int>(r));
+    *t += StringPrintf("\\x%02x", static_cast<int>(r));
     return;
   }
-  StringAppendF(t, "\\x{%x}", static_cast<int>(r));
+  *t += StringPrintf("\\x{%x}", static_cast<int>(r));
 }
 
 static void AppendCCRange(std::string* t, Rune lo, Rune hi) {

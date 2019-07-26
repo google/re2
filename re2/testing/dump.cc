@@ -59,7 +59,7 @@ static const char* kOpcodeNames[] = {
 // Nothing pretty, just for testing.
 static void DumpRegexpAppending(Regexp* re, std::string* s) {
   if (re->op() < 0 || re->op() >= arraysize(kOpcodeNames)) {
-    StringAppendF(s, "op%d", re->op());
+    *s += StringPrintf("op%d", re->op());
   } else {
     switch (re->op()) {
       default:

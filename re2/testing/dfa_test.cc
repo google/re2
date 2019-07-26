@@ -360,12 +360,12 @@ TEST(DFA, Callback) {
     prog->BuildEntireDFA(Prog::kLongestMatch, [&](const int* next, bool match) {
       ASSERT_TRUE(next != NULL);
       if (!dump.empty())
-        StringAppendF(&dump, " ");
-      StringAppendF(&dump, match ? "[[" : "[");
+        dump += " ";
+      dump += match ? "[[" : "[";
       for (int b = 0; b < prog->bytemap_range() + 1; b++)
-        StringAppendF(&dump, "%d,", next[b]);
+        dump += StringPrintf("%d,", next[b]);
       dump.pop_back();
-      StringAppendF(&dump, match ? "]]" : "]");
+      dump += match ? "]]" : "]";
     });
     if (dump != t.dump) {
       LOG(ERROR) << t.regexp << " bytemap:\n" << prog->DumpByteMap();
