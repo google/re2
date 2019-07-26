@@ -58,8 +58,13 @@ static const char* kOpcodeNames[] = {
 // Create string representation of regexp with explicit structure.
 // Nothing pretty, just for testing.
 static void DumpRegexpAppending(Regexp* re, std::string* s) {
+<<<<<<< HEAD   (a3412b Get rid of SStringPrintf().)
   if (re->op() < 0 || re->op() >= ABSL_ARRAYSIZE(kOpcodeNames)) {
     StringAppendF(s, "op%d", re->op());
+=======
+  if (re->op() < 0 || re->op() >= arraysize(kOpcodeNames)) {
+    *s += StringPrintf("op%d", re->op());
+>>>>>>> CHANGE (d5d32a Get rid of StringAppendF().)
   } else {
     switch (re->op()) {
       default:

@@ -509,10 +509,10 @@ std::string DFA::DumpWorkq(Workq* q) {
   const char* sep = "";
   for (Workq::iterator it = q->begin(); it != q->end(); ++it) {
     if (q->is_mark(*it)) {
-      StringAppendF(&s, "|");
+      s += "|";
       sep = "";
     } else {
-      StringAppendF(&s, "%s%d", sep, *it);
+      s += StringPrintf("%s%d", sep, *it);
       sep = ",";
     }
   }
@@ -529,20 +529,20 @@ std::string DFA::DumpState(State* state) {
     return "*";
   std::string s;
   const char* sep = "";
-  StringAppendF(&s, "(%p)", state);
+  s += StringPrintf("(%p)", state);
   for (int i = 0; i < state->ninst_; i++) {
     if (state->inst_[i] == Mark) {
-      StringAppendF(&s, "|");
+      s += "|";
       sep = "";
     } else if (state->inst_[i] == MatchSep) {
-      StringAppendF(&s, "||");
+      s += "||";
       sep = "";
     } else {
-      StringAppendF(&s, "%s%d", sep, state->inst_[i]);
+      s += StringPrintf("%s%d", sep, state->inst_[i]);
       sep = ",";
     }
   }
-  StringAppendF(&s, " flag=%#x", state->flag_);
+  s += StringPrintf(" flag=%#x", state->flag_);
   return s;
 }
 
