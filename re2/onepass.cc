@@ -597,15 +597,15 @@ bool Prog::IsOnePass() {
       if (nodeindex == -1)
         continue;
       OneState* node = IndexToNode(nodes.data(), statesize, nodeindex);
-      StringAppendF(&dump, "node %d id=%d: matchcond=%#x\n",
-                    nodeindex, id, node->matchcond);
+      dump += StringPrintf("node %d id=%d: matchcond=%#x\n",
+                           nodeindex, id, node->matchcond);
       for (int i = 0; i < bytemap_range_; i++) {
         if ((node->action[i] & kImpossible) == kImpossible)
           continue;
-        StringAppendF(&dump, "  %d cond %#x -> %d id=%d\n",
-                      i, node->action[i] & 0xFFFF,
-                      node->action[i] >> kIndexShift,
-                      idmap[node->action[i] >> kIndexShift]);
+        dump += StringPrintf("  %d cond %#x -> %d id=%d\n",
+                             i, node->action[i] & 0xFFFF,
+                             node->action[i] >> kIndexShift,
+                             idmap[node->action[i] >> kIndexShift]);
       }
     }
     LOG(ERROR) << "nodes:\n" << dump;

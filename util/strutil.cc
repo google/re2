@@ -146,11 +146,4 @@ std::string StringPrintf(const char* format, ...) {
   return result;
 }
 
-void StringAppendF(std::string* dst, const char* format, ...) {
-  va_list ap;
-  va_start(ap, format);
-  StringAppendV(dst, format, ap);
-  va_end(ap);
-}
-
 }  // namespace re2

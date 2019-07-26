@@ -429,13 +429,14 @@ std::string NFA::FormatCapture(const char** capture) {
   std::string s;
   for (int i = 0; i < ncapture_; i+=2) {
     if (capture[i] == NULL)
-      StringAppendF(&s, "(?,?)");
+      s += "(?,?)";
     else if (capture[i+1] == NULL)
-      StringAppendF(&s, "(%d,?)", (int)(capture[i] - btext_));
+      s += StringPrintf("(%d,?)",
+                        (int)(capture[i] - btext_));
     else
-      StringAppendF(&s, "(%d,%d)",
-                    (int)(capture[i] - btext_),
-                    (int)(capture[i+1] - btext_));
+      s += StringPrintf("(%d,%d)",
+                        (int)(capture[i] - btext_),
+                        (int)(capture[i+1] - btext_));
   }
   return s;
 }
