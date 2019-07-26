@@ -882,9 +882,10 @@ bool RE2::CheckRewriteString(const StringPiece& rewrite,
   }
 
   if (max_token > NumberOfCapturingGroups()) {
-    SStringPrintf(error, "Rewrite schema requests %d matches, "
-                  "but the regexp only has %d parenthesized subexpressions.",
-                  max_token, NumberOfCapturingGroups());
+    *error = StringPrintf(
+        "Rewrite schema requests %d matches, but the regexp only has %d "
+        "parenthesized subexpressions.",
+        max_token, NumberOfCapturingGroups());
     return false;
   }
   return true;
