@@ -13,7 +13,6 @@ namespace re2 {
 
 void PrefixSuccessor(std::string* prefix);
 std::string StringPrintf(const char* format, ...);
-void SStringPrintf(std::string* dst, const char* format, ...);
 void StringAppendF(std::string* dst, const char* format, ...);
 
 }  // namespace re2
