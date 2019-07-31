@@ -4,8 +4,8 @@ set -eux
 cd git/re2
 
 bazel clean
-bazel build --compilation_mode=dbg -- //...
-bazel test  --compilation_mode=dbg --test_output=errors -- //... \
+bazel build --compilation_mode=dbg -- //:all
+bazel test  --compilation_mode=dbg --test_output=errors -- //:all \
   -//:dfa_test \
   -//:exhaustive1_test \
   -//:exhaustive2_test \
@@ -14,8 +14,8 @@ bazel test  --compilation_mode=dbg --test_output=errors -- //... \
   -//:random_test
 
 bazel clean
-bazel build --compilation_mode=opt -- //...
-bazel test  --compilation_mode=opt --test_output=errors -- //... \
+bazel build --compilation_mode=opt -- //:all
+bazel test  --compilation_mode=opt --test_output=errors -- //:all \
   -//:dfa_test \
   -//:exhaustive1_test \
   -//:exhaustive2_test \
