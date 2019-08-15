@@ -1,6 +1,6 @@
 language: cpp
 sudo: false
-dist: trusty
+dist: xenial
 script:
   - make
   - make test
@@ -76,37 +76,8 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.5
-          packages:
-            - clang-3.5
-      env:
-        - MATRIX_EVAL="CC=clang-3.5 CXX=clang++-3.5"
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
-          packages:
-            - clang-3.6
-      env:
-        - MATRIX_EVAL="CC=clang-3.6 CXX=clang++-3.6"
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-          packages:
-            - clang-3.7
-      env:
-        - MATRIX_EVAL="CC=clang-3.7 CXX=clang++-3.7"
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
+            - sourceline: 'deb https://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.8 main'
+              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
             - clang-3.8
       env:
@@ -116,7 +87,8 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.9
+            - sourceline: 'deb https://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main'
+              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
             - clang-3.9
       env:
@@ -126,7 +98,8 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-4.0
+            - sourceline: 'deb https://apt.llvm.org/xenial/ llvm-toolchain-xenial-4.0 main'
+              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
             - clang-4.0
       env:
@@ -136,7 +109,8 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-5.0
+            - sourceline: 'deb https://apt.llvm.org/xenial/ llvm-toolchain-xenial-5.0 main'
+              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
             - clang-5.0
       env:
@@ -146,7 +120,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: 'deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main'
+            - sourceline: 'deb https://apt.llvm.org/xenial/ llvm-toolchain-xenial-6.0 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
             - clang-6.0
@@ -157,7 +131,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: 'deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main'
+            - sourceline: 'deb https://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
             - clang-7
@@ -168,7 +142,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: 'deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-8 main'
+            - sourceline: 'deb https://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
             - clang-8
