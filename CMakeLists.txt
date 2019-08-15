@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Old enough to support Ubuntu Trusty.
-cmake_minimum_required(VERSION 2.8.12)
+# Old enough to support Ubuntu Xenial.
+cmake_minimum_required(VERSION 3.5.1)
 
 if(POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
@@ -27,7 +27,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   endif()
   if(BUILD_SHARED_LIBS)
     # See http://www.kitware.com/blog/home/post/939 for details.
-    cmake_minimum_required(VERSION 3.4)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
   endif()
   # CMake defaults to /W3, but some users like /W4 (or /Wall) and /WX,
