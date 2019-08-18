@@ -3,6 +3,16 @@ set -eux
 
 cd git/re2
 
+case "${KOKORO_JOB_NAME}" in
+  */windows-*)
+    choco upgrade bazel -y
+    ;;
+  *)
+    # Use the script provided by Kokoro.
+    use_bazel.sh latest
+    ;;
+esac
+
 bazel clean
 bazel build --compilation_mode=dbg -- //:all
 bazel test  --compilation_mode=dbg --test_output=errors -- //:all \
