@@ -9,6 +9,7 @@ workspace(name = "com_googlesource_code_re2")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
+<<<<<<< HEAD   (af0c93 Fix the build after Abseil switched to Starlark for C++ rule)
     name = "com_google_absl",
     strip_prefix = "abseil-cpp-master",
     urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
@@ -37,4 +38,9 @@ http_archive(
     build_file = "@io_abseil_py//third_party:six.BUILD",
     strip_prefix = "six-master",
     urls = ["https://github.com/benjaminp/six/archive/master.zip"],
+=======
+    name = "rules_cc",
+    strip_prefix = "rules_cc-master",
+    urls = ["https://github.com/bazelbuild/rules_cc/archive/master.zip"],
+>>>>>>> CHANGE (d07b6d Switch to Starlark for C++ rules.)
 )
