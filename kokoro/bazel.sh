@@ -6,8 +6,8 @@ cd git/re2
 case "${KOKORO_JOB_NAME}" in
   */windows-*)
     choco upgrade bazel -y -i
-    # VCVARSALL.BAT seems to break otherwise. :/
-    choco install typescript-vs2017 -y -i
+    # The automagical configuration seems to break. :/
+    export BAZEL_VC='C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC'
     ;;
   *)
     # Use the script provided by Kokoro.
