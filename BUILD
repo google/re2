@@ -23,6 +23,8 @@ config_setting(
     values = {"cpu": "x64_windows_msvc"},
 )
 
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
 cc_library(
     name = "re2",
     srcs = [
@@ -122,106 +124,144 @@ cc_library(
     deps = [":testing"],
 )
 
-load(":re2_test.bzl", "re2_test")
-
-re2_test(
-    "charclass_test",
+cc_test(
+    name = "charclass_test",
     size = "small",
+    srcs = ["re2/testing/charclass_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "compile_test",
+cc_test(
+    name = "compile_test",
     size = "small",
+    srcs = ["re2/testing/compile_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "filtered_re2_test",
+cc_test(
+    name = "filtered_re2_test",
     size = "small",
+    srcs = ["re2/testing/filtered_re2_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "mimics_pcre_test",
+cc_test(
+    name = "mimics_pcre_test",
     size = "small",
+    srcs = ["re2/testing/mimics_pcre_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "parse_test",
+cc_test(
+    name = "parse_test",
     size = "small",
+    srcs = ["re2/testing/parse_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "possible_match_test",
+cc_test(
+    name = "possible_match_test",
     size = "small",
+    srcs = ["re2/testing/possible_match_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "re2_arg_test",
+cc_test(
+    name = "re2_arg_test",
     size = "small",
+    srcs = ["re2/testing/re2_arg_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "re2_test",
+cc_test(
+    name = "re2_test",
     size = "small",
+    srcs = ["re2/testing/re2_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "regexp_test",
+cc_test(
+    name = "regexp_test",
     size = "small",
+    srcs = ["re2/testing/regexp_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "required_prefix_test",
+cc_test(
+    name = "required_prefix_test",
     size = "small",
+    srcs = ["re2/testing/required_prefix_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "search_test",
+cc_test(
+    name = "search_test",
     size = "small",
+    srcs = ["re2/testing/search_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "set_test",
+cc_test(
+    name = "set_test",
     size = "small",
+    srcs = ["re2/testing/set_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "simplify_test",
+cc_test(
+    name = "simplify_test",
     size = "small",
+    srcs = ["re2/testing/simplify_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "string_generator_test",
+cc_test(
+    name = "string_generator_test",
     size = "small",
+    srcs = ["re2/testing/string_generator_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "dfa_test",
+cc_test(
+    name = "dfa_test",
     size = "large",
+    srcs = ["re2/testing/dfa_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "exhaustive1_test",
+cc_test(
+    name = "exhaustive1_test",
     size = "large",
+    srcs = ["re2/testing/exhaustive1_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "exhaustive2_test",
+cc_test(
+    name = "exhaustive2_test",
     size = "large",
+    srcs = ["re2/testing/exhaustive2_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "exhaustive3_test",
+cc_test(
+    name = "exhaustive3_test",
     size = "large",
+    srcs = ["re2/testing/exhaustive3_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "exhaustive_test",
+cc_test(
+    name = "exhaustive_test",
     size = "large",
+    srcs = ["re2/testing/exhaustive_test.cc"],
+    deps = [":test"],
 )
 
-re2_test(
-    "random_test",
+cc_test(
+    name = "random_test",
     size = "large",
+    srcs = ["re2/testing/random_test.cc"],
+    deps = [":test"],
 )
 
 cc_library(
