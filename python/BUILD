@@ -4,6 +4,8 @@
 
 # Bazel (http://bazel.io/) BUILD file for RE2 Python.
 
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
 # For now, we just assume that the pybind11 headers are installed under a system
 # directory and that you will tell Bazel where the Python headers are installed:
 # bazel build $(python3-config --includes | tr ' ' '\n' | sed -e 's/^/--copt=/')
