@@ -27,6 +27,12 @@ http_archive(
 )
 
 http_archive(
+    name = "rules_cc",
+    strip_prefix = "rules_cc-master",
+    urls = ["https://github.com/bazelbuild/rules_cc/archive/master.zip"],
+)
+
+http_archive(
     name = "six_archive",
     build_file = "@io_abseil_py//third_party:six.BUILD",
     strip_prefix = "six-master",
