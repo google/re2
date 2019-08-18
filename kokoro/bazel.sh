@@ -6,7 +6,7 @@ cd git/re2
 case "${KOKORO_JOB_NAME}" in
   */windows-*)
     choco upgrade bazel -y -i
-    # The automagical configuration seems to break. :/
+    # Pin to Visual Studio 2015, which is the minimum that we support.
     export BAZEL_VC='C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC'
     ;;
   *)
