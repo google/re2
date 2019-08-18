@@ -5,6 +5,7 @@ cd git/re2
 
 case "${KOKORO_JOB_NAME}" in
   */windows-*)
+    # Pin to Visual Studio 2015, which is the minimum that we support.
     CMAKE_G_A_FLAGS=('-G' 'Visual Studio 14 2015' '-A' 'x64')
     ;;
   *)
