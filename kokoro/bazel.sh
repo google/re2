@@ -5,7 +5,7 @@ cd git/re2
 
 case "${KOKORO_JOB_NAME}" in
   */windows-*)
-    choco upgrade bazel -y -f
+    choco upgrade bazel -y -i
     ;;
   *)
     # Use the script provided by Kokoro.
