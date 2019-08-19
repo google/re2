@@ -1445,7 +1445,7 @@ static int UnHex(int c) {
 // Sets *rp to the named character.
 static bool ParseEscape(absl::string_view* s, Rune* rp,
                         RegexpStatus* status, int rune_max) {
-  const char* begin = s->begin();
+  const char* begin = s->data();
   if (s->size() < 1 || (*s)[0] != '\\') {
     // Should not happen - caller always checks.
     status->set_code(kRegexpInternalError);
@@ -1588,7 +1588,11 @@ BadEscape:
   // Unrecognized escape sequence.
   status->set_code(kRegexpBadEscape);
   status->set_error_arg(
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
       absl::string_view(begin, static_cast<size_t>(s->begin() - begin)));
+=======
+      StringPiece(begin, static_cast<size_t>(s->data() - begin)));
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
   return false;
 }
 
@@ -1709,8 +1713,13 @@ const UGroup* MaybeParsePerlCCEscape(absl::string_view* s,
     return NULL;
   // Could use StringViewToRune, but there aren't
   // any non-ASCII Perl group names.
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
   absl::string_view name(s->begin(), 2);
   const UGroup* g = LookupPerlGroup(name);
+=======
+  StringPiece name(s->data(), 2);
+  const UGroup *g = LookupPerlGroup(name);
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
   if (g == NULL)
     return NULL;
   s->remove_prefix(name.size());
@@ -1749,8 +1758,13 @@ ParseStatus ParseUnicodeGroup(absl::string_view* s,
     return kParseError;
   if (c != '{') {
     // Name is the bit of string we just skipped over for c.
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
     const char* p = seq.begin() + 2;
     name = absl::string_view(p, static_cast<size_t>(s->begin() - p));
+=======
+    const char* p = seq.data() + 2;
+    name = StringPiece(p, static_cast<size_t>(s->data() - p));
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
   } else {
     // Name is in braces. Look for closing }
     size_t end = s->find('}', 0);
@@ -1761,15 +1775,23 @@ ParseStatus ParseUnicodeGroup(absl::string_view* s,
       status->set_error_arg(seq);
       return kParseError;
     }
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
     name = absl::string_view(s->begin(), end);  // without '}'
+=======
+    name = StringPiece(s->data(), end);  // without '}'
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
     s->remove_prefix(end + 1);  // with '}'
     if (!IsValidUTF8(name, status))
       return kParseError;
   }
 
   // Chop seq where s now begins.
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
   seq = absl::string_view(seq.begin(),
                           static_cast<size_t>(s->begin() - seq.begin()));
+=======
+  seq = StringPiece(seq.data(), static_cast<size_t>(s->data() - seq.data()));
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
 
   if (name.size() > 0 && name[0] == '^') {
     sign = -sign;
@@ -2073,8 +2095,13 @@ bool Regexp::ParseState::ParsePerlFlags(absl::string_view* s) {
     }
 
     // t is "P<name>...", t[end] == '>'
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
     absl::string_view capture(t.begin()-2, end+3);  // "(?P<name>"
     absl::string_view name(t.begin()+2, end-2);     // "name"
+=======
+    StringPiece capture(t.data()-2, end+3);  // "(?P<name>"
+    StringPiece name(t.data()+2, end-2);     // "name"
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
     if (!IsValidUTF8(name, status_))
       return false;
     if (!IsValidCaptureName(name)) {
@@ -2088,7 +2115,8 @@ bool Regexp::ParseState::ParsePerlFlags(absl::string_view* s) {
       return false;
     }
 
-    s->remove_prefix(static_cast<size_t>(capture.end() - s->begin()));
+    s->remove_prefix(
+        static_cast<size_t>(capture.data() + capture.size() - s->data()));
     return true;
   }
 
@@ -2171,8 +2199,13 @@ bool Regexp::ParseState::ParsePerlFlags(absl::string_view* s) {
 
 BadPerlOp:
   status_->set_code(kRegexpBadPerlOp);
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
   status_->set_error_arg(absl::string_view(
       s->begin(), static_cast<size_t>(t.begin() - s->begin())));
+=======
+  status_->set_error_arg(
+      StringPiece(s->data(), static_cast<size_t>(t.data() - s->data())));
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
   return false;
 }
 
@@ -2319,9 +2352,15 @@ Regexp* Regexp::Parse(absl::string_view s, ParseFlags global_flags,
             //   a** is a syntax error, not a double-star.
             // (and a++ means something else entirely, which we don't support!)
             status->set_code(kRegexpRepeatOp);
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
             status->set_error_arg(absl::string_view(
                 lastunary.begin(),
                 static_cast<size_t>(t.begin() - lastunary.begin())));
+=======
+            status->set_error_arg(StringPiece(
+                lastunary.data(),
+                static_cast<size_t>(t.data() - lastunary.data())));
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
             return NULL;
           }
         }
@@ -2352,9 +2391,15 @@ Regexp* Regexp::Parse(absl::string_view s, ParseFlags global_flags,
           if (lastunary.size() > 0) {
             // Not allowed to stack repetition operators.
             status->set_code(kRegexpRepeatOp);
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
             status->set_error_arg(absl::string_view(
                 lastunary.begin(),
                 static_cast<size_t>(t.begin() - lastunary.begin())));
+=======
+            status->set_error_arg(StringPiece(
+                lastunary.data(),
+                static_cast<size_t>(t.data() - lastunary.data())));
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
             return NULL;
           }
         }

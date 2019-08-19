@@ -233,7 +233,12 @@ bool Prog::SearchOnePass(absl::string_view text, absl::string_view context,
   for (int i = 0; i < ncap; i++)
     matchcap[i] = NULL;
 
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
   if (context.begin() == NULL)
+=======
+  StringPiece context = const_context;
+  if (context.data() == NULL)
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
     context = text;
   if (anchor_start() && context.begin() != text.begin())
     return false;
@@ -247,8 +252,8 @@ bool Prog::SearchOnePass(absl::string_view text, absl::string_view context,
   // start() is always mapped to the zeroth OneState.
   OneState* state = IndexToNode(nodes, statesize, 0);
   uint8_t* bytemap = bytemap_;
-  const char* bp = text.begin();
-  const char* ep = text.end();
+  const char* bp = text.data();
+  const char* ep = text.data() + text.size();
   const char* p;
   bool matched = false;
   matchcap[0] = bp;

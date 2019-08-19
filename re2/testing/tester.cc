@@ -98,9 +98,15 @@ typedef TestInstance::Result Result;
 
 // Formats a single capture range s in text in the form (a,b)
 // where a and b are the starting and ending offsets of s in text.
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
 static std::string FormatCapture(absl::string_view text,
                                  absl::string_view s) {
   if (s.begin() == NULL)
+=======
+static std::string FormatCapture(const StringPiece& text,
+                                 const StringPiece& s) {
+  if (s.data() == NULL)
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
     return "(?,?)";
   return StringPrintf("(%td,%td)",
                       s.begin() - text.begin(), s.end() - text.begin());
@@ -488,7 +494,7 @@ static bool ResultOkay(const Result& r, const Result& correct) {
     return false;
   if (r.have_submatch || r.have_submatch0) {
     for (int i = 0; i < kMaxSubmatch; i++) {
-      if (correct.submatch[i].begin() != r.submatch[i].begin() ||
+      if (correct.submatch[i].data() != r.submatch[i].data() ||
           correct.submatch[i].size() != r.submatch[i].size())
         return false;
       if (!r.have_submatch)
@@ -554,8 +560,8 @@ bool TestInstance::RunCase(absl::string_view text, absl::string_view context,
       }
     }
     for (int i = 0; i < 1+num_captures_; i++) {
-      if (r.submatch[i].begin() != correct.submatch[i].begin() ||
-          r.submatch[i].end() != correct.submatch[i].end()) {
+      if (r.submatch[i].data() != correct.submatch[i].data() ||
+          r.submatch[i].size() != correct.submatch[i].size()) {
         LOG(INFO) <<
           StringPrintf("   $%d: should be %s is %s",
                        i,

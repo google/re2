@@ -243,7 +243,7 @@ void RegexpGenerator::RunPostfix(const std::vector<std::string>& post) {
 std::vector<std::string> Explode(absl::string_view s) {
   std::vector<std::string> v;
 
-  for (const char *q = s.begin(); q < s.end(); ) {
+  for (const char *q = s.data(); q < s.data() + s.size(); ) {
     const char* p = q;
     Rune r;
     q += chartorune(&r, q);
@@ -261,17 +261,23 @@ std::vector<std::string> Split(absl::string_view sep, absl::string_view s) {
   if (sep.size() == 0)
     return Explode(s);
 
+<<<<<<< HEAD   (df60b4 Comment on why we pin to Visual Studio 2015.)
   const char *p = s.begin();
   for (const char *q = s.begin(); q + sep.size() <= s.end(); q++) {
     if (absl::string_view(q, sep.size()) == sep) {
+=======
+  const char *p = s.data();
+  for (const char *q = s.data(); q + sep.size() <= s.data() + s.size(); q++) {
+    if (StringPiece(q, sep.size()) == sep) {
+>>>>>>> CHANGE (59a5c7 Don't assume that iterators are just pointers.)
       v.push_back(std::string(p, q - p));
       p = q + sep.size();
       q = p - 1;  // -1 for ++ in loop
       continue;
     }
   }
-  if (p < s.end())
-    v.push_back(std::string(p, s.end() - p));
+  if (p < s.data() + s.size())
+    v.push_back(std::string(p, s.data() + s.size() - p));
   return v;
 }
 
