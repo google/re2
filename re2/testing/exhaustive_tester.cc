@@ -64,7 +64,7 @@ static void PrintResult(const RE2& re, absl::string_view input,
   for (int i = 0; i < n; i++) {
     if (i > 0)
       printf(" ");
-    if (m[i].begin() == NULL)
+    if (m[i].data() == NULL)
       printf("-");
     else
       printf("%td-%td",

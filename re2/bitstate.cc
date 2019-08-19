@@ -85,7 +85,7 @@ BitState::BitState(Prog* prog)
 // we don't repeat the visit.
 bool BitState::ShouldVisit(int id, const char* p) {
   int n = prog_->list_heads()[id] * static_cast<int>(text_.size()+1) +
-          static_cast<int>(p-text_.begin());
+          static_cast<int>(p-text_.data());
   if (visited_[n/VisitedBits] & (1 << (n & (VisitedBits-1))))
     return false;
   visited_[n/VisitedBits] |= 1 << (n & (VisitedBits-1));
@@ -133,7 +133,7 @@ void BitState::Push(int id, const char* p) {
 // Return whether it succeeded.
 bool BitState::TrySearch(int id0, const char* p0) {
   bool matched = false;
-  const char* end = text_.end();
+  const char* end = text_.data() + text_.size();
   njob_ = 0;
   // Push() no longer checks ShouldVisit(),
   // so we must perform the check ourselves.
@@ -250,7 +250,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
         matched = true;
         cap_[1] = p;
         if (submatch_[0].data() == NULL ||
-            (longest_ && p > submatch_[0].end())) {
+            (longest_ && p > submatch_[0].data() + submatch_[0].size())) {
           for (int i = 0; i < nsubmatch_; i++)
             submatch_[i] = absl::string_view(
                 cap_[2 * i],
@@ -287,7 +287,7 @@ bool BitState::Search(absl::string_view text, absl::string_view context,
   // Search parameters.
   text_ = text;
   context_ = context;
-  if (context_.begin() == NULL)
+  if (context_.data() == NULL)
     context_ = text;
   if (prog_->anchor_start() && context_.begin() != text.begin())
     return false;
@@ -318,8 +318,8 @@ bool BitState::Search(absl::string_view text, absl::string_view context,
 
   // Anchored search must start at text.begin().
   if (anchored_) {
-    cap_[0] = text.begin();
-    return TrySearch(prog_->start(), text.begin());
+    cap_[0] = text.data();
+    return TrySearch(prog_->start(), text.data());
   }
 
   // Unanchored search, starting from each possible text position.
@@ -328,13 +328,14 @@ bool BitState::Search(absl::string_view text, absl::string_view context,
   // This looks like it's quadratic in the size of the text,
   // but we are not clearing visited_ between calls to TrySearch,
   // so no work is duplicated and it ends up still being linear.
-  for (const char* p = text.begin(); p <= text.end(); p++) {
+  for (const char* p = text.data(); p <= text.data() + text.size(); p++) {
     // Try to use memchr to find the first byte quickly.
     int fb = prog_->first_byte();
-    if (fb >= 0 && p < text.end() && (p[0] & 0xFF) != fb) {
-      p = reinterpret_cast<const char*>(memchr(p, fb, text.end() - p));
+    if (fb >= 0 && p < text.data() + text.size() && (p[0] & 0xFF) != fb) {
+      p = reinterpret_cast<const char*>(
+          memchr(p, fb, text.data() + text.size() - p));
       if (p == NULL)
-        p = text.end();
+        p = text.data() + text.size();
     }
 
     cap_[0] = p;

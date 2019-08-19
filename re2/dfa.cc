@@ -1329,10 +1329,11 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
                                    bool want_earliest_match,
                                    bool run_forward) {
   State* start = params->start;
-  const uint8_t* bp = BytePtr(params->text.begin());  // start of text
-  const uint8_t* p = bp;                              // text scanning point
-  const uint8_t* ep = BytePtr(params->text.end());    // end of text
-  const uint8_t* resetp = NULL;                       // p at last cache reset
+  const uint8_t* bp = BytePtr(params->text.data());  // start of text
+  const uint8_t* p = bp;                             // text scanning point
+  const uint8_t* ep = BytePtr(params->text.data() +
+                              params->text.size());  // end of text
+  const uint8_t* resetp = NULL;                      // p at last cache reset
   if (!run_forward) {
     using std::swap;
     swap(p, ep);
@@ -1794,9 +1795,9 @@ bool DFA::Search(absl::string_view text, absl::string_view context,
     return false;
   if (params.start == FullMatchState) {
     if (run_forward == want_earliest_match)
-      *epp = text.begin();
+      *epp = text.data();
     else
-      *epp = text.end();
+      *epp = text.data() + text.size();
     return true;
   }
   if (ExtraDebug)
@@ -1858,7 +1859,7 @@ bool Prog::SearchDFA(absl::string_view text, absl::string_view context,
                      bool* failed, SparseSet* matches) {
   *failed = false;
 
-  if (context.begin() == NULL)
+  if (context.data() == NULL)
     context = text;
   bool carat = anchor_start();
   bool dollar = anchor_end();
@@ -1905,7 +1906,7 @@ bool Prog::SearchDFA(absl::string_view text, absl::string_view context,
     return false;
   if (!matched)
     return false;
-  if (endmatch && ep != (reversed_ ? text.begin() : text.end()))
+  if (endmatch && ep != (reversed_ ? text.data() : text.data() + text.size()))
     return false;
 
   // If caller cares, record the boundary of the match.
@@ -1913,11 +1914,11 @@ bool Prog::SearchDFA(absl::string_view text, absl::string_view context,
   // as the beginning.
   if (match0) {
     if (reversed_)
-      *match0 = absl::string_view(ep,
-                                  static_cast<size_t>(text.end() - ep));
+      *match0 =
+          absl::string_view(ep, static_cast<size_t>(text.data() + text.size() - ep));
     else
-      *match0 = absl::string_view(text.begin(),
-                                  static_cast<size_t>(ep - text.begin()));
+      *match0 =
+          absl::string_view(text.data(), static_cast<size_t>(ep - text.data()));
   }
   return true;
 }
