@@ -241,7 +241,7 @@ void RegexpGenerator::RunPostfix(const std::vector<std::string>& post) {
 std::vector<std::string> Explode(const StringPiece& s) {
   std::vector<std::string> v;
 
-  for (const char *q = s.begin(); q < s.end(); ) {
+  for (const char *q = s.data(); q < s.data() + s.size(); ) {
     const char* p = q;
     Rune r;
     q += chartorune(&r, q);
@@ -259,8 +259,8 @@ std::vector<std::string> Split(const StringPiece& sep, const StringPiece& s) {
   if (sep.size() == 0)
     return Explode(s);
 
-  const char *p = s.begin();
-  for (const char *q = s.begin(); q + sep.size() <= s.end(); q++) {
+  const char *p = s.data();
+  for (const char *q = s.data(); q + sep.size() <= s.data() + s.size(); q++) {
     if (StringPiece(q, sep.size()) == sep) {
       v.push_back(std::string(p, q - p));
       p = q + sep.size();
@@ -268,8 +268,8 @@ std::vector<std::string> Split(const StringPiece& sep, const StringPiece& s) {
       continue;
     }
   }
-  if (p < s.end())
-    v.push_back(std::string(p, s.end() - p));
+  if (p < s.data() + s.size())
+    v.push_back(std::string(p, s.data() + s.size() - p));
   return v;
 }
 

@@ -448,7 +448,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
     return false;
 
   StringPiece context = const_context;
-  if (context.begin() == NULL)
+  if (context.data() == NULL)
     context = text;
 
   // Sanity check: make sure that text lies within context.
@@ -465,7 +465,6 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
   if (prog_->anchor_end()) {
     longest = true;
     endmatch_ = true;
-    etext_ = text.end();
   }
 
   if (nsubmatch < 0) {
@@ -488,7 +487,9 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
   matched_ = false;
 
   // For debugging prints.
-  btext_ = context.begin();
+  btext_ = context.data();
+  // For convenience.
+  etext_ = text.data() + text.size();
 
   if (ExtraDebug)
     fprintf(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
@@ -503,14 +504,14 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
   memset(&match_[0], 0, ncapture_*sizeof match_[0]);
 
   // Loop over the text, stepping the machine.
-  for (const char* p = text.begin();; p++) {
+  for (const char* p = text.data();; p++) {
     if (ExtraDebug) {
       int c = 0;
-      if (p == context.begin())
+      if (p == btext_)
         c = '^';
-      else if (p > text.end())
+      else if (p > etext_)
         c = '$';
-      else if (p < text.end())
+      else if (p < etext_)
         c = p[0] & 0xFF;
 
       fprintf(stderr, "%c:", c);
@@ -524,14 +525,14 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
     }
 
     // This is a no-op the first time around the loop because runq is empty.
-    int id = Step(runq, nextq, p < text.end() ? p[0] & 0xFF : -1, context, p);
+    int id = Step(runq, nextq, p < etext_ ? p[0] & 0xFF : -1, context, p);
     DCHECK_EQ(runq->size(), 0);
     using std::swap;
     swap(nextq, runq);
     nextq->clear();
     if (id != 0) {
       // We're done: full match ahead.
-      p = text.end();
+      p = etext_;
       for (;;) {
         Prog::Inst* ip = prog_->inst(id);
         switch (ip->opcode()) {
@@ -559,30 +560,30 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
       break;
     }
 
-    if (p > text.end())
+    if (p > etext_)
       break;
 
     // Start a new thread if there have not been any matches.
     // (No point in starting a new thread if there have been
     // matches, since it would be to the right of the match
     // we already found.)
-    if (!matched_ && (!anchored || p == text.begin())) {
+    if (!matched_ && (!anchored || p == text.data())) {
       // If there's a required first byte for an unanchored search
       // and we're not in the middle of any possible matches,
       // use memchr to search for the byte quickly.
       int fb = prog_->first_byte();
       if (!anchored && runq->size() == 0 &&
-          fb >= 0 && p < text.end() && (p[0] & 0xFF) != fb) {
-        p = reinterpret_cast<const char*>(memchr(p, fb, text.end() - p));
+          fb >= 0 && p < etext_ && (p[0] & 0xFF) != fb) {
+        p = reinterpret_cast<const char*>(memchr(p, fb, etext_ - p));
         if (p == NULL) {
-          p = text.end();
+          p = etext_;
         }
       }
 
       Thread* t = AllocThread();
       CopyCapture(t->capture, match_);
       t->capture[0] = p;
-      AddToThreadq(runq, start_, p < text.end() ? p[0] & 0xFF : -1, context, p,
+      AddToThreadq(runq, start_, p < etext_ ? p[0] & 0xFF : -1, context, p,
                    t);
       Decref(t);
     }

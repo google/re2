@@ -99,7 +99,7 @@ typedef TestInstance::Result Result;
 // where a and b are the starting and ending offsets of s in text.
 static std::string FormatCapture(const StringPiece& text,
                                  const StringPiece& s) {
-  if (s.begin() == NULL)
+  if (s.data() == NULL)
     return "(?,?)";
   return StringPrintf("(%td,%td)",
                       s.begin() - text.begin(), s.end() - text.begin());
@@ -489,7 +489,7 @@ static bool ResultOkay(const Result& r, const Result& correct) {
     return false;
   if (r.have_submatch || r.have_submatch0) {
     for (int i = 0; i < kMaxSubmatch; i++) {
-      if (correct.submatch[i].begin() != r.submatch[i].begin() ||
+      if (correct.submatch[i].data() != r.submatch[i].data() ||
           correct.submatch[i].size() != r.submatch[i].size())
         return false;
       if (!r.have_submatch)
@@ -555,8 +555,8 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
       }
     }
     for (int i = 0; i < 1+num_captures_; i++) {
-      if (r.submatch[i].begin() != correct.submatch[i].begin() ||
-          r.submatch[i].end() != correct.submatch[i].end()) {
+      if (r.submatch[i].data() != correct.submatch[i].data() ||
+          r.submatch[i].size() != correct.submatch[i].size()) {
         LOG(INFO) <<
           StringPrintf("   $%d: should be %s is %s",
                        i,

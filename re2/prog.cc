@@ -288,24 +288,24 @@ uint32_t Prog::EmptyFlags(const StringPiece& text, const char* p) {
   int flags = 0;
 
   // ^ and \A
-  if (p == text.begin())
+  if (p == text.data())
     flags |= kEmptyBeginText | kEmptyBeginLine;
   else if (p[-1] == '\n')
     flags |= kEmptyBeginLine;
 
   // $ and \z
-  if (p == text.end())
+  if (p == text.data() + text.size())
     flags |= kEmptyEndText | kEmptyEndLine;
-  else if (p < text.end() && p[0] == '\n')
+  else if (p < text.data() + text.size() && p[0] == '\n')
     flags |= kEmptyEndLine;
 
   // \b and \B
-  if (p == text.begin() && p == text.end()) {
+  if (p == text.data() && p == text.data() + text.size()) {
     // no word boundary here
-  } else if (p == text.begin()) {
+  } else if (p == text.data()) {
     if (IsWordChar(p[0]))
       flags |= kEmptyWordBoundary;
-  } else if (p == text.end()) {
+  } else if (p == text.data() + text.size()) {
     if (IsWordChar(p[-1]))
       flags |= kEmptyWordBoundary;
   } else {

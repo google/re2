@@ -62,7 +62,7 @@ static void PrintResult(const RE2& re, const StringPiece& input, RE2::Anchor anc
   for (int i = 0; i < n; i++) {
     if (i > 0)
       printf(" ");
-    if (m[i].begin() == NULL)
+    if (m[i].data() == NULL)
       printf("-");
     else
       printf("%td-%td",

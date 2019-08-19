@@ -105,7 +105,7 @@ bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
                          StringPiece* submatch, int nsubmatch) {
   text_ = text;
   context_ = context;
-  if (context_.begin() == NULL)
+  if (context_.data() == NULL)
     context_ = text;
   if (prog_->anchor_start() && text.begin() > context_.begin())
     return false;
@@ -137,14 +137,14 @@ bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
 
   // Anchored search must start at text.begin().
   if (anchored_) {
-    cap_[0] = text.begin();
-    return Visit(prog_->start(), text.begin());
+    cap_[0] = text.data();
+    return Visit(prog_->start(), text.data());
   }
 
   // Unanchored search, starting from each possible text position.
   // Notice that we have to try the empty string at the end of
   // the text, so the loop condition is p <= text.end(), not p < text.end().
-  for (const char* p = text.begin(); p <= text.end(); p++) {
+  for (const char* p = text.data(); p <= text.data() + text.size(); p++) {
     cap_[0] = p;
     if (Visit(prog_->start(), p))  // Match must be leftmost; done.
       return true;
@@ -158,8 +158,8 @@ bool Backtracker::Visit(int id, const char* p) {
   // Check bitmap.  If we've already explored from here,
   // either it didn't match or it did but we're hoping for a better match.
   // Either way, don't go down that road again.
-  CHECK(p <= text_.end());
-  size_t n = id*(text_.size()+1) + (p - text_.begin());
+  CHECK(p <= text_.data() + text_.size());
+  size_t n = id*(text_.size()+1) + (p - text_.data());
   CHECK_LT(n/32, nvisited_);
   if (visited_[n/32] & (1 << (n&31)))
     return false;
@@ -182,7 +182,7 @@ bool Backtracker::Try(int id, const char* p) {
   // Pick out byte at current position.  If at end of string,
   // have to explore in hope of finishing a match.  Use impossible byte -1.
   int c = -1;
-  if (p < text_.end())
+  if (p < text_.data() + text_.size())
     c = *p & 0xFF;
 
   Prog::Inst* ip = prog_->inst(id);
@@ -224,11 +224,12 @@ bool Backtracker::Try(int id, const char* p) {
     case kInstMatch:
       // We found a match.  If it's the best so far, record the
       // parameters in the caller's submatch_ array.
-      if (endmatch_ && p != context_.end())
+      if (endmatch_ && p != context_.data() + context_.size())
         return false;
       cap_[1] = p;
-      if (submatch_[0].data() == NULL ||           // First match so far ...
-          (longest_ && p > submatch_[0].end())) {  // ... or better match
+      if (submatch_[0].data() == NULL ||
+          (longest_ && p > submatch_[0].data() + submatch_[0].size())) {
+        // First match so far - or better match.
         for (int i = 0; i < nsubmatch_; i++)
           submatch_[i] = StringPiece(
               cap_[2 * i], static_cast<size_t>(cap_[2 * i + 1] - cap_[2 * i]));
