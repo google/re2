@@ -235,7 +235,7 @@ bool Prog::SearchOnePass(const StringPiece& text,
     matchcap[i] = NULL;
 
   StringPiece context = const_context;
-  if (context.begin() == NULL)
+  if (context.data() == NULL)
     context = text;
   if (anchor_start() && context.begin() != text.begin())
     return false;
@@ -249,8 +249,8 @@ bool Prog::SearchOnePass(const StringPiece& text,
   // start() is always mapped to the zeroth OneState.
   OneState* state = IndexToNode(nodes, statesize, 0);
   uint8_t* bytemap = bytemap_;
-  const char* bp = text.begin();
-  const char* ep = text.end();
+  const char* bp = text.data();
+  const char* ep = text.data() + text.size();
   const char* p;
   bool matched = false;
   matchcap[0] = bp;

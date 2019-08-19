@@ -1447,7 +1447,7 @@ static int UnHex(int c) {
 // Sets *rp to the named character.
 static bool ParseEscape(StringPiece* s, Rune* rp,
                         RegexpStatus* status, int rune_max) {
-  const char* begin = s->begin();
+  const char* begin = s->data();
   if (s->size() < 1 || (*s)[0] != '\\') {
     // Should not happen - caller always checks.
     status->set_code(kRegexpInternalError);
@@ -1590,7 +1590,7 @@ BadEscape:
   // Unrecognized escape sequence.
   status->set_code(kRegexpBadEscape);
   status->set_error_arg(
-      StringPiece(begin, static_cast<size_t>(s->begin() - begin)));
+      StringPiece(begin, static_cast<size_t>(s->data() - begin)));
   return false;
 }
 
@@ -1710,7 +1710,7 @@ const UGroup* MaybeParsePerlCCEscape(StringPiece* s, Regexp::ParseFlags parse_fl
     return NULL;
   // Could use StringPieceToRune, but there aren't
   // any non-ASCII Perl group names.
-  StringPiece name(s->begin(), 2);
+  StringPiece name(s->data(), 2);
   const UGroup *g = LookupPerlGroup(name);
   if (g == NULL)
     return NULL;
@@ -1750,8 +1750,8 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
     return kParseError;
   if (c != '{') {
     // Name is the bit of string we just skipped over for c.
-    const char* p = seq.begin() + 2;
-    name = StringPiece(p, static_cast<size_t>(s->begin() - p));
+    const char* p = seq.data() + 2;
+    name = StringPiece(p, static_cast<size_t>(s->data() - p));
   } else {
     // Name is in braces. Look for closing }
     size_t end = s->find('}', 0);
@@ -1762,14 +1762,14 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
       status->set_error_arg(seq);
       return kParseError;
     }
-    name = StringPiece(s->begin(), end);  // without '}'
+    name = StringPiece(s->data(), end);  // without '}'
     s->remove_prefix(end + 1);  // with '}'
     if (!IsValidUTF8(name, status))
       return kParseError;
   }
 
   // Chop seq where s now begins.
-  seq = StringPiece(seq.begin(), static_cast<size_t>(s->begin() - seq.begin()));
+  seq = StringPiece(seq.data(), static_cast<size_t>(s->data() - seq.data()));
 
   if (name.size() > 0 && name[0] == '^') {
     sign = -sign;
@@ -2074,8 +2074,8 @@ bool Regexp::ParseState::ParsePerlFlags(StringPiece* s) {
     }
 
     // t is "P<name>...", t[end] == '>'
-    StringPiece capture(t.begin()-2, end+3);  // "(?P<name>"
-    StringPiece name(t.begin()+2, end-2);     // "name"
+    StringPiece capture(t.data()-2, end+3);  // "(?P<name>"
+    StringPiece name(t.data()+2, end-2);     // "name"
     if (!IsValidUTF8(name, status_))
       return false;
     if (!IsValidCaptureName(name)) {
@@ -2089,7 +2089,8 @@ bool Regexp::ParseState::ParsePerlFlags(StringPiece* s) {
       return false;
     }
 
-    s->remove_prefix(static_cast<size_t>(capture.end() - s->begin()));
+    s->remove_prefix(
+        static_cast<size_t>(capture.data() + capture.size() - s->data()));
     return true;
   }
 
@@ -2173,7 +2174,7 @@ bool Regexp::ParseState::ParsePerlFlags(StringPiece* s) {
 BadPerlOp:
   status_->set_code(kRegexpBadPerlOp);
   status_->set_error_arg(
-      StringPiece(s->begin(), static_cast<size_t>(t.begin() - s->begin())));
+      StringPiece(s->data(), static_cast<size_t>(t.data() - s->data())));
   return false;
 }
 
@@ -2321,8 +2322,8 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
             // (and a++ means something else entirely, which we don't support!)
             status->set_code(kRegexpRepeatOp);
             status->set_error_arg(StringPiece(
-                lastunary.begin(),
-                static_cast<size_t>(t.begin() - lastunary.begin())));
+                lastunary.data(),
+                static_cast<size_t>(t.data() - lastunary.data())));
             return NULL;
           }
         }
@@ -2354,8 +2355,8 @@ Regexp* Regexp::Parse(const StringPiece& s, ParseFlags global_flags,
             // Not allowed to stack repetition operators.
             status->set_code(kRegexpRepeatOp);
             status->set_error_arg(StringPiece(
-                lastunary.begin(),
-                static_cast<size_t>(t.begin() - lastunary.begin())));
+                lastunary.data(),
+                static_cast<size_t>(t.data() - lastunary.data())));
             return NULL;
           }
         }
