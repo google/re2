@@ -272,18 +272,21 @@ PYBIND11_MODULE(_re2, module) {
       .def("options", &RE2::options)
       .def("NumberOfCapturingGroups", &RE2::NumberOfCapturingGroups)
       .def("NamedCapturingGroups", &RE2NamedCapturingGroupsShim)
-      .def("Match", &RE2MatchShim)
+      .def("Match", &RE2MatchShim,  //
+           py::call_guard<py::gil_scoped_release>())
       .def_static("QuoteMeta", &RE2QuoteMetaShim);
 
   set.def(py::init<RE2::Anchor, const RE2::Options&>())
       .def("Add", &Set::Add)
       .def("Compile", &Set::Compile)
-      .def("Match", &Set::Match);
+      .def("Match", &Set::Match,  //
+           py::call_guard<py::gil_scoped_release>());
 
   filter.def(py::init<>())
       .def("Add", &Filter::Add)
       .def("Compile", &Filter::Compile)
-      .def("Match", &Filter::Match);
+      .def("Match", &Filter::Match,  //
+           py::call_guard<py::gil_scoped_release>());
 }
 
 }  // namespace re2_python
