@@ -276,10 +276,8 @@ install: obj/libre2.a obj/so/libre2.$(SOEXT)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXT)
 	$(INSTALL_DATA) re2.pc $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	$(SED_INPLACE) -e "s#@prefix@#${prefix}#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	$(SED_INPLACE) -e "s#@exec_prefix@#${exec_prefix}#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	$(SED_INPLACE) -e "s#@includedir@#${includedir}#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	$(SED_INPLACE) -e "s#@libdir@#${libdir}#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(SED_INPLACE) -e "s#@includedir@#$(includedir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(SED_INPLACE) -e "s#@libdir@#$(libdir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 
 testinstall: static-testinstall shared-testinstall
 	@echo
