@@ -1139,9 +1139,9 @@ DFA::RWLocker::RWLocker(absl::Mutex* mu) : mu_(mu), writing_(false) {
   mu_->ReaderLock();
 }
 
-// This function is marked as NO_THREAD_SAFETY_ANALYSIS because the annotations
-// does not support lock upgrade.
-void DFA::RWLocker::LockForWriting() NO_THREAD_SAFETY_ANALYSIS {
+// This function is marked as ABSL_NO_THREAD_SAFETY_ANALYSIS because
+// the annotations don't support lock upgrade.
+void DFA::RWLocker::LockForWriting() ABSL_NO_THREAD_SAFETY_ANALYSIS {
   if (!writing_) {
     mu_->ReaderUnlock();
     mu_->WriterLock();
