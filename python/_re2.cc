@@ -20,7 +20,7 @@ namespace re2_python {
 // This is conventional.
 namespace py = pybind11;
 
-inline absl::string_view FromBytes(py::bytes bytes) {
+static inline absl::string_view FromBytes(const py::bytes& bytes) {
   char* data;
   ssize_t size;
   if (PYBIND11_BYTES_AS_STRING_AND_SIZE(bytes.ptr(), &data, &size) == -1) {
@@ -30,7 +30,7 @@ inline absl::string_view FromBytes(py::bytes bytes) {
   return absl::string_view(data, size);
 }
 
-inline int OneCharLen(const char* ptr) {
+static inline int OneCharLen(const char* ptr) {
   return "\1\1\1\1\1\1\1\1\1\1\1\1\2\2\3\4"[(*ptr & 0xFF) >> 4];
 }
 
@@ -87,6 +87,7 @@ std::vector<std::pair<ssize_t, ssize_t>> RE2MatchShim(const RE2& self,
                                                       py::bytes bytes,
                                                       ssize_t pos,
                                                       ssize_t endpos) {
+  py::gil_scoped_release release_gil;
   auto text = FromBytes(bytes);
   const int num_groups = self.NumberOfCapturingGroups() + 1;  // need $0
   std::vector<absl::string_view> groups;
@@ -139,6 +140,7 @@ class Set {
   }
 
   std::vector<int> Match(py::bytes bytes) const {
+    py::gil_scoped_release release_gil;
     auto text = FromBytes(bytes);
     std::vector<int> matches;
     set_.Match(text, &matches);
@@ -183,6 +185,7 @@ class Filter {
   }
 
   std::vector<int> Match(py::bytes bytes, bool potential) const {
+    py::gil_scoped_release release_gil;
     auto text = FromBytes(bytes);
     std::vector<int> atoms;
     set_->Match(text, &atoms);
@@ -272,21 +275,18 @@ PYBIND11_MODULE(_re2, module) {
       .def("options", &RE2::options)
       .def("NumberOfCapturingGroups", &RE2::NumberOfCapturingGroups)
       .def("NamedCapturingGroups", &RE2NamedCapturingGroupsShim)
-      .def("Match", &RE2MatchShim,  //
-           py::call_guard<py::gil_scoped_release>())
+      .def("Match", &RE2MatchShim)
       .def_static("QuoteMeta", &RE2QuoteMetaShim);
 
   set.def(py::init<RE2::Anchor, const RE2::Options&>())
       .def("Add", &Set::Add)
       .def("Compile", &Set::Compile)
-      .def("Match", &Set::Match,  //
-           py::call_guard<py::gil_scoped_release>());
+      .def("Match", &Set::Match);
 
   filter.def(py::init<>())
       .def("Add", &Filter::Add)
       .def("Compile", &Filter::Compile)
-      .def("Match", &Filter::Match,  //
-           py::call_guard<py::gil_scoped_release>());
+      .def("Match", &Filter::Match);
 }
 
 }  // namespace re2_python
