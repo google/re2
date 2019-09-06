@@ -29,19 +29,20 @@ import codecs
 import itertools
 import six
 
-_HAVE_LRU_CACHE = True
+import _re2
+
 if six.PY2:
   try:
     from backports import functools_lru_cache
     _LRUCache = functools_lru_cache.lru_cache
+    _HAVE_LRU_CACHE = True
   except ImportError:
-    _HAVE_LRU_CACHE = False
     _LRUCache = lambda *args, **kwargs: lambda func: func
+    _HAVE_LRU_CACHE = False
 else:
   import functools
   _LRUCache = functools.lru_cache
-
-import _re2
+  _HAVE_LRU_CACHE = True
 
 
 class error(Exception):
