@@ -48,7 +48,8 @@ class Re2CompileTest(parameterized.TestCase):
   )
   def test_compile(self, pattern, expected_groups, expected_groupindex):
     regexp = re2.compile(pattern)
-    self.assertIs(regexp, re2.compile(pattern))  # cached
+    if re2._HAVE_LRU_CACHE:
+      self.assertIs(regexp, re2.compile(pattern))  # cached
     self.assertIsNotNone(regexp.options)
     self.assertEqual(expected_groups, regexp.groups)
     self.assertDictEqual(dict(expected_groupindex), regexp.groupindex)
@@ -267,10 +268,11 @@ class Re2RegexpTest(ReRegexpTest):
     self.assertListEqual(expected_matches, matches)
 
   def test_purge(self):
-    re2.compile('Goodbye, world.')
-    self.assertGreater(re2._Regexp._make.cache_info().currsize, 0)
-    re2.purge()
-    self.assertEqual(re2._Regexp._make.cache_info().currsize, 0)
+    if re2._HAVE_LRU_CACHE:
+      re2.compile('Goodbye, world.')
+      self.assertGreater(re2._Regexp._make.cache_info().currsize, 0)
+      re2.purge()
+      self.assertEqual(re2._Regexp._make.cache_info().currsize, 0)
 
 
 class Re2EscapeTest(parameterized.TestCase):
