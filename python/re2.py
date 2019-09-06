@@ -26,12 +26,20 @@ from __future__ import division
 from __future__ import print_function
 
 import codecs
-import functools
 import itertools
 import six
 
+_HAVE_LRU_CACHE = True
 if six.PY2:
-  from backports import functools_lru_cache
+  try:
+    from backports import functools_lru_cache
+    _LRUCache = functools_lru_cache.lru_cache
+  except ImportError:
+    _HAVE_LRU_CACHE = False
+    _LRUCache = lambda *args, **kwargs: lambda func: func
+else:
+  import functools
+  _LRUCache = functools.lru_cache
 
 import _re2
 
@@ -120,13 +128,9 @@ def escape(pattern):
 
 
 def purge():
-  return _Regexp._make.cache_clear()
+  if _HAVE_LRU_CACHE:
+    return _Regexp._make.cache_clear()
 
-
-if six.PY2:
-  _LRUCache = functools_lru_cache.lru_cache
-else:
-  _LRUCache = functools.lru_cache
 
 _Anchor = _re2.RE2.Anchor
 _NULL_SPAN = (-1, -1)
