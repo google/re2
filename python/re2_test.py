@@ -57,7 +57,7 @@ class Re2CompileTest(parameterized.TestCase):
   def test_compile_with_options(self):
     options = re2.Options()
     options.max_mem = 100
-    with self.assertRaisesRegexp(re2.error, 'pattern too large'):
+    with self.assertRaisesRegex(re2.error, 'pattern too large'):
       re2.compile('.{1000}', options=options)
 
 
@@ -251,9 +251,9 @@ class Re2RegexpTest(ReRegexpTest):
   def test_compile_with_latin1_encoding(self):
     options = re2.Options()
     options.encoding = re2.Options.Encoding.LATIN1
-    with self.assertRaisesRegexp(re2.error,
-                                 ('string type of pattern is Text .*, but '
-                                  'encoding specified in options is LATIN1')):
+    with self.assertRaisesRegex(re2.error,
+                                ('string type of pattern is Text .*, but '
+                                 'encoding specified in options is LATIN1')):
       re2.compile(u'.?', options=options)
 
     # ... whereas this is fine, of course.
