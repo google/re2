@@ -20,8 +20,8 @@
 #include <string>
 #include <vector>
 
-#include "util/sparse_array.h"
 #include "re2/prefilter.h"
+#include "re2/sparse_array.h"
 
 namespace re2 {
 

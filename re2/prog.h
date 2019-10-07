@@ -18,10 +18,10 @@
 #include "absl/base/call_once.h"
 #include "absl/strings/string_view.h"
 #include "util/logging.h"
-#include "util/pod_array.h"
-#include "util/sparse_array.h"
-#include "util/sparse_set.h"
+#include "re2/pod_array.h"
 #include "re2/re2.h"
+#include "re2/sparse_array.h"
+#include "re2/sparse_set.h"
 
 namespace re2 {
 
