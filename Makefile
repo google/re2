@@ -83,21 +83,21 @@ HFILES=\
 	util/mix.h\
 	util/mutex.h\
 	util/pcre.h\
-	util/pod_array.h\
-	util/sparse_array.h\
-	util/sparse_set.h\
 	util/strutil.h\
 	util/test.h\
 	util/utf.h\
 	util/util.h\
 	re2/bitmap256.h\
 	re2/filtered_re2.h\
+	re2/pod_array.h\
 	re2/prefilter.h\
 	re2/prefilter_tree.h\
 	re2/prog.h\
 	re2/re2.h\
 	re2/regexp.h\
 	re2/set.h\
+	re2/sparse_array.h\
+	re2/sparse_set.h\
 	re2/stringpiece.h\
 	re2/testing/exhaustive_tester.h\
 	re2/testing/regexp_generator.h\

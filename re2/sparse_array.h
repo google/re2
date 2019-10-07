@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_SPARSE_ARRAY_H_
-#define UTIL_SPARSE_ARRAY_H_
+#ifndef RE2_SPARSE_ARRAY_H_
+#define RE2_SPARSE_ARRAY_H_
 
 // DESCRIPTION
 //
@@ -102,7 +102,7 @@
 #include <memory>
 #include <utility>
 
-#include "util/pod_array.h"
+#include "re2/pod_array.h"
 
 namespace re2 {
 
@@ -389,4 +389,4 @@ template<typename Value> bool SparseArray<Value>::less(const IndexValue& a,
 
 }  // namespace re2
 
-#endif  // UTIL_SPARSE_ARRAY_H_
+#endif  // RE2_SPARSE_ARRAY_H_
