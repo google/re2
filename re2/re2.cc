@@ -24,11 +24,11 @@
 
 #include "util/util.h"
 #include "util/logging.h"
-#include "util/sparse_array.h"
 #include "util/strutil.h"
 #include "util/utf.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"
+#include "re2/sparse_array.h"
 
 namespace re2 {
 
