@@ -9,8 +9,8 @@
 #include <string>
 
 #include "util/logging.h"
-#include "util/pod_array.h"
 #include "util/utf.h"
+#include "re2/pod_array.h"
 #include "re2/regexp.h"
 #include "re2/walker-inl.h"
 

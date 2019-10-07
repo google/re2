@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "util/logging.h"
-#include "util/pod_array.h"
+#include "re2/pod_array.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
