@@ -38,6 +38,7 @@ cc_library(
         "re2/onepass.cc",
         "re2/parse.cc",
         "re2/perl_groups.cc",
+        "re2/pod_array.h",
         "re2/prefilter.cc",
         "re2/prefilter.h",
         "re2/prefilter_tree.cc",
@@ -49,6 +50,12 @@ cc_library(
         "re2/regexp.h",
         "re2/set.cc",
         "re2/simplify.cc",
+<<<<<<< HEAD   (f44911 Package the Python bindings for distribution via PyPI.)
+=======
+        "re2/sparse_array.h",
+        "re2/sparse_set.h",
+        "re2/stringpiece.cc",
+>>>>>>> CHANGE (18f54d Move pod_array.h and sparse_{array,set}.h from util/ to re2/)
         "re2/tostring.cc",
         "re2/unicode_casefold.cc",
         "re2/unicode_casefold.h",
@@ -57,10 +64,13 @@ cc_library(
         "re2/walker-inl.h",
         "util/flags.h",
         "util/logging.h",
+<<<<<<< HEAD   (f44911 Package the Python bindings for distribution via PyPI.)
         "util/pod_array.h",
+=======
+        "util/mix.h",
+        "util/mutex.h",
+>>>>>>> CHANGE (18f54d Move pod_array.h and sparse_{array,set}.h from util/ to re2/)
         "util/rune.cc",
-        "util/sparse_array.h",
-        "util/sparse_set.h",
         "util/strutil.cc",
         "util/strutil.h",
         "util/utf.h",

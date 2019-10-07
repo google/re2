@@ -20,8 +20,13 @@
 #include <string>
 #include <vector>
 
+<<<<<<< HEAD   (f44911 Package the Python bindings for distribution via PyPI.)
 #include "util/sparse_array.h"
+=======
+#include "util/util.h"
+>>>>>>> CHANGE (18f54d Move pod_array.h and sparse_{array,set}.h from util/ to re2/)
 #include "re2/prefilter.h"
+#include "re2/sparse_array.h"
 
 namespace re2 {
 

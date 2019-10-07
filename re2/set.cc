@@ -9,10 +9,15 @@
 #include <memory>
 
 #include "util/logging.h"
+<<<<<<< HEAD   (f44911 Package the Python bindings for distribution via PyPI.)
 #include "util/pod_array.h"
+=======
+#include "re2/pod_array.h"
+>>>>>>> CHANGE (18f54d Move pod_array.h and sparse_{array,set}.h from util/ to re2/)
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
+#include "re2/stringpiece.h"
 
 namespace re2 {
 

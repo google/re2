@@ -41,10 +41,21 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/types/span.h"
 #include "util/logging.h"
+<<<<<<< HEAD   (f44911 Package the Python bindings for distribution via PyPI.)
 #include "util/pod_array.h"
 #include "util/sparse_set.h"
+=======
+#include "util/mix.h"
+#include "util/mutex.h"
+>>>>>>> CHANGE (18f54d Move pod_array.h and sparse_{array,set}.h from util/ to re2/)
 #include "util/strutil.h"
+#include "re2/pod_array.h"
 #include "re2/prog.h"
+<<<<<<< HEAD   (f44911 Package the Python bindings for distribution via PyPI.)
+=======
+#include "re2/sparse_set.h"
+#include "re2/stringpiece.h"
+>>>>>>> CHANGE (18f54d Move pod_array.h and sparse_{array,set}.h from util/ to re2/)
 
 // Silence "zero-sized array in struct/union" warning for DFA::State::next_.
 #ifdef _MSC_VER
