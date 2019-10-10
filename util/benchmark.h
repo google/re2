@@ -100,28 +100,6 @@ namespace testing {
 
 class Benchmark {
  public:
-  Benchmark(const char* name, void (*func)(int))
-      : name_(name),
-        func_([func](int iters, int arg) {
-          func(iters);
-        }),
-        lo_(0),
-        hi_(0),
-        has_arg_(false) {
-    Register();
-  }
-
-  Benchmark(const char* name, void (*func)(int, int), int lo, int hi)
-      : name_(name),
-        func_([func](int iters, int arg) {
-          func(iters, arg);
-        }),
-        lo_(lo),
-        hi_(hi),
-        has_arg_(true) {
-    Register();
-  }
-
   Benchmark(const char* name, void (*func)(benchmark::State&))
       : name_(name),
         func_([func](int iters, int arg) {
