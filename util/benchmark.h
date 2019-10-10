@@ -12,7 +12,6 @@
 #include "util/util.h"
 
 // Globals for the old benchmark API.
-void BenchmarkMemoryUsage();
 void StartBenchmarkTiming();
 void StopBenchmarkTiming();
 void SetBenchmarkBytesProcessed(int64_t b);
@@ -80,7 +79,8 @@ class State {
   void SetBytesProcessed(int64_t b) { SetBenchmarkBytesProcessed(b); }
   void SetItemsProcessed(int64_t i) { SetBenchmarkItemsProcessed(i); }
   int64_t iterations() const { return iters_; }
-  int64_t range() const { CHECK(has_arg_); return arg_; }
+  // Pretend to support multiple arguments.
+  int64_t range(int pos) const { CHECK(has_arg_); return arg_; }
 
  private:
   int64_t iters_;
@@ -121,10 +121,8 @@ class Benchmark {
     Register();
   }
 
-  Benchmark* ThreadRange(int lo, int hi) {
-    // Pretend to support multi-threaded benchmarking.
-    return this;
-  }
+  // Pretend to support multiple threads.
+  Benchmark* ThreadRange(int lo, int hi) { return this; }
 
   const char* name() const { return name_; }
   const std::function<void(int, int)>& func() const { return func_; }

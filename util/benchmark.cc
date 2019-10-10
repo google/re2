@@ -40,10 +40,6 @@ static int64_t ns;
 static int64_t bytes;
 static int64_t items;
 
-void BenchmarkMemoryUsage() {
-  // Pretend to support benchmarking memory usage.
-}
-
 void StartBenchmarkTiming() {
   if (t0 == 0) {
     t0 = nsec();
