@@ -159,9 +159,9 @@ void MakeText(std::string* text, int nbytes) {
 // the text for regexp iters times.
 void Search(benchmark::State& state, const char* regexp, SearchImpl* search) {
   std::string s;
-  MakeText(&s, state.range());
+  MakeText(&s, state.range(0));
   search(state, regexp, s, Prog::kUnanchored, false);
-  state.SetBytesProcessed(state.iterations() * state.range());
+  state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
 // These two are easy because they start with an A,
@@ -261,13 +261,13 @@ BENCHMARK_RANGE(Search_Parens_CachedRE2,     8, 16<<20)->ThreadRange(1, NumCPUs(
 
 void SearchBigFixed(benchmark::State& state, SearchImpl* search) {
   std::string s;
-  s.append(state.range()/2, 'x');
+  s.append(state.range(0)/2, 'x');
   std::string regexp = "^" + s + ".*$";
   std::string t;
-  MakeText(&t, state.range()/2);
+  MakeText(&t, state.range(0)/2);
   s += t;
   search(state, regexp.c_str(), s, Prog::kUnanchored, true);
-  state.SetBytesProcessed(state.iterations() * state.range());
+  state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
 void Search_BigFixed_CachedDFA(benchmark::State& state)     { SearchBigFixed(state, SearchCachedDFA); }
@@ -286,7 +286,7 @@ BENCHMARK_RANGE(Search_BigFixed_CachedRE2,     8, 1<<20)->ThreadRange(1, NumCPUs
 
 void FindAndConsume(benchmark::State& state) {
   std::string s;
-  MakeText(&s, state.range());
+  MakeText(&s, state.range(0));
   s.append("Hello World");
   RE2 re("((Hello World))");
   for (auto _ : state) {
@@ -295,7 +295,7 @@ void FindAndConsume(benchmark::State& state) {
     CHECK(RE2::FindAndConsume(&t, re, &u));
     CHECK_EQ(u, "Hello World");
   }
-  state.SetBytesProcessed(state.iterations() * state.range());
+  state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
 BENCHMARK_RANGE(FindAndConsume, 8, 16<<20)->ThreadRange(1, NumCPUs());
@@ -305,9 +305,9 @@ BENCHMARK_RANGE(FindAndConsume, 8, 16<<20)->ThreadRange(1, NumCPUs());
 void SearchSuccess(benchmark::State& state, const char* regexp,
                    SearchImpl* search) {
   std::string s;
-  MakeText(&s, state.range());
+  MakeText(&s, state.range(0));
   search(state, regexp, s, Prog::kAnchored, true);
-  state.SetBytesProcessed(state.iterations() * state.range());
+  state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
 // Unambiguous search (RE2 can use OnePass).
@@ -376,9 +376,9 @@ BENCHMARK_RANGE(Search_Success1_CachedBitState, 8, 2<<20)->ThreadRange(1, NumCPU
 
 void SearchAltMatch(benchmark::State& state, SearchImpl* search) {
   std::string s;
-  MakeText(&s, state.range());
+  MakeText(&s, state.range(0));
   search(state, "\\C*", s, Prog::kAnchored, true);
-  state.SetBytesProcessed(state.iterations() * state.range());
+  state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
 void Search_AltMatch_DFA(benchmark::State& state)      { SearchAltMatch(state, SearchDFA); }
@@ -760,10 +760,10 @@ BENCHMARK(BM_RE2_Compile)->ThreadRange(1, NumCPUs());
 // the text for regexp iters times.
 void SearchPhone(benchmark::State& state, ParseImpl* search) {
   std::string s;
-  MakeText(&s, state.range());
+  MakeText(&s, state.range(0));
   s.append("(650) 253-0001");
   search(state, "(\\d{3}-|\\(\\d{3}\\)\\s+)(\\d{3}-\\d{4})", s);
-  state.SetBytesProcessed(state.iterations() * state.range());
+  state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
 void SearchPhone_CachedPCRE(benchmark::State& state) {
@@ -1531,24 +1531,24 @@ BENCHMARK(ASCIIMatchRE2)->ThreadRange(1, NumCPUs());
 
 void FullMatchPCRE(benchmark::State& state, const char *regexp) {
   std::string s;
-  MakeText(&s, state.range());
+  MakeText(&s, state.range(0));
   s += "ABCDEFGHIJ";
   PCRE re(regexp);
   for (auto _ : state) {
     CHECK(PCRE::FullMatch(s, re));
   }
-  state.SetBytesProcessed(state.iterations() * state.range());
+  state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
 void FullMatchRE2(benchmark::State& state, const char *regexp) {
   std::string s;
-  MakeText(&s, state.range());
+  MakeText(&s, state.range(0));
   s += "ABCDEFGHIJ";
   RE2 re(regexp, RE2::Latin1);
   for (auto _ : state) {
     CHECK(RE2::FullMatch(s, re));
   }
-  state.SetBytesProcessed(state.iterations() * state.range());
+  state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
 void FullMatch_DotStar_CachedPCRE(benchmark::State& state) { FullMatchPCRE(state, "(?s).*"); }
