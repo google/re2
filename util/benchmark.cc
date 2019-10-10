@@ -61,11 +61,6 @@ void SetBenchmarkBytesProcessed(int64_t b) { bytes = b; }
 
 void SetBenchmarkItemsProcessed(int64_t i) { items = i; }
 
-int NumCPUs() {
-  // Pretend to support multi-threaded benchmarking.
-  return static_cast<int>(std::thread::hardware_concurrency());
-}
-
 static void RunFunc(Benchmark* b, int iters, int arg) {
   t0 = nsec();
   ns = 0;

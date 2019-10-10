@@ -7,7 +7,6 @@
 
 #include <stdint.h>
 #include <functional>
-#include <thread>
 
 #include "absl/base/attributes.h"
 #include "util/logging.h"
@@ -18,8 +17,6 @@ void StartBenchmarkTiming();
 void StopBenchmarkTiming();
 void SetBenchmarkBytesProcessed(int64_t b);
 void SetBenchmarkItemsProcessed(int64_t i);
-
-int NumCPUs();
 
 namespace benchmark {
 

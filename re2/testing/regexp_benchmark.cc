@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <thread>
 #include <utility>
 
 #include "util/test.h"
@@ -103,6 +104,11 @@ void MemoryUsage() {
 
   fprintf(stderr, "sizeof: PCRE=%zd RE2=%zd Prog=%zd Inst=%zd\n",
           sizeof(PCRE), sizeof(RE2), sizeof(Prog), sizeof(Prog::Inst));
+}
+
+int NumCPUs() {
+  // Pretend to support multi-threaded benchmarking.
+  return static_cast<int>(std::thread::hardware_concurrency());
 }
 
 // Regular expression implementation wrappers.
