@@ -59,7 +59,7 @@ void StopBenchmarkTiming() {
 
 void SetBenchmarkBytesProcessed(int64_t b) { bytes = b; }
 
-void SetBenchmarkItemsProcessed(int i) { items = i; }
+void SetBenchmarkItemsProcessed(int64_t i) { items = i; }
 
 int NumCPUs() {
   // Pretend to support multi-threaded benchmarking.
@@ -108,7 +108,7 @@ static void RunBench(Benchmark* b, int arg) {
   if (ns > 0 && bytes > 0)
     snprintf(mb, sizeof mb, "\t%7.2f MB/s",
              ((double)bytes / 1e6) / ((double)ns / 1e9));
-  if (b->arg()) {
+  if (b->has_arg()) {
     if (arg >= (1 << 20)) {
       snprintf(suf, sizeof suf, "/%dM", arg / (1 << 20));
     } else if (arg >= (1 << 10)) {
