@@ -107,7 +107,6 @@ void MemoryUsage() {
 }
 
 int NumCPUs() {
-  // Pretend to support multi-threaded benchmarking.
   return static_cast<int>(std::thread::hardware_concurrency());
 }
 
