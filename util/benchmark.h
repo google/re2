@@ -9,25 +9,140 @@
 #include <functional>
 #include <thread>
 
+#include "util/logging.h"
+#include "util/util.h"
+
+// Globals for the old benchmark API.
+void BenchmarkMemoryUsage();
+void StartBenchmarkTiming();
+void StopBenchmarkTiming();
+void SetBenchmarkBytesProcessed(int64_t b);
+void SetBenchmarkItemsProcessed(int64_t i);
+
+int NumCPUs();
+
+namespace benchmark {
+
+// The new benchmark API implemented as a layer over the old benchmark API.
+// (Please refer to https://github.com/google/benchmark for documentation.)
+class State {
+ private:
+  class Iterator {
+   public:
+    // Benchmark code looks like this:
+    //
+    //   for (auto _ : state) {
+    //     // ...
+    //   }
+    //
+    // We try to avoid compiler warnings about such variables being unused.
+    struct ATTRIBUTE_UNUSED Value {};
+
+    explicit Iterator(int64_t iters) : iters_(iters) {}
+
+    bool operator!=(const Iterator& that) const {
+      if (iters_ != that.iters_) {
+        return true;
+      } else {
+        // We are about to stop the loop, so stop timing.
+        StopBenchmarkTiming();
+        return false;
+      }
+    }
+
+    Value operator*() const {
+      return Value();
+    }
+
+    Iterator& operator++() {
+      --iters_;
+      return *this;
+    }
+
+   private:
+    int64_t iters_;
+  };
+
+ public:
+  explicit State(int64_t iters)
+      : iters_(iters), arg_(0), has_arg_(false) {}
+
+  State(int64_t iters, int64_t arg)
+      : iters_(iters), arg_(arg), has_arg_(true) {}
+
+  Iterator begin() {
+    // We are about to start the loop, so start timing.
+    StartBenchmarkTiming();
+    return Iterator(iters_);
+  }
+
+  Iterator end() {
+    return Iterator(0);
+  }
+
+  void SetBytesProcessed(int64_t b) { SetBenchmarkBytesProcessed(b); }
+  void SetItemsProcessed(int64_t i) { SetBenchmarkItemsProcessed(i); }
+  int64_t iterations() const { return iters_; }
+  int64_t range() const { CHECK(has_arg_); return arg_; }
+
+ private:
+  int64_t iters_;
+  int64_t arg_;
+  bool has_arg_;
+
+  State(const State&) = delete;
+  State& operator=(const State&) = delete;
+};
+
+}  // namespace benchmark
+
 namespace testing {
 
 class Benchmark {
  public:
   Benchmark(const char* name, void (*func)(int))
       : name_(name),
-        func_([func](int iters, int arg) { func(iters); }),
+        func_([func](int iters, int arg) {
+          func(iters);
+        }),
         lo_(0),
         hi_(0),
-        arg_(false) {
+        has_arg_(false) {
     Register();
   }
 
   Benchmark(const char* name, void (*func)(int, int), int lo, int hi)
       : name_(name),
-        func_([func](int iters, int arg) { func(iters, arg); }),
+        func_([func](int iters, int arg) {
+          func(iters, arg);
+        }),
         lo_(lo),
         hi_(hi),
-        arg_(true) {
+        has_arg_(true) {
+    Register();
+  }
+
+  Benchmark(const char* name, void (*func)(benchmark::State&))
+      : name_(name),
+        func_([func](int iters, int arg) {
+          benchmark::State state(iters);
+          func(state);
+        }),
+        lo_(0),
+        hi_(0),
+        has_arg_(false) {
+    Register();
+  }
+
+  Benchmark(const char* name, void (*func)(benchmark::State&), int lo, int hi)
+      : name_(name),
+        func_([func](int iters, int arg) {
+          benchmark::State state(iters, arg);
+          func(state);
+        }),
+        lo_(lo),
+        hi_(hi),
+        has_arg_(true) {
     Register();
   }
 
@@ -40,7 +155,7 @@ class Benchmark {
   const std::function<void(int, int)>& func() const { return func_; }
   int lo() const { return lo_; }
   int hi() const { return hi_; }
-  bool arg() const { return arg_; }
+  bool has_arg() const { return has_arg_; }
 
  private:
   void Register();
@@ -49,21 +164,13 @@ class Benchmark {
   std::function<void(int, int)> func_;
   int lo_;
   int hi_;
-  bool arg_;
+  bool has_arg_;
 
   Benchmark(const Benchmark&) = delete;
   Benchmark& operator=(const Benchmark&) = delete;
 };
 
 }  // namespace testing
-
-void BenchmarkMemoryUsage();
-void StartBenchmarkTiming();
-void StopBenchmarkTiming();
-void SetBenchmarkBytesProcessed(int64_t b);
-void SetBenchmarkItemsProcessed(int i);
-
-int NumCPUs();
 
 #define BENCHMARK(f)                     \
   ::testing::Benchmark* _benchmark_##f = \

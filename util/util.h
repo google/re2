@@ -17,6 +17,14 @@
 #endif
 #endif
 
+#ifndef ATTRIBUTE_UNUSED
+#if defined(__GNUC__)
+#define ATTRIBUTE_UNUSED __attribute__((unused))
+#else
+#define ATTRIBUTE_UNUSED
+#endif
+#endif
+
 #ifndef FALLTHROUGH_INTENDED
 #if defined(__clang__)
 #define FALLTHROUGH_INTENDED [[clang::fallthrough]]
