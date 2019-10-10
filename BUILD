@@ -116,7 +116,6 @@ cc_library(
         "re2/testing/regexp_generator.h",
         "re2/testing/string_generator.h",
         "re2/testing/tester.h",
-        "util/benchmark.h",
         "util/pcre.h",
         "util/test.h",
     ],
@@ -273,8 +272,11 @@ cc_test(
 cc_library(
     name = "benchmark",
     testonly = 1,
-    srcs = ["util/benchmark.cc"],
-    deps = [":testing"],
+    srcs = [],
+    deps = [
+        ":testing",
+        "@com_github_google_benchmark//:benchmark_main",
+    ],
 )
 
 cc_binary(
