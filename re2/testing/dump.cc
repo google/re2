@@ -26,7 +26,9 @@
 #include "re2/regexp.h"
 
 // Cause a link error if this file is used outside of testing.
-DECLARE_string(test_tmpdir);
+namespace testing {
+std::string TempDir();
+}  // namespace testing
 
 namespace re2 {
 
@@ -154,14 +156,10 @@ static void DumpRegexpAppending(Regexp* re, std::string* s) {
 }
 
 std::string Regexp::Dump() {
-  std::string s;
-
   // Make sure being called from a unit test.
-  if (FLAGS_test_tmpdir.empty()) {
-    LOG(ERROR) << "Cannot use except for testing.";
-    return s;
-  }
+  CHECK(!::testing::TempDir().empty());
 
+  std::string s;
   DumpRegexpAppending(this, &s);
   return s;
 }

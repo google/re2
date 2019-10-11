@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "util/test.h"
+#include "util/flags.h"
 #include "re2/testing/exhaustive_tester.h"
 
 DEFINE_int32(regexpseed, 404, "Random regexp seed.");
