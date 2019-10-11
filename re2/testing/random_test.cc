@@ -38,8 +38,15 @@ static void RandomTest(int maxatoms, int maxops,
 
   ExhaustiveTester t(maxatoms, maxops, alphabet, ops,
                      maxstrlen, stralphabet, wrapper, "");
+<<<<<<< HEAD   (b4a047 Use Abseil's flags.)
   t.RandomStrings(absl::GetFlag(FLAGS_stringseed), absl::GetFlag(FLAGS_stringcount));
   t.GenerateRandom(absl::GetFlag(FLAGS_regexpseed), absl::GetFlag(FLAGS_regexpcount));
+=======
+  t.RandomStrings(GetFlag(FLAGS_stringseed),
+                  GetFlag(FLAGS_stringcount));
+  t.GenerateRandom(GetFlag(FLAGS_regexpseed),
+                   GetFlag(FLAGS_regexpcount));
+>>>>>>> CHANGE (416c76 Oops, wrap a couple of lines.)
   printf("%d regexps, %d tests, %d failures [%d/%d str]\n",
          t.regexps(), t.tests(), t.failures(), maxstrlen, (int)stralphabet.size());
   EXPECT_EQ(0, t.failures());
