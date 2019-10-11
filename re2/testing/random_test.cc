@@ -38,8 +38,10 @@ static void RandomTest(int maxatoms, int maxops,
 
   ExhaustiveTester t(maxatoms, maxops, alphabet, ops,
                      maxstrlen, stralphabet, wrapper, "");
-  t.RandomStrings(GetFlag(FLAGS_stringseed), GetFlag(FLAGS_stringcount));
-  t.GenerateRandom(GetFlag(FLAGS_regexpseed), GetFlag(FLAGS_regexpcount));
+  t.RandomStrings(GetFlag(FLAGS_stringseed),
+                  GetFlag(FLAGS_stringcount));
+  t.GenerateRandom(GetFlag(FLAGS_regexpseed),
+                   GetFlag(FLAGS_regexpcount));
   printf("%d regexps, %d tests, %d failures [%d/%d str]\n",
          t.regexps(), t.tests(), t.failures(), maxstrlen, (int)stralphabet.size());
   EXPECT_EQ(0, t.failures());
