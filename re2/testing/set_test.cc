@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "util/test.h"
+#include "gtest/gtest.h"
 #include "util/logging.h"
 #include "re2/re2.h"
 #include "re2/set.h"

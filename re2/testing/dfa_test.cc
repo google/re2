@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "absl/base/macros.h"
-#include "util/test.h"
+#include "gtest/gtest.h"
 #include "util/flags.h"
 #include "util/logging.h"
 #include "util/malloc_counter.h"
