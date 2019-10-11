@@ -8,6 +8,10 @@
 #include "util/util.h"
 #include "util/logging.h"
 
+namespace testing {
+std::string TempDir();
+}  // namespace testing
+
 #define TEST(x, y) \
 	void x##y(void); \
 	TestRegisterer r##x##y(x##y, # x "." # y); \
