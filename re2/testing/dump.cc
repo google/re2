@@ -25,11 +25,6 @@
 #include "util/utf.h"
 #include "re2/regexp.h"
 
-// Cause a link error if this file is used outside of testing.
-namespace testing {
-std::string TempDir();
-}  // namespace testing
-
 namespace re2 {
 
 static const char* kOpcodeNames[] = {
@@ -156,7 +151,8 @@ static void DumpRegexpAppending(Regexp* re, std::string* s) {
 }
 
 std::string Regexp::Dump() {
-  // Make sure being called from a unit test.
+  // Make sure that we are being called from a unit test.
+  // Should cause a link error if used outside of testing.
   CHECK(!::testing::TempDir().empty());
 
   std::string s;
