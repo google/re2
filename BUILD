@@ -115,12 +115,12 @@ cc_library(
         "re2/testing/regexp_generator.h",
         "re2/testing/string_generator.h",
         "re2/testing/tester.h",
-        "util/flags.h",
         "util/malloc_counter.h",
         "util/pcre.h",
     ],
     deps = [
         ":re2",
+        "@com_google_absl//absl/flags:flag",
         "@com_google_googletest//:gtest",
     ],
 )

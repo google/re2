@@ -15,7 +15,7 @@
 #include <string>
 #include <utility>
 
-#include "util/flags.h"
+#include "absl/flags/flag.h"
 #include "util/logging.h"
 #include "util/pcre.h"
 #include "util/strutil.h"
@@ -34,10 +34,10 @@
 // not exceed main thread stacks.  Note that other threads
 // often have smaller stacks, and therefore tightening
 // regexp_stack_limit may frequently be necessary.
-DEFINE_FLAG(int, regexp_stack_limit, 256 << 10,
-            "default PCRE stack limit (bytes)");
-DEFINE_FLAG(int, regexp_match_limit, 1000000,
-            "default PCRE match limit (function calls)");
+ABSL_FLAG(int, regexp_stack_limit, 256 << 10,
+          "default PCRE stack limit (bytes)");
+ABSL_FLAG(int, regexp_match_limit, 1000000,
+          "default PCRE match limit (function calls)");
 
 #ifndef USEPCRE
 
@@ -463,12 +463,12 @@ int PCRE::TryMatch(absl::string_view text, size_t startpos, Anchor anchor,
 
   int match_limit = match_limit_;
   if (match_limit <= 0) {
-    match_limit = GetFlag(FLAGS_regexp_match_limit);
+    match_limit = absl::GetFlag(FLAGS_regexp_match_limit);
   }
 
   int stack_limit = stack_limit_;
   if (stack_limit <= 0) {
-    stack_limit = GetFlag(FLAGS_regexp_stack_limit);
+    stack_limit = absl::GetFlag(FLAGS_regexp_stack_limit);
   }
 
   pcre_extra extra = { 0 };
