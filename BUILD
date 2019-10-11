@@ -58,7 +58,6 @@ cc_library(
         "re2/unicode_groups.cc",
         "re2/unicode_groups.h",
         "re2/walker-inl.h",
-        "util/flags.h",
         "util/logging.h",
         "util/rune.cc",
         "util/strutil.cc",
@@ -116,6 +115,11 @@ cc_library(
         "re2/testing/regexp_generator.h",
         "re2/testing/string_generator.h",
         "re2/testing/tester.h",
+<<<<<<< HEAD   (0e00c2 Don't declare testing::TempDir() in dump.cc itself.)
+=======
+        "util/benchmark.h",
+        "util/flags.h",
+>>>>>>> CHANGE (4ca028 Move util/flags.h into the testing target.)
         "util/malloc_counter.h",
         "util/pcre.h",
     ],
