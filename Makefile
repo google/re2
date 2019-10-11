@@ -80,6 +80,7 @@ HFILES=\
 	util/benchmark.h\
 	util/flags.h\
 	util/logging.h\
+	util/malloc_counter.h\
 	util/mix.h\
 	util/mutex.h\
 	util/pcre.h\
