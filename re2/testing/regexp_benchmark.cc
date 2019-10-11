@@ -15,6 +15,7 @@
 #include "util/test.h"
 #include "util/flags.h"
 #include "util/logging.h"
+#include "util/malloc_counter.h"
 #include "util/strutil.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
