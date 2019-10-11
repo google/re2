@@ -82,7 +82,7 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
   if (!topwrapper_.empty())
     regexp = StringPrintf(topwrapper_.c_str(), regexp.c_str());
 
-  if (FLAGS_show_regexps) {
+  if (GetFlag(FLAGS_show_regexps)) {
     printf("\r%s", regexp.c_str());
     fflush(stdout);
   }
@@ -137,7 +137,7 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
     tests_++;
     if (!tester.TestInput(strgen_.Next())) {
       failures_++;
-      if (++bad_inputs >= FLAGS_max_bad_regexp_inputs)
+      if (++bad_inputs >= GetFlag(FLAGS_max_bad_regexp_inputs))
         break;
     }
   }
