@@ -15,6 +15,7 @@
 
 #include "absl/base/macros.h"
 #include "util/test.h"
+#include "util/flags.h"
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "re2/testing/exhaustive_tester.h"

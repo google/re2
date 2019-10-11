@@ -5,7 +5,6 @@
 #ifndef UTIL_TEST_H_
 #define UTIL_TEST_H_
 
-#include "util/flags.h"
 #include "util/logging.h"
 
 #define TEST(x, y) \

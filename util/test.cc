@@ -3,10 +3,13 @@
 // license that can be found in the LICENSE file.
 
 #include <stdio.h>
+#include <string>
 
 #include "util/test.h"
 
-DEFINE_string(test_tmpdir, "/var/tmp", "temp directory");
+namespace testing {
+std::string TempDir() { return "/tmp/"; }
+}  // namespace testing
 
 struct Test {
   void (*fn)(void);
