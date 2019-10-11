@@ -14,8 +14,8 @@
 #include <stdio.h>
 
 #include "absl/base/macros.h"
+#include "absl/flags/flag.h"
 #include "gtest/gtest.h"
-#include "util/flags.h"
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "re2/testing/exhaustive_tester.h"
@@ -26,11 +26,11 @@
 #define LOGGING 0
 #endif
 
-DEFINE_FLAG(bool, show_regexps, false, "show regexps during testing");
+ABSL_FLAG(bool, show_regexps, false, "show regexps during testing");
 
-DEFINE_FLAG(int, max_bad_regexp_inputs, 1,
-            "Stop testing a regular expression after finding this many "
-            "strings that break it.");
+ABSL_FLAG(int, max_bad_regexp_inputs, 1,
+          "Stop testing a regular expression after finding this many "
+          "strings that break it.");
 
 namespace re2 {
 
@@ -82,7 +82,7 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
   if (!topwrapper_.empty())
     regexp = StringPrintf(topwrapper_.c_str(), regexp.c_str());
 
-  if (GetFlag(FLAGS_show_regexps)) {
+  if (absl::GetFlag(FLAGS_show_regexps)) {
     printf("\r%s", regexp.c_str());
     fflush(stdout);
   }
@@ -137,7 +137,7 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
     tests_++;
     if (!tester.TestInput(strgen_.Next())) {
       failures_++;
-      if (++bad_inputs >= GetFlag(FLAGS_max_bad_regexp_inputs))
+      if (++bad_inputs >= absl::GetFlag(FLAGS_max_bad_regexp_inputs))
         break;
     }
   }

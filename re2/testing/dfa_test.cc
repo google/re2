@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "absl/base/macros.h"
+#include "absl/flags/flag.h"
 #include "gtest/gtest.h"
-#include "util/flags.h"
 #include "util/logging.h"
 #include "util/malloc_counter.h"
 #include "util/strutil.h"
@@ -21,9 +21,9 @@
 
 static const bool UsingMallocCounter = false;
 
-DEFINE_FLAG(int, size, 8, "log2(number of DFA nodes)");
-DEFINE_FLAG(int, repeat, 2, "Repetition count.");
-DEFINE_FLAG(int, threads, 4, "number of threads");
+ABSL_FLAG(int, size, 8, "log2(number of DFA nodes)");
+ABSL_FLAG(int, repeat, 2, "Repetition count.");
+ABSL_FLAG(int, threads, 4, "number of threads");
 
 namespace re2 {
 
@@ -37,7 +37,7 @@ static void DoBuild(Prog* prog) {
 TEST(Multithreaded, BuildEntireDFA) {
   // Create regexp with 2^FLAGS_size states in DFA.
   std::string s = "a";
-  for (int i = 0; i < GetFlag(FLAGS_size); i++)
+  for (int i = 0; i < absl::GetFlag(FLAGS_size); i++)
     s += "[ab]";
   s += "b";
   Regexp* re = Regexp::Parse(s, Regexp::LikePerl, NULL);
@@ -55,14 +55,14 @@ TEST(Multithreaded, BuildEntireDFA) {
   }
 
   // Build the DFA simultaneously in a bunch of threads.
-  for (int i = 0; i < GetFlag(FLAGS_repeat); i++) {
+  for (int i = 0; i < absl::GetFlag(FLAGS_repeat); i++) {
     Prog* prog = re->CompileToProg(0);
     ASSERT_TRUE(prog != NULL);
 
     std::vector<std::thread> threads;
-    for (int j = 0; j < GetFlag(FLAGS_threads); j++)
+    for (int j = 0; j < absl::GetFlag(FLAGS_threads); j++)
       threads.emplace_back(DoBuild, prog);
-    for (int j = 0; j < GetFlag(FLAGS_threads); j++)
+    for (int j = 0; j < absl::GetFlag(FLAGS_threads); j++)
       threads[j].join();
 
     // One more compile, to make sure everything is okay.
@@ -266,14 +266,14 @@ TEST(Multithreaded, SearchDFA) {
 
   // Run the search simultaneously in a bunch of threads.
   // Reuse same flags for Multithreaded.BuildDFA above.
-  for (int i = 0; i < GetFlag(FLAGS_repeat); i++) {
+  for (int i = 0; i < absl::GetFlag(FLAGS_repeat); i++) {
     Prog* prog = re->CompileToProg(1<<n);
     ASSERT_TRUE(prog != NULL);
 
     std::vector<std::thread> threads;
-    for (int j = 0; j < GetFlag(FLAGS_threads); j++)
+    for (int j = 0; j < absl::GetFlag(FLAGS_threads); j++)
       threads.emplace_back(DoSearch, prog, match, no_match);
-    for (int j = 0; j < GetFlag(FLAGS_threads); j++)
+    for (int j = 0; j < absl::GetFlag(FLAGS_threads); j++)
       threads[j].join();
 
     delete prog;

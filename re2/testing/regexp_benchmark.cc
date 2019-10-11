@@ -11,9 +11,9 @@
 #include <thread>
 #include <utility>
 
+#include "absl/flags/flag.h"
 #include "benchmark/benchmark.h"
 #include "gtest/gtest.h"
-#include "util/flags.h"
 #include "util/logging.h"
 #include "util/malloc_counter.h"
 #include "util/strutil.h"
@@ -731,20 +731,20 @@ void RunBuild(benchmark::State& state, const std::string& regexp,
 
 }  // namespace re2
 
-DEFINE_FLAG(std::string, compile_regexp, "(.*)-(\\d+)-of-(\\d+)",
-            "regexp for compile benchmarks");
+ABSL_FLAG(std::string, compile_regexp, "(.*)-(\\d+)-of-(\\d+)",
+          "regexp for compile benchmarks");
 
 namespace re2 {
 
-void BM_PCRE_Compile(benchmark::State& state)             { RunBuild(state, GetFlag(FLAGS_compile_regexp), CompilePCRE); }
-void BM_Regexp_Parse(benchmark::State& state)             { RunBuild(state, GetFlag(FLAGS_compile_regexp), ParseRegexp); }
-void BM_Regexp_Simplify(benchmark::State& state)          { RunBuild(state, GetFlag(FLAGS_compile_regexp), SimplifyRegexp); }
-void BM_CompileToProg(benchmark::State& state)            { RunBuild(state, GetFlag(FLAGS_compile_regexp), CompileToProg); }
-void BM_CompileByteMap(benchmark::State& state)           { RunBuild(state, GetFlag(FLAGS_compile_regexp), CompileByteMap); }
-void BM_Regexp_Compile(benchmark::State& state)           { RunBuild(state, GetFlag(FLAGS_compile_regexp), CompileRegexp); }
-void BM_Regexp_SimplifyCompile(benchmark::State& state)   { RunBuild(state, GetFlag(FLAGS_compile_regexp), SimplifyCompileRegexp); }
-void BM_Regexp_NullWalk(benchmark::State& state)          { RunBuild(state, GetFlag(FLAGS_compile_regexp), NullWalkRegexp); }
-void BM_RE2_Compile(benchmark::State& state)              { RunBuild(state, GetFlag(FLAGS_compile_regexp), CompileRE2); }
+void BM_PCRE_Compile(benchmark::State& state)             { RunBuild(state, absl::GetFlag(FLAGS_compile_regexp), CompilePCRE); }
+void BM_Regexp_Parse(benchmark::State& state)             { RunBuild(state, absl::GetFlag(FLAGS_compile_regexp), ParseRegexp); }
+void BM_Regexp_Simplify(benchmark::State& state)          { RunBuild(state, absl::GetFlag(FLAGS_compile_regexp), SimplifyRegexp); }
+void BM_CompileToProg(benchmark::State& state)            { RunBuild(state, absl::GetFlag(FLAGS_compile_regexp), CompileToProg); }
+void BM_CompileByteMap(benchmark::State& state)           { RunBuild(state, absl::GetFlag(FLAGS_compile_regexp), CompileByteMap); }
+void BM_Regexp_Compile(benchmark::State& state)           { RunBuild(state, absl::GetFlag(FLAGS_compile_regexp), CompileRegexp); }
+void BM_Regexp_SimplifyCompile(benchmark::State& state)   { RunBuild(state, absl::GetFlag(FLAGS_compile_regexp), SimplifyCompileRegexp); }
+void BM_Regexp_NullWalk(benchmark::State& state)          { RunBuild(state, absl::GetFlag(FLAGS_compile_regexp), NullWalkRegexp); }
+void BM_RE2_Compile(benchmark::State& state)              { RunBuild(state, absl::GetFlag(FLAGS_compile_regexp), CompileRE2); }
 
 #ifdef USEPCRE
 BENCHMARK(BM_PCRE_Compile)->ThreadRange(1, NumCPUs());

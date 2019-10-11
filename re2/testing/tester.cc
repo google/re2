@@ -10,8 +10,8 @@
 #include <string>
 
 #include "absl/base/macros.h"
+#include "absl/flags/flag.h"
 #include "absl/strings/escaping.h"
-#include "util/flags.h"
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "re2/testing/tester.h"
@@ -19,15 +19,15 @@
 #include "re2/re2.h"
 #include "re2/regexp.h"
 
-DEFINE_FLAG(bool, dump_prog, false, "dump regexp program");
-DEFINE_FLAG(bool, log_okay, false, "log successful runs");
-DEFINE_FLAG(bool, dump_rprog, false, "dump reversed regexp program");
+ABSL_FLAG(bool, dump_prog, false, "dump regexp program");
+ABSL_FLAG(bool, log_okay, false, "log successful runs");
+ABSL_FLAG(bool, dump_rprog, false, "dump reversed regexp program");
 
-DEFINE_FLAG(int, max_regexp_failures, 100,
-            "maximum number of regexp test failures (-1 = unlimited)");
+ABSL_FLAG(int, max_regexp_failures, 100,
+          "maximum number of regexp test failures (-1 = unlimited)");
 
-DEFINE_FLAG(std::string, regexp_engines, "",
-            "pattern to select regexp engines to test");
+ABSL_FLAG(std::string, regexp_engines, "",
+          "pattern to select regexp engines to test");
 
 namespace re2 {
 
@@ -64,11 +64,11 @@ static uint32_t Engines() {
   if (did_parse)
     return cached_engines;
 
-  if (GetFlag(FLAGS_regexp_engines).empty()) {
+  if (absl::GetFlag(FLAGS_regexp_engines).empty()) {
     cached_engines = ~0;
   } else {
     for (Engine i = static_cast<Engine>(0); i < kEngineMax; i++)
-      if (GetFlag(FLAGS_regexp_engines).find(EngineName(i)) != std::string::npos)
+      if (absl::GetFlag(FLAGS_regexp_engines).find(EngineName(i)) != std::string::npos)
         cached_engines |= 1<<i;
   }
 
@@ -200,7 +200,7 @@ TestInstance::TestInstance(absl::string_view regexp_str, Prog::MatchKind kind,
     error_ = true;
     return;
   }
-  if (GetFlag(FLAGS_dump_prog)) {
+  if (absl::GetFlag(FLAGS_dump_prog)) {
     LOG(INFO) << "Prog for "
               << " regexp "
               << absl::CEscape(regexp_str_)
@@ -218,7 +218,7 @@ TestInstance::TestInstance(absl::string_view regexp_str, Prog::MatchKind kind,
       error_ = true;
       return;
     }
-    if (GetFlag(FLAGS_dump_rprog))
+    if (absl::GetFlag(FLAGS_dump_rprog))
       LOG(INFO) << rprog_->Dump();
   }
 
@@ -528,7 +528,7 @@ bool TestInstance::RunCase(absl::string_view text, absl::string_view context,
     Result r;
     RunSearch(i, text, context, anchor, &r);
     if (ResultOkay(r, correct)) {
-      if (GetFlag(FLAGS_log_okay))
+      if (absl::GetFlag(FLAGS_log_okay))
         LogMatch(r.skipped ? "Skipped: " : "Okay: ", i, text, context, anchor);
       continue;
     }
@@ -573,7 +573,7 @@ bool TestInstance::RunCase(absl::string_view text, absl::string_view context,
   if (!all_okay) {
     // This will be initialised once (after flags have been initialised)
     // and that is desirable because we want to enforce a global limit.
-    static int max_regexp_failures = GetFlag(FLAGS_max_regexp_failures);
+    static int max_regexp_failures = absl::GetFlag(FLAGS_max_regexp_failures);
     if (max_regexp_failures > 0 && --max_regexp_failures == 0)
       LOG(QFATAL) << "Too many regexp failures.";
   }
