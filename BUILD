@@ -116,6 +116,7 @@ cc_library(
         "re2/testing/regexp_generator.h",
         "re2/testing/string_generator.h",
         "re2/testing/tester.h",
+        "util/malloc_counter.h",
         "util/pcre.h",
         "util/test.h",
     ],
