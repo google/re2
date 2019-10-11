@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "util/test.h"
+#include "util/flags.h"
 #include "re2/testing/exhaustive_tester.h"
 
 DECLARE_string(regexp_engines);
