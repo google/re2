@@ -731,7 +731,8 @@ void RunBuild(benchmark::State& state, const std::string& regexp,
 
 }  // namespace re2
 
-DEFINE_string(compile_regexp, "(.*)-(\\d+)-of-(\\d+)", "regexp for compile benchmarks");
+DEFINE_FLAG(std::string, compile_regexp, "(.*)-(\\d+)-of-(\\d+)",
+            "regexp for compile benchmarks");
 
 namespace re2 {
 

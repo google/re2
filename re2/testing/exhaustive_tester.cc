@@ -25,11 +25,11 @@
 #define LOGGING 0
 #endif
 
-DEFINE_bool(show_regexps, false, "show regexps during testing");
+DEFINE_FLAG(bool, show_regexps, false, "show regexps during testing");
 
-DEFINE_int32(max_bad_regexp_inputs, 1,
-             "Stop testing a regular expression after finding this many "
-             "strings that break it.");
+DEFINE_FLAG(int, max_bad_regexp_inputs, 1,
+            "Stop testing a regular expression after finding this many "
+            "strings that break it.");
 
 namespace re2 {
 
