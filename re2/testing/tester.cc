@@ -19,14 +19,15 @@
 #include "re2/re2.h"
 #include "re2/regexp.h"
 
-DEFINE_bool(dump_prog, false, "dump regexp program");
-DEFINE_bool(log_okay, false, "log successful runs");
-DEFINE_bool(dump_rprog, false, "dump reversed regexp program");
+DEFINE_FLAG(bool, dump_prog, false, "dump regexp program");
+DEFINE_FLAG(bool, log_okay, false, "log successful runs");
+DEFINE_FLAG(bool, dump_rprog, false, "dump reversed regexp program");
 
-DEFINE_int32(max_regexp_failures, 100,
-             "maximum number of regexp test failures (-1 = unlimited)");
+DEFINE_FLAG(int, max_regexp_failures, 100,
+            "maximum number of regexp test failures (-1 = unlimited)");
 
-DEFINE_string(regexp_engines, "", "pattern to select regexp engines to test");
+DEFINE_FLAG(std::string, regexp_engines, "",
+            "pattern to select regexp engines to test");
 
 namespace re2 {
 
