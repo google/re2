@@ -6,7 +6,6 @@
 #define UTIL_TEST_H_
 
 #include "util/util.h"
-#include "util/flags.h"
 #include "util/logging.h"
 
 #define TEST(x, y) \

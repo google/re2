@@ -12,8 +12,6 @@
 #include "util/flags.h"
 #include "re2/re2.h"
 
-DEFINE_string(test_tmpdir, "/var/tmp", "temp directory");
-
 #ifdef _WIN32
 #define snprintf _snprintf
 #endif
