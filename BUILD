@@ -116,6 +116,11 @@ cc_library(
         "re2/testing/regexp_generator.h",
         "re2/testing/string_generator.h",
         "re2/testing/tester.h",
+<<<<<<< HEAD   (68592b Remove the fake test_tmpdir flag in favour of testing::TempD)
+=======
+        "util/benchmark.h",
+        "util/malloc_counter.h",
+>>>>>>> CHANGE (40dd3f Split out the fake testing::MallocCounter into its own file.)
         "util/pcre.h",
         "util/test.h",
     ],

@@ -11,10 +11,15 @@
 #include <thread>
 #include <utility>
 
+<<<<<<< HEAD   (68592b Remove the fake test_tmpdir flag in favour of testing::TempD)
 #include "benchmark/benchmark.h"
+=======
+#include "util/benchmark.h"
+>>>>>>> CHANGE (40dd3f Split out the fake testing::MallocCounter into its own file.)
 #include "util/test.h"
 #include "util/flags.h"
 #include "util/logging.h"
+#include "util/malloc_counter.h"
 #include "util/strutil.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
