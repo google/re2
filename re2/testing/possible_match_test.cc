@@ -8,7 +8,7 @@
 
 #include "absl/base/macros.h"
 #include "absl/strings/escaping.h"
-#include "util/test.h"
+#include "gtest/gtest.h"
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "re2/prog.h"

@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "util/test.h"
+#include "gtest/gtest.h"
 #include "util/flags.h"
 #include "re2/testing/exhaustive_tester.h"
 

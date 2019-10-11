@@ -118,16 +118,21 @@ cc_library(
         "re2/testing/tester.h",
         "util/malloc_counter.h",
         "util/pcre.h",
-        "util/test.h",
     ],
-    deps = [":re2"],
+    deps = [
+        ":re2",
+        "@com_google_googletest//:gtest",
+    ],
 )
 
 cc_library(
     name = "test",
     testonly = 1,
-    srcs = ["util/test.cc"],
-    deps = [":testing"],
+    srcs = [],
+    deps = [
+        ":testing",
+        "@com_google_googletest//:gtest_main",
+    ],
 )
 
 cc_test(
