@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "util/test.h"
-#include "re2/re2.h"
 #include "re2/testing/exhaustive_tester.h"
 
 namespace re2 {

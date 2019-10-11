@@ -8,10 +8,7 @@
 #include <vector>
 
 #include "util/test.h"
-#include "util/flags.h"
 #include "re2/testing/exhaustive_tester.h"
-
-DECLARE_string(regexp_engines);
 
 namespace re2 {
 
@@ -35,11 +32,8 @@ TEST(Repetition, Capturing) {
     "%s* %s+ %s? %s*? %s+? %s??");
   ExhaustiveTest(3, 2, Split(" ", "a (a) b"), ops,
                  7, Explode("ab"), "(?:%s)", "");
-
-  // This would be a great test, but it runs forever when PCRE is enabled.
-  if (FLAGS_regexp_engines.find("PCRE") == std::string::npos)
-    ExhaustiveTest(3, 2, Split(" ", "a (a)"), ops,
-                   50, Explode("a"), "(?:%s)", "");
+  ExhaustiveTest(3, 2, Split(" ", "a (a)"), ops,
+                 50, Explode("a"), "(?:%s)", "");
 }
 
 }  // namespace re2
