@@ -524,12 +524,12 @@ int PCRE::TryMatch(const StringPiece& text,
 
   int match_limit = match_limit_;
   if (match_limit <= 0) {
-    match_limit = FLAGS_regexp_match_limit;
+    match_limit = GetFlag(FLAGS_regexp_match_limit);
   }
 
   int stack_limit = stack_limit_;
   if (stack_limit <= 0) {
-    stack_limit = FLAGS_regexp_stack_limit;
+    stack_limit = GetFlag(FLAGS_regexp_stack_limit);
   }
 
   pcre_extra extra = { 0 };

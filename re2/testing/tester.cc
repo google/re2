@@ -63,11 +63,11 @@ static uint32_t Engines() {
   if (did_parse)
     return cached_engines;
 
-  if (FLAGS_regexp_engines.empty()) {
+  if (GetFlag(FLAGS_regexp_engines).empty()) {
     cached_engines = ~0;
   } else {
     for (Engine i = static_cast<Engine>(0); i < kEngineMax; i++)
-      if (FLAGS_regexp_engines.find(EngineName(i)) != std::string::npos)
+      if (GetFlag(FLAGS_regexp_engines).find(EngineName(i)) != std::string::npos)
         cached_engines |= 1<<i;
   }
 
@@ -199,7 +199,7 @@ TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
     error_ = true;
     return;
   }
-  if (FLAGS_dump_prog) {
+  if (GetFlag(FLAGS_dump_prog)) {
     LOG(INFO) << "Prog for "
               << " regexp "
               << CEscape(regexp_str_)
@@ -217,7 +217,7 @@ TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
       error_ = true;
       return;
     }
-    if (FLAGS_dump_rprog)
+    if (GetFlag(FLAGS_dump_rprog))
       LOG(INFO) << rprog_->Dump();
   }
 
@@ -529,7 +529,7 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
     Result r;
     RunSearch(i, text, context, anchor, &r);
     if (ResultOkay(r, correct)) {
-      if (FLAGS_log_okay)
+      if (GetFlag(FLAGS_log_okay))
         LogMatch(r.skipped ? "Skipped: " : "Okay: ", i, text, context, anchor);
       continue;
     }
@@ -572,7 +572,10 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
   }
 
   if (!all_okay) {
-    if (FLAGS_max_regexp_failures > 0 && --FLAGS_max_regexp_failures == 0)
+    // This will be initialised once (after flags have been initialised)
+    // and that is desirable because we want to enforce a global limit.
+    static int max_regexp_failures = GetFlag(FLAGS_max_regexp_failures);
+    if (max_regexp_failures > 0 && --max_regexp_failures == 0)
       LOG(QFATAL) << "Too many regexp failures.";
   }
 

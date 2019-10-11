@@ -16,4 +16,11 @@
 #define DECLARE_FLAG(type, name) \
 	namespace re2 { extern type FLAGS_##name; }
 
+namespace re2 {
+template <typename T>
+T GetFlag(const T& flag) {
+  return flag;
+}
+}  // namespace re2
+
 #endif  // UTIL_FLAGS_H_
