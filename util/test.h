@@ -5,7 +5,11 @@
 #ifndef UTIL_TEST_H_
 #define UTIL_TEST_H_
 
+<<<<<<< HEAD   (68de92 Remove the comment on NumCPUs().)
 #include "util/flags.h"
+=======
+#include "util/util.h"
+>>>>>>> CHANGE (b44750 Remove the fake test_tmpdir flag in favour of testing::TempD)
 #include "util/logging.h"
 
 #define TEST(x, y) \
