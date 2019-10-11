@@ -9,8 +9,12 @@
 #include <string>
 #include <vector>
 
+<<<<<<< HEAD   (edf7fc Move util/flags.h into the testing target.)
 #include "gtest/gtest.h"
 #include "re2/re2.h"
+=======
+#include "util/test.h"
+>>>>>>> CHANGE (84daac Remove a condition from exhaustive1_test.cc that is no longe)
 #include "re2/testing/exhaustive_tester.h"
 
 namespace re2 {

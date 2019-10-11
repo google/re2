@@ -7,11 +7,13 @@
 #include <string>
 #include <vector>
 
+<<<<<<< HEAD   (edf7fc Move util/flags.h into the testing target.)
 #include "gtest/gtest.h"
 #include "util/flags.h"
+=======
+#include "util/test.h"
+>>>>>>> CHANGE (84daac Remove a condition from exhaustive1_test.cc that is no longe)
 #include "re2/testing/exhaustive_tester.h"
-
-DECLARE_string(regexp_engines);
 
 namespace re2 {
 
@@ -35,11 +37,8 @@ TEST(Repetition, Capturing) {
     "%s* %s+ %s? %s*? %s+? %s??");
   ExhaustiveTest(3, 2, Split(" ", "a (a) b"), ops,
                  7, Explode("ab"), "(?:%s)", "");
-
-  // This would be a great test, but it runs forever when PCRE is enabled.
-  if (FLAGS_regexp_engines.find("PCRE") == std::string::npos)
-    ExhaustiveTest(3, 2, Split(" ", "a (a)"), ops,
-                   50, Explode("a"), "(?:%s)", "");
+  ExhaustiveTest(3, 2, Split(" ", "a (a)"), ops,
+                 50, Explode("a"), "(?:%s)", "");
 }
 
 }  // namespace re2
