@@ -21,9 +21,9 @@
 
 static const bool UsingMallocCounter = false;
 
-DEFINE_int32(size, 8, "log2(number of DFA nodes)");
-DEFINE_int32(repeat, 2, "Repetition count.");
-DEFINE_int32(threads, 4, "number of threads");
+DEFINE_FLAG(int, size, 8, "log2(number of DFA nodes)");
+DEFINE_FLAG(int, repeat, 2, "Repetition count.");
+DEFINE_FLAG(int, threads, 4, "number of threads");
 
 namespace re2 {
 

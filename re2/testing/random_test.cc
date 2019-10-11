@@ -12,10 +12,10 @@
 #include "util/flags.h"
 #include "re2/testing/exhaustive_tester.h"
 
-DEFINE_int32(regexpseed, 404, "Random regexp seed.");
-DEFINE_int32(regexpcount, 100, "How many random regexps to generate.");
-DEFINE_int32(stringseed, 200, "Random string seed.");
-DEFINE_int32(stringcount, 100, "How many random strings to generate.");
+DEFINE_FLAG(int, regexpseed, 404, "Random regexp seed.");
+DEFINE_FLAG(int, regexpcount, 100, "How many random regexps to generate.");
+DEFINE_FLAG(int, stringseed, 200, "Random string seed.");
+DEFINE_FLAG(int, stringcount, 100, "How many random strings to generate.");
 
 namespace re2 {
 
@@ -97,4 +97,3 @@ TEST(Random, Complicated) {
 }
 
 }  // namespace re2
-
