@@ -550,7 +550,7 @@ bool Prog::IsOnePass() {
           if (!AddQ(&workq, ip->out())) {
             if (ExtraDebug)
               LOG(ERROR) << StringPrintf(
-                  "Not OnePass: multiple paths %d -> %d\n", *it, ip->out());
+                  "Not OnePass: multiple paths %d -> %d", *it, ip->out());
             goto fail;
           }
           id = ip->out();
@@ -561,7 +561,7 @@ bool Prog::IsOnePass() {
             // (3) is violated
             if (ExtraDebug)
               LOG(ERROR) << StringPrintf(
-                  "Not OnePass: multiple matches from %d\n", *it);
+                  "Not OnePass: multiple matches from %d", *it);
             goto fail;
           }
           matched = true;

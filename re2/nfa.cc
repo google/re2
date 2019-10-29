@@ -431,12 +431,12 @@ std::string NFA::FormatCapture(const char** capture) {
     if (capture[i] == NULL)
       s += "(?,?)";
     else if (capture[i+1] == NULL)
-      s += StringPrintf("(%d,?)",
-                        (int)(capture[i] - btext_));
+      s += StringPrintf("(%td,?)",
+                        capture[i] - btext_);
     else
-      s += StringPrintf("(%d,%d)",
-                        (int)(capture[i] - btext_),
-                        (int)(capture[i+1] - btext_));
+      s += StringPrintf("(%td,%td)",
+                        capture[i] - btext_,
+                        capture[i+1] - btext_);
   }
   return s;
 }
@@ -493,8 +493,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
 
   if (ExtraDebug)
     fprintf(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
-            std::string(text).c_str(), std::string(context).c_str(), anchored,
-            longest);
+            std::string(text).c_str(), std::string(context).c_str(), anchored, longest);
 
   // Set up search.
   Threadq* runq = &q0_;
@@ -606,7 +605,8 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
                       static_cast<size_t>(match_[2 * i + 1] - match_[2 * i]));
     if (ExtraDebug)
       fprintf(stderr, "match (%td,%td)\n",
-              match_[0] - btext_, match_[1] - btext_);
+              match_[0] - btext_,
+              match_[1] - btext_);
     return true;
   }
   return false;
