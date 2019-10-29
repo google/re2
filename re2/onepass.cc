@@ -547,7 +547,11 @@ bool Prog::IsOnePass() {
           // If already on work queue, (1) is violated: bail out.
           if (!AddQ(&workq, ip->out())) {
             if (ExtraDebug)
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
               LOG(ERROR) << absl::StrFormat(
+=======
+              LOG(ERROR) << StringPrintf(
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
                   "Not OnePass: multiple paths %d -> %d", *it, ip->out());
             goto fail;
           }
@@ -558,7 +562,11 @@ bool Prog::IsOnePass() {
           if (matched) {
             // (3) is violated
             if (ExtraDebug)
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
               LOG(ERROR) << absl::StrFormat(
+=======
+              LOG(ERROR) << StringPrintf(
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
                   "Not OnePass: multiple matches from %d", *it);
             goto fail;
           }

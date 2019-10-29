@@ -68,9 +68,15 @@ static void PrintResult(const RE2& re, absl::string_view input,
     if (m[i].data() == NULL)
       absl::PrintF("-");
     else
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
       absl::PrintF("%d-%d",
                    m[i].begin() - input.begin(),
                    m[i].end() - input.begin());
+=======
+      printf("%td-%td",
+             m[i].begin() - input.begin(),
+             m[i].end() - input.begin());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
   }
 }
 
@@ -81,9 +87,13 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
   regexps_++;
   std::string regexp = const_regexp;
   if (!topwrapper_.empty()) {
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     auto fmt = absl::ParsedFormat<'s'>::New(topwrapper_);
     CHECK(fmt != nullptr);
     regexp = absl::StrFormat(*fmt, regexp);
+=======
+    regexp = StringPrintf(topwrapper_.c_str(), regexp.c_str());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
   }
 
   if (absl::GetFlag(FLAGS_show_regexps)) {

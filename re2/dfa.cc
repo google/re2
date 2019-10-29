@@ -443,7 +443,11 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
     q1_(NULL),
     mem_budget_(max_mem) {
   if (ExtraDebug)
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "\nkind %d\n%s\n", kind_, prog_->DumpUnanchored());
+=======
+    fprintf(stderr, "\nkind %d\n%s\n", kind_, prog_->DumpUnanchored().c_str());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
   int nmark = 0;
   if (kind_ == Prog::kLongestMatch)
     nmark = prog_->size();
@@ -991,8 +995,13 @@ void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
   }
 
   if (ExtraDebug)
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "%s on %d[%#x] -> %s [%d]\n",
                   DumpWorkq(oldq), c, flag, DumpWorkq(newq), *ismatch);
+=======
+    fprintf(stderr, "%s on %d[%#x] -> %s [%d]\n",
+            DumpWorkq(oldq).c_str(), c, flag, DumpWorkq(newq).c_str(), *ismatch);
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
 }
 
 // Processes input byte c in state, returning new state.
@@ -1369,7 +1378,11 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
 
   while (p != ep) {
     if (ExtraDebug)
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
       absl::FPrintF(stderr, "@%d: %s\n", p - bp, DumpState(s));
+=======
+      fprintf(stderr, "@%td: %s\n", p - bp, DumpState(s).c_str());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
 
     if (have_first_byte && s == start) {
       // In start state, only way out is to find first_byte,
@@ -1477,7 +1490,11 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       else
         lastmatch = p + 1;
       if (ExtraDebug)
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
         absl::FPrintF(stderr, "match @%d! [%s]\n", lastmatch - bp, DumpState(s));
+=======
+        fprintf(stderr, "match @%td! [%s]\n", lastmatch - bp, DumpState(s).c_str());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
       if (params->matches != NULL && kind_ == Prog::kManyMatch) {
         for (int i = s->ninst_ - 1; i >= 0; i--) {
           int id = s->inst_[i];
@@ -1773,9 +1790,15 @@ bool DFA::Search(absl::string_view text, absl::string_view context,
   *failed = false;
 
   if (ExtraDebug) {
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "\nprogram:\n%s\n", prog_->DumpUnanchored());
     absl::FPrintF(stderr, "text %s anchored=%d earliest=%d fwd=%d kind %d\n",
                   text, anchored, want_earliest_match, run_forward, kind_);
+=======
+    fprintf(stderr, "\nprogram:\n%s\n", prog_->DumpUnanchored().c_str());
+    fprintf(stderr, "text %s anchored=%d earliest=%d fwd=%d kind %d\n",
+            std::string(text).c_str(), anchored, want_earliest_match, run_forward, kind_);
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
   }
 
   RWLocker l(&cache_mutex_);

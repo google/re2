@@ -59,19 +59,34 @@ void MemoryUsage() {
     CHECK(re);
     // Can't pass mc.HeapGrowth() and mc.PeakHeapGrowth() to LOG(INFO) directly,
     // because LOG(INFO) might do a big allocation before they get evaluated.
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "Regexp: %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+=======
+    fprintf(stderr, "Regexp: %7lld bytes (peak=%lld)\n",
+            mc.HeapGrowth(), mc.PeakHeapGrowth());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
     mc.Reset();
 
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     CHECK(prog->IsOnePass());
     CHECK(prog->CanBitState());
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "Prog:   %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+=======
+    fprintf(stderr, "Prog:   %7lld bytes (peak=%lld)\n",
+            mc.HeapGrowth(), mc.PeakHeapGrowth());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
     mc.Reset();
 
     absl::string_view sp[4];
     CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "Search: %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+=======
+    fprintf(stderr, "Search: %7lld bytes (peak=%lld)\n",
+            mc.HeapGrowth(), mc.PeakHeapGrowth());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
     delete prog;
     re->Decref();
   }
@@ -80,18 +95,38 @@ void MemoryUsage() {
     MallocCounter mc(MallocCounter::THIS_THREAD_ONLY);
 
     PCRE re(regexp, PCRE::UTF8);
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "RE:     %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+=======
+    fprintf(stderr, "RE:     %7lld bytes (peak=%lld)\n",
+            mc.HeapGrowth(), mc.PeakHeapGrowth());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
     PCRE::FullMatch(text, re);
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "RE:     %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+=======
+    fprintf(stderr, "RE:     %7lld bytes (peak=%lld)\n",
+            mc.HeapGrowth(), mc.PeakHeapGrowth());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
   }
 
   {
     MallocCounter mc(MallocCounter::THIS_THREAD_ONLY);
 
     PCRE* re = new PCRE(regexp, PCRE::UTF8);
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "PCRE*:  %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+=======
+    fprintf(stderr, "PCRE*:  %7lld bytes (peak=%lld)\n",
+            mc.HeapGrowth(), mc.PeakHeapGrowth());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
     PCRE::FullMatch(text, *re);
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "PCRE*:  %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+=======
+    fprintf(stderr, "PCRE*:  %7lld bytes (peak=%lld)\n",
+            mc.HeapGrowth(), mc.PeakHeapGrowth());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
     delete re;
   }
 
@@ -99,9 +134,19 @@ void MemoryUsage() {
     MallocCounter mc(MallocCounter::THIS_THREAD_ONLY);
 
     RE2 re(regexp);
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "RE2:    %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+=======
+    fprintf(stderr, "RE2:    %7lld bytes (peak=%lld)\n",
+            mc.HeapGrowth(), mc.PeakHeapGrowth());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
     RE2::FullMatch(text, re);
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "RE2:    %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+=======
+    fprintf(stderr, "RE2:    %7lld bytes (peak=%lld)\n",
+            mc.HeapGrowth(), mc.PeakHeapGrowth());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
   }
 
   absl::FPrintF(stderr, "sizeof: PCRE=%d RE2=%d Prog=%d Inst=%d\n",

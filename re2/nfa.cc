@@ -430,12 +430,23 @@ std::string NFA::FormatCapture(const char** capture) {
     if (capture[i] == NULL)
       s += "(?,?)";
     else if (capture[i+1] == NULL)
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
       s += absl::StrFormat("(%d,?)",
                            capture[i] - btext_);
+=======
+      s += StringPrintf("(%td,?)",
+                        capture[i] - btext_);
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
     else
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
       s += absl::StrFormat("(%d,%d)",
                            capture[i] - btext_,
                            capture[i+1] - btext_);
+=======
+      s += StringPrintf("(%td,%td)",
+                        capture[i] - btext_,
+                        capture[i+1] - btext_);
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
   }
   return s;
 }
@@ -490,8 +501,13 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
   etext_ = text.data() + text.size();
 
   if (ExtraDebug)
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
     absl::FPrintF(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
                   text, context, anchored, longest);
+=======
+    fprintf(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
+            std::string(text).c_str(), std::string(context).c_str(), anchored, longest);
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
 
   // Set up search.
   Threadq* runq = &q0_;
@@ -602,9 +618,15 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
           match_[2 * i],
           static_cast<size_t>(match_[2 * i + 1] - match_[2 * i]));
     if (ExtraDebug)
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
       absl::FPrintF(stderr, "match (%d,%d)\n",
                     match_[0] - btext_,
                     match_[1] - btext_);
+=======
+      fprintf(stderr, "match (%td,%td)\n",
+              match_[0] - btext_,
+              match_[1] - btext_);
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
     return true;
   }
   return false;

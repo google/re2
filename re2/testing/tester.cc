@@ -103,9 +103,15 @@ static std::string FormatCapture(absl::string_view text,
                                  absl::string_view s) {
   if (s.data() == NULL)
     return "(?,?)";
+<<<<<<< HEAD   (d87519 Address the MSVC warnings that crept in recently.)
   return absl::StrFormat("(%d,%d)",
                          s.begin() - text.begin(),
                          s.end() - text.begin());
+=======
+  return StringPrintf("(%td,%td)",
+                      s.begin() - text.begin(),
+                      s.end() - text.begin());
+>>>>>>> CHANGE (eecfdb Tweak some printed debugging for style.)
 }
 
 // Returns whether text contains non-ASCII (>= 0x80) bytes.
