@@ -223,13 +223,13 @@ void RegexpGenerator::RunPostfix(const std::vector<std::string>& post) {
 
   if (regexps.size() != 1) {
     // Internal error - should never happen.
-    printf("Bad regexp program:\n");
+    absl::PrintF("Bad regexp program:\n");
     for (size_t i = 0; i < post.size(); i++) {
-      printf("  %s\n", absl::CEscape(post[i]).c_str());
+      absl::PrintF("  %s\n", absl::CEscape(post[i]));
     }
-    printf("Stack after running program:\n");
+    absl::PrintF("Stack after running program:\n");
     while (!regexps.empty()) {
-      printf("  %s\n", absl::CEscape(regexps.top()).c_str());
+      absl::PrintF("  %s\n", absl::CEscape(regexps.top()));
       regexps.pop();
     }
     LOG(FATAL) << "Bad regexp program.";

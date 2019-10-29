@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "absl/flags/flag.h"
+#include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
 #include "re2/testing/exhaustive_tester.h"
 
@@ -42,8 +43,8 @@ static void RandomTest(int maxatoms, int maxops,
                   absl::GetFlag(FLAGS_stringcount));
   t.GenerateRandom(absl::GetFlag(FLAGS_regexpseed),
                    absl::GetFlag(FLAGS_regexpcount));
-  printf("%d regexps, %d tests, %d failures [%d/%d str]\n",
-         t.regexps(), t.tests(), t.failures(), maxstrlen, (int)stralphabet.size());
+  absl::PrintF("%d regexps, %d tests, %d failures [%d/%d str]\n",
+               t.regexps(), t.tests(), t.failures(), maxstrlen, stralphabet.size());
   EXPECT_EQ(0, t.failures());
 }
 
