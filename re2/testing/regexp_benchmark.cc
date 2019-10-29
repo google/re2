@@ -143,10 +143,10 @@ ParseImpl SearchParse1CachedPCRE, SearchParse1CachedRE2;
 
 // Generate random text that won't contain the search string,
 // to test worst-case search behavior.
-void MakeText(std::string* text, int nbytes) {
+void MakeText(std::string* text, int64_t nbytes) {
   srand(1);
   text->resize(nbytes);
-  for (int i = 0; i < nbytes; i++) {
+  for (int64_t i = 0; i < nbytes; i++) {
     // Generate a one-byte rune that isn't a control character (e.g. '\n').
     // Clipping to 0x20 introduces some bias, but we don't need uniformity.
     int byte = rand() & 0x7F;
