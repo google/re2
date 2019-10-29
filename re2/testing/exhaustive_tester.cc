@@ -59,17 +59,18 @@ static char* escape(absl::string_view sp) {
 static void PrintResult(const RE2& re, absl::string_view input,
                         RE2::Anchor anchor, absl::string_view* m, int n) {
   if (!re.Match(input, 0, input.size(), anchor, m, n)) {
-    printf("-");
+    absl::PrintF("-");
     return;
   }
   for (int i = 0; i < n; i++) {
     if (i > 0)
-      printf(" ");
+      absl::PrintF(" ");
     if (m[i].data() == NULL)
-      printf("-");
+      absl::PrintF("-");
     else
-      printf("%td-%td",
-             m[i].begin() - input.begin(), m[i].end() - input.begin());
+      absl::PrintF("%d-%d",
+                   m[i].begin() - input.begin(),
+                   m[i].end() - input.begin());
   }
 }
 
@@ -86,7 +87,7 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
   }
 
   if (absl::GetFlag(FLAGS_show_regexps)) {
-    printf("\r%s", regexp.c_str());
+    absl::PrintF("\r%s", regexp);
     fflush(stdout);
   }
 
@@ -96,13 +97,13 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
     if (randomstrings_)
       LOG(ERROR) << "Cannot log with random strings.";
     if (regexps_ == 1) {  // first
-      printf("strings\n");
+      absl::PrintF("strings\n");
       strgen_.Reset();
       while (strgen_.HasNext())
-        printf("%s\n", escape(strgen_.Next()));
-      printf("regexps\n");
+        absl::PrintF("%s\n", escape(strgen_.Next()));
+      absl::PrintF("regexps\n");
     }
-    printf("%s\n", escape(regexp));
+    absl::PrintF("%s\n", escape(regexp));
 
     RE2 re(regexp);
     RE2::Options longest;
@@ -115,13 +116,13 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
     while (strgen_.HasNext()) {
       absl::string_view input = strgen_.Next();
       PrintResult(re, input, RE2::ANCHOR_BOTH, group, ngroup);
-      printf(";");
+      absl::PrintF(";");
       PrintResult(re, input, RE2::UNANCHORED, group, ngroup);
-      printf(";");
+      absl::PrintF(";");
       PrintResult(relongest, input, RE2::ANCHOR_BOTH, group, ngroup);
-      printf(";");
+      absl::PrintF(";");
       PrintResult(relongest, input, RE2::UNANCHORED, group, ngroup);
-      printf("\n");
+      absl::PrintF("\n");
     }
     delete[] group;
     return;
@@ -167,8 +168,8 @@ void ExhaustiveTest(int maxatoms, int maxops,
                      topwrapper);
   t.Generate();
   if (!LOGGING) {
-    printf("%d regexps, %d tests, %d failures [%d/%d str]\n",
-           t.regexps(), t.tests(), t.failures(), maxstrlen, (int)stralphabet.size());
+    absl::PrintF("%d regexps, %d tests, %d failures [%d/%d str]\n",
+                 t.regexps(), t.tests(), t.failures(), maxstrlen, stralphabet.size());
   }
   EXPECT_EQ(0, t.failures());
 }

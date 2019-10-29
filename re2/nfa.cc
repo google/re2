@@ -229,7 +229,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, absl::string_view context,
       continue;
     if (q->has_index(id)) {
       if (ExtraDebug)
-        fprintf(stderr, "  [%d%s]\n", id, FormatCapture(t0->capture).c_str());
+        absl::FPrintF(stderr, "  [%d%s]\n", id, FormatCapture(t0->capture));
       continue;
     }
 
@@ -292,7 +292,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, absl::string_view context,
       t = Incref(t0);
       *tp = t;
       if (ExtraDebug)
-        fprintf(stderr, " + %d%s\n", id, FormatCapture(t0->capture).c_str());
+        absl::FPrintF(stderr, " + %d%s\n", id, FormatCapture(t0->capture));
 
       if (ip->hint() == 0)
         break;
@@ -304,7 +304,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, absl::string_view context,
       t = Incref(t0);
       *tp = t;
       if (ExtraDebug)
-        fprintf(stderr, " ! %d%s\n", id, FormatCapture(t0->capture).c_str());
+        absl::FPrintF(stderr, " ! %d%s\n", id, FormatCapture(t0->capture));
 
     Next:
       if (ip->last())
@@ -490,9 +490,8 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
   etext_ = text.data() + text.size();
 
   if (ExtraDebug)
-    fprintf(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
-            std::string(text).c_str(), std::string(context).c_str(), anchored,
-            longest);
+    absl::FPrintF(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
+                  text, context, anchored, longest);
 
   // Set up search.
   Threadq* runq = &q0_;
@@ -512,14 +511,14 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
       else if (p < etext_)
         c = p[0] & 0xFF;
 
-      fprintf(stderr, "%c:", c);
+      absl::FPrintF(stderr, "%c:", c);
       for (Threadq::iterator i = runq->begin(); i != runq->end(); ++i) {
         Thread* t = i->value();
         if (t == NULL)
           continue;
-        fprintf(stderr, " %d%s", i->index(), FormatCapture(t->capture).c_str());
+        absl::FPrintF(stderr, " %d%s", i->index(), FormatCapture(t->capture));
       }
-      fprintf(stderr, "\n");
+      absl::FPrintF(stderr, "\n");
     }
 
     // This is a no-op the first time around the loop because runq is empty.
@@ -589,7 +588,7 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
     // If all the threads have died, stop early.
     if (runq->size() == 0) {
       if (ExtraDebug)
-        fprintf(stderr, "dead\n");
+        absl::FPrintF(stderr, "dead\n");
       break;
     }
   }
@@ -603,8 +602,9 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
           match_[2 * i],
           static_cast<size_t>(match_[2 * i + 1] - match_[2 * i]));
     if (ExtraDebug)
-      fprintf(stderr, "match (%td,%td)\n",
-              match_[0] - btext_, match_[1] - btext_);
+      absl::FPrintF(stderr, "match (%d,%d)\n",
+                    match_[0] - btext_,
+                    match_[1] - btext_);
     return true;
   }
   return false;
