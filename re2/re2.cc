@@ -23,6 +23,7 @@
 
 #include "absl/base/macros.h"
 #include "absl/container/fixed_array.h"
+#include "absl/strings/str_format.h"
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "util/utf.h"
@@ -870,7 +871,7 @@ bool RE2::CheckRewriteString(absl::string_view rewrite,
   }
 
   if (max_token > NumberOfCapturingGroups()) {
-    *error = StringPrintf(
+    *error = absl::StrFormat(
         "Rewrite schema requests %d matches, but the regexp only has %d "
         "parenthesized subexpressions.",
         max_token, NumberOfCapturingGroups());

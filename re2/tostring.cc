@@ -8,8 +8,8 @@
 #include <string.h>
 #include <string>
 
+#include "absl/strings/str_format.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "util/utf.h"
 #include "re2/regexp.h"
 #include "re2/walker-inl.h"
@@ -215,11 +215,11 @@ int ToStringWalker::PostVisit(Regexp* re, int parent_arg, int pre_arg,
 
     case kRegexpRepeat:
       if (re->max() == -1)
-        t_->append(StringPrintf("{%d,}", re->min()));
+        t_->append(absl::StrFormat("{%d,}", re->min()));
       else if (re->min() == re->max())
-        t_->append(StringPrintf("{%d}", re->min()));
+        t_->append(absl::StrFormat("{%d}", re->min()));
       else
-        t_->append(StringPrintf("{%d,%d}", re->min(), re->max()));
+        t_->append(absl::StrFormat("{%d,%d}", re->min(), re->max()));
       if (re->parse_flags() & Regexp::NonGreedy)
         t_->append("?");
       if (prec < PrecUnary)
@@ -331,10 +331,10 @@ static void AppendCCChar(std::string* t, Rune r) {
   }
 
   if (r < 0x100) {
-    *t += StringPrintf("\\x%02x", static_cast<int>(r));
+    *t += absl::StrFormat("\\x%02x", static_cast<int>(r));
     return;
   }
-  *t += StringPrintf("\\x{%x}", static_cast<int>(r));
+  *t += absl::StrFormat("\\x{%x}", static_cast<int>(r));
 }
 
 static void AppendCCRange(std::string* t, Rune lo, Rune hi) {

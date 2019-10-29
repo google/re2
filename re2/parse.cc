@@ -27,7 +27,6 @@
 
 #include "absl/base/macros.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "util/utf.h"
 #include "re2/pod_array.h"
 #include "re2/regexp.h"

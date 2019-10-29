@@ -9,10 +9,10 @@
 
 #include "absl/base/macros.h"
 #include "absl/flags/flag.h"
+#include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
 #include "util/logging.h"
 #include "util/malloc_counter.h"
-#include "util/strutil.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
@@ -177,7 +177,7 @@ TEST(SingleThreaded, SearchDFA) {
   // Empirically, n = 18 is a good compromise between the two.
   const int n = 18;
 
-  Regexp* re = Regexp::Parse(StringPrintf("0[01]{%d}$", n),
+  Regexp* re = Regexp::Parse(absl::StrFormat("0[01]{%d}$", n),
                              Regexp::LikePerl, NULL);
   ASSERT_TRUE(re != NULL);
 
@@ -247,7 +247,7 @@ TEST(Multithreaded, SearchDFA) {
 
   // Same as single-threaded test above.
   const int n = 18;
-  Regexp* re = Regexp::Parse(StringPrintf("0[01]{%d}$", n),
+  Regexp* re = Regexp::Parse(absl::StrFormat("0[01]{%d}$", n),
                              Regexp::LikePerl, NULL);
   ASSERT_TRUE(re != NULL);
   std::string no_match = DeBruijnString(n);
@@ -371,7 +371,7 @@ TEST(DFA, Callback) {
         dump += " ";
       dump += match ? "[[" : "[";
       for (int b = 0; b < prog->bytemap_range() + 1; b++)
-        dump += StringPrintf("%d,", next[b]);
+        dump += absl::StrFormat("%d,", next[b]);
       dump.pop_back();
       dump += match ? "]]" : "]";
     });

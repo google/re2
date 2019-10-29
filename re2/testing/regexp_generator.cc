@@ -31,9 +31,9 @@
 
 #include "absl/base/macros.h"
 #include "absl/strings/escaping.h"
+#include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "util/utf.h"
 #include "re2/testing/regexp_generator.h"
 
@@ -201,19 +201,21 @@ void RegexpGenerator::RunPostfix(const std::vector<std::string>& post) {
         regexps.push(post[i]);
         break;
       case 1: {
+        auto fmt = absl::ParsedFormat<'s'>::New(post[i]);
+        CHECK(fmt != nullptr);
         std::string a = regexps.top();
         regexps.pop();
-        regexps.push("(?:" + StringPrintf(post[i].c_str(), a.c_str()) + ")");
+        regexps.push("(?:" + absl::StrFormat(*fmt, a) + ")");
         break;
       }
       case 2: {
+        auto fmt = absl::ParsedFormat<'s', 's'>::New(post[i]);
+        CHECK(fmt != nullptr);
         std::string b = regexps.top();
         regexps.pop();
         std::string a = regexps.top();
         regexps.pop();
-        regexps.push("(?:" +
-                     StringPrintf(post[i].c_str(), a.c_str(), b.c_str()) +
-                     ")");
+        regexps.push("(?:" + absl::StrFormat(*fmt, a, b) + ")");
         break;
       }
     }

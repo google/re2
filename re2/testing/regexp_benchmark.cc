@@ -12,11 +12,11 @@
 #include <utility>
 
 #include "absl/flags/flag.h"
+#include "absl/strings/str_format.h"
 #include "benchmark/benchmark.h"
 #include "gtest/gtest.h"
 #include "util/logging.h"
 #include "util/malloc_counter.h"
-#include "util/strutil.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
