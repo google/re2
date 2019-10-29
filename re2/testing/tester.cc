@@ -103,7 +103,8 @@ static std::string FormatCapture(const StringPiece& text,
   if (s.data() == NULL)
     return "(?,?)";
   return StringPrintf("(%td,%td)",
-                      s.begin() - text.begin(), s.end() - text.begin());
+                      s.begin() - text.begin(),
+                      s.end() - text.begin());
 }
 
 // Returns whether text contains non-ASCII (>= 0x80) bytes.

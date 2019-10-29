@@ -442,7 +442,7 @@ DFA::DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem)
     q1_(NULL),
     mem_budget_(max_mem) {
   if (ExtraDebug)
-    fprintf(stderr, "\nkind %d\n%s\n", (int)kind_, prog_->DumpUnanchored().c_str());
+    fprintf(stderr, "\nkind %d\n%s\n", kind_, prog_->DumpUnanchored().c_str());
   int nmark = 0;
   if (kind_ == Prog::kLongestMatch)
     nmark = prog_->size();
@@ -989,8 +989,8 @@ void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
   }
 
   if (ExtraDebug)
-    fprintf(stderr, "%s on %d[%#x] -> %s [%d]\n", DumpWorkq(oldq).c_str(),
-            c, flag, DumpWorkq(newq).c_str(), *ismatch);
+    fprintf(stderr, "%s on %d[%#x] -> %s [%d]\n",
+            DumpWorkq(oldq).c_str(), c, flag, DumpWorkq(newq).c_str(), *ismatch);
 }
 
 // Processes input byte c in state, returning new state.
@@ -1367,8 +1367,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
 
   while (p != ep) {
     if (ExtraDebug)
-      fprintf(stderr, "@%td: %s\n",
-              p - bp, DumpState(s).c_str());
+      fprintf(stderr, "@%td: %s\n", p - bp, DumpState(s).c_str());
 
     if (have_first_byte && s == start) {
       // In start state, only way out is to find first_byte,
@@ -1476,8 +1475,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       else
         lastmatch = p + 1;
       if (ExtraDebug)
-        fprintf(stderr, "match @%td! [%s]\n",
-                lastmatch - bp, DumpState(s).c_str());
+        fprintf(stderr, "match @%td! [%s]\n", lastmatch - bp, DumpState(s).c_str());
       if (params->matches != NULL && kind_ == Prog::kManyMatch) {
         for (int i = s->ninst_ - 1; i >= 0; i--) {
           int id = s->inst_[i];
@@ -1780,8 +1778,7 @@ bool DFA::Search(const StringPiece& text,
   if (ExtraDebug) {
     fprintf(stderr, "\nprogram:\n%s\n", prog_->DumpUnanchored().c_str());
     fprintf(stderr, "text %s anchored=%d earliest=%d fwd=%d kind %d\n",
-            std::string(text).c_str(), anchored, want_earliest_match,
-            run_forward, kind_);
+            std::string(text).c_str(), anchored, want_earliest_match, run_forward, kind_);
   }
 
   RWLocker l(&cache_mutex_);

@@ -67,7 +67,8 @@ static void PrintResult(const RE2& re, const StringPiece& input, RE2::Anchor anc
       printf("-");
     else
       printf("%td-%td",
-             m[i].begin() - input.begin(), m[i].end() - input.begin());
+             m[i].begin() - input.begin(),
+             m[i].end() - input.begin());
   }
 }
 
@@ -77,8 +78,9 @@ static void PrintResult(const RE2& re, const StringPiece& input, RE2::Anchor anc
 void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
   regexps_++;
   std::string regexp = const_regexp;
-  if (!topwrapper_.empty())
+  if (!topwrapper_.empty()) {
     regexp = StringPrintf(topwrapper_.c_str(), regexp.c_str());
+  }
 
   if (GetFlag(FLAGS_show_regexps)) {
     printf("\r%s", regexp.c_str());
