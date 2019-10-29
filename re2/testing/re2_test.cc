@@ -18,9 +18,9 @@
 #endif
 
 #include "absl/base/macros.h"
+#include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
 
@@ -907,10 +907,10 @@ TEST(RE2, FloatingPointFullMatchTypes) {
     // implementation of strtof(3). And apparently MSVC too. Sigh.
 #if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MINGW32__)
     ASSERT_TRUE(RE2::FullMatch("0.1", "(.*)", &v));
-    ASSERT_EQ(v, 0.1f) << StringPrintf("%.8g != %.8g", v, 0.1f);
+    ASSERT_EQ(v, 0.1f) << absl::StrFormat("%.8g != %.8g", v, 0.1f);
     ASSERT_TRUE(RE2::FullMatch("6700000000081920.1", "(.*)", &v));
     ASSERT_EQ(v, 6700000000081920.1f)
-      << StringPrintf("%.8g != %.8g", v, 6700000000081920.1f);
+      << absl::StrFormat("%.8g != %.8g", v, 6700000000081920.1f);
 #endif
   }
   {
@@ -922,10 +922,10 @@ TEST(RE2, FloatingPointFullMatchTypes) {
     ASSERT_EQ(v, double(1e23));
 
     ASSERT_TRUE(RE2::FullMatch("0.1", "(.*)", &v));
-    ASSERT_EQ(v, 0.1) << StringPrintf("%.17g != %.17g", v, 0.1);
+    ASSERT_EQ(v, 0.1) << absl::StrFormat("%.17g != %.17g", v, 0.1);
     ASSERT_TRUE(RE2::FullMatch("1.00000005960464485", "(.*)", &v));
     ASSERT_EQ(v, 1.0000000596046448)
-      << StringPrintf("%.17g != %.17g", v, 1.0000000596046448);
+      << absl::StrFormat("%.17g != %.17g", v, 1.0000000596046448);
   }
 }
 

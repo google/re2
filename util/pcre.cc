@@ -16,9 +16,9 @@
 #include <utility>
 
 #include "absl/flags/flag.h"
+#include "absl/strings/str_format.h"
 #include "util/logging.h"
 #include "util/pcre.h"
-#include "util/strutil.h"
 
 // Silence warnings about the wacky formatting in the operator() functions.
 // Note that we test for Clang first because it defines __GNUC__ as well.
@@ -667,7 +667,7 @@ bool PCRE::CheckRewriteString(absl::string_view rewrite,
   }
 
   if (max_token > NumberOfCapturingGroups()) {
-    *error = StringPrintf(
+    *error = absl::StrFormat(
         "Rewrite schema requests %d matches, but the regexp only has %d "
         "parenthesized subexpressions.",
         max_token, NumberOfCapturingGroups());

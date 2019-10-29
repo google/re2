@@ -59,8 +59,8 @@
 
 #include "absl/container/fixed_array.h"
 #include "absl/container/inlined_vector.h"
+#include "absl/strings/str_format.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "util/utf.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
@@ -460,7 +460,7 @@ bool Prog::IsOnePass() {
           if (nextindex == -1) {
             if (nalloc >= maxnodes) {
               if (ExtraDebug)
-                LOG(ERROR) << StringPrintf(
+                LOG(ERROR) << absl::StrFormat(
                     "Not OnePass: hit node limit %d >= %d", nalloc, maxnodes);
               goto fail;
             }
@@ -485,7 +485,7 @@ bool Prog::IsOnePass() {
               node->action[b] = newact;
             } else if (act != newact) {
               if (ExtraDebug)
-                LOG(ERROR) << StringPrintf(
+                LOG(ERROR) << absl::StrFormat(
                     "Not OnePass: conflict on byte %#x at state %d", c, *it);
               goto fail;
             }
@@ -506,7 +506,7 @@ bool Prog::IsOnePass() {
                 node->action[b] = newact;
               } else if (act != newact) {
                 if (ExtraDebug)
-                  LOG(ERROR) << StringPrintf(
+                  LOG(ERROR) << absl::StrFormat(
                       "Not OnePass: conflict on byte %#x at state %d", c, *it);
                 goto fail;
               }
@@ -547,8 +547,8 @@ bool Prog::IsOnePass() {
           // If already on work queue, (1) is violated: bail out.
           if (!AddQ(&workq, ip->out())) {
             if (ExtraDebug)
-              LOG(ERROR) << StringPrintf(
-                  "Not OnePass: multiple paths %d -> %d\n", *it, ip->out());
+              LOG(ERROR) << absl::StrFormat(
+                  "Not OnePass: multiple paths %d -> %d", *it, ip->out());
             goto fail;
           }
           id = ip->out();
@@ -558,8 +558,8 @@ bool Prog::IsOnePass() {
           if (matched) {
             // (3) is violated
             if (ExtraDebug)
-              LOG(ERROR) << StringPrintf(
-                  "Not OnePass: multiple matches from %d\n", *it);
+              LOG(ERROR) << absl::StrFormat(
+                  "Not OnePass: multiple matches from %d", *it);
             goto fail;
           }
           matched = true;
@@ -595,15 +595,15 @@ bool Prog::IsOnePass() {
       if (nodeindex == -1)
         continue;
       OneState* node = IndexToNode(nodes.data(), statesize, nodeindex);
-      dump += StringPrintf("node %d id=%d: matchcond=%#x\n",
-                           nodeindex, id, node->matchcond);
+      dump += absl::StrFormat("node %d id=%d: matchcond=%#x\n",
+                              nodeindex, id, node->matchcond);
       for (int i = 0; i < bytemap_range_; i++) {
         if ((node->action[i] & kImpossible) == kImpossible)
           continue;
-        dump += StringPrintf("  %d cond %#x -> %d id=%d\n",
-                             i, node->action[i] & 0xFFFF,
-                             node->action[i] >> kIndexShift,
-                             idmap[node->action[i] >> kIndexShift]);
+        dump += absl::StrFormat("  %d cond %#x -> %d id=%d\n",
+                                i, node->action[i] & 0xFFFF,
+                                node->action[i] >> kIndexShift,
+                                idmap[node->action[i] >> kIndexShift]);
       }
     }
     LOG(ERROR) << "nodes:\n" << dump;

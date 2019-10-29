@@ -38,6 +38,7 @@
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/types/span.h"
 #include "util/logging.h"
@@ -512,7 +513,7 @@ std::string DFA::DumpWorkq(Workq* q) {
       s += "|";
       sep = "";
     } else {
-      s += StringPrintf("%s%d", sep, *it);
+      s += absl::StrFormat("%s%d", sep, *it);
       sep = ",";
     }
   }
@@ -529,7 +530,7 @@ std::string DFA::DumpState(State* state) {
     return "*";
   std::string s;
   const char* sep = "";
-  s += StringPrintf("(%p)", state);
+  s += absl::StrFormat("(%p)", state);
   for (int i = 0; i < state->ninst_; i++) {
     if (state->inst_[i] == Mark) {
       s += "|";
@@ -538,11 +539,11 @@ std::string DFA::DumpState(State* state) {
       s += "||";
       sep = "";
     } else {
-      s += StringPrintf("%s%d", sep, state->inst_[i]);
+      s += absl::StrFormat("%s%d", sep, state->inst_[i]);
       sep = ",";
     }
   }
-  s += StringPrintf(" flag=%#x", state->flag_);
+  s += absl::StrFormat(" flag=%#x", state->flag_);
   return s;
 }
 

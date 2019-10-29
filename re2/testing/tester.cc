@@ -12,8 +12,8 @@
 #include "absl/base/macros.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/escaping.h"
+#include "absl/strings/str_format.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "re2/testing/tester.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
@@ -103,8 +103,9 @@ static std::string FormatCapture(absl::string_view text,
                                  absl::string_view s) {
   if (s.data() == NULL)
     return "(?,?)";
-  return StringPrintf("(%td,%td)",
-                      s.begin() - text.begin(), s.end() - text.begin());
+  return absl::StrFormat("(%d,%d)",
+                         s.begin() - text.begin(),
+                         s.end() - text.begin());
 }
 
 // Returns whether text contains non-ASCII (>= 0x80) bytes.
@@ -163,7 +164,7 @@ static std::string FormatMode(Regexp::ParseFlags flags) {
   for (size_t i = 0; i < ABSL_ARRAYSIZE(parse_modes); i++)
     if (parse_modes[i].parse_flags == flags)
       return parse_modes[i].desc;
-  return StringPrintf("%#x", static_cast<uint32_t>(flags));
+  return absl::StrFormat("%#x", static_cast<uint32_t>(flags));
 }
 
 // Constructs and saves all the matching engines that
@@ -558,14 +559,14 @@ bool TestInstance::RunCase(absl::string_view text, absl::string_view context,
       if (r.submatch[i].data() != correct.submatch[i].data() ||
           r.submatch[i].size() != correct.submatch[i].size()) {
         LOG(INFO) <<
-          StringPrintf("   $%d: should be %s is %s",
-                       i,
-                       FormatCapture(text, correct.submatch[i]).c_str(),
-                       FormatCapture(text, r.submatch[i]).c_str());
+          absl::StrFormat("   $%d: should be %s is %s",
+                          i,
+                          FormatCapture(text, correct.submatch[i]),
+                          FormatCapture(text, r.submatch[i]));
       } else {
         LOG(INFO) <<
-          StringPrintf("   $%d: %s ok", i,
-                       FormatCapture(text, r.submatch[i]).c_str());
+          absl::StrFormat("   $%d: %s ok", i,
+                          FormatCapture(text, r.submatch[i]));
       }
     }
   }

@@ -15,9 +15,9 @@
 
 #include "absl/base/macros.h"
 #include "absl/flags/flag.h"
+#include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "re2/testing/exhaustive_tester.h"
 #include "re2/testing/tester.h"
 
@@ -79,8 +79,11 @@ static void PrintResult(const RE2& re, absl::string_view input,
 void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
   regexps_++;
   std::string regexp = const_regexp;
-  if (!topwrapper_.empty())
-    regexp = StringPrintf(topwrapper_.c_str(), regexp.c_str());
+  if (!topwrapper_.empty()) {
+    auto fmt = absl::ParsedFormat<'s'>::New(topwrapper_);
+    CHECK(fmt != nullptr);
+    regexp = absl::StrFormat(*fmt, regexp);
+  }
 
   if (absl::GetFlag(FLAGS_show_regexps)) {
     printf("\r%s", regexp.c_str());

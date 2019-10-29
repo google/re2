@@ -31,8 +31,8 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/str_format.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"
@@ -430,12 +430,12 @@ std::string NFA::FormatCapture(const char** capture) {
     if (capture[i] == NULL)
       s += "(?,?)";
     else if (capture[i+1] == NULL)
-      s += StringPrintf("(%d,?)",
-                        (int)(capture[i] - btext_));
+      s += absl::StrFormat("(%d,?)",
+                           capture[i] - btext_);
     else
-      s += StringPrintf("(%d,%d)",
-                        (int)(capture[i] - btext_),
-                        (int)(capture[i+1] - btext_));
+      s += absl::StrFormat("(%d,%d)",
+                           capture[i] - btext_,
+                           capture[i+1] - btext_);
   }
   return s;
 }

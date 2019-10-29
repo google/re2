@@ -7,12 +7,9 @@
 
 #include <string>
 
-#include "absl/strings/string_view.h"
-
 namespace re2 {
 
 void PrefixSuccessor(std::string* prefix);
-std::string StringPrintf(const char* format, ...);
 
 }  // namespace re2
 
