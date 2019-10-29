@@ -978,32 +978,7 @@ static bool parse_double_float(const char* str, size_t n, bool isfloat,
   } else {
     r = strtod(buf, &end);
   }
-  if (end != buf + n) {
-#ifdef _WIN32
-    // Microsoft's strtod() doesn't handle inf and nan, so we have to
-    // handle it explicitly.  Speed is not important here because this
-    // code is only called in unit tests.
-    bool pos = true;
-    const char* i = buf;
-    if ('-' == *i) {
-      pos = false;
-      ++i;
-    } else if ('+' == *i) {
-      ++i;
-    }
-    if (0 == _stricmp(i, "inf") || 0 == _stricmp(i, "infinity")) {
-      r = std::numeric_limits<double>::infinity();
-      if (!pos)
-        r = -r;
-    } else if (0 == _stricmp(i, "nan")) {
-      r = std::numeric_limits<double>::quiet_NaN();
-    } else {
-      return false;
-    }
-#else
-    return false;   // Leftover junk
-#endif
-  }
+  if (end != buf + n) return false;   // Leftover junk
   if (errno) return false;
   if (dest == NULL) return true;
   if (isfloat) {
