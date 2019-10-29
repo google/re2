@@ -59,19 +59,22 @@ void MemoryUsage() {
     CHECK(re);
     // Can't pass mc.HeapGrowth() and mc.PeakHeapGrowth() to LOG(INFO) directly,
     // because LOG(INFO) might do a big allocation before they get evaluated.
-    absl::FPrintF(stderr, "Regexp: %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+    absl::FPrintF(stderr, "Regexp: %7d bytes (peak=%d)\n",
+                  mc.HeapGrowth(), mc.PeakHeapGrowth());
     mc.Reset();
 
     Prog* prog = re->CompileToProg(0);
     CHECK(prog);
     CHECK(prog->IsOnePass());
     CHECK(prog->CanBitState());
-    absl::FPrintF(stderr, "Prog:   %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+    absl::FPrintF(stderr, "Prog:   %7d bytes (peak=%d)\n",
+                  mc.HeapGrowth(), mc.PeakHeapGrowth());
     mc.Reset();
 
     absl::string_view sp[4];
     CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
-    absl::FPrintF(stderr, "Search: %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+    absl::FPrintF(stderr, "Search: %7d bytes (peak=%d)\n",
+                  mc.HeapGrowth(), mc.PeakHeapGrowth());
     delete prog;
     re->Decref();
   }
@@ -80,18 +83,22 @@ void MemoryUsage() {
     MallocCounter mc(MallocCounter::THIS_THREAD_ONLY);
 
     PCRE re(regexp, PCRE::UTF8);
-    absl::FPrintF(stderr, "RE:     %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+    absl::FPrintF(stderr, "RE:     %7d bytes (peak=%d)\n",
+                  mc.HeapGrowth(), mc.PeakHeapGrowth());
     PCRE::FullMatch(text, re);
-    absl::FPrintF(stderr, "RE:     %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+    absl::FPrintF(stderr, "RE:     %7d bytes (peak=%d)\n",
+                  mc.HeapGrowth(), mc.PeakHeapGrowth());
   }
 
   {
     MallocCounter mc(MallocCounter::THIS_THREAD_ONLY);
 
     PCRE* re = new PCRE(regexp, PCRE::UTF8);
-    absl::FPrintF(stderr, "PCRE*:  %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+    absl::FPrintF(stderr, "PCRE*:  %7d bytes (peak=%d)\n",
+                  mc.HeapGrowth(), mc.PeakHeapGrowth());
     PCRE::FullMatch(text, *re);
-    absl::FPrintF(stderr, "PCRE*:  %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+    absl::FPrintF(stderr, "PCRE*:  %7d bytes (peak=%d)\n",
+                  mc.HeapGrowth(), mc.PeakHeapGrowth());
     delete re;
   }
 
@@ -99,9 +106,11 @@ void MemoryUsage() {
     MallocCounter mc(MallocCounter::THIS_THREAD_ONLY);
 
     RE2 re(regexp);
-    absl::FPrintF(stderr, "RE2:    %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+    absl::FPrintF(stderr, "RE2:    %7d bytes (peak=%d)\n",
+                  mc.HeapGrowth(), mc.PeakHeapGrowth());
     RE2::FullMatch(text, re);
-    absl::FPrintF(stderr, "RE2:    %7d bytes (peak=%d)\n", mc.HeapGrowth(), mc.PeakHeapGrowth());
+    absl::FPrintF(stderr, "RE2:    %7d bytes (peak=%d)\n",
+                  mc.HeapGrowth(), mc.PeakHeapGrowth());
   }
 
   absl::FPrintF(stderr, "sizeof: PCRE=%d RE2=%d Prog=%d Inst=%d\n",
