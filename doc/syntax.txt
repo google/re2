@@ -1,6 +1,12 @@
 RE2 regular expression syntax reference
 -------------------------­-------­-----
 
+Meta characters
+.[{()\^$|?*+	
+\	use to escape meta characters
+.	any character
+\.	dot
+
 Single characters:
 .	any character, possibly including newline (s=true)
 [xyz]	character class
