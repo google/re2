@@ -645,7 +645,7 @@ static Prog::Anchor anchors[] = {
 
 bool Tester::TestInput(const StringPiece& text) {
   bool okay = TestInputInContext(text, text);
-  if (text.size() > 0) {
+  if (!text.empty()) {
     StringPiece sp;
     sp = text;
     sp.remove_prefix(1);
