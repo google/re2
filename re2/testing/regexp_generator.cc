@@ -256,7 +256,7 @@ std::vector<std::string> Explode(const StringPiece& s) {
 std::vector<std::string> Split(const StringPiece& sep, const StringPiece& s) {
   std::vector<std::string> v;
 
-  if (sep.size() == 0)
+  if (sep.empty())
     return Explode(s);
 
   const char *p = s.data();

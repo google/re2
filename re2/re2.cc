@@ -408,7 +408,7 @@ int RE2::GlobalReplace(std::string* str,
       break;
     if (p < vec[0].data())
       out.append(p, vec[0].data() - p);
-    if (vec[0].data() == lastend && vec[0].size() == 0) {
+    if (vec[0].data() == lastend && vec[0].empty()) {
       // Disallow empty match at end of last match: skip ahead.
       //
       // fullrune() takes int, not ptrdiff_t. However, it just looks
@@ -934,7 +934,7 @@ bool RE2::Rewrite(std::string* out,
         return false;
       }
       StringPiece snip = vec[n];
-      if (snip.size() > 0)
+      if (!snip.empty())
         out->append(snip.data(), snip.size());
     } else if (c == '\\') {
       out->push_back('\\');
