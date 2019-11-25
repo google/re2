@@ -342,6 +342,10 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
     cap_[0] = p;
     if (TrySearch(prog_->start(), p))  // Match must be leftmost; done.
       return true;
+    // Avoid invoking undefined behavior (arithmetic on a null pointer)
+    // by simply not continuing the loop.
+    if (p == NULL)
+      break;
   }
   return false;
 }

@@ -382,10 +382,15 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, const StringPiece& context,
         break;
 
       case kInstMatch: {
-        // Avoid invoking undefined behavior when p happens
-        // to be null - and p-1 would be meaningless anyway.
-        if (p == NULL)
+        // Avoid invoking undefined behavior (arithmetic on a null pointer)
+        // by storing p instead of p-1. (What would the latter even mean?!)
+        // This complements the special case in NFA::Search().
+        if (p == NULL) {
+          CopyCapture(match_, t->capture);
+          match_[1] = p;
+          matched_ = true;
           break;
+        }
 
         if (endmatch_ && p-1 != etext_)
           break;
@@ -591,6 +596,18 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
     if (runq->size() == 0) {
       if (ExtraDebug)
         fprintf(stderr, "dead\n");
+      break;
+    }
+
+    // Avoid invoking undefined behavior (arithmetic on a null pointer)
+    // by simply not continuing the loop.
+    // This complements the special case in NFA::Step().
+    if (p == NULL) {
+      (void)Step(runq, nextq, p < etext_ ? p[0] & 0xFF : -1, context, p);
+      DCHECK_EQ(runq->size(), 0);
+      using std::swap;
+      swap(nextq, runq);
+      nextq->clear();
       break;
     }
   }
