@@ -409,7 +409,7 @@ int RE2::GlobalReplace(std::string* str,
       break;
     if (p < vec[0].data())
       out.append(p, vec[0].data() - p);
-    if (vec[0].data() == lastend && vec[0].size() == 0) {
+    if (vec[0].data() == lastend && vec[0].empty()) {
       // Disallow empty match at end of last match: skip ahead.
       //
       // fullrune() takes int, not ptrdiff_t. However, it just looks
@@ -922,8 +922,13 @@ bool RE2::Rewrite(std::string* out,
         }
         return false;
       }
+<<<<<<< HEAD   (cb53c1 Fix a latent bug in Regexp::Walker<T>::Reset().)
       absl::string_view snip = vec[n];
       if (snip.size() > 0)
+=======
+      StringPiece snip = vec[n];
+      if (!snip.empty())
+>>>>>>> CHANGE (4f6e13 Check if empty() instead of comparing size() with 0.)
         out->append(snip.data(), snip.size());
     } else if (c == '\\') {
       out->push_back('\\');

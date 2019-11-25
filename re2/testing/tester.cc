@@ -644,8 +644,13 @@ static Prog::Anchor anchors[] = {
 
 bool Tester::TestInput(absl::string_view text) {
   bool okay = TestInputInContext(text, text);
+<<<<<<< HEAD   (cb53c1 Fix a latent bug in Regexp::Walker<T>::Reset().)
   if (text.size() > 0) {
     absl::string_view sp;
+=======
+  if (!text.empty()) {
+    StringPiece sp;
+>>>>>>> CHANGE (4f6e13 Check if empty() instead of comparing size() with 0.)
     sp = text;
     sp.remove_prefix(1);
     okay &= TestInputInContext(sp, text);

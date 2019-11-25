@@ -1318,15 +1318,20 @@ bool Regexp::ParseState::MaybeConcatString(int r, ParseFlags flags) {
 
 // Parses a decimal integer, storing it in *np.
 // Sets *s to span the remainder of the string.
+<<<<<<< HEAD   (cb53c1 Fix a latent bug in Regexp::Walker<T>::Reset().)
 static bool ParseInteger(absl::string_view* s, int* np) {
   if (s->size() == 0 || !isdigit((*s)[0] & 0xFF))
+=======
+static bool ParseInteger(StringPiece* s, int* np) {
+  if (s->empty() || !isdigit((*s)[0] & 0xFF))
+>>>>>>> CHANGE (4f6e13 Check if empty() instead of comparing size() with 0.)
     return false;
   // Disallow leading zeros.
   if (s->size() >= 2 && (*s)[0] == '0' && isdigit((*s)[1] & 0xFF))
     return false;
   int n = 0;
   int c;
-  while (s->size() > 0 && isdigit(c = (*s)[0] & 0xFF)) {
+  while (!s->empty() && isdigit(c = (*s)[0] & 0xFF)) {
     // Avoid overflow.
     if (n >= 100000000)
       return false;
@@ -1346,18 +1351,24 @@ static bool ParseInteger(absl::string_view* s, int* np) {
 // The Maybe in the name signifies that the regexp parse
 // doesn't fail even if ParseRepetition does, so the string_view
 // s must NOT be edited unless MaybeParseRepetition returns true.
+<<<<<<< HEAD   (cb53c1 Fix a latent bug in Regexp::Walker<T>::Reset().)
 static bool MaybeParseRepetition(absl::string_view* sp, int* lo, int* hi) {
   absl::string_view s = *sp;
   if (s.size() == 0 || s[0] != '{')
+=======
+static bool MaybeParseRepetition(StringPiece* sp, int* lo, int* hi) {
+  StringPiece s = *sp;
+  if (s.empty() || s[0] != '{')
+>>>>>>> CHANGE (4f6e13 Check if empty() instead of comparing size() with 0.)
     return false;
   s.remove_prefix(1);  // '{'
   if (!ParseInteger(&s, lo))
     return false;
-  if (s.size() == 0)
+  if (s.empty())
     return false;
   if (s[0] == ',') {
     s.remove_prefix(1);  // ','
-    if (s.size() == 0)
+    if (s.empty())
       return false;
     if (s[0] == '}') {
       // {2,} means at least 2
@@ -1371,7 +1382,7 @@ static bool MaybeParseRepetition(absl::string_view* sp, int* lo, int* hi) {
     // {2} means exactly two
     *hi = *lo;
   }
-  if (s.size() == 0 || s[0] != '}')
+  if (s.empty() || s[0] != '}')
     return false;
   s.remove_prefix(1);  // '}'
   *sp = s;
@@ -1413,8 +1424,13 @@ static int StringViewToRune(Rune* r, absl::string_view* sp,
 static bool IsValidUTF8(absl::string_view s, RegexpStatus* status) {
   absl::string_view t = s;
   Rune r;
+<<<<<<< HEAD   (cb53c1 Fix a latent bug in Regexp::Walker<T>::Reset().)
   while (t.size() > 0) {
     if (StringViewToRune(&r, &t, status) < 0)
+=======
+  while (!t.empty()) {
+    if (StringPieceToRune(&r, &t, status) < 0)
+>>>>>>> CHANGE (4f6e13 Check if empty() instead of comparing size() with 0.)
       return false;
   }
   return true;
@@ -1445,13 +1461,13 @@ static int UnHex(int c) {
 static bool ParseEscape(absl::string_view* s, Rune* rp,
                         RegexpStatus* status, int rune_max) {
   const char* begin = s->data();
-  if (s->size() < 1 || (*s)[0] != '\\') {
+  if (s->empty() || (*s)[0] != '\\') {
     // Should not happen - caller always checks.
     status->set_code(kRegexpInternalError);
     status->set_error_arg(absl::string_view());
     return false;
   }
-  if (s->size() < 2) {
+  if (s->size() == 1) {
     status->set_code(kRegexpTrailingBackslash);
     status->set_error_arg(absl::string_view());
     return false;
@@ -1482,16 +1498,16 @@ static bool ParseEscape(absl::string_view* s, Rune* rp,
     case '6':
     case '7':
       // Single non-zero octal digit is a backreference; not supported.
-      if (s->size() == 0 || (*s)[0] < '0' || (*s)[0] > '7')
+      if (s->empty() || (*s)[0] < '0' || (*s)[0] > '7')
         goto BadEscape;
       ABSL_FALLTHROUGH_INTENDED;
     case '0':
       // consume up to three octal digits; already have one.
       code = c - '0';
-      if (s->size() > 0 && '0' <= (c = (*s)[0]) && c <= '7') {
+      if (!s->empty() && '0' <= (c = (*s)[0]) && c <= '7') {
         code = code * 8 + c - '0';
         s->remove_prefix(1);  // digit
-        if (s->size() > 0) {
+        if (!s->empty()) {
           c = (*s)[0];
           if ('0' <= c && c <= '7') {
             code = code * 8 + c - '0';
@@ -1506,7 +1522,7 @@ static bool ParseEscape(absl::string_view* s, Rune* rp,
 
     // Hexadecimal escapes
     case 'x':
-      if (s->size() == 0)
+      if (s->empty())
         goto BadEscape;
       if (StringViewToRune(&c, s, status) < 0)
         return false;
@@ -1526,7 +1542,7 @@ static bool ParseEscape(absl::string_view* s, Rune* rp,
           code = code * 16 + UnHex(c);
           if (code > rune_max)
             goto BadEscape;
-          if (s->size() == 0)
+          if (s->empty())
             goto BadEscape;
           if (StringViewToRune(&c, s, status) < 0)
             return false;
@@ -1537,7 +1553,7 @@ static bool ParseEscape(absl::string_view* s, Rune* rp,
         return true;
       }
       // Easy case: two hex digits.
-      if (s->size() == 0)
+      if (s->empty())
         goto BadEscape;
       if (StringViewToRune(&c1, s, status) < 0)
         return false;
@@ -1769,7 +1785,7 @@ ParseStatus ParseUnicodeGroup(absl::string_view* s,
   // Chop seq where s now begins.
   seq = absl::string_view(seq.data(), static_cast<size_t>(s->data() - seq.data()));
 
-  if (name.size() > 0 && name[0] == '^') {
+  if (!name.empty() && name[0] == '^') {
     sign = -sign;
     name.remove_prefix(1);  // '^'
   }
@@ -1856,7 +1872,7 @@ static ParseStatus ParseCCName(absl::string_view* s,
 bool Regexp::ParseState::ParseCCCharacter(absl::string_view* s, Rune* rp,
                                           absl::string_view whole_class,
                                           RegexpStatus* status) {
-  if (s->size() == 0) {
+  if (s->empty()) {
     status->set_code(kRegexpMissingBracket);
     status->set_error_arg(whole_class);
     return false;
@@ -1864,7 +1880,7 @@ bool Regexp::ParseState::ParseCCCharacter(absl::string_view* s, Rune* rp,
 
   // Allow regular escape sequences even though
   // many need not be escaped in this context.
-  if (s->size() >= 1 && (*s)[0] == '\\')
+  if ((*s)[0] == '\\')
     return ParseEscape(s, rp, status, rune_max_);
 
   // Otherwise take the next rune.
@@ -1904,8 +1920,13 @@ bool Regexp::ParseState::ParseCCRange(absl::string_view* s, RuneRange* rr,
 // Sets *out_re to the regexp for the class.
 bool Regexp::ParseState::ParseCharClass(absl::string_view* s, Regexp** out_re,
                                         RegexpStatus* status) {
+<<<<<<< HEAD   (cb53c1 Fix a latent bug in Regexp::Walker<T>::Reset().)
   absl::string_view whole_class = *s;
   if (s->size() == 0 || (*s)[0] != '[') {
+=======
+  StringPiece whole_class = *s;
+  if (s->empty() || (*s)[0] != '[') {
+>>>>>>> CHANGE (4f6e13 Check if empty() instead of comparing size() with 0.)
     // Caller checked this.
     status->set_code(kRegexpInternalError);
     status->set_error_arg(absl::string_view());
@@ -1915,7 +1936,7 @@ bool Regexp::ParseState::ParseCharClass(absl::string_view* s, Regexp** out_re,
   Regexp* re = new Regexp(kRegexpCharClass, flags_ & ~FoldCase);
   re->ccb_ = new CharClassBuilder;
   s->remove_prefix(1);  // '['
-  if (s->size() > 0 && (*s)[0] == '^') {
+  if (!s->empty() && (*s)[0] == '^') {
     s->remove_prefix(1);  // '^'
     negated = true;
     if (!(flags_ & ClassNL) || (flags_ & NeverNL)) {
@@ -1925,7 +1946,7 @@ bool Regexp::ParseState::ParseCharClass(absl::string_view* s, Regexp** out_re,
     }
   }
   bool first = true;  // ] is okay as first char in class
-  while (s->size() > 0 && ((*s)[0] != ']' || first)) {
+  while (!s->empty() && ((*s)[0] != ']' || first)) {
     // - is only okay unescaped as first or last in class.
     // Except that Perl allows - anywhere.
     if ((*s)[0] == '-' && !first && !(flags_&PerlX) &&
@@ -1993,7 +2014,7 @@ bool Regexp::ParseState::ParseCharClass(absl::string_view* s, Regexp** out_re,
     // in the flags.
     re->ccb_->AddRangeFlags(rr.lo, rr.hi, flags_ | Regexp::ClassNL);
   }
-  if (s->size() == 0) {
+  if (s->empty()) {
     status->set_code(kRegexpMissingBracket);
     status->set_error_arg(whole_class);
     re->Decref();
@@ -2012,8 +2033,13 @@ bool Regexp::ParseState::ParseCharClass(absl::string_view* s, Regexp** out_re,
 // PCRE limits names to 32 bytes.
 // Python rejects names starting with digits.
 // We don't enforce either of those.
+<<<<<<< HEAD   (cb53c1 Fix a latent bug in Regexp::Walker<T>::Reset().)
 static bool IsValidCaptureName(absl::string_view name) {
   if (name.size() == 0)
+=======
+static bool IsValidCaptureName(const StringPiece& name) {
+  if (name.empty())
+>>>>>>> CHANGE (4f6e13 Check if empty() instead of comparing size() with 0.)
     return false;
   for (size_t i = 0; i < name.size(); i++) {
     int c = name[i];
@@ -2096,7 +2122,7 @@ bool Regexp::ParseState::ParsePerlFlags(absl::string_view* s) {
   int nflags = flags_;
   Rune c;
   for (bool done = false; !done; ) {
-    if (t.size() == 0)
+    if (t.empty())
       goto BadPerlOp;
     if (StringViewToRune(&c, &t, status_) < 0)
       return false;
@@ -2214,7 +2240,7 @@ Regexp* Regexp::Parse(absl::string_view s, ParseFlags global_flags,
 
   if (global_flags & Literal) {
     // Special parse loop for literal string.
-    while (t.size() > 0) {
+    while (!t.empty()) {
       Rune r;
       if (StringViewToRune(&r, &t, status) < 0)
         return NULL;
@@ -2224,9 +2250,15 @@ Regexp* Regexp::Parse(absl::string_view s, ParseFlags global_flags,
     return ps.DoFinish();
   }
 
+<<<<<<< HEAD   (cb53c1 Fix a latent bug in Regexp::Walker<T>::Reset().)
   absl::string_view lastunary = absl::string_view();
   while (t.size() > 0) {
     absl::string_view isunary = absl::string_view();
+=======
+  StringPiece lastunary = StringPiece();
+  while (!t.empty()) {
+    StringPiece isunary = StringPiece();
+>>>>>>> CHANGE (4f6e13 Check if empty() instead of comparing size() with 0.)
     switch (t[0]) {
       default: {
         Rune r;
@@ -2309,11 +2341,11 @@ Regexp* Regexp::Parse(absl::string_view s, ParseFlags global_flags,
         bool nongreedy = false;
         t.remove_prefix(1);  // '*' or '+' or '?'
         if (ps.flags() & PerlX) {
-          if (t.size() > 0 && t[0] == '?') {
+          if (!t.empty() && t[0] == '?') {
             nongreedy = true;
             t.remove_prefix(1);  // '?'
           }
-          if (lastunary.size() > 0) {
+          if (!lastunary.empty()) {
             // In Perl it is not allowed to stack repetition operators:
             //   a** is a syntax error, not a double-star.
             // (and a++ means something else entirely, which we don't support!)
@@ -2344,11 +2376,11 @@ Regexp* Regexp::Parse(absl::string_view s, ParseFlags global_flags,
         }
         bool nongreedy = false;
         if (ps.flags() & PerlX) {
-          if (t.size() > 0 && t[0] == '?') {
+          if (!t.empty() && t[0] == '?') {
             nongreedy = true;
             t.remove_prefix(1);  // '?'
           }
-          if (lastunary.size() > 0) {
+          if (!lastunary.empty()) {
             // Not allowed to stack repetition operators.
             status->set_code(kRegexpRepeatOp);
             status->set_error_arg(absl::string_view(
@@ -2402,7 +2434,7 @@ Regexp* Regexp::Parse(absl::string_view s, ParseFlags global_flags,
 
           if (t[1] == 'Q') {  // \Q ... \E: the ... is always literals
             t.remove_prefix(2);  // '\\', 'Q'
-            while (t.size() > 0) {
+            while (!t.empty()) {
               if (t.size() >= 2 && t[0] == '\\' && t[1] == 'E') {
                 t.remove_prefix(2);  // '\\', 'E'
                 break;
