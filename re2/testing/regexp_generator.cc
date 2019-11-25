@@ -260,7 +260,7 @@ std::vector<std::string> Explode(absl::string_view s) {
 std::vector<std::string> Split(absl::string_view sep, absl::string_view s) {
   std::vector<std::string> v;
 
-  if (sep.size() == 0)
+  if (sep.empty())
     return Explode(s);
 
   const char *p = s.data();

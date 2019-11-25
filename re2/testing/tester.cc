@@ -644,7 +644,7 @@ static Prog::Anchor anchors[] = {
 
 bool Tester::TestInput(absl::string_view text) {
   bool okay = TestInputInContext(text, text);
-  if (text.size() > 0) {
+  if (!text.empty()) {
     absl::string_view sp;
     sp = text;
     sp.remove_prefix(1);
