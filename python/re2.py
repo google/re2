@@ -118,14 +118,14 @@ def _decode(b):
 
 
 def escape(pattern):
-  if isinstance(pattern, bytes):
-    escaped = _re2.RE2.QuoteMeta(pattern)
-    return escaped
-  else:
+  if isinstance(pattern, six.text_type):
     encoded_pattern = _encode(pattern)
     escaped = _re2.RE2.QuoteMeta(encoded_pattern)
     decoded_escaped = _decode(escaped)
     return decoded_escaped
+  else:
+    escaped = _re2.RE2.QuoteMeta(pattern)
+    return escaped
 
 
 def purge():
@@ -151,14 +151,14 @@ class _Regexp(object):
 
   def __init__(self, pattern, options):
     self._pattern = pattern
-    if isinstance(self._pattern, bytes):
-      self._regexp = _re2.RE2(self._pattern, options)
-    else:
+    if isinstance(self._pattern, six.text_type):
       if options.encoding == Options.Encoding.LATIN1:
         raise error('string type of pattern is Text (unicode in Python 2, str '
                     'in Python 3), but encoding specified in options is LATIN1')
       encoded_pattern = _encode(self._pattern)
       self._regexp = _re2.RE2(encoded_pattern, options)
+    else:
+      self._regexp = _re2.RE2(self._pattern, options)
     if not self._regexp.ok():
       raise error(self._regexp.error())
 
@@ -182,21 +182,7 @@ class _Regexp(object):
     endpos = len(text) if endpos is None else max(0, min(endpos, len(text)))
     if pos > endpos:
       return
-    if isinstance(text, bytes):
-      while True:
-        spans = self._regexp.Match(anchor, text, pos, endpos)
-        if spans[0] == _NULL_SPAN:
-          break
-        yield _Match(self, text, pos, endpos, spans)
-        if pos == endpos:
-          break
-        elif pos == spans[0][1]:
-          # We matched the empty string at pos and would be stuck, so in order
-          # to make forward progress, increment the bytes offset.
-          pos += 1
-        else:
-          pos = spans[0][1]
-    else:
+    if isinstance(text, six.text_type):
       encoded_text = _encode(text)
       encoded_pos = _re2.CharLenToBytes(encoded_text, 0, pos)
       if endpos == len(text):
@@ -244,6 +230,20 @@ class _Regexp(object):
           encoded_pos += _re2.CharLenToBytes(encoded_text, encoded_pos, 1)
         else:
           encoded_pos = spans[0][1]
+    else:
+      while True:
+        spans = self._regexp.Match(anchor, text, pos, endpos)
+        if spans[0] == _NULL_SPAN:
+          break
+        yield _Match(self, text, pos, endpos, spans)
+        if pos == endpos:
+          break
+        elif pos == spans[0][1]:
+          # We matched the empty string at pos and would be stuck, so in order
+          # to make forward progress, increment the bytes offset.
+          pos += 1
+        else:
+          pos = spans[0][1]
 
   def search(self, text, pos=None, endpos=None):
     return next(self._match(_Anchor.UNANCHORED, text, pos, endpos), None)
@@ -319,11 +319,11 @@ class _Regexp(object):
   @property
   def groupindex(self):
     groups = self._regexp.NamedCapturingGroups()
-    if isinstance(self._pattern, bytes):
-      return dict(groups)
-    else:
+    if isinstance(self._pattern, six.text_type):
       decoded_groups = [(_decode(group), index) for group, index in groups]
       return dict(decoded_groups)
+    else:
+      return dict(groups)
 
 
 class _Match(object):
@@ -511,11 +511,11 @@ class Set(object):
     return cls(_Anchor.ANCHOR_BOTH, options=options)
 
   def Add(self, pattern):
-    if isinstance(pattern, bytes):
-      index = self._set.Add(pattern)
-    else:
+    if isinstance(pattern, six.text_type):
       encoded_pattern = _encode(pattern)
       index = self._set.Add(encoded_pattern)
+    else:
+      index = self._set.Add(pattern)
     if index == -1:
       raise error('failed to add %r to Set' % pattern)
     return index
@@ -525,11 +525,11 @@ class Set(object):
       raise error('failed to compile Set')
 
   def Match(self, text):
-    if isinstance(text, bytes):
-      matches = self._set.Match(text)
-    else:
+    if isinstance(text, six.text_type):
       encoded_text = _encode(text)
       matches = self._set.Match(encoded_text)
+    else:
+      matches = self._set.Match(text)
     return matches or None
 
 
@@ -544,11 +544,11 @@ class Filter(object):
   def Add(self, pattern, options=None):
     if not options:
       options = Options()
-    if isinstance(pattern, bytes):
-      index = self._filter.Add(pattern, options)
-    else:
+    if isinstance(pattern, six.text_type):
       encoded_pattern = _encode(pattern)
       index = self._filter.Add(encoded_pattern, options)
+    else:
+      index = self._filter.Add(pattern, options)
     if index == -1:
       raise error('failed to add %r to Filter' % pattern)
     return index
@@ -558,9 +558,9 @@ class Filter(object):
       raise error('failed to compile Filter')
 
   def Match(self, text, potential=False):
-    if isinstance(text, bytes):
-      matches = self._filter.Match(text, potential)
-    else:
+    if isinstance(text, six.text_type):
       encoded_text = _encode(text)
       matches = self._filter.Match(encoded_text, potential)
+    else:
+      matches = self._filter.Match(text, potential)
     return matches or None

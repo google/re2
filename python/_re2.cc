@@ -20,13 +20,14 @@ namespace re2_python {
 // This is conventional.
 namespace py = pybind11;
 
-static inline absl::string_view FromBytes(const py::bytes& bytes) {
-  char* data;
-  ssize_t size;
-  if (PYBIND11_BYTES_AS_STRING_AND_SIZE(bytes.ptr(), &data, &size) == -1) {
-    // Should never happen: we were passed a py::bytes in the first place!
-    py::pybind11_fail("PYBIND11_BYTES_AS_STRING_AND_SIZE() failed");
-  }
+// In terms of the pybind11 API, a py::buffer is merely a py::object that
+// supports the buffer interface/protocol and you must explicitly request
+// a py::buffer_info in order to access the actual bytes. Under the hood,
+// the py::buffer_info manages a reference count to the py::buffer, so it
+// must be constructed and subsequently destructed while holding the GIL.
+static inline absl::string_view FromBytes(const py::buffer_info& bytes) {
+  char* data = reinterpret_cast<char*>(bytes.ptr);
+  ssize_t size = bytes.size;
   return absl::string_view(data, size);
 }
 
@@ -36,7 +37,8 @@ static inline int OneCharLen(const char* ptr) {
 
 // Helper function for when Python encodes Text to bytes and then needs to
 // convert Text offsets to bytes offsets. Assumes that text is valid UTF-8.
-ssize_t CharLenToBytes(py::bytes bytes, ssize_t pos, ssize_t len) {
+ssize_t CharLenToBytes(py::buffer buffer, ssize_t pos, ssize_t len) {
+  auto bytes = buffer.request();
   auto text = FromBytes(bytes);
   auto ptr = text.data() + pos;
   auto end = text.data() + text.size();
@@ -49,7 +51,8 @@ ssize_t CharLenToBytes(py::bytes bytes, ssize_t pos, ssize_t len) {
 
 // Helper function for when Python decodes bytes to Text and then needs to
 // convert bytes offsets to Text offsets. Assumes that text is valid UTF-8.
-ssize_t BytesToCharLen(py::bytes bytes, ssize_t pos, ssize_t endpos) {
+ssize_t BytesToCharLen(py::buffer buffer, ssize_t pos, ssize_t endpos) {
+  auto bytes = buffer.request();
   auto text = FromBytes(bytes);
   auto ptr = text.data() + pos;
   auto end = text.data() + endpos;
@@ -61,7 +64,9 @@ ssize_t BytesToCharLen(py::bytes bytes, ssize_t pos, ssize_t endpos) {
   return len;
 }
 
-std::unique_ptr<RE2> RE2InitShim(py::bytes bytes, const RE2::Options& options) {
+std::unique_ptr<RE2> RE2InitShim(py::buffer buffer,
+                                 const RE2::Options& options) {
+  auto bytes = buffer.request();
   auto pattern = FromBytes(bytes);
   return absl::make_unique<RE2>(pattern, options);
 }
@@ -84,14 +89,15 @@ std::vector<std::pair<py::bytes, int>> RE2NamedCapturingGroupsShim(
 
 std::vector<std::pair<ssize_t, ssize_t>> RE2MatchShim(const RE2& self,
                                                       RE2::Anchor anchor,
-                                                      py::bytes bytes,
+                                                      py::buffer buffer,
                                                       ssize_t pos,
                                                       ssize_t endpos) {
-  py::gil_scoped_release release_gil;
+  auto bytes = buffer.request();
   auto text = FromBytes(bytes);
   const int num_groups = self.NumberOfCapturingGroups() + 1;  // need $0
   std::vector<absl::string_view> groups;
   groups.resize(num_groups);
+  py::gil_scoped_release release_gil;
   if (!self.Match(text, pos, endpos, anchor, groups.data(), groups.size())) {
     // Ensure that groups are null before converting to spans!
     for (auto& it : groups) {
@@ -111,7 +117,8 @@ std::vector<std::pair<ssize_t, ssize_t>> RE2MatchShim(const RE2& self,
   return spans;
 }
 
-py::bytes RE2QuoteMetaShim(py::bytes bytes) {
+py::bytes RE2QuoteMetaShim(py::buffer buffer) {
+  auto bytes = buffer.request();
   auto pattern = FromBytes(bytes);
   // Return the std::string as bytes. That is, without decoding to Text.
   return RE2::QuoteMeta(pattern);
@@ -128,7 +135,8 @@ class Set {
   Set(const Set&) = delete;
   Set& operator=(const Set&) = delete;
 
-  int Add(py::bytes bytes) {
+  int Add(py::buffer buffer) {
+    auto bytes = buffer.request();
     auto pattern = FromBytes(bytes);
     int index = set_.Add(pattern, /*error=*/NULL);  // -1 on error
     return index;
@@ -139,10 +147,11 @@ class Set {
     return set_.Compile();
   }
 
-  std::vector<int> Match(py::bytes bytes) const {
-    py::gil_scoped_release release_gil;
+  std::vector<int> Match(py::buffer buffer) const {
+    auto bytes = buffer.request();
     auto text = FromBytes(bytes);
     std::vector<int> matches;
+    py::gil_scoped_release release_gil;
     set_.Match(text, &matches);
     return matches;
   }
@@ -160,7 +169,8 @@ class Filter {
   Filter(const Filter&) = delete;
   Filter& operator=(const Filter&) = delete;
 
-  int Add(py::bytes bytes, const RE2::Options& options) {
+  int Add(py::buffer buffer, const RE2::Options& options) {
+    auto bytes = buffer.request();
     auto pattern = FromBytes(bytes);
     int index = -1;  // not clobbered on error
     filter_.Add(pattern, options, &index);
@@ -184,10 +194,11 @@ class Filter {
     return set_->Compile();
   }
 
-  std::vector<int> Match(py::bytes bytes, bool potential) const {
-    py::gil_scoped_release release_gil;
+  std::vector<int> Match(py::buffer buffer, bool potential) const {
+    auto bytes = buffer.request();
     auto text = FromBytes(bytes);
     std::vector<int> atoms;
+    py::gil_scoped_release release_gil;
     set_->Match(text, &atoms);
     std::vector<int> matches;
     if (potential) {
