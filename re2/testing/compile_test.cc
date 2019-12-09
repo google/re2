@@ -147,10 +147,19 @@ static void DumpByteMap(StringPiece pattern, Regexp::ParseFlags flags,
   Regexp* re = Regexp::Parse(pattern, flags, NULL);
   EXPECT_TRUE(re != NULL);
 
-  Prog* prog = re->CompileToProg(0);
-  EXPECT_TRUE(prog != NULL);
-  *bytemap = prog->DumpByteMap();
-  delete prog;
+  {
+    Prog* prog = re->CompileToProg(0);
+    EXPECT_TRUE(prog != NULL);
+    *bytemap = prog->DumpByteMap();
+    delete prog;
+  }
+
+  {
+    Prog* prog = re->CompileToReverseProg(0);
+    EXPECT_TRUE(prog != NULL);
+    EXPECT_EQ(*bytemap, prog->DumpByteMap());
+    delete prog;
+  }
 
   re->Decref();
 }
@@ -213,16 +222,11 @@ TEST(TestCompile, UTF8Ranges) {
   EXPECT_EQ("[00-09] -> 0\n"
             "[0a-0a] -> 1\n"
             "[0b-7f] -> 0\n"
-            "[80-8f] -> 2\n"
-            "[90-9f] -> 3\n"
-            "[a0-bf] -> 4\n"
+            "[80-bf] -> 2\n"
             "[c0-c1] -> 1\n"
-            "[c2-df] -> 5\n"
-            "[e0-e0] -> 6\n"
-            "[e1-ef] -> 7\n"
-            "[f0-f0] -> 8\n"
-            "[f1-f3] -> 9\n"
-            "[f4-f4] -> 10\n"
+            "[c2-df] -> 3\n"
+            "[e0-ef] -> 4\n"
+            "[f0-f4] -> 5\n"
             "[f5-ff] -> 1\n",
             bytemap);
 }
@@ -299,20 +303,22 @@ TEST(TestCompile, Bug26705922) {
             "8. byte [f0-f0] 0 -> 7\n",
             reverse);
 
-  Dump("[\\x{80}-\\x{10FFFF}]", Regexp::LikePerl, NULL, &reverse);
-  EXPECT_EQ("3. byte [80-bf] 0 -> 4\n"
-            "4+ byte [c2-df] 0 -> 7\n"
-            "5+ byte [a0-bf] 1 -> 8\n"
-            "6. byte [80-bf] 0 -> 9\n"
+  Dump("[\\x{80}-\\x{10FFFF}]", Regexp::LikePerl, &forward, &reverse);
+  EXPECT_EQ("3+ byte [c2-df] 0 -> 6\n"
+            "4+ byte [e0-ef] 0 -> 8\n"
+            "5. byte [f0-f4] 0 -> 9\n"
+            "6. byte [80-bf] 0 -> 7\n"
             "7. match! 0\n"
-            "8. byte [e0-e0] 0 -> 7\n"
-            "9+ byte [e1-ef] 0 -> 7\n"
-            "10+ byte [90-bf] 1 -> 13\n"
-            "11+ byte [80-bf] 1 -> 14\n"
-            "12. byte [80-8f] 0 -> 15\n"
-            "13. byte [f0-f0] 0 -> 7\n"
-            "14. byte [f1-f3] 0 -> 7\n"
-            "15. byte [f4-f4] 0 -> 7\n",
+            "8. byte [80-bf] 0 -> 6\n"
+            "9. byte [80-bf] 0 -> 8\n",
+            forward);
+  EXPECT_EQ("3. byte [80-bf] 0 -> 4\n"
+            "4+ byte [c2-df] 0 -> 6\n"
+            "5. byte [80-bf] 0 -> 7\n"
+            "6. match! 0\n"
+            "7+ byte [e0-ef] 0 -> 6\n"
+            "8. byte [80-bf] 0 -> 9\n"
+            "9. byte [f0-f4] 0 -> 6\n",
             reverse);
 }
 

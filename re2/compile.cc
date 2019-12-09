@@ -662,48 +662,43 @@ void Compiler::AddRuneRangeLatin1(Rune lo, Rune hi, bool foldcase) {
                                    static_cast<uint8_t>(hi), foldcase, 0));
 }
 
-// Table describing how to make a UTF-8 matching machine
-// for the rune range 80-10FFFF (Runeself-Runemax).
-// This range happens frequently enough (for example /./ and /[^a-z]/)
-// and the rune_cache_ map is slow enough that this is worth
-// special handling.  Makes compilation of a small expression
-// with a dot in it about 10% faster.
-// The * in the comments below mark whole sequences.
-static struct ByteRangeProg {
-  int next;
-  int lo;
-  int hi;
-} prog_80_10ffff[] = {
-  // Two-byte
-  { -1, 0x80, 0xBF, },  // 0:  80-BF
-  {  0, 0xC2, 0xDF, },  // 1:  C2-DF 80-BF*
-
-  // Three-byte
-  {  0, 0xA0, 0xBF, },  // 2:  A0-BF 80-BF
-  {  2, 0xE0, 0xE0, },  // 3:  E0 A0-BF 80-BF*
-  {  0, 0x80, 0xBF, },  // 4:  80-BF 80-BF
-  {  4, 0xE1, 0xEF, },  // 5:  E1-EF 80-BF 80-BF*
-
-  // Four-byte
-  {  4, 0x90, 0xBF, },  // 6:  90-BF 80-BF 80-BF
-  {  6, 0xF0, 0xF0, },  // 7:  F0 90-BF 80-BF 80-BF*
-  {  4, 0x80, 0xBF, },  // 8:  80-BF 80-BF 80-BF
-  {  8, 0xF1, 0xF3, },  // 9: F1-F3 80-BF 80-BF 80-BF*
-  {  4, 0x80, 0x8F, },  // 10: 80-8F 80-BF 80-BF
-  { 10, 0xF4, 0xF4, },  // 11: F4 80-8F 80-BF 80-BF*
-};
-
 void Compiler::Add_80_10ffff() {
-  int inst[arraysize(prog_80_10ffff)] = { 0 }; // does not need to be initialized; silences gcc warning
-  for (size_t i = 0; i < arraysize(prog_80_10ffff); i++) {
-    const ByteRangeProg& p = prog_80_10ffff[i];
-    int next = 0;
-    if (p.next >= 0)
-      next = inst[p.next];
-    inst[i] = UncachedRuneByteSuffix(static_cast<uint8_t>(p.lo),
-                                     static_cast<uint8_t>(p.hi), false, next);
-    if ((p.lo & 0xC0) != 0x80)
-      AddSuffix(inst[i]);
+  // The 80-10FFFF (Runeself-Runemax) rune range occurs frequently enough
+  // (for example, for /./ and /[^a-z]/) that it is worth simplifying: by
+  // permitting overlong encodings in E0 and F0 sequences and code points
+  // over 10FFFF in F4 sequences, the size of the bytecode and the number
+  // of equivalence classes are reduced significantly.
+  int id;
+  if (reversed_) {
+    // Prefix factoring matters, but we don't have to handle it here
+    // because the rune range trie logic takes care of that already.
+    id = UncachedRuneByteSuffix(0xC2, 0xDF, false, 0);
+    id = UncachedRuneByteSuffix(0x80, 0xBF, false, id);
+    AddSuffix(id);
+
+    id = UncachedRuneByteSuffix(0xE0, 0xEF, false, 0);
+    id = UncachedRuneByteSuffix(0x80, 0xBF, false, id);
+    id = UncachedRuneByteSuffix(0x80, 0xBF, false, id);
+    AddSuffix(id);
+
+    id = UncachedRuneByteSuffix(0xF0, 0xF4, false, 0);
+    id = UncachedRuneByteSuffix(0x80, 0xBF, false, id);
+    id = UncachedRuneByteSuffix(0x80, 0xBF, false, id);
+    id = UncachedRuneByteSuffix(0x80, 0xBF, false, id);
+    AddSuffix(id);
+  } else {
+    // Suffix factoring matters - and we do have to handle it here.
+    int cont1 = UncachedRuneByteSuffix(0x80, 0xBF, false, 0);
+    id = UncachedRuneByteSuffix(0xC2, 0xDF, false, cont1);
+    AddSuffix(id);
+
+    int cont2 = UncachedRuneByteSuffix(0x80, 0xBF, false, cont1);
+    id = UncachedRuneByteSuffix(0xE0, 0xEF, false, cont2);
+    AddSuffix(id);
+
+    int cont3 = UncachedRuneByteSuffix(0x80, 0xBF, false, cont2);
+    id = UncachedRuneByteSuffix(0xF0, 0xF4, false, cont3);
+    AddSuffix(id);
   }
 }
 
@@ -711,9 +706,8 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
   if (lo > hi)
     return;
 
-  // Pick off 80-10FFFF as a common special case
-  // that can bypass the slow rune_cache_.
-  if (lo == 0x80 && hi == 0x10ffff && !reversed_) {
+  // Pick off 80-10FFFF as a common special case.
+  if (lo == 0x80 && hi == 0x10ffff) {
     Add_80_10ffff();
     return;
   }
