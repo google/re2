@@ -13,7 +13,7 @@ namespace re2 {
 template <typename T>
 class PODArray {
  public:
-  static_assert(std::is_pod<T>::value,
+  static_assert(std::is_trivial<T>::value && std::is_standard_layout<T>::value,
                 "T must be POD");
 
   PODArray()
