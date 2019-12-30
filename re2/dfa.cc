@@ -971,8 +971,20 @@ void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
         break;
 
       case kInstByteRange:   // can follow if c is in range
-        if (ip->Matches(c))
-          AddToQueue(newq, ip->out(), flag);
+        if (!ip->Matches(c))
+          break;
+        AddToQueue(newq, ip->out(), flag);
+        if (ip->hint() != 0) {
+          // We have a hint, but we must cancel out the
+          // increment that will occur after the break.
+          i += ip->hint() - 1;
+        } else {
+          // We have no hint, so we must find the end
+          // of the current list and then skip to it.
+          while (!prog_->inst(id)->last())
+            ++id;
+          i += id - *i;
+        }
         break;
 
       case kInstMatch:
