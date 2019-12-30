@@ -621,6 +621,36 @@ class RE2 {
       one_line_(false) {
     }
 
+    Options(int flags) :
+      encoding_(EncodingUTF8),
+      posix_syntax_(flags & PosixSyntax),
+      longest_match_(flags & LongestMatch),
+      log_errors_(flags & LogErrors),
+      max_mem_(kDefaultMaxMem),
+      literal_(flags & Literal),
+      never_nl_(flags & NeverNl),
+      dot_nl_(flags & DotNl),
+      never_capture_(flags & NeverCapture),
+      case_sensitive_(flags & CaseSensitive),
+      perl_classes_(flags & PerlClasses),
+      word_boundary_(flags & WordBoundary),
+      one_line_(flags & OneLine) {
+    }
+
+    enum OptionFlags : int {
+        PosixSyntax   = 1 << 0,
+        LongestMatch  = 1 << 1,
+        LogErrors     = 1 << 2,
+        Literal       = 1 << 3,
+        NeverNl       = 1 << 4,
+        DotNl         = 1 << 5,
+        NeverCapture  = 1 << 6,
+        CaseSensitive = 1 << 7,
+        PerlClasses   = 1 << 8,
+        WordBoundary  = 1 << 9,
+        OneLine       = 1 << 10
+    };
+
     /*implicit*/ Options(CannedOptions);
 
     Encoding encoding() const { return encoding_; }
