@@ -7,7 +7,7 @@
 // Prog::SearchBitState is a regular expression search with submatch
 // tracking for small regular expressions and texts.  Similarly to
 // testing/backtrack.cc, it allocates a bitmap with (count of
-// lists) * (length of prog) bits to make sure it never explores the
+// lists) * (length of text) bits to make sure it never explores the
 // same (instruction list, character position) multiple times.  This
 // limits the search to run in time linear in the length of the text.
 //
