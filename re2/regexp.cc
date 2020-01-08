@@ -543,9 +543,12 @@ class NumCapturesWalker : public Regexp::Walker<Ignored> {
       ncapture_++;
     return ignored;
   }
+
   virtual Ignored ShortVisit(Regexp* re, Ignored ignored) {
-    // Should never be called: we use Walk not WalkExponential.
+    // Should never be called: we use Walk(), not WalkExponential().
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     LOG(DFATAL) << "NumCapturesWalker::ShortVisit called";
+#endif
     return ignored;
   }
 
@@ -574,7 +577,7 @@ class NamedCapturesWalker : public Regexp::Walker<Ignored> {
     return m;
   }
 
-  Ignored PreVisit(Regexp* re, Ignored ignored, bool* stop) {
+  virtual Ignored PreVisit(Regexp* re, Ignored ignored, bool* stop) {
     if (re->op() == kRegexpCapture && re->name() != NULL) {
       // Allocate map once we find a name.
       if (map_ == NULL)
@@ -590,8 +593,10 @@ class NamedCapturesWalker : public Regexp::Walker<Ignored> {
   }
 
   virtual Ignored ShortVisit(Regexp* re, Ignored ignored) {
-    // Should never be called: we use Walk not WalkExponential.
+    // Should never be called: we use Walk(), not WalkExponential().
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     LOG(DFATAL) << "NamedCapturesWalker::ShortVisit called";
+#endif
     return ignored;
   }
 
@@ -620,7 +625,7 @@ class CaptureNamesWalker : public Regexp::Walker<Ignored> {
     return m;
   }
 
-  Ignored PreVisit(Regexp* re, Ignored ignored, bool* stop) {
+  virtual Ignored PreVisit(Regexp* re, Ignored ignored, bool* stop) {
     if (re->op() == kRegexpCapture && re->name() != NULL) {
       // Allocate map once we find a name.
       if (map_ == NULL)
@@ -632,8 +637,10 @@ class CaptureNamesWalker : public Regexp::Walker<Ignored> {
   }
 
   virtual Ignored ShortVisit(Regexp* re, Ignored ignored) {
-    // Should never be called: we use Walk not WalkExponential.
+    // Should never be called: we use Walk(), not WalkExponential().
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     LOG(DFATAL) << "CaptureNamesWalker::ShortVisit called";
+#endif
     return ignored;
   }
 
