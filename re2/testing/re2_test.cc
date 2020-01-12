@@ -1233,11 +1233,16 @@ TEST(RE2, DeepRecursion) {
 // Suggested by Josh Hyman.  Failed when SearchOnePass was
 // not implementing case-folding.
 TEST(CaseInsensitive, MatchAndConsume) {
-  std::string result;
   std::string text = "A fish named *Wanda*";
+<<<<<<< HEAD   (174d6a Prevent ShortVisit() from crashing fuzzers.)
   absl::string_view sp(text);
 
   EXPECT_TRUE(RE2::PartialMatch(sp, "(?i)([wand]{5})", &result));
+=======
+  StringPiece sp(text);
+  StringPiece result;
+  EXPECT_TRUE(RE2::PartialMatch(text, "(?i)([wand]{5})", &result));
+>>>>>>> CHANGE (85c014 Tidy up a test.)
   EXPECT_TRUE(RE2::FindAndConsume(&sp, "(?i)([wand]{5})", &result));
 }
 
