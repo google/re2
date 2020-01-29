@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <fuzzer/FuzzedDataProvider.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <map>
@@ -17,7 +18,38 @@ using re2::StringPiece;
 // NOT static, NOT signed.
 uint8_t dummy = 0;
 
-void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
+void TestOneInput(StringPiece pattern, const RE2::Options& options,
+                  StringPiece text) {
+  // Crudely limit the use of ., \p, \P, \d, \D, \s, \S, \w and \W.
+  // Otherwise, we will waste time on inputs that have long runs of various
+  // character classes. The fuzzer has shown itself to be easily capable of
+  // generating such patterns that fall within the other limits, but result
+  // in timeouts nonetheless. The marginal cost is high - even more so when
+  // counted repetition is involved - whereas the marginal benefit is zero.
+  // TODO(junyer): Handle [:isalnum:] et al. when they start to cause pain.
+  int char_class = 0;
+  int backslash_p = 0;  // very expensive, so handle specially
+  for (size_t i = 0; i < pattern.size(); i++) {
+    if (pattern[i] == '.')
+      char_class++;
+    if (pattern[i] != '\\')
+      continue;
+    i++;
+    if (i >= pattern.size())
+      break;
+    if (pattern[i] == 'p' || pattern[i] == 'P' ||
+        pattern[i] == 'd' || pattern[i] == 'D' ||
+        pattern[i] == 's' || pattern[i] == 'S' ||
+        pattern[i] == 'w' || pattern[i] == 'W')
+      char_class++;
+    if (pattern[i] == 'p' || pattern[i] == 'P')
+      backslash_p++;
+  }
+  if (char_class > 9)
+    return;
+  if (backslash_p > 1)
+    return;
+
   RE2 re(pattern, options);
   if (!re.ok())
     return;
@@ -102,72 +134,38 @@ void Test(StringPiece pattern, const RE2::Options& options, StringPiece text) {
 
 // Entry point for libFuzzer.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  if (size == 0 || size > 999)
+  // An input larger than 4 KiB probably isn't interesting. (This limit
+  // allows for fdp.ConsumeRandomLengthString()'s backslash behaviour.)
+  if (size == 0 || size > 4096)
     return 0;
 
-  // Crudely limit the use of ., \p, \P, \d, \D, \s, \S, \w and \W.
-  // Otherwise, we will waste time on inputs that have long runs of various
-  // character classes. The fuzzer has shown itself to be easily capable of
-  // generating such patterns that fall within the other limits, but result
-  // in timeouts nonetheless. The marginal cost is high - even more so when
-  // counted repetition is involved - whereas the marginal benefit is zero.
-  // TODO(junyer): Handle [:isalnum:] et al. when they start to cause pain.
-  int char_class = 0;
-  int backslash_p = 0;  // very expensive, so handle specially
-  for (size_t i = 0; i < size; i++) {
-    if (data[i] == '.')
-      char_class++;
-    if (data[i] != '\\')
-      continue;
-    i++;
-    if (i >= size)
-      break;
-    if (data[i] == 'p' || data[i] == 'P' ||
-        data[i] == 'd' || data[i] == 'D' ||
-        data[i] == 's' || data[i] == 'S' ||
-        data[i] == 'w' || data[i] == 'W')
-      char_class++;
-    if (data[i] == 'p' || data[i] == 'P')
-      backslash_p++;
-  }
-  if (char_class > 9)
-    return 0;
-  if (backslash_p > 1)
-    return 0;
+  FuzzedDataProvider fdp(data, size);
 
-  // The one-at-a-time hash by Bob Jenkins.
-  uint32_t hash = 0;
-  for (size_t i = 0; i < size; i++) {
-    hash += data[i];
-    hash += (hash << 10);
-    hash ^= (hash >> 6);
-  }
-  hash += (hash << 3);
-  hash ^= (hash >> 11);
-  hash += (hash << 15);
-
+  // The convention here is that fdp.ConsumeBool() returning false sets
+  // the default value whereas returning true sets the alternate value:
+  // most options default to false and so can be set directly; encoding
+  // defaults to UTF-8; case_sensitive defaults to true. We do NOT want
+  // to log errors. max_mem is 64 MiB because we can afford to use more
+  // RAM in exchange for (hopefully) faster fuzzing.
   RE2::Options options;
+  options.set_encoding(fdp.ConsumeBool() ? RE2::Options::EncodingLatin1
+                                         : RE2::Options::EncodingUTF8);
+  options.set_posix_syntax(fdp.ConsumeBool());
+  options.set_longest_match(fdp.ConsumeBool());
   options.set_log_errors(false);
   options.set_max_mem(64 << 20);
-  options.set_encoding(hash & 1 ? RE2::Options::EncodingLatin1
-                                : RE2::Options::EncodingUTF8);
-  options.set_posix_syntax(hash & 2);
-  options.set_longest_match(hash & 4);
-  options.set_literal(hash & 8);
-  options.set_never_nl(hash & 16);
-  options.set_dot_nl(hash & 32);
-  options.set_never_capture(hash & 64);
-  options.set_case_sensitive(hash & 128);
-  options.set_perl_classes(hash & 256);
-  options.set_word_boundary(hash & 512);
-  options.set_one_line(hash & 1024);
+  options.set_literal(fdp.ConsumeBool());
+  options.set_never_nl(fdp.ConsumeBool());
+  options.set_dot_nl(fdp.ConsumeBool());
+  options.set_never_capture(fdp.ConsumeBool());
+  options.set_case_sensitive(!fdp.ConsumeBool());
+  options.set_perl_classes(fdp.ConsumeBool());
+  options.set_word_boundary(fdp.ConsumeBool());
+  options.set_one_line(fdp.ConsumeBool());
 
-  const char* ptr = reinterpret_cast<const char*>(data);
-  int len = static_cast<int>(size);
+  std::string pattern = fdp.ConsumeRandomLengthString(999);
+  std::string text = fdp.ConsumeRandomLengthString(999);
 
-  StringPiece pattern(ptr, len);
-  StringPiece text(ptr, len);
-  Test(pattern, options, text);
-
+  TestOneInput(pattern, options, text);
   return 0;
 }
