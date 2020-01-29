@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ef59b2d_46f6385e",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 8610
+      },
+      "writtenOn": "2020-01-29T18:39:13Z",
+      "side": 1,
+      "message": "nit: this should not be needed for recent clang installations, but I suspect you can\u0027t guarantee it for all users :)",
+      "range": {
+        "startLine": 226,
+        "startChar": 31,
+        "endLine": 226,
+        "endChar": 66
+      },
+      "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fe5ea02_76fc8bd2",
+        "filename": "re2/fuzzing/re2_fuzzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 8610
+      },
+      "writtenOn": "2020-01-29T18:39:13Z",
+      "side": 1,
+      "message": "I think it still makes sense to enforce size limit here (like you did in the previous version)",
+      "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9af8818_169e3d40",
+        "filename": "re2/fuzzing/re2_fuzzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 8610
+      },
+      "writtenOn": "2020-01-29T18:39:13Z",
+      "side": 1,
+      "message": "`ConsumeRemainingBytesAsString` might be a good choice here too, just to make sure we re-use all the data left.",
+      "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": true
+    }
+  ]
+}
