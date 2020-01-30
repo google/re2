@@ -158,6 +158,24 @@
       "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc283ed1_413c175c",
+        "filename": "re2/fuzzing/re2_fuzzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2020-01-30T21:34:07Z",
+      "side": 1,
+      "message": "That makes sense to me. Done. Thanks for explaining!",
+      "parentUuid": "5f6419a0_9a0c9d6a",
+      "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
