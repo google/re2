@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "cdcc6489_faa08157",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 8610
+      },
+      "writtenOn": "2020-01-30T17:41:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b2c0a17d_cffc8f86",
+      "range": {
+        "startLine": 226,
+        "startChar": 31,
+        "endLine": 226,
+        "endChar": 66
+      },
+      "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4fe5ea02_76fc8bd2",
         "filename": "re2/fuzzing/re2_fuzzer.cc",
         "patchSetId": 1
@@ -113,6 +137,24 @@
       "side": 1,
       "message": "As currently written, it\u0027s clear that pattern and text are at most 999 bytes each. With a limit and using ConsumeRemainingBytesAsString(), text is at most limit - 11 - pattern.size() bytes, which could be much larger than 999 bytes. As mentioned above, I also don\u0027t know what the limit should be. The backslash behaviour of ConsumeRandomLengthString() further complicates matters because passing max_length \u003d size / 2 actually means that more than half of data could be used. Overall, it\u0027s simpler (for me, at least) to ask FuzzedDataProvider for what I really want and let the fuzzing engine figure out when adding more bytes stops increasing coverage. Having said that, I\u0027m quite possibly misunderstanding something. :)",
       "parentUuid": "f9af8818_169e3d40",
+      "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f6419a0_9a0c9d6a",
+        "filename": "re2/fuzzing/re2_fuzzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 8610
+      },
+      "writtenOn": "2020-01-30T17:41:12Z",
+      "side": 1,
+      "message": "It all makes sense, Paul! This way is fine too, but I\u0027d add something like `if (size \u003e 2048) return 0;` in the beginning of the function. Just to minimize the effort that would be spent by fuzzer / infra on figuring out that large inputs aren\u0027t \"interesting\".\n\nI\u0027d say it\u0027s not an issue in general, but our infra became so diverse that different other engines / mutators would still drop in larger corpus inputs, which later on will be rejected and excluded / minimized, but it\u0027s kinda endless loop, as new larger inputs will be added, then minimized, and so on. Sorry for the long story here!",
+      "parentUuid": "e8ef973b_35bc9ea3",
       "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": false
