@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b2c0a17d_cffc8f86",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2020-01-30T01:04:35Z",
+      "side": 1,
+      "message": "I also want GCC users to be able to run this check.",
+      "parentUuid": "9ef59b2d_46f6385e",
+      "range": {
+        "startLine": 226,
+        "startChar": 31,
+        "endLine": 226,
+        "endChar": 66
+      },
+      "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4fe5ea02_76fc8bd2",
         "filename": "re2/fuzzing/re2_fuzzer.cc",
         "patchSetId": 1
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "5ed9a68f_a1a1b88f",
+        "filename": "re2/fuzzing/re2_fuzzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2020-01-30T01:04:35Z",
+      "side": 1,
+      "message": "I did consider that, but I didn\u0027t know what the limit should be. (See below.)",
+      "parentUuid": "4fe5ea02_76fc8bd2",
+      "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f9af8818_169e3d40",
         "filename": "re2/fuzzing/re2_fuzzer.cc",
         "patchSetId": 1
@@ -56,6 +98,24 @@
       "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8ef973b_35bc9ea3",
+        "filename": "re2/fuzzing/re2_fuzzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2020-01-30T01:04:35Z",
+      "side": 1,
+      "message": "As currently written, it\u0027s clear that pattern and text are at most 999 bytes each. With a limit and using ConsumeRemainingBytesAsString(), text is at most limit - 11 - pattern.size() bytes, which could be much larger than 999 bytes. As mentioned above, I also don\u0027t know what the limit should be. The backslash behaviour of ConsumeRandomLengthString() further complicates matters because passing max_length \u003d size / 2 actually means that more than half of data could be used. Overall, it\u0027s simpler (for me, at least) to ask FuzzedDataProvider for what I really want and let the fuzzing engine figure out when adding more bytes stops increasing coverage. Having said that, I\u0027m quite possibly misunderstanding something. :)",
+      "parentUuid": "f9af8818_169e3d40",
+      "revId": "ce7878c7fb38a74b242f38877d18771099427c2d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
