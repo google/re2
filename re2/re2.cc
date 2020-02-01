@@ -610,6 +610,8 @@ bool RE2::Match(const StringPiece& text,
   // If the regexp is anchored explicitly, must not be in middle of text.
   if (prog_->anchor_start() && startpos != 0)
     return false;
+  if (prog_->anchor_end() && endpos != text.size())
+    return false;
 
   // If the regexp is anchored explicitly, update re_anchor
   // so that we can potentially fall into a faster case below.
@@ -658,7 +660,35 @@ bool RE2::Match(const StringPiece& text,
   bool dfa_failed = false;
   switch (re_anchor) {
     default:
+      LOG(DFATAL) << "Unexpected re_anchor value: " << re_anchor;
+      return false;
+
     case UNANCHORED: {
+      if (prog_->anchor_end()) {
+        // This is a very special case: we don't need the forward DFA because
+        // we already know where the match must end! Instead, the reverse DFA
+        // can say whether there is a match and (optionally) where it starts.
+        Prog* prog = ReverseProg();
+        if (prog == NULL)
+          return false;
+        if (!prog->SearchDFA(subtext, text, Prog::kAnchored,
+                             Prog::kLongestMatch, matchp, &dfa_failed, NULL)) {
+          if (dfa_failed) {
+            if (options_.log_errors())
+              LOG(ERROR) << "DFA out of memory: size " << prog->size() << ", "
+                         << "bytemap range " << prog->bytemap_range() << ", "
+                         << "list count " << prog->list_count();
+            // Fall back to NFA below.
+            skipped_test = true;
+            break;
+          }
+          return false;
+        }
+        if (matchp == NULL)  // Matched.  Don't care where.
+          return true;
+        break;
+      }
+
       if (!prog_->SearchDFA(subtext, text, anchor, kind,
                             matchp, &dfa_failed, NULL)) {
         if (dfa_failed) {
@@ -672,10 +702,10 @@ bool RE2::Match(const StringPiece& text,
         }
         return false;
       }
-      if (matchp == NULL)  // Matched.  Don't care where
+      if (matchp == NULL)  // Matched.  Don't care where.
         return true;
-      // SearchDFA set match[0].end() but didn't know where the
-      // match started.  Run the regexp backward from match[0].end()
+      // SearchDFA set match.end() but didn't know where the
+      // match started.  Run the regexp backward from match.end()
       // to find the longest possible match -- that's where it started.
       Prog* prog = ReverseProg();
       if (prog == NULL)
