@@ -896,7 +896,6 @@ MAKE_INTEGER_PARSER(unsigned long long, ulonglong)
 #undef MAKE_INTEGER_PARSER
 
 #ifndef SWIG
-
 // Silence warnings about missing initializers for members of LazyRE2.
 // Note that we test for Clang first because it defines __GNUC__ as well.
 #if defined(__clang__)
@@ -949,7 +948,7 @@ class LazyRE2 {
 
   void operator=(const LazyRE2&);  // disallowed
 };
-#endif  // SWIG
+#endif
 
 }  // namespace re2
 
