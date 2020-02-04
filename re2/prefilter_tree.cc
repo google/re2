@@ -107,7 +107,7 @@ void PrefilterTree::Compile(std::vector<std::string>* atom_vec) {
 
 Prefilter* PrefilterTree::CanonicalNode(NodeMap* nodes, Prefilter* node) {
   std::string node_string = NodeString(node);
-  std::map<std::string, Prefilter*>::iterator iter = nodes->find(node_string);
+  NodeMap::iterator iter = nodes->find(node_string);
   if (iter == nodes->end())
     return NULL;
   return (*iter).second;
@@ -377,7 +377,7 @@ void PrefilterTree::PrintDebugInfo(NodeMap* nodes) {
       LOG(ERROR) << it->first;
   }
   LOG(ERROR) << "Map:";
-  for (std::map<std::string, Prefilter*>::const_iterator iter = nodes->begin();
+  for (NodeMap::const_iterator iter = nodes->begin();
        iter != nodes->end(); ++iter)
     LOG(ERROR) << "NodeId: " << (*iter).second->unique_id()
                << " Str: " << (*iter).first;
