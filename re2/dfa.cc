@@ -42,6 +42,7 @@
 #include "util/strutil.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
+#include "re2/re2.h"
 #include "re2/sparse_set.h"
 #include "re2/stringpiece.h"
 
@@ -1184,6 +1185,11 @@ void DFA::ResetCache(RWLocker* cache_lock) {
   // Re-acquire the cache_mutex_ for writing (exclusive use).
   cache_lock->LockForWriting();
 
+  hooks::GetDFAStateCacheResetHook()({
+      .state_budget = state_budget_,
+      .state_cache_size = state_cache_.size(),
+  });
+
   // Clear the cache, reset the memory budget.
   for (int i = 0; i < kMaxStart; i++) {
     start_[i].start = NULL;
@@ -1917,8 +1923,12 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   bool matched = dfa->Search(text, context, anchored,
                              want_earliest_match, !reversed_,
                              failed, &ep, matches);
-  if (*failed)
+  if (*failed) {
+    hooks::GetDFASearchFailureHook()({
+      // Nothing yet...
+    });
     return false;
+  }
   if (!matched)
     return false;
   if (endmatch && ep != (reversed_ ? text.data() : text.data() + text.size()))
