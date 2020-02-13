@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2654748a_bc9c8b84",
+        "filename": "re2/re2.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 32229
+      },
+      "writtenOn": "2020-02-13T15:04:43Z",
+      "side": 1,
+      "message": "I had a hard time parsing this comment. I think it means that context\u0027s pointee may be destroyed during or before execution of a hook, but how can a hook do anything useful and comply with the spec?",
+      "range": {
+        "startLine": 953,
+        "startChar": 1,
+        "endLine": 953,
+        "endChar": 2
+      },
+      "revId": "0bae2afe6271e1668d7d155403066aa533d96048",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afd3f72d_23374323",
+        "filename": "re2/re2.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 32229
+      },
+      "writtenOn": "2020-02-13T15:04:43Z",
+      "side": 1,
+      "message": "Is this thread_local because hooks are only ever invoked from synchronous methods on RE2? Do you need to prohibit use of RE2::* within hooks themselves?",
+      "revId": "0bae2afe6271e1668d7d155403066aa533d96048",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": true
+    }
+  ]
+}
