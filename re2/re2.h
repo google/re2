@@ -948,6 +948,33 @@ class LazyRE2 {
 };
 #endif
 
+namespace hooks {
+
+// A hook MUST NOT assume that the context pointee will outlive an invocation
+// of the hook.
+extern thread_local const RE2* context;
+
+struct DFAStateCacheReset {
+  int64_t state_budget;
+  size_t state_cache_size;
+};
+
+struct DFASearchFailure {
+  // Nothing yet...
+};
+
+#define DECLARE_HOOK(type)                  \
+  using type##Callback = void(const type&); \
+  void Set##type##Hook(type##Callback* cb); \
+  type##Callback* Get##type##Hook();
+
+DECLARE_HOOK(DFAStateCacheReset)
+DECLARE_HOOK(DFASearchFailure)
+
+#undef DECLARE_HOOK
+
+}  // namespace hooks
+
 }  // namespace re2
 
 using re2::RE2;
