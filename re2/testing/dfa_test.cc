@@ -27,6 +27,20 @@ ABSL_FLAG(int, threads, 4, "number of threads");
 
 namespace re2 {
 
+static int state_cache_resets = 0;
+static int search_failures = 0;
+
+struct SetHooks {
+  SetHooks() {
+    hooks::SetDFAStateCacheResetHook(+[](const hooks::DFAStateCacheReset&) {
+      ++state_cache_resets;
+    });
+    hooks::SetDFASearchFailureHook(+[](const hooks::DFASearchFailure&) {
+      ++search_failures;
+    });
+  }
+} set_hooks;
+
 // Check that multithreaded access to DFA class works.
 
 // Helper function: builds entire DFA for prog.
@@ -169,6 +183,8 @@ TEST(SingleThreaded, SearchDFA) {
   // if it can't get a good cache hit rate.)
   // Tell the DFA to trudge along instead.
   Prog::TEST_dfa_should_bail_when_slow(false);
+  state_cache_resets = 0;
+  search_failures = 0;
 
   // Choice of n is mostly arbitrary, except that:
   //   * making n too big makes the test run for too long.
@@ -220,6 +236,8 @@ TEST(SingleThreaded, SearchDFA) {
 
   // Reset to original behaviour.
   Prog::TEST_dfa_should_bail_when_slow(true);
+  ASSERT_GT(state_cache_resets, 0);
+  ASSERT_EQ(search_failures, 0);
 }
 
 // Helper function: searches for match, which should match,
@@ -244,6 +262,8 @@ static void DoSearch(Prog* prog, absl::string_view match,
 
 TEST(Multithreaded, SearchDFA) {
   Prog::TEST_dfa_should_bail_when_slow(false);
+  state_cache_resets = 0;
+  search_failures = 0;
 
   // Same as single-threaded test above.
   const int n = 18;
@@ -283,6 +303,8 @@ TEST(Multithreaded, SearchDFA) {
 
   // Reset to original behaviour.
   Prog::TEST_dfa_should_bail_when_slow(true);
+  ASSERT_GT(state_cache_resets, 0);
+  ASSERT_EQ(search_failures, 0);
 }
 
 struct ReverseTest {
