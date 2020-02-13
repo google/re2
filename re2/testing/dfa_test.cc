@@ -26,6 +26,16 @@ DEFINE_FLAG(int, threads, 4, "number of threads");
 
 namespace re2 {
 
+static int cache_resets = 0;
+
+struct SetHooks {
+  SetHooks() {
+    hooks::SetDFAStateCacheResetHook(+[](const hooks::DFAStateCacheReset&) {
+      ++cache_resets;
+    });
+  }
+} set_hooks;
+
 // Check that multithreaded access to DFA class works.
 
 // Helper function: builds entire DFA for prog.
@@ -168,6 +178,7 @@ TEST(SingleThreaded, SearchDFA) {
   // if it can't get a good cache hit rate.)
   // Tell the DFA to trudge along instead.
   Prog::TEST_dfa_should_bail_when_slow(false);
+  cache_resets = 0;
 
   // Choice of n is mostly arbitrary, except that:
   //   * making n too big makes the test run for too long.
@@ -216,6 +227,7 @@ TEST(SingleThreaded, SearchDFA) {
   re->Decref();
 
   // Reset to original behaviour.
+  ASSERT_GT(cache_resets, 0);
   Prog::TEST_dfa_should_bail_when_slow(true);
 }
 
@@ -239,6 +251,7 @@ static void DoSearch(Prog* prog, const StringPiece& match,
 
 TEST(Multithreaded, SearchDFA) {
   Prog::TEST_dfa_should_bail_when_slow(false);
+  cache_resets = 0;
 
   // Same as single-threaded test above.
   const int n = 18;
@@ -277,6 +290,7 @@ TEST(Multithreaded, SearchDFA) {
   re->Decref();
 
   // Reset to original behaviour.
+  ASSERT_GT(cache_resets, 0);
   Prog::TEST_dfa_should_bail_when_slow(true);
 }
 

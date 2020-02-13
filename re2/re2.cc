@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm>
+#include <atomic>
 #include <iterator>
 #include <mutex>
 #include <string>
@@ -645,7 +646,6 @@ bool RE2::Match(const StringPiece& text,
   Prog::MatchKind kind = Prog::kFirstMatch;
   if (options_.longest_match())
     kind = Prog::kLongestMatch;
-  bool skipped_test = false;
 
   bool can_one_pass = (is_one_pass_ && ncap <= Prog::kMaxOnePassCapture);
 
@@ -657,7 +657,9 @@ bool RE2::Match(const StringPiece& text,
   bool can_bit_state = prog_->CanBitState();
   size_t bit_state_text_max = kMaxBitStateBitmapSize / prog_->list_count();
 
+  hooks::context = this;
   bool dfa_failed = false;
+  bool skipped_test = false;
   switch (re_anchor) {
     default:
       LOG(DFATAL) << "Unexpected re_anchor value: " << re_anchor;
@@ -1252,15 +1254,50 @@ bool RE2::Arg::parse_float(const char* str, size_t n, void* dest) {
     return parse_##name##_radix(str, n, dest, 0);                              \
   }
 
-DEFINE_INTEGER_PARSER(short);
-DEFINE_INTEGER_PARSER(ushort);
-DEFINE_INTEGER_PARSER(int);
-DEFINE_INTEGER_PARSER(uint);
-DEFINE_INTEGER_PARSER(long);
-DEFINE_INTEGER_PARSER(ulong);
-DEFINE_INTEGER_PARSER(longlong);
-DEFINE_INTEGER_PARSER(ulonglong);
+DEFINE_INTEGER_PARSER(short)
+DEFINE_INTEGER_PARSER(ushort)
+DEFINE_INTEGER_PARSER(int)
+DEFINE_INTEGER_PARSER(uint)
+DEFINE_INTEGER_PARSER(long)
+DEFINE_INTEGER_PARSER(ulong)
+DEFINE_INTEGER_PARSER(longlong)
+DEFINE_INTEGER_PARSER(ulonglong)
 
 #undef DEFINE_INTEGER_PARSER
+
+namespace hooks {
+
+thread_local const RE2* context = NULL;
+
+template <typename T>
+union Hook {
+  void Store(T* cb) { cb_.store(cb, std::memory_order_release); }
+  T* Load() const { return cb_.load(std::memory_order_acquire); }
+
+#if !defined(__clang__) && defined(_MSC_VER)
+  // Citing https://github.com/protocolbuffers/protobuf/pull/4777 as precedent,
+  // this is a gross hack to make std::atomic<T*> constant-initialized on MSVC.
+  static_assert(ATOMIC_POINTER_LOCK_FREE == 2,
+                "std::atomic<T*> must be always lock-free");
+  T* cb_for_constinit_;
+#endif
+
+  std::atomic<T*> cb_;
+};
+
+template <typename T>
+static void DoNothing(const T&) {}
+
+#define DEFINE_HOOK(type, name)                                       \
+  static Hook<type##Callback> name##_hook = {{&DoNothing<type>}};     \
+  void Set##type##Hook(type##Callback* cb) { name##_hook.Store(cb); } \
+  type##Callback* Get##type##Hook() { return name##_hook.Load(); }
+
+DEFINE_HOOK(DFAStateCacheReset, dfa_state_cache_reset)
+DEFINE_HOOK(DFASearchFailure, dfa_search_failure)
+
+#undef DEFINE_HOOK
+
+}  // namespace hooks
 
 }  // namespace re2
