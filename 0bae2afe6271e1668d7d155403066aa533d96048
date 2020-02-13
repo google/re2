@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b19cc832_ea4328ef",
+        "filename": "re2/re2.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2020-02-13T21:14:58Z",
+      "side": 1,
+      "message": "Mea culpa, that does seem badly worded now that I read it again. The intended meaning was that the hook should assume nothing about lifetimes: the context pointee exists for the duration of the invocation, but could be destructed at any time afterwards. Updated the comment.",
+      "parentUuid": "2654748a_bc9c8b84",
+      "range": {
+        "startLine": 953,
+        "startChar": 1,
+        "endLine": 953,
+        "endChar": 2
+      },
+      "revId": "0bae2afe6271e1668d7d155403066aa533d96048",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "afd3f72d_23374323",
         "filename": "re2/re2.h",
         "patchSetId": 2
@@ -39,6 +63,24 @@
       "revId": "0bae2afe6271e1668d7d155403066aa533d96048",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a91c79f8_68077811",
+        "filename": "re2/re2.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2020-02-13T21:14:58Z",
+      "side": 1,
+      "message": "Yes, I opted to use thread_local because hooks will generally be invoked from code where the RE2 object itself hasn\u0027t been plumbed – and shouldn\u0027t be plumbed just for the sake of hooks; any hook walking the current thread\u0027s stack will eventually find a frame where `this` is the context pointee. Great point about reentrancy! Updated the comment further.",
+      "parentUuid": "afd3f72d_23374323",
+      "revId": "0bae2afe6271e1668d7d155403066aa533d96048",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa",
+      "unresolved": false
     }
   ]
 }
