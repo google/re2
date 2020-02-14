@@ -32,10 +32,10 @@ static int search_failures = 0;
 
 struct SetHooks {
   SetHooks() {
-    hooks::SetDFAStateCacheResetHook(+[](const hooks::DFAStateCacheReset&) {
+    hooks::SetDFAStateCacheResetHook([](const hooks::DFAStateCacheReset&) {
       ++state_cache_resets;
     });
-    hooks::SetDFASearchFailureHook(+[](const hooks::DFASearchFailure&) {
+    hooks::SetDFASearchFailureHook([](const hooks::DFASearchFailure&) {
       ++search_failures;
     });
   }
