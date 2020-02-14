@@ -195,6 +195,10 @@
 #include <map>
 #include <string>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #include "absl/base/call_once.h"
 #include "absl/strings/string_view.h"
 
@@ -950,6 +954,15 @@ class LazyRE2 {
 
 namespace hooks {
 
+// Most platforms support thread_local. Older versions of iOS don't support
+// thread_local, but for the sake of brevity, we lump together all versions
+// of Apple platforms that aren't macOS. If an iOS application really needs
+// the context pointee someday, we can get more specific then...
+#define RE2_HAVE_THREAD_LOCAL
+#if defined(__APPLE__) && defined(TARGET_OS_MAC) && !defined(TARGET_OS_OSX)
+#undef RE2_HAVE_THREAD_LOCAL
+#endif
+
 // A hook must not make any assumptions regarding the lifetime of the context
 // pointee beyond the current invocation of the hook. Pointers and references
 // obtained via the context pointee should be considered invalidated when the
@@ -959,7 +972,9 @@ namespace hooks {
 // A hook must not use RE2 for matching. Control flow reentering RE2::Match()
 // could result in infinite mutual recursion. To discourage that possibility,
 // RE2 will not maintain the context pointer correctly when used in that way.
+#ifdef RE2_HAVE_THREAD_LOCAL
 extern thread_local const RE2* context;
+#endif
 
 struct DFAStateCacheReset {
   int64_t state_budget;
