@@ -657,7 +657,9 @@ bool RE2::Match(const StringPiece& text,
   bool can_bit_state = prog_->CanBitState();
   size_t bit_state_text_max = kMaxBitStateBitmapSize / prog_->list_count();
 
+#ifdef RE2_HAVE_THREAD_LOCAL
   hooks::context = this;
+#endif
   bool dfa_failed = false;
   bool skipped_test = false;
   switch (re_anchor) {
@@ -1267,7 +1269,9 @@ DEFINE_INTEGER_PARSER(ulonglong)
 
 namespace hooks {
 
+#ifdef RE2_HAVE_THREAD_LOCAL
 thread_local const RE2* context = NULL;
+#endif
 
 template <typename T>
 union Hook {
