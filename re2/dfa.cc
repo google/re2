@@ -1186,8 +1186,8 @@ void DFA::ResetCache(RWLocker* cache_lock) {
   cache_lock->LockForWriting();
 
   hooks::GetDFAStateCacheResetHook()({
-      .state_budget = state_budget_,
-      .state_cache_size = state_cache_.size(),
+      state_budget_,
+      state_cache_.size(),
   });
 
   // Clear the cache, reset the memory budget.
@@ -1925,7 +1925,7 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
                              failed, &ep, matches);
   if (*failed) {
     hooks::GetDFASearchFailureHook()({
-      // Nothing yet...
+        // Nothing yet...
     });
     return false;
   }
