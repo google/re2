@@ -122,44 +122,6 @@ TEST(SingleThreaded, BuildEntireDFA) {
   re->Decref();
 }
 
-// Generates and returns a string over binary alphabet {0,1} that contains
-// all possible binary sequences of length n as subsequences.  The obvious
-// brute force method would generate a string of length n * 2^n, but this
-// generates a string of length n + 2^n - 1 called a De Bruijn cycle.
-// See Knuth, The Art of Computer Programming, Vol 2, Exercise 3.2.2 #17.
-// Such a string is useful for testing a DFA.  If you have a DFA
-// where distinct last n bytes implies distinct states, then running on a
-// DeBruijn string causes the DFA to need to create a new state at every
-// position in the input, never reusing any states until it gets to the
-// end of the string.  This is the worst possible case for DFA execution.
-static std::string DeBruijnString(int n) {
-  CHECK_LT(n, static_cast<int>(8*sizeof(int)));
-  CHECK_GT(n, 0);
-
-  std::vector<bool> did(size_t{1}<<n);
-  for (int i = 0; i < 1<<n; i++)
-    did[i] = false;
-
-  std::string s;
-  for (int i = 0; i < n-1; i++)
-    s.append("0");
-  int bits = 0;
-  int mask = (1<<n) - 1;
-  for (int i = 0; i < (1<<n); i++) {
-    bits <<= 1;
-    bits &= mask;
-    if (!did[bits|1]) {
-      bits |= 1;
-      s.append("1");
-    } else {
-      s.append("0");
-    }
-    CHECK(!did[bits]);
-    did[bits] = true;
-  }
-  return s;
-}
-
 // Test that the DFA gets the right result even if it runs
 // out of memory during a search.  The regular expression
 // 0[01]{n}$ matches a binary string of 0s and 1s only if
