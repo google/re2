@@ -111,4 +111,31 @@ void StringGenerator::GenerateNULL() {
   hasnext_ = true;
 }
 
+std::string DeBruijnString(int n) {
+  CHECK_GE(n, 1);
+  CHECK_LE(n, 29);
+  const size_t size = size_t{1} << static_cast<size_t>(n);
+  const size_t mask = size - 1;
+  std::vector<bool> did(size, false);
+  std::string s;
+  s.reserve(static_cast<size_t>(n) + size);
+  for (size_t i = 0; i < static_cast<size_t>(n - 1); i++)
+    s += '0';
+  size_t bits = 0;
+  for (size_t i = 0; i < size; i++) {
+    bits <<= 1;
+    bits &= mask;
+    if (!did[bits | 1]) {
+      bits |= 1;
+      s += '1';
+    } else {
+      s += '0';
+    }
+    CHECK(!did[bits]);
+    did[bits] = true;
+  }
+  CHECK_EQ(s.size(), static_cast<size_t>(n - 1) + size);
+  return s;
+}
+
 }  // namespace re2
