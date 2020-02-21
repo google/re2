@@ -447,7 +447,7 @@ class RE2 {
 
   // Escapes all potentially meaningful regexp characters in
   // 'unquoted'.  The returned string, used as a regular expression,
-  // will exactly match the original string.  For example,
+  // will match exactly the original string.  For example,
   //           1.5-2.0?
   // may become:
   //           1\.5\-2\.0\?
