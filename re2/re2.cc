@@ -368,9 +368,10 @@ bool RE2::Replace(std::string* str,
                   const RE2& re,
                   const StringPiece& rewrite) {
   StringPiece vec[kVecSize];
-  int nvec = 1 + MaxSubmatch(rewrite);
+  int nvec = 1 + re.NumberOfCapturingGroups();
   if (nvec > static_cast<int>(arraysize(vec)))
     return false;
+
   if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
     return false;
 
@@ -388,7 +389,7 @@ int RE2::GlobalReplace(std::string* str,
                        const RE2& re,
                        const StringPiece& rewrite) {
   StringPiece vec[kVecSize];
-  int nvec = 1 + MaxSubmatch(rewrite);
+  int nvec = 1 + re.NumberOfCapturingGroups();
   if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
@@ -460,7 +461,7 @@ bool RE2::Extract(const StringPiece& text,
                   const StringPiece& rewrite,
                   std::string* out) {
   StringPiece vec[kVecSize];
-  int nvec = 1 + MaxSubmatch(rewrite);
+  int nvec = 1 + re.NumberOfCapturingGroups();
   if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
