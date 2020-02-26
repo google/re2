@@ -679,8 +679,11 @@ bool RE2::Match(absl::string_view text,
         // we already know where the match must end! Instead, the reverse DFA
         // can say whether there is a match and (optionally) where it starts.
         Prog* prog = ReverseProg();
-        if (prog == NULL)
-          return false;
+        if (prog == NULL) {
+          // Fall back to NFA below.
+          skipped_test = true;
+          break;
+        }
         if (!prog->SearchDFA(subtext, text, Prog::kAnchored,
                              Prog::kLongestMatch, matchp, &dfa_failed, NULL)) {
           if (dfa_failed) {
@@ -718,8 +721,11 @@ bool RE2::Match(absl::string_view text,
       // match started.  Run the regexp backward from match.end()
       // to find the longest possible match -- that's where it started.
       Prog* prog = ReverseProg();
-      if (prog == NULL)
-        return false;
+      if (prog == NULL) {
+        // Fall back to NFA below.
+        skipped_test = true;
+        break;
+      }
       if (!prog->SearchDFA(match, text, Prog::kAnchored,
                            Prog::kLongestMatch, &match, &dfa_failed, NULL)) {
         if (dfa_failed) {
