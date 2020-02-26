@@ -369,8 +369,6 @@ bool RE2::Replace(std::string* str,
                   const StringPiece& rewrite) {
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > 1 + re.NumberOfCapturingGroups())
-    return false;
   if (nvec > static_cast<int>(arraysize(vec)))
     return false;
   if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
@@ -391,8 +389,6 @@ int RE2::GlobalReplace(std::string* str,
                        const StringPiece& rewrite) {
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > 1 + re.NumberOfCapturingGroups())
-    return false;
   if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
@@ -465,10 +461,9 @@ bool RE2::Extract(const StringPiece& text,
                   std::string* out) {
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
-  if (nvec > 1 + re.NumberOfCapturingGroups())
-    return false;
   if (nvec > static_cast<int>(arraysize(vec)))
     return false;
+
   if (!re.Match(text, 0, text.size(), UNANCHORED, vec, nvec))
     return false;
 
@@ -973,8 +968,8 @@ bool RE2::Rewrite(std::string* out,
       int n = (c - '0');
       if (n >= veclen) {
         if (options_.log_errors()) {
-          LOG(ERROR) << "invalid substitution \\" << n
-                     << " from " << veclen << " groups";
+          LOG(ERROR) << "requested group " << n
+                     << " in regexp " << rewrite.data();
         }
         return false;
       }
