@@ -741,32 +741,36 @@ class RE2 {
 
   re2::Prog* ReverseProg() const;
 
-  std::string   pattern_;          // string regular expression
-  Options       options_;          // option flags
-  std::string   prefix_;           // required prefix (before regexp_)
-  bool          prefix_foldcase_;  // prefix is ASCII case-insensitive
-  re2::Regexp*  entire_regexp_;    // parsed regular expression
-  re2::Regexp*  suffix_regexp_;    // parsed regular expression, prefix removed
-  re2::Prog*    prog_;             // compiled program for regexp
-  int           num_captures_;     // Number of capturing groups
-  bool          is_one_pass_;      // can use prog_->SearchOnePass?
+  std::string pattern_;         // string regular expression
+  Options options_;             // option flags
+  re2::Regexp* entire_regexp_;  // parsed regular expression
+  const std::string* error_;    // error indicator (or points to empty string)
+  ErrorCode error_code_;        // error code
+  std::string error_arg_;       // fragment of regexp showing error
+  std::string prefix_;          // required prefix (before suffix_regexp_)
+  bool prefix_foldcase_;        // prefix_ is ASCII case-insensitive
+  re2::Regexp* suffix_regexp_;  // parsed regular expression, prefix_ removed
+  re2::Prog* prog_;             // compiled program for regexp
+  int num_captures_;            // number of capturing groups
+  bool is_one_pass_;            // can use prog_->SearchOnePass?
 
-  mutable re2::Prog*          rprog_;    // reverse program for regexp
-  mutable const std::string*  error_;    // Error indicator
-                                         // (or points to empty string)
-  mutable ErrorCode      error_code_;    // Error code
-  mutable std::string    error_arg_;     // Fragment of regexp showing error
-
+  // Reverse Prog for DFA execution only
+  mutable re2::Prog* rprog_;
   // Map from capture names to indices
   mutable const std::map<std::string, int>* named_groups_;
-
   // Map from capture indices to names
   mutable const std::map<int, std::string>* group_names_;
 
+<<<<<<< HEAD   (e62da0 Revert "Refuse to rewrite when MaxSubmatch() is too large.")
   // Onces for lazy computations.
   mutable absl::once_flag rprog_once_;
   mutable absl::once_flag named_groups_once_;
   mutable absl::once_flag group_names_once_;
+=======
+  mutable std::once_flag rprog_once_;
+  mutable std::once_flag named_groups_once_;
+  mutable std::once_flag group_names_once_;
+>>>>>>> CHANGE (572d6a Don't break the RE2 object when compiling the reverse Prog f)
 
   RE2(const RE2&) = delete;
   RE2& operator=(const RE2&) = delete;
