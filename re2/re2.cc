@@ -173,15 +173,20 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
     empty_group_names = new std::map<int, std::string>;
   });
 
-  pattern_ = std::string(pattern);
+  pattern_.assign(pattern.data(), pattern.size());
   options_.Copy(options);
   entire_regexp_ = NULL;
+  error_ = empty_string;
+  error_code_ = NoError;
+  error_arg_.clear();
+  prefix_.clear();
+  prefix_foldcase_ = false;
   suffix_regexp_ = NULL;
   prog_ = NULL;
   num_captures_ = -1;
+  is_one_pass_ = false;
+
   rprog_ = NULL;
-  error_ = empty_string;
-  error_code_ = NoError;
   named_groups_ = NULL;
   group_names_ = NULL;
 
@@ -240,9 +245,11 @@ re2::Prog* RE2::ReverseProg() const {
     if (re->rprog_ == NULL) {
       if (re->options_.log_errors())
         LOG(ERROR) << "Error reverse compiling '" << trunc(re->pattern_) << "'";
-      re->error_ =
-          new std::string("pattern too large - reverse compile failed");
-      re->error_code_ = RE2::ErrorPatternTooLarge;
+      // We no longer touch error_ and error_code_ because failing to compile
+      // the reverse Prog is not a showstopper: falling back to NFA execution
+      // is fine. More importantly, an RE2 object is supposed to be logically
+      // immutable: whatever ok() would have returned after Init() completed,
+      // it should continue to return that no matter what ReverseProg() does.
     }
   }, this);
   return rprog_;
