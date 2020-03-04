@@ -10,7 +10,9 @@
  * You should assume the locks are *not* re-entrant.
  */
 
-#if !defined(_WIN32)
+#ifdef _WIN32
+#define MUTEX_IS_WIN32_SRWLOCK
+#else
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -20,7 +22,10 @@
 #endif
 #endif
 
-#if defined(MUTEX_IS_PTHREAD_RWLOCK)
+#if defined(MUTEX_IS_WIN32_SRWLOCK)
+#include <windows.h>
+typedef SRWLOCK MutexType;
+#elif defined(MUTEX_IS_PTHREAD_RWLOCK)
 #include <pthread.h>
 #include <stdlib.h>
 typedef pthread_rwlock_t MutexType;
@@ -56,7 +61,16 @@ class Mutex {
   Mutex& operator=(const Mutex&) = delete;
 };
 
-#if defined(MUTEX_IS_PTHREAD_RWLOCK)
+#if defined(MUTEX_IS_WIN32_SRWLOCK)
+
+Mutex::Mutex()             { InitializeSRWLock(&mutex_); }
+Mutex::~Mutex()            { }
+void Mutex::Lock()         { AcquireSRWLockExclusive(&mutex_); }
+void Mutex::Unlock()       { ReleaseSRWLockExclusive(&mutex_); }
+void Mutex::ReaderLock()   { AcquireSRWLockShared(&mutex_); }
+void Mutex::ReaderUnlock() { ReleaseSRWLockShared(&mutex_); }
+
+#elif defined(MUTEX_IS_PTHREAD_RWLOCK)
 
 #define SAFE_PTHREAD(fncall)    \
   do {                          \
