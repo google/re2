@@ -18,12 +18,17 @@
 #if defined(_POSIX_READER_WRITER_LOCKS) && _POSIX_READER_WRITER_LOCKS > 0
 #define MUTEX_IS_PTHREAD_RWLOCK
 #endif
+#else
+#define MUTEX_IS_WIN32_SRWLOCK
 #endif
 
 #if defined(MUTEX_IS_PTHREAD_RWLOCK)
 #include <pthread.h>
 #include <stdlib.h>
 typedef pthread_rwlock_t MutexType;
+#elif defined(MUTEX_IS_WIN32_SRWLOCK)
+#include <windows.h>
+typedef SRWLOCK MutexType;
 #else
 #include <mutex>
 typedef std::mutex MutexType;
@@ -74,12 +79,12 @@ void Mutex::ReaderUnlock() { SAFE_PTHREAD(pthread_rwlock_unlock(&mutex_)); }
 
 #else
 
-Mutex::Mutex()             { }
+Mutex::Mutex()             { InitializeSRWLock(&mutex_); }
 Mutex::~Mutex()            { }
-void Mutex::Lock()         { mutex_.lock(); }
-void Mutex::Unlock()       { mutex_.unlock(); }
-void Mutex::ReaderLock()   { Lock(); }  // C++11 doesn't have std::shared_mutex.
-void Mutex::ReaderUnlock() { Unlock(); }
+void Mutex::Lock()         { AcquireSRWLockExclusive(&mutex_); }
+void Mutex::Unlock()       { ReleaseSRWLockExclusive(&mutex_); }
+void Mutex::ReaderLock()   { AcquireSRWLockShared(&mutex_); }
+void Mutex::ReaderUnlock() { ReleaseSRWLockShared(&mutex_); }
 
 #endif
 
