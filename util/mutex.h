@@ -11,7 +11,9 @@
  */
 
 #ifdef _WIN32
+#if defined(WINVER) && WINVER >= 0x0600
 #define MUTEX_IS_WIN32_SRWLOCK
+#endif
 #else
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
