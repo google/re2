@@ -7,7 +7,7 @@
 namespace re2 {
 
 
-// 1381 groups, 2792 pairs, 356 ranges
+// 1384 groups, 2798 pairs, 358 ranges
 const CaseFold unicode_casefold[] = {
 	{ 65, 90, 32 },
 	{ 97, 106, -32 },
@@ -349,6 +349,8 @@ const CaseFold unicode_casefold[] = {
 	{ 42948, 42948, -48 },
 	{ 42949, 42949, -42307 },
 	{ 42950, 42950, -35384 },
+	{ 42951, 42954, OddEven },
+	{ 42997, 42998, OddEven },
 	{ 43859, 43859, -928 },
 	{ 43888, 43967, -38864 },
 	{ 65313, 65338, 32 },
@@ -366,9 +368,9 @@ const CaseFold unicode_casefold[] = {
 	{ 125184, 125217, 34 },
 	{ 125218, 125251, -34 },
 };
-const int num_unicode_casefold = 356;
+const int num_unicode_casefold = 358;
 
-// 1381 groups, 1411 pairs, 198 ranges
+// 1384 groups, 1414 pairs, 200 ranges
 const CaseFold unicode_tolower[] = {
 	{ 65, 90, 32 },
 	{ 181, 181, 775 },
@@ -560,6 +562,8 @@ const CaseFold unicode_tolower[] = {
 	{ 42948, 42948, -48 },
 	{ 42949, 42949, -42307 },
 	{ 42950, 42950, -35384 },
+	{ 42951, 42953, OddEvenSkip },
+	{ 42997, 42997, OddEven },
 	{ 43888, 43967, -38864 },
 	{ 65313, 65338, 32 },
 	{ 66560, 66599, 40 },
@@ -569,7 +573,7 @@ const CaseFold unicode_tolower[] = {
 	{ 93760, 93791, 32 },
 	{ 125184, 125217, 34 },
 };
-const int num_unicode_tolower = 198;
+const int num_unicode_tolower = 200;
 
 
 
