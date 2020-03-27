@@ -122,9 +122,10 @@ bool RE2::Set::Match(absl::string_view text, std::vector<int>* v,
                               NULL, &dfa_failed, matches.get());
   if (dfa_failed) {
     if (options_.log_errors())
-      LOG(ERROR) << "DFA out of memory: size " << prog_->size() << ", "
-                 << "bytemap range " << prog_->bytemap_range() << ", "
-                 << "list count " << prog_->list_count();
+      LOG(ERROR) << "DFA out of memory: "
+                 << "program size " << prog->size() << ", "
+                 << "list count " << prog->list_count() << ", "
+                 << "bytemap range " << prog->bytemap_range();
     if (error_info != NULL)
       error_info->kind = kOutOfMemory;
     return false;
