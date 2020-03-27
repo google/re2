@@ -125,9 +125,9 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v,
   if (dfa_failed) {
     if (options_.log_errors())
       LOG(ERROR) << "DFA out of memory: "
-                 << "program size " << prog->size() << ", "
-                 << "list count " << prog->list_count() << ", "
-                 << "bytemap range " << prog->bytemap_range();
+                 << "program size " << prog_->size() << ", "
+                 << "list count " << prog_->list_count() << ", "
+                 << "bytemap range " << prog_->bytemap_range();
     if (error_info != NULL)
       error_info->kind = kOutOfMemory;
     return false;
