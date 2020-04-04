@@ -60,6 +60,11 @@ class Re2CompileTest(parameterized.TestCase):
     with self.assertRaisesRegex(re2.error, 'pattern too large'):
       re2.compile('.{1000}', options=options)
 
+  def test_programsize_reverseprogramsize(self):
+    regexp = re2.compile('a+b')
+    self.assertEqual(7, regexp.programsize)
+    self.assertEqual(7, regexp.reverseprogramsize)
+
 
 Params = collections.namedtuple(
     'Params', ('pattern', 'text', 'spans', 'search', 'match', 'fullmatch'))
@@ -324,7 +329,7 @@ class ReMatchTest(parameterized.TestCase):
     self.assertEqual(u'@\n', match.expand(u'\\100\\n'))
     self.assertEqual(u'@0\n', match.expand(u'\\1000\\n'))
 
-  def test_getitem_group_groups_and_groupdict(self):
+  def test_getitem_group_groups_groupdict(self):
     pattern = u'(?P<S>[\u2600-\u26ff]+).*?(?P<P>[^\\s\\w]+)'
     text = u'Hello, world.\nI \u2665 RE2!\nGoodbye, world.\n'
     match = self.MODULE.search(pattern, text)

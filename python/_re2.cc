@@ -286,6 +286,8 @@ PYBIND11_MODULE(_re2, module) {
       .def("options", &RE2::options)
       .def("NumberOfCapturingGroups", &RE2::NumberOfCapturingGroups)
       .def("NamedCapturingGroups", &RE2NamedCapturingGroupsShim)
+      .def("ProgramSize", &RE2::ProgramSize)
+      .def("ReverseProgramSize", &RE2::ReverseProgramSize)
       .def("Match", &RE2MatchShim)
       .def_static("QuoteMeta", &RE2QuoteMetaShim);
 
