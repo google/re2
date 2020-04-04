@@ -325,6 +325,14 @@ class _Regexp(object):
     else:
       return dict(groups)
 
+  @property
+  def programsize(self):
+    return self._regexp.ProgramSize()
+
+  @property
+  def reverseprogramsize(self):
+    return self._regexp.ReverseProgramSize()
+
 
 class _Match(object):
 
