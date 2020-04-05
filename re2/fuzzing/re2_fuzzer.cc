@@ -5,10 +5,10 @@
 #include <fuzzer/FuzzedDataProvider.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <map>
 #include <memory>
 #include <queue>
 #include <string>
+#include <vector>
 
 #include "re2/prefilter.h"
 #include "re2/re2.h"
@@ -87,7 +87,7 @@ void TestOneInput(StringPiece pattern, const RE2::Options& options,
 
   // Don't waste time fuzzing high-fanout programs.
   // They can cause bug reports due to fuzzer timeouts.
-  std::map<int, int> histogram;
+  std::vector<int> histogram;
   int fanout = re.ProgramFanout(&histogram);
   if (fanout > 9)
     return;
