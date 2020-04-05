@@ -12,6 +12,9 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -285,17 +288,39 @@ int RE2::ReverseProgramSize() const {
   return prog->size();
 }
 
+// Finds the most significant non-zero bit in n.
+static int FindMSBSet(uint32_t n) {
+  DCHECK_NE(n, 0);
+#if defined(__GNUC__)
+  return 31 ^ __builtin_clz(n);
+#elif defined(_MSC_VER)
+  unsigned long c;
+  _BitScanReverse(&c, n);
+  return static_cast<int>(c);
+#else
+  int c = 0;
+  for (int shift = 1 << 4; shift != 0; shift >>= 1) {
+    uint32_t word = n >> shift;
+    if (word != 0) {
+      n = word;
+      c += shift;
+    }
+  }
+  return c;
+#endif
+}
+
 static int Fanout(Prog* prog, std::map<int, int>* histogram) {
   SparseArray<int> fanout(prog->size());
   prog->Fanout(&fanout);
   histogram->clear();
   for (SparseArray<int>::iterator i = fanout.begin(); i != fanout.end(); ++i) {
-    // TODO(junyer): Optimise this?
-    int bucket = 0;
-    while (1 << bucket < i->value()) {
-      bucket++;
-    }
-    (*histogram)[bucket]++;
+    if (i->value() == 0)
+      continue;
+    uint32_t value = i->value();
+    int bucket = FindMSBSet(value);
+    bucket += value & (value-1) ? 1 : 0;
+    ++(*histogram)[bucket];
   }
   return histogram->rbegin()->first;
 }
