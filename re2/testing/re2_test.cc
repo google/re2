@@ -12,6 +12,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 #if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MINGW32__)
 #include <sys/mman.h>
 #include <unistd.h>  /* for sysconf */
@@ -473,7 +474,7 @@ TEST(ProgramFanout, BigProgram) {
   RE2 re100("(?:(?:(?:(?:(?:.)?){100})*)+)");
   RE2 re1000("(?:(?:(?:(?:(?:.)?){1000})*)+)");
 
-  std::map<int, int> histogram;
+  std::vector<int> histogram;
 
   // 3 is the largest non-empty bucket and has 1 element.
   ASSERT_EQ(3, re1.ProgramFanout(&histogram));
