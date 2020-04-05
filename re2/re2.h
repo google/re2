@@ -194,6 +194,7 @@
 #include <algorithm>
 #include <map>
 #include <string>
+#include <vector>
 
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
@@ -291,7 +292,13 @@ class RE2 {
   int ProgramSize() const;
   int ReverseProgramSize() const;
 
-  // EXPERIMENTAL! SUBJECT TO CHANGE!
+  // If histogram is not null, outputs the program fanout
+  // as a histogram bucketed by powers of 2.
+  // Returns the number of the largest non-empty bucket.
+  int ProgramFanout(std::vector<int>* histogram) const;
+  int ReverseProgramFanout(std::vector<int>* histogram) const;
+
+  // DEPRECATED! WILL BE REMOVED!
   // Outputs the program fanout as a histogram bucketed by powers of 2.
   // Returns the number of the largest non-empty bucket.
   int ProgramFanout(std::map<int, int>* histogram) const;
@@ -630,8 +637,7 @@ class RE2 {
     Encoding encoding() const { return encoding_; }
     void set_encoding(Encoding encoding) { encoding_ = encoding; }
 
-    // Legacy interface to encoding.
-    // TODO(rsc): Remove once clients have been converted.
+    // DEPRECATED! WILL BE REMOVED!
     bool utf8() const { return encoding_ == EncodingUTF8; }
     void set_utf8(bool b) {
       if (b) {

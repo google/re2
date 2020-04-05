@@ -311,6 +311,40 @@ static int FindMSBSet(uint32_t n) {
 #endif
 }
 
+static int Fanout(Prog* prog, std::vector<int>* histogram) {
+  SparseArray<int> fanout(prog->size());
+  prog->Fanout(&fanout);
+  int data[32] = {};
+  int size = 0;
+  for (SparseArray<int>::iterator i = fanout.begin(); i != fanout.end(); ++i) {
+    if (i->value() == 0)
+      continue;
+    uint32_t value = i->value();
+    int bucket = FindMSBSet(value);
+    bucket += value & (value-1) ? 1 : 0;
+    ++data[bucket];
+    size = std::max(size, bucket+1);
+  }
+  if (histogram != NULL)
+    histogram->assign(data, data+size);
+  return size-1;
+}
+
+int RE2::ProgramFanout(std::vector<int>* histogram) const {
+  if (prog_ == NULL)
+    return -1;
+  return Fanout(prog_, histogram);
+}
+
+int RE2::ReverseProgramFanout(std::vector<int>* histogram) const {
+  if (prog_ == NULL)
+    return -1;
+  Prog* prog = ReverseProg();
+  if (prog == NULL)
+    return -1;
+  return Fanout(prog, histogram);
+}
+
 static int Fanout(Prog* prog, std::map<int, int>* histogram) {
   SparseArray<int> fanout(prog->size());
   prog->Fanout(&fanout);
