@@ -65,6 +65,11 @@ class Re2CompileTest(parameterized.TestCase):
     self.assertEqual(7, regexp.programsize)
     self.assertEqual(7, regexp.reverseprogramsize)
 
+  def test_programfanout_reverseprogramfanout(self):
+    regexp = re2.compile('a+b')
+    self.assertListEqual([1, 1], regexp.programfanout)
+    self.assertListEqual([3], regexp.reverseprogramfanout)
+
 
 Params = collections.namedtuple(
     'Params', ('pattern', 'text', 'spans', 'search', 'match', 'fullmatch'))

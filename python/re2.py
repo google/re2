@@ -333,6 +333,14 @@ class _Regexp(object):
   def reverseprogramsize(self):
     return self._regexp.ReverseProgramSize()
 
+  @property
+  def programfanout(self):
+    return self._regexp.ProgramFanout()
+
+  @property
+  def reverseprogramfanout(self):
+    return self._regexp.ReverseProgramFanout()
+
 
 class _Match(object):
 

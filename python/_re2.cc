@@ -87,6 +87,18 @@ std::vector<std::pair<py::bytes, int>> RE2NamedCapturingGroupsShim(
   return groups;
 }
 
+std::vector<int> RE2ProgramFanoutShim(const RE2& self) {
+  std::vector<int> histogram;
+  self.ProgramFanout(&histogram);
+  return histogram;
+}
+
+std::vector<int> RE2ReverseProgramFanoutShim(const RE2& self) {
+  std::vector<int> histogram;
+  self.ReverseProgramFanout(&histogram);
+  return histogram;
+}
+
 std::vector<std::pair<ssize_t, ssize_t>> RE2MatchShim(const RE2& self,
                                                       RE2::Anchor anchor,
                                                       py::buffer buffer,
@@ -288,6 +300,8 @@ PYBIND11_MODULE(_re2, module) {
       .def("NamedCapturingGroups", &RE2NamedCapturingGroupsShim)
       .def("ProgramSize", &RE2::ProgramSize)
       .def("ReverseProgramSize", &RE2::ReverseProgramSize)
+      .def("ProgramFanout", &RE2ProgramFanoutShim)
+      .def("ReverseProgramFanout", &RE2ReverseProgramFanoutShim)
       .def("Match", &RE2MatchShim)
       .def_static("QuoteMeta", &RE2QuoteMetaShim);
 
