@@ -52,7 +52,7 @@ class Bitmap256 {
   static int FindLSBSet(uint64_t n) {
     DCHECK_NE(n, 0);
 #if defined(__GNUC__)
-    return __builtin_ctzl(n);
+    return __builtin_ctzll(n);
 #elif defined(_MSC_VER) && defined(_M_X64)
     unsigned long c;
     _BitScanForward64(&c, n);
