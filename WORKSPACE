@@ -33,6 +33,12 @@ http_archive(
 )
 
 http_archive(
+    name = "rules_python",
+    strip_prefix = "rules_python-master",
+    urls = ["https://github.com/bazelbuild/rules_python/archive/master.zip"],
+)
+
+http_archive(
     name = "io_abseil_py",
     strip_prefix = "abseil-py-master",
     urls = ["https://github.com/abseil/abseil-py/archive/master.zip"],
