@@ -298,12 +298,6 @@ class RE2 {
   int ProgramFanout(std::vector<int>* histogram) const;
   int ReverseProgramFanout(std::vector<int>* histogram) const;
 
-  // DEPRECATED! WILL BE REMOVED!
-  // Outputs the program fanout as a histogram bucketed by powers of 2.
-  // Returns the number of the largest non-empty bucket.
-  int ProgramFanout(std::map<int, int>* histogram) const;
-  int ReverseProgramFanout(std::map<int, int>* histogram) const;
-
   // Returns the underlying Regexp; not for general use.
   // Returns entire_regexp_ so that callers don't need
   // to know about prefix_ and prefix_foldcase_.
@@ -636,16 +630,6 @@ class RE2 {
 
     Encoding encoding() const { return encoding_; }
     void set_encoding(Encoding encoding) { encoding_ = encoding; }
-
-    // DEPRECATED! WILL BE REMOVED!
-    bool utf8() const { return encoding_ == EncodingUTF8; }
-    void set_utf8(bool b) {
-      if (b) {
-        encoding_ = EncodingUTF8;
-      } else {
-        encoding_ = EncodingLatin1;
-      }
-    }
 
     bool posix_syntax() const { return posix_syntax_; }
     void set_posix_syntax(bool b) { posix_syntax_ = b; }
