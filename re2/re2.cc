@@ -344,36 +344,6 @@ int RE2::ReverseProgramFanout(std::vector<int>* histogram) const {
   return Fanout(prog, histogram);
 }
 
-static int Fanout(Prog* prog, std::map<int, int>* histogram) {
-  SparseArray<int> fanout(prog->size());
-  prog->Fanout(&fanout);
-  histogram->clear();
-  for (SparseArray<int>::iterator i = fanout.begin(); i != fanout.end(); ++i) {
-    if (i->value() == 0)
-      continue;
-    uint32_t value = i->value();
-    int bucket = FindMSBSet(value);
-    bucket += value & (value-1) ? 1 : 0;
-    ++(*histogram)[bucket];
-  }
-  return histogram->rbegin()->first;
-}
-
-int RE2::ProgramFanout(std::map<int, int>* histogram) const {
-  if (prog_ == NULL)
-    return -1;
-  return Fanout(prog_, histogram);
-}
-
-int RE2::ReverseProgramFanout(std::map<int, int>* histogram) const {
-  if (prog_ == NULL)
-    return -1;
-  Prog* prog = ReverseProg();
-  if (prog == NULL)
-    return -1;
-  return Fanout(prog, histogram);
-}
-
 // Returns named_groups_, computing it if needed.
 const std::map<std::string, int>& RE2::NamedCapturingGroups() const {
   std::call_once(named_groups_once_, [](const RE2* re) {
