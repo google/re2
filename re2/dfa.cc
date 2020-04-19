@@ -362,6 +362,9 @@ class DFA {
   int64_t state_budget_;   // Amount of memory remaining for new States.
   StateSet state_cache_;   // All States computed so far.
   StartInfo start_[kMaxStart];
+
+  DFA(const DFA&) = delete;
+  DFA& operator=(const DFA&) = delete;
 };
 
 // Shorthand for casting to uint8_t*.
