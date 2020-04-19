@@ -63,11 +63,14 @@ class BitState {
   int nsubmatch_;           //   # of submatches to fill in
 
   // Search state
-  static const int VisitedBits = 32;
-  PODArray<uint32_t> visited_;  // bitmap: (list ID, char*) pairs visited
+  static constexpr int kVisitedBits = 64;
+  PODArray<uint64_t> visited_;  // bitmap: (list ID, char*) pairs visited
   PODArray<const char*> cap_;   // capture registers
   PODArray<Job> job_;           // stack of text positions to explore
   int njob_;                    // stack size
+
+  BitState(const BitState&) = delete;
+  BitState& operator=(const BitState&) = delete;
 };
 
 BitState::BitState(Prog* prog)
@@ -87,9 +90,9 @@ BitState::BitState(Prog* prog)
 bool BitState::ShouldVisit(int id, const char* p) {
   int n = prog_->list_heads()[id] * static_cast<int>(text_.size()+1) +
           static_cast<int>(p-text_.data());
-  if (visited_[n/VisitedBits] & (1 << (n & (VisitedBits-1))))
+  if (visited_[n/kVisitedBits] & (uint64_t{1} << (n & (kVisitedBits-1))))
     return false;
-  visited_[n/VisitedBits] |= 1 << (n & (VisitedBits-1));
+  visited_[n/kVisitedBits] |= uint64_t{1} << (n & (kVisitedBits-1));
   return true;
 }
 
@@ -304,8 +307,8 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
 
   // Allocate scratch space.
   int nvisited = prog_->list_count() * static_cast<int>(text.size()+1);
-  nvisited = (nvisited + VisitedBits-1) / VisitedBits;
-  visited_ = PODArray<uint32_t>(nvisited);
+  nvisited = (nvisited + kVisitedBits-1) / kVisitedBits;
+  visited_ = PODArray<uint64_t>(nvisited);
   memset(visited_.data(), 0, nvisited*sizeof visited_[0]);
 
   int ncap = 2*nsubmatch;
