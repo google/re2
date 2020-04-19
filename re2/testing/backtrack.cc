@@ -82,6 +82,9 @@ class Backtracker {
   const char* cap_[64];     // capture registers
   uint32_t *visited_;       // bitmap: (Inst*, char*) pairs already backtracked
   size_t nvisited_;         //   # of words in bitmap
+
+  Backtracker(const Backtracker&) = delete;
+  Backtracker& operator=(const Backtracker&) = delete;
 };
 
 Backtracker::Backtracker(Prog* prog)
