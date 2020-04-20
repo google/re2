@@ -53,17 +53,6 @@
 
 namespace re2 {
 
-#if !defined(__linux__)  /* only Linux seems to have memrchr */
-static void* memrchr(const void* s, int c, size_t n) {
-  const unsigned char* p = (const unsigned char*)s;
-  for (p += n; n > 0; n--)
-    if (*--p == c)
-      return (void*)p;
-
-  return NULL;
-}
-#endif
-
 // Controls whether the DFA should bail out early if the NFA would be faster.
 static bool dfa_should_bail_when_slow = true;
 
@@ -1391,22 +1380,14 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     if (ExtraDebug)
       fprintf(stderr, "@%td: %s\n", p - bp, DumpState(s).c_str());
 
-    if (have_first_byte && s == start) {
+    if (run_forward && have_first_byte && s == start) {
       // In start state, only way out is to find first_byte,
       // so use optimized assembly in memchr to skip ahead.
       // If first_byte isn't found, we can skip to the end
       // of the string.
-      if (run_forward) {
-        if ((p = BytePtr(memchr(p, params->first_byte, ep - p))) == NULL) {
-          p = ep;
-          break;
-        }
-      } else {
-        if ((p = BytePtr(memrchr(ep, params->first_byte, p - ep))) == NULL) {
-          p = ep;
-          break;
-        }
-        p++;
+      if ((p = BytePtr(memchr(p, params->first_byte, ep - p))) == NULL) {
+        p = ep;
+        break;
       }
     }
 
