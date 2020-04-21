@@ -30,6 +30,16 @@
 //   "(?i)hello"           -- (?i) turns on case-insensitive matching
 //   "/\\*(.*?)\\*/"       -- .*? matches . minimum no. of times possible
 //
+// The double backslashes are needed when writing C++ string literals.
+// However, they should NOT be used when writing C++11 raw string literals:
+//
+//   R"(hello (\w+) world)"  -- \w matches a "word" character
+//   R"(version (\d+))"      -- \d matches a digit
+//   R"(hello\s+world)"      -- \s matches any whitespace character
+//   R"(\b(\w+)\b)"          -- \b matches non-empty string at word boundary
+//   R"((?i)hello)"          -- (?i) turns on case-insensitive matching
+//   R"(/\*(.*?)\*/)"        -- .*? matches . minimum no. of times possible
+//
 // -----------------------------------------------------------------------
 // MATCHING INTERFACE:
 //
