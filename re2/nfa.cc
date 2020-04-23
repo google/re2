@@ -629,10 +629,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
   return false;
 }
 
-// Computes whether all successful matches have a common first byte,
-// and if so, returns that byte.  If not, returns -1.
-int Prog::ComputeFirstByte() {
-  int b = -1;
+void Prog::ComputeFirstByte() {
   SparseSet q(size());
   q.insert(start());
   for (SparseSet::iterator it = q.begin(); it != q.end(); ++it) {
@@ -645,23 +642,27 @@ int Prog::ComputeFirstByte() {
 
       case kInstMatch:
         // The empty string matches: no first byte.
-        return -1;
+        first_byte_ = -1;
+        return;
 
       case kInstByteRange:
         if (!ip->last())
           q.insert(id+1);
 
-        // Must match only a single byte
-        if (ip->lo() != ip->hi())
-          return -1;
-        if (ip->foldcase() && 'a' <= ip->lo() && ip->lo() <= 'z')
-          return -1;
+        // Must match only a single byte.
+        if (ip->lo() != ip->hi() ||
+            (ip->foldcase() && 'a' <= ip->lo() && ip->lo() <= 'z')) {
+          first_byte_ = -1;
+          return;
+        }
         // If we haven't seen any bytes yet, record it;
         // otherwise must match the one we saw before.
-        if (b == -1)
-          b = ip->lo();
-        else if (b != ip->lo())
-          return -1;
+        if (first_byte_ == -1) {
+          first_byte_ = ip->lo();
+        } else if (first_byte_ != ip->lo()) {
+          first_byte_ = -1;
+          return;
+        }
         break;
 
       case kInstNop:
@@ -687,7 +688,6 @@ int Prog::ComputeFirstByte() {
         break;
     }
   }
-  return b;
 }
 
 bool
