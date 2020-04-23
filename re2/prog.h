@@ -209,8 +209,6 @@ class Prog {
   uint16_t* list_heads() { return list_heads_.data(); }
   void set_dfa_mem(int64_t dfa_mem) { dfa_mem_ = dfa_mem; }
   int64_t dfa_mem() { return dfa_mem_; }
-  int flags() { return flags_; }
-  void set_flags(int flags) { flags_ = flags; }
   bool anchor_start() { return anchor_start_; }
   void set_anchor_start(bool b) { anchor_start_ = b; }
   bool anchor_end() { return anchor_end_; }
@@ -403,7 +401,6 @@ class Prog {
   int size_;                // number of instructions
   int bytemap_range_;       // bytemap_[x] < bytemap_range_
   int first_byte_;          // required first byte for match, or -1 if none
-  int flags_;               // regexp parse flags
 
   int list_count_;                 // count of lists (see above)
   int inst_count_[kNumInst];       // count of instructions by opcode
