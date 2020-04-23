@@ -183,14 +183,40 @@ std::string Prog::DumpByteMap() {
   return map;
 }
 
+<<<<<<< HEAD   (2b13e1 Remove unused flags_ member from Prog class.)
 int Prog::first_byte() {
   absl::call_once(first_byte_once_, [](Prog* prog) {
     prog->first_byte_ = prog->ComputeFirstByte();
   }, this);
   return first_byte_;
 }
+=======
+// Is ip a guaranteed match at end of text, perhaps after some capturing?
+static bool IsMatch(Prog* prog, Prog::Inst* ip) {
+  for (;;) {
+    switch (ip->opcode()) {
+      default:
+        LOG(DFATAL) << "Unexpected opcode in IsMatch: " << ip->opcode();
+        return false;
+>>>>>>> CHANGE (209319 Compute first_byte_ eagerly.)
 
-static bool IsMatch(Prog*, Prog::Inst*);
+      case kInstAlt:
+      case kInstAltMatch:
+      case kInstByteRange:
+      case kInstFail:
+      case kInstEmptyWidth:
+        return false;
+
+      case kInstCapture:
+      case kInstNop:
+        ip = prog->inst(ip->out());
+        break;
+
+      case kInstMatch:
+        return true;
+    }
+  }
+}
 
 // Peep-hole optimizer.
 void Prog::Optimize() {
@@ -256,6 +282,7 @@ void Prog::Optimize() {
   }
 }
 
+<<<<<<< HEAD   (2b13e1 Remove unused flags_ member from Prog class.)
 // Is ip a guaranteed match at end of text, perhaps after some capturing?
 static bool IsMatch(Prog* prog, Prog::Inst* ip) {
   for (;;) {
@@ -283,6 +310,9 @@ static bool IsMatch(Prog* prog, Prog::Inst* ip) {
 }
 
 uint32_t Prog::EmptyFlags(absl::string_view text, const char* p) {
+=======
+uint32_t Prog::EmptyFlags(const StringPiece& text, const char* p) {
+>>>>>>> CHANGE (209319 Compute first_byte_ eagerly.)
   int flags = 0;
 
   // ^ and \A
