@@ -183,14 +183,31 @@ std::string Prog::DumpByteMap() {
   return map;
 }
 
-int Prog::first_byte() {
-  absl::call_once(first_byte_once_, [](Prog* prog) {
-    prog->first_byte_ = prog->ComputeFirstByte();
-  }, this);
-  return first_byte_;
-}
+// Is ip a guaranteed match at end of text, perhaps after some capturing?
+static bool IsMatch(Prog* prog, Prog::Inst* ip) {
+  for (;;) {
+    switch (ip->opcode()) {
+      default:
+        LOG(DFATAL) << "Unexpected opcode in IsMatch: " << ip->opcode();
+        return false;
 
-static bool IsMatch(Prog*, Prog::Inst*);
+      case kInstAlt:
+      case kInstAltMatch:
+      case kInstByteRange:
+      case kInstFail:
+      case kInstEmptyWidth:
+        return false;
+
+      case kInstCapture:
+      case kInstNop:
+        ip = prog->inst(ip->out());
+        break;
+
+      case kInstMatch:
+        return true;
+    }
+  }
+}
 
 // Peep-hole optimizer.
 void Prog::Optimize() {
@@ -252,32 +269,6 @@ void Prog::Optimize() {
           k->lo() == 0x00 && k->hi() == 0xFF) {
         ip->set_opcode(kInstAltMatch);
       }
-    }
-  }
-}
-
-// Is ip a guaranteed match at end of text, perhaps after some capturing?
-static bool IsMatch(Prog* prog, Prog::Inst* ip) {
-  for (;;) {
-    switch (ip->opcode()) {
-      default:
-        LOG(DFATAL) << "Unexpected opcode in IsMatch: " << ip->opcode();
-        return false;
-
-      case kInstAlt:
-      case kInstAltMatch:
-      case kInstByteRange:
-      case kInstFail:
-      case kInstEmptyWidth:
-        return false;
-
-      case kInstCapture:
-      case kInstNop:
-        ip = prog->inst(ip->out());
-        break;
-
-      case kInstMatch:
-        return true;
     }
   }
 }
