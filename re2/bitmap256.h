@@ -32,7 +32,7 @@ class Bitmap256 {
     DCHECK_GE(c, 0);
     DCHECK_LE(c, 255);
 
-    return (words_[c / 64] & (1ULL << (c % 64))) != 0;
+    return (words_[c / 64] & (uint64_t{1} << (c % 64))) != 0;
   }
 
   // Sets the bit with index c.
@@ -40,7 +40,7 @@ class Bitmap256 {
     DCHECK_GE(c, 0);
     DCHECK_LE(c, 255);
 
-    words_[c / 64] |= (1ULL << (c % 64));
+    words_[c / 64] |= (uint64_t{1} << (c % 64));
   }
 
   // Finds the next non-zero bit with index >= c.
@@ -88,7 +88,7 @@ int Bitmap256::FindNextSetBit(int c) const {
 
   // Check the word that contains the bit. Mask out any lower bits.
   int i = c / 64;
-  uint64_t word = words_[i] & (~0ULL << (c % 64));
+  uint64_t word = words_[i] & (~uint64_t{0} << (c % 64));
   if (word != 0)
     return (i * 64) + FindLSBSet(word);
 

@@ -944,7 +944,7 @@ void SearchCachedDFA(benchmark::State& state, const char* regexp,
                      bool expect_match) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
-  Prog* prog = re->CompileToProg(1LL<<31);
+  Prog* prog = re->CompileToProg(int64_t{1}<<31);
   CHECK(prog);
   for (auto _ : state) {
     bool failed = false;
