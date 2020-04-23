@@ -215,9 +215,7 @@ class Prog {
   void set_anchor_end(bool b) { anchor_end_ = b; }
   int bytemap_range() { return bytemap_range_; }
   const uint8_t* bytemap() { return bytemap_; }
-
-  // Lazily computed.
-  int first_byte();
+  int first_byte() { return first_byte_; }
 
   // Returns string representation of program for debugging.
   std::string Dump();
@@ -295,9 +293,8 @@ class Prog {
   // Compute bytemap.
   void ComputeByteMap();
 
-  // Computes whether all matches must begin with the same first
-  // byte, and if so, returns that byte.  If not, returns -1.
-  int ComputeFirstByte();
+  // Computes whether all matches must begin with the same first byte.
+  void ComputeFirstByte();
 
   // Run peep-hole optimizer on program.
   void Optimize();
@@ -416,7 +413,6 @@ class Prog {
 
   uint8_t bytemap_[256];    // map from input bytes to byte classes
 
-  std::once_flag first_byte_once_;
   std::once_flag dfa_first_once_;
   std::once_flag dfa_longest_once_;
 
