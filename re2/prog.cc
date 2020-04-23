@@ -109,7 +109,6 @@ Prog::Prog()
     size_(0),
     bytemap_range_(0),
     first_byte_(-1),
-    flags_(0),
     list_count_(0),
     dfa_mem_(0),
     dfa_first_(NULL),

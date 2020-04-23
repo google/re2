@@ -1090,8 +1090,6 @@ static bool IsAnchorEnd(Regexp** pre, int depth) {
 
 void Compiler::Setup(Regexp::ParseFlags flags, int64_t max_mem,
                      RE2::Anchor anchor) {
-  prog_->set_flags(flags);
-
   if (flags & Regexp::Latin1)
     encoding_ = kEncodingLatin1;
   max_mem_ = max_mem;
@@ -1112,14 +1110,11 @@ void Compiler::Setup(Regexp::ParseFlags flags, int64_t max_mem,
     // on the program.)
     if (m >= 1<<24)
       m = 1<<24;
-
     // Inst imposes its own limit (currently bigger than 2^24 but be safe).
     if (m > Prog::Inst::kMaxInst)
       m = Prog::Inst::kMaxInst;
-
     max_ninst_ = static_cast<int>(m);
   }
-
   anchor_ = anchor;
 }
 
