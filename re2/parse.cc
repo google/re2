@@ -91,7 +91,7 @@ class Regexp::ParseState {
   bool PushSimpleOp(RegexpOp op);
 
   // Pushes a ^ onto the stack.
-  bool PushCarat();
+  bool PushCaret();
 
   // Pushes a \b (word == true) or \B (word == false) onto the stack.
   bool PushWordBoundary(bool word);
@@ -420,7 +420,7 @@ bool Regexp::ParseState::PushLiteral(Rune r) {
 }
 
 // Pushes a ^ onto the stack.
-bool Regexp::ParseState::PushCarat() {
+bool Regexp::ParseState::PushCaret() {
   if (flags_ & OneLine) {
     return PushSimpleOp(kRegexpBeginText);
   }
@@ -2269,7 +2269,7 @@ Regexp* Regexp::Parse(absl::string_view s, ParseFlags global_flags,
         break;
 
       case '^':  // Beginning of line.
-        if (!ps.PushCarat())
+        if (!ps.PushCaret())
           return NULL;
         t.remove_prefix(1);  // '^'
         break;
