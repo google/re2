@@ -1866,13 +1866,13 @@ bool Prog::SearchDFA(const StringPiece& text, const StringPiece& const_context,
   StringPiece context = const_context;
   if (context.data() == NULL)
     context = text;
-  bool carat = anchor_start();
+  bool caret = anchor_start();
   bool dollar = anchor_end();
   if (reversed_) {
     using std::swap;
-    swap(carat, dollar);
+    swap(caret, dollar);
   }
-  if (carat && context.begin() != text.begin())
+  if (caret && context.begin() != text.begin())
     return false;
   if (dollar && context.end() != text.end())
     return false;
