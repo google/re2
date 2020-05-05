@@ -168,12 +168,6 @@ class DFA {
   typedef absl::flat_hash_set<State*, StateHash, StateEqual> StateSet;
 
  private:
-  // Special "first_byte" values for a state.  (Values >= 0 denote actual bytes.)
-  enum {
-    kFbUnknown = -1,   // No analysis has been performed.
-    kFbNone = -2,      // The first-byte trick cannot be used.
-  };
-
   enum {
     // Indices into start_ for unanchored searches.
     // Add kStartAnchored for anchored searches.
@@ -240,25 +234,26 @@ class DFA {
   struct SearchParams {
     SearchParams(absl::string_view text, absl::string_view context,
                  RWLocker* cache_lock)
-      : text(text), context(context),
+      : text(text),
+        context(context),
         anchored(false),
+        have_first_byte(false),
         want_earliest_match(false),
         run_forward(false),
         start(NULL),
-        first_byte(kFbUnknown),
         cache_lock(cache_lock),
         failed(false),
         ep(NULL),
-        matches(NULL) { }
+        matches(NULL) {}
 
     absl::string_view text;
     absl::string_view context;
     bool anchored;
+    bool have_first_byte;
     bool want_earliest_match;
     bool run_forward;
     State* start;
-    int first_byte;
-    RWLocker *cache_lock;
+    RWLocker* cache_lock;
     bool failed;     // "out" parameter: whether search gave up
     const char* ep;  // "out" parameter: end pointer for match
     SparseSet* matches;
@@ -269,15 +264,13 @@ class DFA {
   };
 
   // Before each search, the parameters to Search are analyzed by
-  // AnalyzeSearch to determine the state in which to start and the
-  // "first_byte" for that state, if any.
+  // AnalyzeSearch to determine the state in which to start.
   struct StartInfo {
-    StartInfo() : start(NULL), first_byte(kFbUnknown) {}
-    State* start;
-    std::atomic<int> first_byte;
+    StartInfo() : start(NULL) {}
+    std::atomic<State*> start;
   };
 
-  // Fills in params->start and params->first_byte using
+  // Fills in params->start and params->have_first_byte using
   // the other search parameters.  Returns true on success,
   // false on failure.
   // cache_mutex_.r <= L < mutex_
@@ -1185,10 +1178,8 @@ void DFA::ResetCache(RWLocker* cache_lock) {
   });
 
   // Clear the cache, reset the memory budget.
-  for (int i = 0; i < kMaxStart; i++) {
-    start_[i].start = NULL;
-    start_[i].first_byte.store(kFbUnknown, std::memory_order_relaxed);
-  }
+  for (int i = 0; i < kMaxStart; i++)
+    start_[i].start.store(NULL, std::memory_order_relaxed);
   ClearCache();
   mem_budget_ = state_budget_;
 }
@@ -1351,6 +1342,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     swap(p, ep);
   }
 
+  int first_byte = prog_->first_byte();
   const uint8_t* bytemap = prog_->bytemap();
   const uint8_t* lastmatch = NULL;   // most recent matching position in text
   bool matched = false;
@@ -1387,7 +1379,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       // so use optimized assembly in memchr to skip ahead.
       // If first_byte isn't found, we can skip to the end
       // of the string.
-      if ((p = BytePtr(memchr(p, params->first_byte, ep - p))) == NULL) {
+      if ((p = BytePtr(memchr(p, first_byte, ep - p))) == NULL) {
         p = ep;
         break;
       }
@@ -1591,7 +1583,7 @@ bool DFA::SearchTTT(SearchParams* params) {
 // For debugging, calls the general code directly.
 bool DFA::SlowSearchLoop(SearchParams* params) {
   return InlinedSearchLoop(params,
-                           params->first_byte >= 0,
+                           params->have_first_byte,
                            params->want_earliest_match,
                            params->run_forward);
 }
@@ -1612,8 +1604,7 @@ bool DFA::FastSearchLoop(SearchParams* params) {
     &DFA::SearchTTT,
   };
 
-  bool have_first_byte = params->first_byte >= 0;
-  int index = 4 * have_first_byte +
+  int index = 4 * params->have_first_byte +
               2 * params->want_earliest_match +
               1 * params->run_forward;
   return (this->*Searches[index])(params);
@@ -1705,13 +1696,21 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
     }
   }
 
-  if (ExtraDebug)
-    absl::FPrintF(stderr, "anchored=%d fwd=%d flags=%#x state=%s first_byte=%d\n",
-                  params->anchored, params->run_forward, flags,
-                  DumpState(info->start), info->first_byte.load());
+  params->start = info->start.load(std::memory_order_acquire);
 
-  params->start = info->start;
-  params->first_byte = info->first_byte.load(std::memory_order_acquire);
+  // Even if we have a first byte, we cannot use it when anchored and,
+  // less obviously, we cannot use it when we are going to need flags.
+  // This trick works only when there is a single byte that leads to a
+  // different state!
+  if (prog_->first_byte() >= 0 &&
+      !params->anchored &&
+      params->start->flag_ >> kFlagNeedShift == 0)
+    params->have_first_byte = true;
+
+  if (ExtraDebug)
+    absl::FPrintF(stderr, "anchored=%d fwd=%d flags=%#x state=%s have_first_byte=%d\n",
+                  params->anchored, params->run_forward, flags,
+                  DumpState(params->start), params->have_first_byte);
 
   return true;
 }
@@ -1720,47 +1719,25 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
 bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
                               uint32_t flags) {
   // Quick check.
-  int fb = info->first_byte.load(std::memory_order_acquire);
-  if (fb != kFbUnknown)
+  State* start = info->start.load(std::memory_order_acquire);
+  if (start != NULL)
     return true;
 
   absl::MutexLock l(&mutex_);
-  fb = info->first_byte.load(std::memory_order_relaxed);
-  if (fb != kFbUnknown)
+  start = info->start.load(std::memory_order_relaxed);
+  if (start != NULL)
     return true;
 
   q0_->clear();
   AddToQueue(q0_,
              params->anchored ? prog_->start() : prog_->start_unanchored(),
              flags);
-  info->start = WorkqToCachedState(q0_, NULL, flags);
-  if (info->start == NULL)
+  start = WorkqToCachedState(q0_, NULL, flags);
+  if (start == NULL)
     return false;
 
-  if (info->start == DeadState) {
-    // Synchronize with "quick check" above.
-    info->first_byte.store(kFbNone, std::memory_order_release);
-    return true;
-  }
-
-  if (info->start == FullMatchState) {
-    // Synchronize with "quick check" above.
-    info->first_byte.store(kFbNone, std::memory_order_release);  // will be ignored
-    return true;
-  }
-
-  // Even if we have a first_byte, we cannot use it when anchored and,
-  // less obviously, we cannot use it when we are going to need flags.
-  // This trick works only when there is a single byte that leads to a
-  // different state!
-  int first_byte = prog_->first_byte();
-  if (first_byte == -1 ||
-      params->anchored ||
-      info->start->flag_ >> kFlagNeedShift != 0)
-    first_byte = kFbNone;
-
   // Synchronize with "quick check" above.
-  info->first_byte.store(first_byte, std::memory_order_release);
+  info->start.store(start, std::memory_order_release);
   return true;
 }
 
