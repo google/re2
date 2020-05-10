@@ -236,7 +236,7 @@ TEST(TestCompile, InsufficientMemory) {
       "^(?P<name1>[^\\s]+)\\s+(?P<name2>[^\\s]+)\\s+(?P<name3>.+)$",
       Regexp::LikePerl, NULL);
   EXPECT_TRUE(re != NULL);
-  Prog* prog = re->CompileToProg(920);
+  Prog* prog = re->CompileToProg(850);
   // If the memory budget has been exhausted, compilation should fail
   // and return NULL instead of trying to do anything with NoMatch().
   EXPECT_TRUE(prog == NULL);
