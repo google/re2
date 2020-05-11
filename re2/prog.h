@@ -198,8 +198,8 @@ class Prog {
 
   Inst *inst(int id) { return &inst_[id]; }
   int start() { return start_; }
-  int start_unanchored() { return start_unanchored_; }
   void set_start(int start) { start_ = start; }
+  int start_unanchored() { return start_unanchored_; }
   void set_start_unanchored(int start) { start_unanchored_ = start; }
   int size() { return size_; }
   bool reversed() { return reversed_; }
@@ -207,8 +207,8 @@ class Prog {
   int list_count() { return list_count_; }
   int inst_count(InstOp op) { return inst_count_[op]; }
   uint16_t* list_heads() { return list_heads_.data(); }
-  void set_dfa_mem(int64_t dfa_mem) { dfa_mem_ = dfa_mem; }
   int64_t dfa_mem() { return dfa_mem_; }
+  void set_dfa_mem(int64_t dfa_mem) { dfa_mem_ = dfa_mem; }
   bool anchor_start() { return anchor_start_; }
   void set_anchor_start(bool b) { anchor_start_ = b; }
   bool anchor_end() { return anchor_end_; }
@@ -216,6 +216,7 @@ class Prog {
   int bytemap_range() { return bytemap_range_; }
   const uint8_t* bytemap() { return bytemap_; }
   int first_byte() { return first_byte_; }
+  void set_first_byte(int first_byte) { first_byte_ = first_byte; }
 
   // Returns string representation of program for debugging.
   std::string Dump();
@@ -292,9 +293,6 @@ class Prog {
 
   // Compute bytemap.
   void ComputeByteMap();
-
-  // Computes whether all matches must begin with the same first byte.
-  void ComputeFirstByte();
 
   // Run peep-hole optimizer on program.
   void Optimize();
