@@ -629,67 +629,6 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
   return false;
 }
 
-void Prog::ComputeFirstByte() {
-  SparseSet q(size());
-  q.insert(start());
-  for (SparseSet::iterator it = q.begin(); it != q.end(); ++it) {
-    int id = *it;
-    Prog::Inst* ip = inst(id);
-    switch (ip->opcode()) {
-      default:
-        LOG(DFATAL) << "unhandled " << ip->opcode() << " in ComputeFirstByte";
-        break;
-
-      case kInstMatch:
-        // The empty string matches: no first byte.
-        first_byte_ = -1;
-        return;
-
-      case kInstByteRange:
-        if (!ip->last())
-          q.insert(id+1);
-
-        // Must match only a single byte.
-        if (ip->lo() != ip->hi() ||
-            (ip->foldcase() && 'a' <= ip->lo() && ip->lo() <= 'z')) {
-          first_byte_ = -1;
-          return;
-        }
-        // If we haven't seen any bytes yet, record it;
-        // otherwise must match the one we saw before.
-        if (first_byte_ == -1) {
-          first_byte_ = ip->lo();
-        } else if (first_byte_ != ip->lo()) {
-          first_byte_ = -1;
-          return;
-        }
-        break;
-
-      case kInstNop:
-      case kInstCapture:
-      case kInstEmptyWidth:
-        if (!ip->last())
-          q.insert(id+1);
-
-        // Continue on.
-        // Ignore ip->empty() flags for kInstEmptyWidth
-        // in order to be as conservative as possible
-        // (assume all possible empty-width flags are true).
-        if (ip->out())
-          q.insert(ip->out());
-        break;
-
-      case kInstAltMatch:
-        DCHECK(!ip->last());
-        q.insert(id+1);
-        break;
-
-      case kInstFail:
-        break;
-    }
-  }
-}
-
 bool
 Prog::SearchNFA(const StringPiece& text, const StringPiece& context,
                 Anchor anchor, MatchKind kind,

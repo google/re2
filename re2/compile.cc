@@ -225,8 +225,8 @@ class Compiler : public Regexp::Walker<Frag> {
   // Single rune.
   Frag Literal(Rune r, bool foldcase);
 
-  void Setup(Regexp::ParseFlags, int64_t, RE2::Anchor);
-  Prog* Finish();
+  void Setup(Regexp::ParseFlags flags, int64_t max_mem, RE2::Anchor anchor);
+  Prog* Finish(Regexp* re);
 
   // Returns .* where dot = any byte
   Frag DotStar();
@@ -1167,10 +1167,10 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64_t max_mem) {
   c.prog_->set_start_unanchored(all.begin);
 
   // Hand ownership of prog_ to caller.
-  return c.Finish();
+  return c.Finish(re);
 }
 
-Prog* Compiler::Finish() {
+Prog* Compiler::Finish(Regexp* re) {
   if (failed_)
     return NULL;
 
@@ -1186,7 +1186,13 @@ Prog* Compiler::Finish() {
   prog_->Optimize();
   prog_->Flatten();
   prog_->ComputeByteMap();
-  prog_->ComputeFirstByte();
+
+  // Compute first byte.
+  std::string prefix;
+  bool prefix_foldcase;
+  if (re->RequiredPrefixUnanchored(&prefix, &prefix_foldcase) &&
+      !prefix_foldcase)
+    prog_->set_first_byte(prefix[0]);
 
   // Record remaining memory for DFA.
   if (max_mem_ <= 0) {
@@ -1244,7 +1250,7 @@ Prog* Compiler::CompileSet(Regexp* re, RE2::Anchor anchor, int64_t max_mem) {
   c.prog_->set_start(all.begin);
   c.prog_->set_start_unanchored(all.begin);
 
-  Prog* prog = c.Finish();
+  Prog* prog = c.Finish(re);
   if (prog == NULL)
     return NULL;
 
