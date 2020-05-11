@@ -1704,6 +1704,7 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
   // different state!
   if (prog_->first_byte() >= 0 &&
       !params->anchored &&
+      params->start > SpecialStateMax &&
       params->start->flag_ >> kFlagNeedShift == 0)
     params->have_first_byte = true;
 
