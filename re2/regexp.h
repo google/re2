@@ -440,6 +440,13 @@ class Regexp {
   bool RequiredPrefix(std::string* prefix, bool* foldcase,
                       Regexp** suffix);
 
+  // Whether every match of this regexp must be unanchored and
+  // begin with a non-empty fixed string (perhaps after ASCII
+  // case-folding).  If so, returns the prefix.
+  // Callers should expect *prefix and *foldcase to be "zeroed"
+  // regardless of the return value.
+  bool RequiredPrefixUnanchored(std::string* prefix, bool* foldcase);
+
  private:
   // Constructor allocates vectors as appropriate for operator.
   explicit Regexp(RegexpOp op, ParseFlags parse_flags);
