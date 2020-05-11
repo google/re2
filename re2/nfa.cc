@@ -627,6 +627,7 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
   return false;
 }
 
+<<<<<<< HEAD   (1fc40c Implement Regexp::RequiredPrefixUnanchored().)
 void Prog::ComputeFirstByte() {
   SparseSet q(size());
   q.insert(start());
@@ -691,6 +692,12 @@ void Prog::ComputeFirstByte() {
 bool Prog::SearchNFA(absl::string_view text, absl::string_view context,
                      Anchor anchor, MatchKind kind, absl::string_view* match,
                      int nmatch) {
+=======
+bool
+Prog::SearchNFA(const StringPiece& text, const StringPiece& context,
+                Anchor anchor, MatchKind kind,
+                StringPiece* match, int nmatch) {
+>>>>>>> CHANGE (75220a Compute first_byte using the Regexp, not the Prog.)
   if (ExtraDebug)
     Dump();
 
