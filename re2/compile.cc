@@ -1188,12 +1188,14 @@ Prog* Compiler::Finish(Regexp* re) {
   prog_->Flatten();
   prog_->ComputeByteMap();
 
-  // Compute first byte.
-  std::string prefix;
-  bool prefix_foldcase;
-  if (re->RequiredPrefixUnanchored(&prefix, &prefix_foldcase) &&
-      !prefix_foldcase)
-    prog_->set_first_byte(prefix[0]);
+  if (!prog_->reversed()) {
+    // Compute first byte.
+    std::string prefix;
+    bool prefix_foldcase;
+    if (re->RequiredPrefixUnanchored(&prefix, &prefix_foldcase) &&
+        !prefix_foldcase)
+      prog_->set_first_byte(prefix[0]);
+  }
 
   // Record remaining memory for DFA.
   if (max_mem_ <= 0) {
