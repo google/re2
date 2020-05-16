@@ -293,7 +293,7 @@ static int FindMSBSet(uint32_t n) {
   DCHECK_NE(n, 0);
 #if defined(__GNUC__)
   return 31 ^ __builtin_clz(n);
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
   unsigned long c;
   _BitScanReverse(&c, n);
   return static_cast<int>(c);
