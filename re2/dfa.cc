@@ -599,7 +599,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
   // Only ByteRange, EmptyWidth, and Match instructions are useful to keep:
   // those are the only operators with any effect in
   // RunWorkqOnEmptyString or RunWorkqOnByte.
-  int* inst = new int[q->size()];
+  PODArray<int> inst(q->size());
   int n = 0;
   uint32_t needflags = 0;  // flags needed by kInstEmptyWidth instructions
   bool sawmatch = false;   // whether queue contains guaranteed kInstMatch
@@ -629,7 +629,6 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
              (it == q->begin() && ip->greedy(prog_))) &&
             (kind_ != Prog::kLongestMatch || !sawmark) &&
             (flag & kFlagMatch)) {
-          delete[] inst;
           if (ExtraDebug)
             fprintf(stderr, " -> FullMatchState\n");
           return FullMatchState;
@@ -676,7 +675,6 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
   // the execution loop can stop early.  This is only okay
   // if the state is *not* a matching state.
   if (n == 0 && flag == 0) {
-    delete[] inst;
     if (ExtraDebug)
       fprintf(stderr, " -> DeadState\n");
     return DeadState;
@@ -686,7 +684,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
   // unordered state sets separated by Marks.  Sort each set
   // to canonicalize, to reduce the number of distinct sets stored.
   if (kind_ == Prog::kLongestMatch) {
-    int* ip = inst;
+    int* ip = inst.data();
     int* ep = ip + n;
     while (ip < ep) {
       int* markp = ip;
@@ -703,7 +701,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
   // we have an unordered set of states (i.e. we don't have Marks)
   // and sorting will reduce the number of distinct sets stored.
   if (kind_ == Prog::kManyMatch) {
-    int* ip = inst;
+    int* ip = inst.data();
     int* ep = ip + n;
     std::sort(ip, ep);
   }
@@ -722,8 +720,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
   // Save the needed empty-width flags in the top bits for use later.
   flag |= needflags << kFlagNeedShift;
 
-  State* state = CachedState(inst, n, flag);
-  delete[] inst;
+  State* state = CachedState(inst.data(), n, flag);
   return state;
 }
 

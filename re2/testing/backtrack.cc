@@ -29,6 +29,7 @@
 
 #include "util/util.h"
 #include "util/logging.h"
+#include "re2/pod_array.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"
 
@@ -53,7 +54,6 @@ namespace re2 {
 class Backtracker {
  public:
   explicit Backtracker(Prog* prog);
-  ~Backtracker();
 
   bool Search(const StringPiece& text, const StringPiece& context,
               bool anchored, bool longest,
@@ -79,9 +79,8 @@ class Backtracker {
   int nsubmatch_;           //   # of submatches to fill in
 
   // Search state
-  const char* cap_[64];     // capture registers
-  uint32_t *visited_;       // bitmap: (Inst*, char*) pairs already backtracked
-  size_t nvisited_;         //   # of words in bitmap
+  const char* cap_[64];         // capture registers
+  PODArray<uint32_t> visited_;  // bitmap: (Inst*, char*) pairs visited
 
   Backtracker(const Backtracker&) = delete;
   Backtracker& operator=(const Backtracker&) = delete;
@@ -93,13 +92,7 @@ Backtracker::Backtracker(Prog* prog)
     longest_(false),
     endmatch_(false),
     submatch_(NULL),
-    nsubmatch_(0),
-    visited_(NULL),
-    nvisited_(0) {
-}
-
-Backtracker::~Backtracker() {
-  delete[] visited_;
+    nsubmatch_(0) {
 }
 
 // Runs a backtracking search.
@@ -133,10 +126,10 @@ bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
 
   // Allocate new visited_ bitmap -- size is proportional
   // to text, so have to reallocate on each call to Search.
-  delete[] visited_;
-  nvisited_ = (prog_->size()*(text.size()+1) + 31)/32;
-  visited_ = new uint32_t[nvisited_];
-  memset(visited_, 0, nvisited_*sizeof visited_[0]);
+  int nvisited = prog_->size() * static_cast<int>(text.size()+1);
+  nvisited = (nvisited + 31) / 32;
+  visited_ = PODArray<uint32_t>(nvisited);
+  memset(visited_.data(), 0, nvisited*sizeof visited_[0]);
 
   // Anchored search must start at text.begin().
   if (anchored_) {
@@ -167,7 +160,6 @@ bool Backtracker::Visit(int id, const char* p) {
   // Either way, don't go down that road again.
   CHECK(p <= text_.data() + text_.size());
   size_t n = id*(text_.size()+1) + (p - text_.data());
-  CHECK_LT(n/32, nvisited_);
   if (visited_[n/32] & (1 << (n&31)))
     return false;
   visited_[n/32] |= 1 << (n&31);
