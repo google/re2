@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <algorithm>
+#include <deque>
 #include <string>
 #include <utility>
 #include <vector>
@@ -119,7 +120,8 @@ class NFA {
   const char* etext_;         // end of text (for endmatch_)
   Threadq q0_, q1_;           // pre-allocated for Search.
   PODArray<AddState> stack_;  // pre-allocated for AddToThreadq
-  Thread* free_threads_;      // free list
+  std::deque<Thread> arena_;  // thread arena
+  Thread* freelist_;          // thread freelist
   const char** match_;        // best match so far
   bool matched_;              // any match so far?
 
@@ -142,31 +144,30 @@ NFA::NFA(Prog* prog) {
                prog_->inst_count(kInstEmptyWidth) +
                prog_->inst_count(kInstNop) + 1;  // + 1 for start inst
   stack_ = PODArray<AddState>(nstack);
-  free_threads_ = NULL;
+  freelist_ = NULL;
   match_ = NULL;
   matched_ = false;
 }
 
 NFA::~NFA() {
   delete[] match_;
-  Thread* next;
-  for (Thread* t = free_threads_; t; t = next) {
-    next = t->next;
-    delete[] t->capture;
-    delete t;
-  }
+  for (const Thread& t : arena_)
+    delete[] t.capture;
 }
 
 NFA::Thread* NFA::AllocThread() {
-  Thread* t = free_threads_;
-  if (t == NULL) {
-    t = new Thread;
+  Thread* t = freelist_;
+  if (t != NULL) {
+    freelist_ = t->next;
     t->ref = 1;
-    t->capture = new const char*[ncapture_];
+    // We don't need to touch t->capture because
+    // the caller will immediately overwrite it.
     return t;
   }
-  free_threads_ = t->next;
+  arena_.emplace_back();
+  t = &arena_.back();
   t->ref = 1;
+  t->capture = new const char*[ncapture_];
   return t;
 }
 
@@ -177,14 +178,13 @@ NFA::Thread* NFA::Incref(Thread* t) {
 }
 
 void NFA::Decref(Thread* t) {
-  if (t == NULL)
-    return;
+  DCHECK(t != NULL);
   t->ref--;
   if (t->ref > 0)
     return;
   DCHECK_EQ(t->ref, 0);
-  t->next = free_threads_;
-  free_threads_ = t;
+  t->next = freelist_;
+  freelist_ = t;
 }
 
 // Follows all empty arrows from id0 and enqueues all the states reached.
@@ -366,8 +366,10 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, absl::string_view context,
           matched_ = true;
 
           Decref(t);
-          for (++i; i != runq->end(); ++i)
-            Decref(i->value());
+          for (++i; i != runq->end(); ++i) {
+            if (i->value() != NULL)
+              Decref(i->value());
+          }
           runq->clear();
           if (ip->greedy(prog_))
             return ip->out1();
@@ -410,8 +412,10 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, absl::string_view context,
           // worse than the one we just found: don't run the
           // rest of the current Threadq.
           Decref(t);
-          for (++i; i != runq->end(); ++i)
-            Decref(i->value());
+          for (++i; i != runq->end(); ++i) {
+            if (i->value() != NULL)
+              Decref(i->value());
+          }
           runq->clear();
           return 0;
         }
@@ -482,6 +486,7 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
   }
 
   match_ = new const char*[ncapture_];
+  memset(match_, 0, ncapture_*sizeof match_[0]);
   matched_ = false;
 
   // For debugging prints.
@@ -498,7 +503,6 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
   Threadq* nextq = &q1_;
   runq->clear();
   nextq->clear();
-  memset(&match_[0], 0, ncapture_*sizeof match_[0]);
 
   // Loop over the text, stepping the machine.
   for (const char* p = text.data();; p++) {
@@ -605,8 +609,10 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
     }
   }
 
-  for (Threadq::iterator i = runq->begin(); i != runq->end(); ++i)
-    Decref(i->value());
+  for (Threadq::iterator i = runq->begin(); i != runq->end(); ++i) {
+    if (i->value() != NULL)
+      Decref(i->value());
+  }
 
   if (matched_) {
     for (int i = 0; i < nsubmatch; i++)
