@@ -69,7 +69,7 @@ class NFA {
       int ref;
       Thread* next;  // when on free list
     };
-    PODArray<const char*> capture;
+    const char** capture;
   };
 
   // State for explicit stack in AddToThreadq.
@@ -105,24 +105,24 @@ class NFA {
            const char* p);
 
   // Returns text version of capture information, for debugging.
-  std::string FormatCapture(const PODArray<const char*>& capture);
+  std::string FormatCapture(const char** capture);
 
-  void CopyCapture(PODArray<const char*>* dst, PODArray<const char*>* src) {
-    memmove(dst->data(), src->data(), ncapture_*sizeof (*src)[0]);
+  void CopyCapture(const char** dst, const char** src) {
+    memmove(dst, src, ncapture_*sizeof src[0]);
   }
 
-  Prog* prog_;                   // underlying program
-  int start_;                    // start instruction in program
-  int ncapture_;                 // number of submatches to track
-  bool longest_;                 // whether searching for longest match
-  bool endmatch_;                // whether match must end at text.end()
-  const char* btext_;            // beginning of text (for FormatSubmatch)
-  const char* etext_;            // end of text (for endmatch_)
-  Threadq q0_, q1_;              // pre-allocated for Search.
-  PODArray<AddState> stack_;     // pre-allocated for AddToThreadq
-  Thread* free_threads_;         // free list
-  PODArray<const char*> match_;  // best match so far
-  bool matched_;                 // any match so far?
+  Prog* prog_;                // underlying program
+  int start_;                 // start instruction in program
+  int ncapture_;              // number of submatches to track
+  bool longest_;              // whether searching for longest match
+  bool endmatch_;             // whether match must end at text.end()
+  const char* btext_;         // beginning of text (for FormatSubmatch)
+  const char* etext_;         // end of text (for endmatch_)
+  Threadq q0_, q1_;           // pre-allocated for Search.
+  PODArray<AddState> stack_;  // pre-allocated for AddToThreadq
+  Thread* free_threads_;      // free list
+  const char** match_;        // best match so far
+  bool matched_;              // any match so far?
 
   NFA(const NFA&) = delete;
   NFA& operator=(const NFA&) = delete;
@@ -160,7 +160,7 @@ NFA::Thread* NFA::AllocThread() {
   if (t == NULL) {
     t = new Thread;
     t->ref = 1;
-    t->capture = PODArray<const char*>(ncapture_);
+    t->capture = new const char*[ncapture_];
     return t;
   }
   free_threads_ = t->next;
@@ -270,7 +270,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, const StringPiece& context,
 
         // Record capture.
         t = AllocThread();
-        CopyCapture(&t->capture, &t0->capture);
+        CopyCapture(t->capture, t0->capture);
         t->capture[j] = p;
         t0 = t;
       }
@@ -360,7 +360,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, const StringPiece& context,
           break;
         // The match is ours if we want it.
         if (ip->greedy(prog_) || longest_) {
-          CopyCapture(&match_, &t->capture);
+          CopyCapture(match_, t->capture);
           matched_ = true;
 
           Decref(t);
@@ -378,7 +378,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, const StringPiece& context,
         // by storing p instead of p-1. (What would the latter even mean?!)
         // This complements the special case in NFA::Search().
         if (p == NULL) {
-          CopyCapture(&match_, &t->capture);
+          CopyCapture(match_, t->capture);
           match_[1] = p;
           matched_ = true;
           break;
@@ -393,14 +393,14 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, const StringPiece& context,
           // point but longer than an existing match.
           if (!matched_ || t->capture[0] < match_[0] ||
               (t->capture[0] == match_[0] && p-1 > match_[1])) {
-            CopyCapture(&match_, &t->capture);
+            CopyCapture(match_, t->capture);
             match_[1] = p-1;
             matched_ = true;
           }
         } else {
           // Leftmost-biased mode: this match is by definition
           // better than what we've already found (see next line).
-          CopyCapture(&match_, &t->capture);
+          CopyCapture(match_, t->capture);
           match_[1] = p-1;
           matched_ = true;
 
@@ -422,7 +422,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, const StringPiece& context,
   return 0;
 }
 
-std::string NFA::FormatCapture(const PODArray<const char*>& capture) {
+std::string NFA::FormatCapture(const char** capture) {
   std::string s;
   for (int i = 0; i < ncapture_; i+=2) {
     if (capture[i] == NULL)
@@ -480,7 +480,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
     ncapture_ = 2;
   }
 
-  match_ = PODArray<const char*>(ncapture_);
+  match_ = new const char*[ncapture_];
   matched_ = false;
 
   // For debugging prints.
@@ -577,7 +577,7 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
       }
 
       Thread* t = AllocThread();
-      CopyCapture(&t->capture, &match_);
+      CopyCapture(t->capture, match_);
       t->capture[0] = p;
       AddToThreadq(runq, start_, p < etext_ ? p[0] & 0xFF : -1, context, p,
                    t);

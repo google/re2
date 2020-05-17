@@ -159,7 +159,9 @@ bool Backtracker::Visit(int id, const char* p) {
   // either it didn't match or it did but we're hoping for a better match.
   // Either way, don't go down that road again.
   CHECK(p <= text_.data() + text_.size());
-  size_t n = id*(text_.size()+1) + (p - text_.data());
+  int n = id * static_cast<int>(text_.size()+1) +
+          static_cast<int>(p-text_.data());
+  CHECK_LT(n/32, visited_.size());
   if (visited_[n/32] & (1 << (n&31)))
     return false;
   visited_[n/32] |= 1 << (n&31);
