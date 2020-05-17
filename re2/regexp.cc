@@ -20,6 +20,7 @@
 #include "absl/synchronization/mutex.h"
 #include "util/logging.h"
 #include "util/utf.h"
+#include "re2/pod_array.h"
 #include "re2/walker-inl.h"
 
 namespace re2 {
@@ -242,16 +243,15 @@ Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub,
       return new Regexp(kRegexpEmptyMatch, flags);
   }
 
-  Regexp** subcopy = NULL;
+  PODArray<Regexp*> subcopy;
   if (op == kRegexpAlternate && can_factor) {
     // Going to edit sub; make a copy so we don't step on caller.
-    subcopy = new Regexp*[nsub];
-    memmove(subcopy, sub, nsub * sizeof sub[0]);
-    sub = subcopy;
+    subcopy = PODArray<Regexp*>(nsub);
+    memmove(subcopy.data(), sub, nsub * sizeof sub[0]);
+    sub = subcopy.data();
     nsub = FactorAlternation(sub, nsub, flags);
     if (nsub == 1) {
       Regexp* re = sub[0];
-      delete[] subcopy;
       return re;
     }
   }
@@ -268,7 +268,6 @@ Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub,
     subs[nbigsub - 1] = ConcatOrAlternate(op, sub+(nbigsub-1)*kMaxNsub,
                                           nsub - (nbigsub-1)*kMaxNsub, flags,
                                           false);
-    delete[] subcopy;
     return re;
   }
 
@@ -277,8 +276,6 @@ Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub,
   Regexp** subs = re->sub();
   for (int i = 0; i < nsub; i++)
     subs[i] = sub[i];
-
-  delete[] subcopy;
   return re;
 }
 
