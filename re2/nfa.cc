@@ -144,13 +144,16 @@ NFA::NFA(Prog* prog) {
                prog_->inst_count(kInstNop) + 1;  // + 1 for start inst
   stack_ = PODArray<AddState>(nstack);
   free_threads_ = NULL;
+  match_ = NULL;
   matched_ = false;
 }
 
 NFA::~NFA() {
+  delete[] match_;
   Thread* next;
   for (Thread* t = free_threads_; t; t = next) {
     next = t->next;
+    delete[] t->capture;
     delete t;
   }
 }
