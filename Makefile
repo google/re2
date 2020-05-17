@@ -68,6 +68,7 @@ SOEXTVER00=$(SOEXT).$(SONAME).0.0
 MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),--version-script,libre2.symbols $(RE2_LDFLAGS) $(LDFLAGS)
 endif
 
+.PHONY: all
 all: obj/libre2.a obj/so/libre2.$(SOEXT)
 
 INSTALL_HFILES=\
@@ -176,40 +177,49 @@ DTESTOFILES=$(patsubst obj/%,obj/dbg/%,$(TESTOFILES))
 DTESTS=$(patsubst obj/%,obj/dbg/%,$(TESTS))
 DBIGTESTS=$(patsubst obj/%,obj/dbg/%,$(BIGTESTS))
 
+.PRECIOUS: obj/%.o
 obj/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
 	$(CXX) -c -o $@ $(CPPFLAGS) $(RE2_CXXFLAGS) $(CXXFLAGS) -DNDEBUG $*.cc
 
+.PRECIOUS: obj/dbg/%.o
 obj/dbg/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
 	$(CXX) -c -o $@ $(CPPFLAGS) $(RE2_CXXFLAGS) $(CXXFLAGS) $*.cc
 
+.PRECIOUS: obj/so/%.o
 obj/so/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
 	$(CXX) -c -o $@ -fPIC $(CPPFLAGS) $(RE2_CXXFLAGS) $(CXXFLAGS) -DNDEBUG $*.cc
 
+.PRECIOUS: obj/libre2.a
 obj/libre2.a: $(OFILES)
 	@mkdir -p obj
 	$(AR) $(ARFLAGS) obj/libre2.a $(OFILES)
 
+.PRECIOUS: obj/dbg/libre2.a
 obj/dbg/libre2.a: $(DOFILES)
 	@mkdir -p obj/dbg
 	$(AR) $(ARFLAGS) obj/dbg/libre2.a $(DOFILES)
 
+.PRECIOUS: obj/so/libre2.$(SOEXT)
 obj/so/libre2.$(SOEXT): $(SOFILES)
 	@mkdir -p obj/so
 	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES)
 	ln -sf libre2.$(SOEXTVER) $@
 
+.PRECIOUS: obj/dbg/test/%
 obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/util/test.o
 	@mkdir -p obj/dbg/test
 	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
 
+.PRECIOUS: obj/test/%
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/test
 	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 # Test the shared lib, falling back to the static lib for private symbols
+.PRECIOUS: obj/so/test/%
 obj/so/test/%: obj/so/libre2.$(SOEXT) obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
 	@mkdir -p obj/so/test
 	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o -Lobj/so -lre2 obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
@@ -229,64 +239,94 @@ obj/test/re2_fuzzer: obj/libre2.a obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o
 	$(CXX) -o $@ obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 ifdef REBUILD_TABLES
+.PRECIOUS: re2/perl_groups.cc
 re2/perl_groups.cc: re2/make_perl_groups.pl
 	perl $< > $@
 
+.PRECIOUS: re2/unicode_%.cc
 re2/unicode_%.cc: re2/make_unicode_%.py
 	python $< > $@
-
-.PRECIOUS: re2/perl_groups.cc re2/unicode_casefold.cc re2/unicode_groups.cc
 endif
 
+.PHONY: distclean
 distclean: clean
 	rm -f re2/perl_groups.cc re2/unicode_casefold.cc re2/unicode_groups.cc
 
+.PHONY: clean
 clean:
 	rm -rf obj
 	rm -f re2/*.pyc
 
+.PHONY: testofiles
 testofiles: $(TESTOFILES)
 
+.PHONY: test
 test: $(DTESTS) $(TESTS) $(STESTS) debug-test static-test shared-test
 
+.PHONY: debug-test
 debug-test: $(DTESTS)
 	@./runtests $(DTESTS)
 
+.PHONY: static-test
 static-test: $(TESTS)
 	@./runtests $(TESTS)
 
+.PHONY: shared-test
 shared-test: $(STESTS)
 	@./runtests -shared-library-path obj/so $(STESTS)
 
+.PHONY: debug-bigtest
 debug-bigtest: $(DTESTS) $(DBIGTESTS)
 	@./runtests $(DTESTS) $(DBIGTESTS)
 
+.PHONY: static-bigtest
 static-bigtest: $(TESTS) $(BIGTESTS)
 	@./runtests $(TESTS) $(BIGTESTS)
 
+.PHONY: shared-bigtest
 shared-bigtest: $(STESTS) $(SBIGTESTS)
 	@./runtests -shared-library-path obj/so $(STESTS) $(SBIGTESTS)
 
+.PHONY: benchmark
 benchmark: obj/test/regexp_benchmark
 
+.PHONY: fuzz
 fuzz: obj/test/re2_fuzzer
 
-install: obj/libre2.a obj/so/libre2.$(SOEXT)
-	mkdir -p $(DESTDIR)$(includedir)/re2 $(DESTDIR)$(libdir)/pkgconfig
-	$(INSTALL_DATA) $(INSTALL_HFILES) $(DESTDIR)$(includedir)/re2
+.PHONY: install
+install: static-install shared-install
+
+.PHONY: static
+static: obj/libre2.a
+
+.PHONY: static-install
+static-install: obj/libre2.a common-install
 	$(INSTALL) obj/libre2.a $(DESTDIR)$(libdir)/libre2.a
+
+.PHONY: shared
+shared: obj/so/libre2.$(SOEXT)
+
+.PHONY: shared-install
+shared-install: obj/so/libre2.$(SOEXT) common-install
 	$(INSTALL) obj/so/libre2.$(SOEXT) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER00)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXT)
+
+.PHONY: common-install
+common-install:
+	mkdir -p $(DESTDIR)$(includedir)/re2 $(DESTDIR)$(libdir)/pkgconfig
+	$(INSTALL_DATA) $(INSTALL_HFILES) $(DESTDIR)$(includedir)/re2
 	$(INSTALL_DATA) re2.pc $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 	$(SED_INPLACE) -e "s#@includedir@#$(includedir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 	$(SED_INPLACE) -e "s#@libdir@#$(libdir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 
+.PHONY: testinstall
 testinstall: static-testinstall shared-testinstall
 	@echo
 	@echo Install tests passed.
 	@echo
 
+.PHONY: static-testinstall
 static-testinstall: CXXFLAGS:=-std=c++11 -pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
 static-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -l:libre2.a $(LDICU) $(LDFLAGS)
 static-testinstall:
@@ -301,6 +341,7 @@ else
 	obj/testinstall
 endif
 
+.PHONY: shared-testinstall
 shared-testinstall: CXXFLAGS:=-std=c++11 -pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
 shared-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -lre2 $(LDICU) $(LDFLAGS)
 shared-testinstall:
@@ -313,19 +354,14 @@ else
 	LD_LIBRARY_PATH="$(DESTDIR)$(libdir):$(LD_LIBRARY_PATH)" obj/testinstall
 endif
 
+.PHONY: benchlog
 benchlog: obj/test/regexp_benchmark
 	(echo '==BENCHMARK==' `hostname` `date`; \
 	  (uname -a; $(CXX) --version; git rev-parse --short HEAD; file obj/test/regexp_benchmark) | sed 's/^/# /'; \
 	  echo; \
 	  ./obj/test/regexp_benchmark 'PCRE|RE2') | tee -a benchlog.$$(hostname | sed 's/\..*//')
 
-# Keep gmake from deleting intermediate files it creates.
-# This makes repeated builds faster and preserves debug info on OS X.
-
-.PRECIOUS: obj/%.o obj/dbg/%.o obj/so/%.o obj/libre2.a \
-	obj/dbg/libre2.a obj/so/libre2.a \
-	obj/test/% obj/so/test/% obj/dbg/test/%
-
+.PHONY: log
 log:
 	$(MAKE) clean
 	$(MAKE) CXXFLAGS="$(CXXFLAGS) -DLOGGING=1" \
@@ -341,6 +377,3 @@ log:
 	echo '#' RE2 basic search tests built by make $@ >re2-search.txt
 	echo '#' $$(date) >>re2-search.txt
 	obj/test/search_test |grep -v '^PASS$$' >>re2-search.txt
-
-x: x.cc obj/libre2.a
-	g++ -I. -o x x.cc obj/libre2.a
