@@ -1802,14 +1802,13 @@ ParseStatus ParseUnicodeGroup(StringPiece* s, Regexp::ParseFlags parse_flags,
 
   // Convert the UnicodeSet to a URange32 and UGroup that we can add.
   int nr = uset.getRangeCount();
-  URange32* r = new URange32[nr];
+  PODArray<URange32> r(nr);
   for (int i = 0; i < nr; i++) {
     r[i].lo = uset.getRangeStart(i);
     r[i].hi = uset.getRangeEnd(i);
   }
-  UGroup g = {"", +1, 0, 0, r, nr};
+  UGroup g = {"", +1, 0, 0, r.data(), nr};
   AddUGroup(cc, &g, sign, parse_flags);
-  delete[] r;
 #endif
 
   return kParseOk;
