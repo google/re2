@@ -89,7 +89,7 @@ template<typename T> class Regexp::Walker {
 
  private:
   // Walk state for the entire traversal.
-  std::stack<WalkState<T> >* stack_;
+  std::stack<WalkState<T>> stack_;
   bool stopped_early_;
   int max_visits_;
 
@@ -134,24 +134,22 @@ template<typename T> struct WalkState {
 };
 
 template<typename T> Regexp::Walker<T>::Walker() {
-  stack_ = new std::stack<WalkState<T> >;
   stopped_early_ = false;
 }
 
 template<typename T> Regexp::Walker<T>::~Walker() {
   Reset();
-  delete stack_;
 }
 
 // Clears the stack.  Should never be necessary, since
 // Walk always enters and exits with an empty stack.
 // Logs DFATAL if stack is not already clear.
 template<typename T> void Regexp::Walker<T>::Reset() {
-  if (stack_ && stack_->size() > 0) {
+  if (!stack_.empty()) {
     LOG(DFATAL) << "Stack not empty.";
-    while (stack_->size() > 0) {
-      delete[] stack_->top().child_args;
-      stack_->pop();
+    while (!stack_.empty()) {
+      delete[] stack_.top().child_args;
+      stack_.pop();
     }
   }
 }
@@ -165,12 +163,12 @@ template<typename T> T Regexp::Walker<T>::WalkInternal(Regexp* re, T top_arg,
     return top_arg;
   }
 
-  stack_->push(WalkState<T>(re, top_arg));
+  stack_.push(WalkState<T>(re, top_arg));
 
   WalkState<T>* s;
   for (;;) {
     T t;
-    s = &stack_->top();
+    s = &stack_.top();
     Regexp* re = s->re;
     switch (s->n) {
       case -1: {
@@ -201,7 +199,7 @@ template<typename T> T Regexp::Walker<T>::WalkInternal(Regexp* re, T top_arg,
               s->child_args[s->n] = Copy(s->child_args[s->n - 1]);
               s->n++;
             } else {
-              stack_->push(WalkState<T>(sub[s->n], s->pre_arg));
+              stack_.push(WalkState<T>(sub[s->n], s->pre_arg));
             }
             continue;
           }
@@ -214,12 +212,12 @@ template<typename T> T Regexp::Walker<T>::WalkInternal(Regexp* re, T top_arg,
       }
     }
 
-    // We've finished stack_->top().
+    // We've finished stack_.top().
     // Update next guy down.
-    stack_->pop();
-    if (stack_->size() == 0)
+    stack_.pop();
+    if (stack_.empty())
       return t;
-    s = &stack_->top();
+    s = &stack_.top();
     if (s->child_args != NULL)
       s->child_args[s->n] = t;
     else
