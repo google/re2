@@ -237,7 +237,7 @@ class DFA {
       : text(text),
         context(context),
         anchored(false),
-        have_first_byte(false),
+        can_prefix_accel(false),
         want_earliest_match(false),
         run_forward(false),
         start(NULL),
@@ -249,7 +249,7 @@ class DFA {
     absl::string_view text;
     absl::string_view context;
     bool anchored;
-    bool have_first_byte;
+    bool can_prefix_accel;
     bool want_earliest_match;
     bool run_forward;
     State* start;
@@ -270,7 +270,7 @@ class DFA {
     std::atomic<State*> start;
   };
 
-  // Fills in params->start and params->have_first_byte using
+  // Fills in params->start and params->can_prefix_accel using
   // the other search parameters.  Returns true on success,
   // false on failure.
   // cache_mutex_.r <= L < mutex_
@@ -282,7 +282,7 @@ class DFA {
   // cache_mutex_.r <= L < mutex_
   // Might unlock and relock cache_mutex_ via params->cache_lock.
   inline bool InlinedSearchLoop(SearchParams* params,
-                                bool have_first_byte,
+                                bool can_prefix_accel,
                                 bool want_earliest_match,
                                 bool run_forward);
 
@@ -1291,8 +1291,7 @@ DFA::State* DFA::StateSaver::Restore() {
 // situation, the DFA can do better than executing the simple loop.
 // Instead, it can call memchr to search very quickly for the byte c.
 // Whether the start state has this property is determined during a
-// pre-compilation pass, and if so, the byte b is passed to the search
-// loop as the "first_byte" argument, along with a boolean "have_first_byte".
+// pre-compilation pass and the "can_prefix_accel" argument is set.
 //
 // Fourth, the desired behavior is to search for the leftmost-best match
 // (approximately, the same one that Perl would find), which is not
@@ -1325,7 +1324,7 @@ DFA::State* DFA::StateSaver::Restore() {
 // making them function arguments lets the inliner specialize
 // this function to each combination (see two paragraphs above).
 inline bool DFA::InlinedSearchLoop(SearchParams* params,
-                                   bool have_first_byte,
+                                   bool can_prefix_accel,
                                    bool want_earliest_match,
                                    bool run_forward) {
   State* start = params->start;
@@ -1370,13 +1369,11 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     if (ExtraDebug)
       absl::FPrintF(stderr, "@%d: %s\n", p - bp, DumpState(s));
 
-    if (have_first_byte && s == start) {
-      // In start state, only way out is to find first_byte,
-      // so use optimized assembly in memchr to skip ahead.
-      // If first_byte isn't found, we can skip to the end
-      // of the string.
-      int first_byte = prog_->first_byte();
-      p = BytePtr(memchr(p, first_byte, ep - p));
+    if (can_prefix_accel && s == start) {
+      // In start state, only way out is to find the prefix,
+      // so we use prefix accel (e.g. memchr) to skip ahead.
+      // If not found, we can skip to the end of the string.
+      p = BytePtr(prog_->PrefixAccel(p, ep - p));
       if (p == NULL) {
         p = ep;
         break;
@@ -1581,7 +1578,7 @@ bool DFA::SearchTTT(SearchParams* params) {
 // For debugging, calls the general code directly.
 bool DFA::SlowSearchLoop(SearchParams* params) {
   return InlinedSearchLoop(params,
-                           params->have_first_byte,
+                           params->can_prefix_accel,
                            params->want_earliest_match,
                            params->run_forward);
 }
@@ -1602,7 +1599,7 @@ bool DFA::FastSearchLoop(SearchParams* params) {
     &DFA::SearchTTT,
   };
 
-  int index = 4 * params->have_first_byte +
+  int index = 4 * params->can_prefix_accel +
               2 * params->want_earliest_match +
               1 * params->run_forward;
   return (this->*Searches[index])(params);
@@ -1696,20 +1693,26 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
 
   params->start = info->start.load(std::memory_order_acquire);
 
-  // Even if we have a first byte, we cannot use it when anchored and,
-  // less obviously, we cannot use it when we are going to need flags.
+  // Even if we could prefix accel, we cannot do so when anchored and,
+  // less obviously, we cannot do so when we are going to need flags.
   // This trick works only when there is a single byte that leads to a
   // different state!
-  if (prog_->first_byte() >= 0 &&
+  if (prog_->can_prefix_accel() &&
       !params->anchored &&
       params->start > SpecialStateMax &&
       params->start->flag_ >> kFlagNeedShift == 0)
-    params->have_first_byte = true;
+    params->can_prefix_accel = true;
 
   if (ExtraDebug)
+<<<<<<< HEAD   (7530d6 have_first_byte now implies run_forward.)
     absl::FPrintF(stderr, "anchored=%d fwd=%d flags=%#x state=%s have_first_byte=%d\n",
                   params->anchored, params->run_forward, flags,
                   DumpState(params->start), params->have_first_byte);
+=======
+    fprintf(stderr, "anchored=%d fwd=%d flags=%#x state=%s can_prefix_accel=%d\n",
+            params->anchored, params->run_forward, flags,
+            DumpState(params->start).c_str(), params->can_prefix_accel);
+>>>>>>> CHANGE (ce0570 Generalise from "first byte" to "prefix accel".)
 
   return true;
 }
