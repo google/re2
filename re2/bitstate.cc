@@ -332,14 +332,14 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
   // This looks like it's quadratic in the size of the text,
   // but we are not clearing visited_ between calls to TrySearch,
   // so no work is duplicated and it ends up still being linear.
-  for (const char* p = text.data(); p <= text.data() + text.size(); p++) {
+  const char* etext = text.data() + text.size();
+  for (const char* p = text.data(); p <= etext; p++) {
     // Try to use memchr to find the first byte quickly.
-    int fb = prog_->first_byte();
-    if (fb >= 0 && p < text.data() + text.size() && (p[0] & 0xFF) != fb) {
-      p = reinterpret_cast<const char*>(
-          memchr(p, fb, text.data() + text.size() - p));
+    int first_byte = prog_->first_byte();
+    if (first_byte >= 0 && p < etext && (p[0] & 0xFF) != first_byte) {
+      p = reinterpret_cast<const char*>(memchr(p, first_byte, etext - p));
       if (p == NULL)
-        p = text.data() + text.size();
+        p = etext;
     }
 
     cap_[0] = p;
