@@ -1337,7 +1337,6 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     swap(p, ep);
   }
 
-  int first_byte = prog_->first_byte();
   const uint8_t* bytemap = prog_->bytemap();
   const uint8_t* lastmatch = NULL;   // most recent matching position in text
   bool matched = false;
@@ -1374,7 +1373,9 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
       // so use optimized assembly in memchr to skip ahead.
       // If first_byte isn't found, we can skip to the end
       // of the string.
-      if ((p = BytePtr(memchr(p, first_byte, ep - p))) == NULL) {
+      int first_byte = prog_->first_byte();
+      p = BytePtr(memchr(p, first_byte, ep - p));
+      if (p == NULL) {
         p = ep;
         break;
       }
