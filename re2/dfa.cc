@@ -1368,7 +1368,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
     if (ExtraDebug)
       fprintf(stderr, "@%td: %s\n", p - bp, DumpState(s).c_str());
 
-    if (run_forward && have_first_byte && s == start) {
+    if (have_first_byte && s == start) {
       // In start state, only way out is to find first_byte,
       // so use optimized assembly in memchr to skip ahead.
       // If first_byte isn't found, we can skip to the end
