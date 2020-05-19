@@ -333,10 +333,9 @@ bool BitState::Search(absl::string_view text, absl::string_view context,
   // so no work is duplicated and it ends up still being linear.
   const char* etext = text.data() + text.size();
   for (const char* p = text.data(); p <= etext; p++) {
-    // Try to use memchr to find the first byte quickly.
-    int first_byte = prog_->first_byte();
-    if (first_byte >= 0 && p < etext && (p[0] & 0xFF) != first_byte) {
-      p = reinterpret_cast<const char*>(memchr(p, first_byte, etext - p));
+    // Try to use prefix accel (e.g. memchr) to skip ahead.
+    if (p < etext && prog_->can_prefix_accel()) {
+      p = reinterpret_cast<const char*>(prog_->PrefixAccel(p, etext - p));
       if (p == NULL)
         p = etext;
     }
