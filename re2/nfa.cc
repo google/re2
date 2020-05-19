@@ -572,13 +572,12 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
       // If there's a required first byte for an unanchored search
       // and we're not in the middle of any possible matches,
       // use memchr to search for the byte quickly.
-      int fb = prog_->first_byte();
+      int first_byte = prog_->first_byte();
       if (!anchored && runq->size() == 0 &&
-          fb >= 0 && p < etext_ && (p[0] & 0xFF) != fb) {
-        p = reinterpret_cast<const char*>(memchr(p, fb, etext_ - p));
-        if (p == NULL) {
+          first_byte >= 0 && p < etext_ && (p[0] & 0xFF) != first_byte) {
+        p = reinterpret_cast<const char*>(memchr(p, first_byte, etext_ - p));
+        if (p == NULL)
           p = etext_;
-        }
       }
 
       Thread* t = AllocThread();
