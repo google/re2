@@ -215,8 +215,14 @@ class Prog {
   void set_anchor_end(bool b) { anchor_end_ = b; }
   int bytemap_range() { return bytemap_range_; }
   const uint8_t* bytemap() { return bytemap_; }
-  int first_byte() { return first_byte_; }
-  void set_first_byte(int first_byte) { first_byte_ = first_byte; }
+  bool can_prefix_accel() { return prefix_size_ != 0; }
+
+  // Accelerates to the first likely occurrence of the prefix.
+  // Returns a pointer to the first byte or NULL if not found.
+  const void* PrefixAccel(const void* data, size_t size) {
+    DCHECK_NE(prefix_size_, 0);
+    return memchr(data, prefix_front_, size);
+  }
 
   // Returns string representation of program for debugging.
   std::string Dump();
@@ -395,7 +401,9 @@ class Prog {
   int start_unanchored_;    // unanchored entry point for program
   int size_;                // number of instructions
   int bytemap_range_;       // bytemap_[x] < bytemap_range_
-  int first_byte_;          // required first byte for match, or -1 if none
+  size_t prefix_size_;      // size of prefix (0 if no prefix)
+  int prefix_front_;        // first byte of prefix (-1 if no prefix)
+  int prefix_back_;         // last byte of prefix (-1 if no prefix)
 
   int list_count_;                 // count of lists (see above)
   int inst_count_[kNumInst];       // count of instructions by opcode
