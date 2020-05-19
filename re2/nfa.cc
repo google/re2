@@ -569,13 +569,12 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
     // matches, since it would be to the right of the match
     // we already found.)
     if (!matched_ && (!anchored || p == text.data())) {
-      // If there's a required first byte for an unanchored search
-      // and we're not in the middle of any possible matches,
-      // use memchr to search for the byte quickly.
-      int first_byte = prog_->first_byte();
+      // Try to use prefix accel (e.g. memchr) to skip ahead.
+      // The search must be unanchored and there must be zero
+      // possible matches already.
       if (!anchored && runq->size() == 0 &&
-          first_byte >= 0 && p < etext_ && (p[0] & 0xFF) != first_byte) {
-        p = reinterpret_cast<const char*>(memchr(p, first_byte, etext_ - p));
+          p < etext_ && prog_->can_prefix_accel()) {
+        p = reinterpret_cast<const char*>(prog_->PrefixAccel(p, etext_ - p));
         if (p == NULL)
           p = etext_;
       }
