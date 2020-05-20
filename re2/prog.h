@@ -220,9 +220,14 @@ class Prog {
   // Accelerates to the first likely occurrence of the prefix.
   // Returns a pointer to the first byte or NULL if not found.
   const void* PrefixAccel(const void* data, size_t size) {
-    DCHECK_NE(prefix_size_, 0);
-    return memchr(data, prefix_front_, size);
+    DCHECK_GE(prefix_size_, 1);
+    return prefix_size_ == 1 ? memchr(data, prefix_front_, size)
+                             : PrefixAccel_FrontAndBack(data, size);
   }
+
+  // An implementation of prefix accel that looks for prefix_front_ and
+  // prefix_back_ to return fewer false positives than memchr(3) alone.
+  const void* PrefixAccel_FrontAndBack(const void* data, size_t size);
 
   // Returns string representation of program for debugging.
   std::string Dump();
