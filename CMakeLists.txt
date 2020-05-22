@@ -13,6 +13,11 @@ project(RE2 CXX)
 include(CTest)
 include(GNUInstallDirs)
 
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
+
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
 option(USEPCRE "use PCRE in tests and benchmarks" OFF)
 
@@ -36,11 +41,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # Without a byte order mark (BOM), Visual Studio assumes that the source
   # file is encoded using the current user code page, so we specify UTF-8.
   add_compile_options(/utf-8)
-elseif(CYGWIN OR MINGW)
-  # See https://stackoverflow.com/questions/38139631 for details.
-  add_compile_options(-std=gnu++11)
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  add_compile_options(-std=c++11)
 endif()
 
 if(WIN32)
