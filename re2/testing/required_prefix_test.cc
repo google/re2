@@ -6,6 +6,7 @@
 
 #include "util/test.h"
 #include "util/logging.h"
+#include "re2/prog.h"
 #include "re2/regexp.h"
 
 namespace re2 {
@@ -120,6 +121,25 @@ TEST(RequiredPrefixUnanchored, SimpleTests) {
       re->Decref();
     }
   }
+}
+
+TEST(PrefixAccel, BasicTest) {
+  Regexp* re = Regexp::Parse("abc\\d+", Regexp::LikePerl, NULL);
+  ASSERT_TRUE(re != NULL);
+  Prog* prog = re->CompileToProg(0);
+  ASSERT_TRUE(prog != NULL);
+  for (int i = 0; i < 100; i++) {
+    std::string text(i, 'a');
+    const char* p = reinterpret_cast<const char*>(
+        prog->PrefixAccel(text.data(), text.size()));
+    EXPECT_TRUE(p == NULL);
+    text.append("abc");
+    p = reinterpret_cast<const char*>(
+        prog->PrefixAccel(text.data(), text.size()));
+    EXPECT_EQ(i, p-text.data());
+  }
+  delete prog;
+  re->Decref();
 }
 
 }  // namespace re2
