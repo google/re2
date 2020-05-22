@@ -1191,7 +1191,7 @@ Prog* Compiler::Finish(Regexp* re) {
   if (!prog_->reversed()) {
     std::string prefix;
     bool prefix_foldcase;
-    if (re->RequiredPrefixUnanchored(&prefix, &prefix_foldcase) &&
+    if (re->RequiredPrefixForAccel(&prefix, &prefix_foldcase) &&
         !prefix_foldcase) {
       prog_->prefix_size_ = prefix.size();
       prog_->prefix_front_ = prefix.front();

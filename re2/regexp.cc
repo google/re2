@@ -715,7 +715,7 @@ bool Regexp::RequiredPrefix(std::string* prefix, bool* foldcase,
 // Determines whether regexp matches must be unanchored
 // with a fixed string prefix.  If so, returns the prefix.
 // The prefix might be ASCII case-insensitive.
-bool Regexp::RequiredPrefixUnanchored(std::string* prefix, bool* foldcase) {
+bool Regexp::RequiredPrefixForAccel(std::string* prefix, bool* foldcase) {
   prefix->clear();
   *foldcase = false;
 
