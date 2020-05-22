@@ -445,7 +445,7 @@ class Regexp {
   // case-folding).  If so, returns the prefix.
   // Callers should expect *prefix and *foldcase to be "zeroed"
   // regardless of the return value.
-  bool RequiredPrefixUnanchored(std::string* prefix, bool* foldcase);
+  bool RequiredPrefixForAccel(std::string* prefix, bool* foldcase);
 
  private:
   // Constructor allocates vectors as appropriate for operator.

@@ -73,7 +73,7 @@ TEST(RequiredPrefix, SimpleTests) {
   }
 }
 
-static PrefixTest unanchored_tests[] = {
+static PrefixTest for_accel_tests[] = {
   // Empty cases.
   { "", false },
   { "(?m)^", false },
@@ -97,9 +97,9 @@ static PrefixTest unanchored_tests[] = {
   { "☺abc", true, "☺abc", false, },
 };
 
-TEST(RequiredPrefixUnanchored, SimpleTests) {
-  for (size_t i = 0; i < arraysize(unanchored_tests); i++) {
-    const PrefixTest& t = unanchored_tests[i];
+TEST(RequiredPrefixForAccel, SimpleTests) {
+  for (size_t i = 0; i < arraysize(for_accel_tests); i++) {
+    const PrefixTest& t = for_accel_tests[i];
     for (size_t j = 0; j < 2; j++) {
       Regexp::ParseFlags flags = Regexp::LikePerl;
       if (j == 0)
@@ -109,7 +109,7 @@ TEST(RequiredPrefixUnanchored, SimpleTests) {
 
       std::string p;
       bool f;
-      ASSERT_EQ(t.return_value, re->RequiredPrefixUnanchored(&p, &f))
+      ASSERT_EQ(t.return_value, re->RequiredPrefixForAccel(&p, &f))
         << " " << t.regexp << " " << (j == 0 ? "latin1" : "utf8")
         << " " << re->Dump();
       if (t.return_value) {
