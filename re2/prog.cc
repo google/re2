@@ -7,8 +7,11 @@
 
 #include "re2/prog.h"
 
-#if defined(__GNUC__) && defined(__AVX2__)
+#if defined(__AVX2__)
 #include <immintrin.h>
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 #endif
 #include <stdint.h>
 #include <string.h>
@@ -912,6 +915,30 @@ void Prog::ComputeHints(std::vector<Inst>* flat, int begin, int end) {
   }
 }
 
+#if defined(__AVX2__)
+// Finds the least significant non-zero bit in n.
+static int FindLSBSet(uint32_t n) {
+  DCHECK_NE(n, 0);
+#if defined(__GNUC__)
+  return __builtin_ctz(n);
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+  unsigned long c;
+  _BitScanForward(&c, n);
+  return static_cast<int>(c);
+#else
+  int c = 31;
+  for (int shift = 1 << 4; shift != 0; shift >>= 1) {
+    uint32_t word = n << shift;
+    if (word != 0) {
+      n = word;
+      c -= shift;
+    }
+  }
+  return c;
+#endif
+}
+#endif
+
 const void* Prog::PrefixAccel_FrontAndBack(const void* data, size_t size) {
   DCHECK_GE(prefix_size_, 2);
   if (size < prefix_size_)
@@ -920,7 +947,7 @@ const void* Prog::PrefixAccel_FrontAndBack(const void* data, size_t size) {
   // This also means that probing for prefix_back_ doesn't go out of bounds.
   size -= prefix_size_-1;
 
-#if defined(__GNUC__) && defined(__AVX2__)
+#if defined(__AVX2__)
   // Use AVX2 to look for prefix_front_ and prefix_back_ 32 bytes at a time.
   if (size >= sizeof(__m256i)) {
     const __m256i* fp = reinterpret_cast<const __m256i*>(
@@ -939,7 +966,7 @@ const void* Prog::PrefixAccel_FrontAndBack(const void* data, size_t size) {
       if (fb_testz == 0) {  // ZF: 1 means zero, 0 means non-zero.
         const __m256i fb_and = _mm256_and_si256(f_cmpeq, b_cmpeq);
         const int fb_movemask = _mm256_movemask_epi8(fb_and);
-        const int fb_ctz = __builtin_ctz(fb_movemask);
+        const int fb_ctz = FindLSBSet(fb_movemask);
         return reinterpret_cast<const char*>(fp-1) + fb_ctz;
       }
     }
