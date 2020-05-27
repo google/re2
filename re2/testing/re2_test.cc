@@ -225,6 +225,15 @@ TEST(RE2, Extract) {
   ASSERT_EQ(s, "'foo'");
 }
 
+TEST(RE2, MaxSubmatchTooLarge) {
+  std::string s;
+  ASSERT_FALSE(RE2::Extract("foo", "f(o+)", "\\1\\2", &s));
+  s = "foo";
+  ASSERT_FALSE(RE2::Replace(&s, "f(o+)", "\\1\\2"));
+  s = "foo";
+  ASSERT_FALSE(RE2::GlobalReplace(&s, "f(o+)", "\\1\\2"));
+}
+
 TEST(RE2, Consume) {
   RE2 r("\\s*(\\w+)");    // matches a word, possibly proceeded by whitespace
   std::string word;

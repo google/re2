@@ -406,7 +406,13 @@ bool RE2::Replace(std::string* str,
                   absl::string_view rewrite) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
+<<<<<<< HEAD   (f49b91 Make "front and back" prefix accel work with MSVC.)
   if (nvec > static_cast<int>(ABSL_ARRAYSIZE(vec)))
+=======
+  if (nvec > 1 + re.NumberOfCapturingGroups())
+    return false;
+  if (nvec > static_cast<int>(arraysize(vec)))
+>>>>>>> CHANGE (aecba1 Refuse to rewrite when MaxSubmatch() is too large.)
     return false;
   if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
     return false;
@@ -426,7 +432,13 @@ int RE2::GlobalReplace(std::string* str,
                        absl::string_view rewrite) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
+<<<<<<< HEAD   (f49b91 Make "front and back" prefix accel work with MSVC.)
   if (nvec > static_cast<int>(ABSL_ARRAYSIZE(vec)))
+=======
+  if (nvec > 1 + re.NumberOfCapturingGroups())
+    return false;
+  if (nvec > static_cast<int>(arraysize(vec)))
+>>>>>>> CHANGE (aecba1 Refuse to rewrite when MaxSubmatch() is too large.)
     return false;
 
   const char* p = str->data();
@@ -498,9 +510,14 @@ bool RE2::Extract(absl::string_view text,
                   std::string* out) {
   absl::string_view vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
+<<<<<<< HEAD   (f49b91 Make "front and back" prefix accel work with MSVC.)
   if (nvec > static_cast<int>(ABSL_ARRAYSIZE(vec)))
+=======
+  if (nvec > 1 + re.NumberOfCapturingGroups())
     return false;
-
+  if (nvec > static_cast<int>(arraysize(vec)))
+>>>>>>> CHANGE (aecba1 Refuse to rewrite when MaxSubmatch() is too large.)
+    return false;
   if (!re.Match(text, 0, text.size(), UNANCHORED, vec, nvec))
     return false;
 
@@ -1001,8 +1018,8 @@ bool RE2::Rewrite(std::string* out,
       int n = (c - '0');
       if (n >= veclen) {
         if (options_.log_errors()) {
-          LOG(ERROR) << "requested group " << n
-                     << " in regexp " << rewrite.data();
+          LOG(ERROR) << "invalid substitution \\" << n
+                     << " from " << veclen << " groups";
         }
         return false;
       }
