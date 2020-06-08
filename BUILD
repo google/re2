@@ -77,6 +77,7 @@ cc_library(
     copts = select({
         ":windows": [],
         ":windows_msvc": [],
+        ":wasm": [],
         "//conditions:default": ["-pthread"],
     }),
     linkopts = select({
@@ -86,9 +87,15 @@ cc_library(
         ":darwin": [],
         ":windows": [],
         ":windows_msvc": [],
+        ":wasm": [],
         "//conditions:default": ["-pthread"],
     }),
     visibility = ["//visibility:public"],
+)
+
+config_setting(
+  name = "wasm",
+  values = {"cpu": "wasm"},
 )
 
 cc_library(
