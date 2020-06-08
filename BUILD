@@ -9,18 +9,18 @@ licenses(["notice"])
 exports_files(["LICENSE"])
 
 config_setting(
-    name = "darwin",
+    name = "macos",
     values = {"cpu": "darwin"},
+)
+
+config_setting(
+    name = "wasm",
+    values = {"cpu": "wasm"},
 )
 
 config_setting(
     name = "windows",
     values = {"cpu": "x64_windows"},
-)
-
-config_setting(
-    name = "windows_msvc",
-    values = {"cpu": "x64_windows_msvc"},
 )
 
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
@@ -75,17 +75,17 @@ cc_library(
         "re2/stringpiece.h",
     ],
     copts = select({
+        ":wasm": [],
         ":windows": [],
-        ":windows_msvc": [],
         "//conditions:default": ["-pthread"],
     }),
     linkopts = select({
-        # Darwin doesn't need `-pthread' when linking and it appears that
+        # macOS doesn't need `-pthread' when linking and it appears that
         # older versions of Clang will warn about the unused command line
         # argument, so just don't pass it.
-        ":darwin": [],
+        ":macos": [],
+        ":wasm": [],
         ":windows": [],
-        ":windows_msvc": [],
         "//conditions:default": ["-pthread"],
     }),
     visibility = ["//visibility:public"],
