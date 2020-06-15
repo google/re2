@@ -31,91 +31,57 @@ namespace re2 {
 // See http://swtch.com/~rsc/regexp/regexp1.html for inspiration.
 //
 // Because the out and out1 fields in Inst are no longer pointers,
-// we can't use pointers directly here either.  Instead, p refers
-// to inst_[p>>1].out (p&1 == 0) or inst_[p>>1].out1 (p&1 == 1).
-// p == 0 represents the NULL list.  This is okay because instruction #0
+// we can't use pointers directly here either.  Instead, head refers
+// to inst_[head>>1].out (head&1 == 0) or inst_[head>>1].out1 (head&1 == 1).
+// head == 0 represents the NULL list.  This is okay because instruction #0
 // is always the fail instruction, which never appears on a list.
-
 struct PatchList {
-  uint32_t p;
-
   // Returns patch list containing just p.
-  static PatchList Mk(uint32_t p);
+  static PatchList Mk(uint32_t p) {
+    return {p, p};
+  }
 
-  // Patches all the entries on l to have value v.
+  // Patches all the entries on l to have value p.
   // Caller must not ever use patch list again.
-  static void Patch(Prog::Inst *inst0, PatchList l, uint32_t v);
-
-  // Deref returns the next pointer pointed at by p.
-  static PatchList Deref(Prog::Inst *inst0, PatchList l);
-
-  // Appends two patch lists and returns result.
-  static PatchList Append(Prog::Inst *inst0, PatchList l1, PatchList l2);
-};
-
-static PatchList nullPatchList = { 0 };
-
-// Returns patch list containing just p.
-PatchList PatchList::Mk(uint32_t p) {
-  PatchList l;
-  l.p = p;
-  return l;
-}
-
-// Returns the next pointer pointed at by l.
-PatchList PatchList::Deref(Prog::Inst* inst0, PatchList l) {
-  Prog::Inst* ip = &inst0[l.p>>1];
-  if (l.p&1)
-    l.p = ip->out1();
-  else
-    l.p = ip->out();
-  return l;
-}
-
-// Patches all the entries on l to have value v.
-void PatchList::Patch(Prog::Inst *inst0, PatchList l, uint32_t val) {
-  while (l.p != 0) {
-    Prog::Inst* ip = &inst0[l.p>>1];
-    if (l.p&1) {
-      l.p = ip->out1();
-      ip->out1_ = val;
-    } else {
-      l.p = ip->out();
-      ip->set_out(val);
+  static void Patch(Prog::Inst* inst0, PatchList l, uint32_t p) {
+    while (l.head != 0) {
+      Prog::Inst* ip = &inst0[l.head>>1];
+      if (l.head&1) {
+        l.head = ip->out1();
+        ip->out1_ = p;
+      } else {
+        l.head = ip->out();
+        ip->set_out(p);
+      }
     }
   }
-}
 
-// Appends two patch lists and returns result.
-PatchList PatchList::Append(Prog::Inst* inst0, PatchList l1, PatchList l2) {
-  if (l1.p == 0)
-    return l2;
-  if (l2.p == 0)
-    return l1;
-
-  PatchList l = l1;
-  for (;;) {
-    PatchList next = PatchList::Deref(inst0, l);
-    if (next.p == 0)
-      break;
-    l = next;
+  // Appends two patch lists and returns result.
+  static PatchList Append(Prog::Inst* inst0, PatchList l1, PatchList l2) {
+    if (l1.head == 0)
+      return l2;
+    if (l2.head == 0)
+      return l1;
+    Prog::Inst* ip = &inst0[l1.tail>>1];
+    if (l1.tail&1)
+      ip->out1_ = l2.head;
+    else
+      ip->set_out(l2.head);
+    return {l1.head, l2.tail};
   }
 
-  Prog::Inst* ip = &inst0[l.p>>1];
-  if (l.p&1)
-    ip->out1_ = l2.p;
-  else
-    ip->set_out(l2.p);
+  uint32_t head;
+  uint32_t tail;  // for linear-time append
+};
 
-  return l1;
-}
+static const PatchList kNullPatchList = {0, 0};
 
 // Compiled program fragment.
 struct Frag {
   uint32_t begin;
   PatchList end;
 
-  Frag() : begin(0) { end.p = 0; }  // needed so Frag can go in vector
+  Frag() : begin(0) { end.head = 0; }  // needed so Frag can go in vector
   Frag(uint32_t begin, PatchList end) : begin(begin), end(end) {}
 };
 
@@ -213,8 +179,8 @@ class Compiler : public Regexp::Walker<Frag> {
   int AddSuffixRecursive(int root, int id);
 
   // Finds the trie node for the given suffix. Returns a Frag in order to
-  // distinguish between pointing at the root node directly (end.p == 0)
-  // and pointing at an Alt's out1 or out (end.p&1 == 1 or 0, respectively).
+  // distinguish between pointing at the root node directly (end.head == 0)
+  // and pointing at an Alt's out1 or out (end.head&1 == 1 or 0, respectively).
   Frag FindByteRange(int root, int id);
 
   // Compares two ByteRanges and returns true iff they are equal.
@@ -299,7 +265,7 @@ int Compiler::AllocInst(int n) {
 
 // Returns an unmatchable fragment.
 Frag Compiler::NoMatch() {
-  return Frag(0, nullPatchList);
+  return Frag(0, kNullPatchList);
 }
 
 // Is a an unmatchable fragment?
@@ -315,7 +281,7 @@ Frag Compiler::Cat(Frag a, Frag b) {
   // Elide no-op.
   Prog::Inst* begin = &inst_[a.begin];
   if (begin->opcode() == kInstNop &&
-      a.end.p == (a.begin << 1) &&
+      a.end.head == (a.begin << 1) &&
       begin->out() == 0) {
     // in case refs to a somewhere
     PatchList::Patch(inst_.data(), a.end, b.begin);
@@ -420,7 +386,7 @@ Frag Compiler::Match(int32_t match_id) {
   if (id < 0)
     return NoMatch();
   inst_[id].InitMatch(match_id);
-  return Frag(id, nullPatchList);
+  return Frag(id, kNullPatchList);
 }
 
 // Returns a fragment matching a particular empty-width op (like ^ or $)
@@ -468,7 +434,7 @@ static int MaxRune(int len) {
 void Compiler::BeginRange() {
   rune_cache_.clear();
   rune_range_.begin = 0;
-  rune_range_.end = nullPatchList;
+  rune_range_.end = kNullPatchList;
 }
 
 int Compiler::UncachedRuneByteSuffix(uint8_t lo, uint8_t hi, bool foldcase,
@@ -549,9 +515,9 @@ int Compiler::AddSuffixRecursive(int root, int id) {
   }
 
   int br;
-  if (f.end.p == 0)
+  if (f.end.head == 0)
     br = root;
-  else if (f.end.p&1)
+  else if (f.end.head&1)
     br = inst_[f.begin].out1();
   else
     br = inst_[f.begin].out();
@@ -567,9 +533,9 @@ int Compiler::AddSuffixRecursive(int root, int id) {
     // Ensure that the parent points to the clone, not to the original.
     // Note that this could leave the head unreachable except via the cache.
     br = byterange;
-    if (f.end.p == 0)
+    if (f.end.head == 0)
       root = br;
-    else if (f.end.p&1)
+    else if (f.end.head&1)
       inst_[f.begin].out1_ = br;
     else
       inst_[f.begin].set_out(br);
@@ -602,7 +568,7 @@ bool Compiler::ByteRangeEqual(int id1, int id2) {
 Frag Compiler::FindByteRange(int root, int id) {
   if (inst_[root].opcode() == kInstByteRange) {
     if (ByteRangeEqual(root, id))
-      return Frag(root, nullPatchList);
+      return Frag(root, kNullPatchList);
     else
       return NoMatch();
   }
