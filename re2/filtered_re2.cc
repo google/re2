@@ -26,10 +26,16 @@ FilteredRE2::FilteredRE2(int min_atom_len)
 FilteredRE2::~FilteredRE2() {
   for (size_t i = 0; i < re2_vec_.size(); i++)
     delete re2_vec_[i];
-  delete prefilter_tree_;
 }
 
+<<<<<<< HEAD   (369150 Herp derp. It's actually constant-time append.)
 RE2::ErrorCode FilteredRE2::Add(absl::string_view pattern,
+=======
+FilteredRE2::FilteredRE2(FilteredRE2&&) = default;
+FilteredRE2& FilteredRE2::operator=(FilteredRE2&&) = default;
+
+RE2::ErrorCode FilteredRE2::Add(const StringPiece& pattern,
+>>>>>>> CHANGE (23f748 Make RE2::Set and FilteredRE2 movable.)
                                 const RE2::Options& options, int* id) {
   RE2* re = new RE2(pattern, options);
   RE2::ErrorCode code = re->error_code();
@@ -37,7 +43,7 @@ RE2::ErrorCode FilteredRE2::Add(absl::string_view pattern,
   if (!re->ok()) {
     if (options.log_errors()) {
       LOG(ERROR) << "Couldn't compile regular expression, skipping: "
-                 << re << " due to error " << re->error();
+                 << pattern << " due to error " << re->error();
     }
     delete re;
   } else {

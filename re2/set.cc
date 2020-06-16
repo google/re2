@@ -16,22 +16,27 @@
 
 namespace re2 {
 
-RE2::Set::Set(const RE2::Options& options, RE2::Anchor anchor) {
-  options_.Copy(options);
+RE2::Set::Set(const RE2::Options& options, RE2::Anchor anchor)
+    : options_(options),
+      anchor_(anchor),
+      compiled_(false),
+      size_(0) {
   options_.set_never_capture(true);  // might unblock some optimisations
-  anchor_ = anchor;
-  prog_ = NULL;
-  compiled_ = false;
-  size_ = 0;
 }
 
 RE2::Set::~Set() {
   for (size_t i = 0; i < elem_.size(); i++)
     elem_[i].second->Decref();
-  delete prog_;
 }
 
+<<<<<<< HEAD   (369150 Herp derp. It's actually constant-time append.)
 int RE2::Set::Add(absl::string_view pattern, std::string* error) {
+=======
+RE2::Set::Set(Set&&) = default;
+RE2::Set& RE2::Set::operator=(Set&&) = default;
+
+int RE2::Set::Add(const StringPiece& pattern, std::string* error) {
+>>>>>>> CHANGE (23f748 Make RE2::Set and FilteredRE2 movable.)
   if (compiled_) {
     LOG(DFATAL) << "RE2::Set::Add() called after compiling";
     return -1;
@@ -95,9 +100,9 @@ bool RE2::Set::Compile() {
     options_.ParseFlags());
   re2::Regexp* re = re2::Regexp::Alternate(sub.data(), size_, pf);
 
-  prog_ = Prog::CompileSet(re, anchor_, options_.max_mem());
+  prog_.reset(Prog::CompileSet(re, anchor_, options_.max_mem()));
   re->Decref();
-  return prog_ != NULL;
+  return prog_ != nullptr;
 }
 
 bool RE2::Set::Match(absl::string_view text, std::vector<int>* v) const {
