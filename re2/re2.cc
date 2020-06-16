@@ -84,6 +84,8 @@ static RE2::ErrorCode RegexpErrorToRE2(re2::RegexpStatusCode code) {
       return RE2::ErrorMissingBracket;
     case re2::kRegexpMissingParen:
       return RE2::ErrorMissingParen;
+    case re2::kRegexpUnexpectedParen:
+      return RE2::ErrorUnexpectedParen;
     case re2::kRegexpTrailingBackslash:
       return RE2::ErrorTrailingBackslash;
     case re2::kRegexpRepeatArgument:
