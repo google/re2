@@ -1279,38 +1279,48 @@ TEST(RE2, CL8622304) {
   EXPECT_EQ(val, "1,0x2F,030,4,5");
 }
 
-
 // Check that RE2 returns correct regexp pieces on error.
 // In particular, make sure it returns whole runes
 // and that it always reports invalid UTF-8.
 // Also check that Perl error flag piece is big enough.
 static struct ErrorTest {
   const char *regexp;
-  const char *error;
+  RE2::ErrorCode error_code;
+  const char *error_arg;
 } error_tests[] = {
-  { "ab\\αcd", "\\α" },
-  { "ef\\x☺01", "\\x☺0" },
-  { "gh\\x1☺01", "\\x1☺" },
-  { "ij\\x1", "\\x1" },
-  { "kl\\x", "\\x" },
-  { "uv\\x{0000☺}", "\\x{0000☺" },
-  { "wx\\p{ABC", "\\p{ABC" },
-  { "yz(?smiUX:abc)", "(?smiUX" },   // used to return (?s but the error is X
-  { "aa(?sm☺i", "(?sm☺" },
-  { "bb[abc", "[abc" },
+  { "ab\\αcd", RE2::ErrorBadEscape, "\\α" },
+  { "ef\\x☺01", RE2::ErrorBadEscape, "\\x☺0" },
+  { "gh\\x1☺01", RE2::ErrorBadEscape, "\\x1☺" },
+  { "ij\\x1", RE2::ErrorBadEscape, "\\x1" },
+  { "kl\\x", RE2::ErrorBadEscape, "\\x" },
+  { "uv\\x{0000☺}", RE2::ErrorBadEscape, "\\x{0000☺" },
+  { "wx\\p{ABC", RE2::ErrorBadCharRange, "\\p{ABC" },
+  // used to return (?s but the error is X
+  { "yz(?smiUX:abc)", RE2::ErrorBadPerlOp, "(?smiUX" },
+  { "aa(?sm☺i", RE2::ErrorBadPerlOp, "(?sm☺" },
+  { "bb[abc", RE2::ErrorMissingBracket, "[abc" },
+  { "abc(def", RE2::ErrorMissingParen, "abc(def" },
+  { "abc)def", RE2::ErrorUnexpectedParen, "abc)def" },
 
-  { "mn\\x1\377", "" },  // no argument string returned for invalid UTF-8
-  { "op\377qr", "" },
-  { "st\\x{00000\377", "" },
-  { "zz\\p{\377}", "" },
-  { "zz\\x{00\377}", "" },
-  { "zz(?P<name\377>abc)", "" },
+  // no argument string returned for invalid UTF-8
+  { "mn\\x1\377", RE2::ErrorBadUTF8, "" },
+  { "op\377qr", RE2::ErrorBadUTF8, "" },
+  { "st\\x{00000\377", RE2::ErrorBadUTF8, "" },
+  { "zz\\p{\377}", RE2::ErrorBadUTF8, "" },
+  { "zz\\x{00\377}", RE2::ErrorBadUTF8, "" },
+  { "zz(?P<name\377>abc)", RE2::ErrorBadUTF8, "" },
 };
+<<<<<<< HEAD   (db8e6d Make RE2::Set and FilteredRE2 movable.)
 TEST(RE2, ErrorArgs) {
   for (size_t i = 0; i < ABSL_ARRAYSIZE(error_tests); i++) {
+=======
+TEST(RE2, ErrorCodeAndArg) {
+  for (size_t i = 0; i < arraysize(error_tests); i++) {
+>>>>>>> CHANGE (e6613e Distinguish between missing ')' and unexpected ')'.)
     RE2 re(error_tests[i].regexp, RE2::Quiet);
     EXPECT_FALSE(re.ok());
-    EXPECT_EQ(re.error_arg(), error_tests[i].error) << re.error();
+    EXPECT_EQ(re.error_code(), error_tests[i].error_code) << re.error();
+    EXPECT_EQ(re.error_arg(), error_tests[i].error_arg) << re.error();
   }
 }
 
