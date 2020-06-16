@@ -24,26 +24,23 @@ FilteredRE2::FilteredRE2(int min_atom_len)
       prefilter_tree_(new PrefilterTree(min_atom_len)) {
 }
 
-FilteredRE2::~FilteredRE2() {
-  for (size_t i = 0; i < re2_vec_.size(); i++)
-    delete re2_vec_[i];
-  delete prefilter_tree_;
-}
+FilteredRE2::~FilteredRE2() = default;
+FilteredRE2::FilteredRE2(FilteredRE2&&) = default;
+FilteredRE2& FilteredRE2::operator=(FilteredRE2&&) = default;
 
 RE2::ErrorCode FilteredRE2::Add(const StringPiece& pattern,
                                 const RE2::Options& options, int* id) {
-  RE2* re = new RE2(pattern, options);
+  std::unique_ptr<RE2> re(new RE2(pattern, options));
   RE2::ErrorCode code = re->error_code();
 
   if (!re->ok()) {
     if (options.log_errors()) {
       LOG(ERROR) << "Couldn't compile regular expression, skipping: "
-                 << re << " due to error " << re->error();
+                 << pattern << " due to error " << re->error();
     }
-    delete re;
   } else {
     *id = static_cast<int>(re2_vec_.size());
-    re2_vec_.push_back(re);
+    re2_vec_.push_back(std::move(re));
   }
 
   return code;
@@ -61,7 +58,7 @@ void FilteredRE2::Compile(std::vector<std::string>* atoms) {
   }
 
   for (size_t i = 0; i < re2_vec_.size(); i++) {
-    Prefilter* prefilter = Prefilter::FromRE2(re2_vec_[i]);
+    Prefilter* prefilter = Prefilter::FromRE2(re2_vec_[i].get());
     prefilter_tree_->Add(prefilter);
   }
   atoms->clear();

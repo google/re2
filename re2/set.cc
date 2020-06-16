@@ -18,20 +18,21 @@
 
 namespace re2 {
 
-RE2::Set::Set(const RE2::Options& options, RE2::Anchor anchor) {
-  options_.Copy(options);
+RE2::Set::Set(const RE2::Options& options, RE2::Anchor anchor)
+    : options_(options),
+      anchor_(anchor),
+      compiled_(false),
+      size_(0) {
   options_.set_never_capture(true);  // might unblock some optimisations
-  anchor_ = anchor;
-  prog_ = NULL;
-  compiled_ = false;
-  size_ = 0;
 }
 
 RE2::Set::~Set() {
   for (size_t i = 0; i < elem_.size(); i++)
     elem_[i].second->Decref();
-  delete prog_;
 }
+
+RE2::Set::Set(Set&&) = default;
+RE2::Set& RE2::Set::operator=(Set&&) = default;
 
 int RE2::Set::Add(const StringPiece& pattern, std::string* error) {
   if (compiled_) {
@@ -97,9 +98,9 @@ bool RE2::Set::Compile() {
     options_.ParseFlags());
   re2::Regexp* re = re2::Regexp::Alternate(sub.data(), size_, pf);
 
-  prog_ = Prog::CompileSet(re, anchor_, options_.max_mem());
+  prog_.reset(Prog::CompileSet(re, anchor_, options_.max_mem()));
   re->Decref();
-  return prog_ != NULL;
+  return prog_ != nullptr;
 }
 
 bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
