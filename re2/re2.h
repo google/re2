@@ -247,6 +247,7 @@ class RE2 {
     ErrorBadCharRange,       // bad character class range
     ErrorMissingBracket,     // missing closing ]
     ErrorMissingParen,       // missing closing )
+    ErrorUnexpectedParen,    // unexpected closing )
     ErrorTrailingBackslash,  // trailing \ at end of regexp
     ErrorRepeatArgument,     // repeat argument missing, e.g. "*"
     ErrorRepeatSize,         // bad repetition argument

@@ -498,6 +498,7 @@ static const char *kErrorStrings[] = {
   "invalid character class range",
   "missing ]",
   "missing )",
+  "unexpected )",
   "trailing \\",
   "no argument for repetition operator",
   "invalid repetition size",

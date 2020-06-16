@@ -685,7 +685,7 @@ bool Regexp::ParseState::DoRightParen() {
   if ((r1 = stacktop_) == NULL ||
       (r2 = r1->down_) == NULL ||
       r2->op() != kLeftParen) {
-    status_->set_code(kRegexpMissingParen);
+    status_->set_code(kRegexpUnexpectedParen);
     status_->set_error_arg(whole_regexp_);
     return false;
   }
