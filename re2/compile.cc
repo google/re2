@@ -70,7 +70,7 @@ struct PatchList {
   }
 
   uint32_t head;
-  uint32_t tail;  // for linear-time append
+  uint32_t tail;  // for constant-time append
 };
 
 static const PatchList kNullPatchList = {0, 0};
