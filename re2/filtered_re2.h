@@ -42,8 +42,8 @@ class FilteredRE2 {
   FilteredRE2(const FilteredRE2&) = delete;
   FilteredRE2& operator=(const FilteredRE2&) = delete;
   // Movable.
-  FilteredRE2(FilteredRE2&&);
-  FilteredRE2& operator=(FilteredRE2&&);
+  FilteredRE2(FilteredRE2&& other);
+  FilteredRE2& operator=(FilteredRE2&& other);
 
   // Uses RE2 constructor to create a RE2 object (re). Returns
   // re->error_code(). If error_code is other than NoError, then re is
