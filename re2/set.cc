@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <algorithm>
 #include <memory>
+#include <utility>
 
 #include "util/util.h"
 #include "util/logging.h"
@@ -31,8 +32,25 @@ RE2::Set::~Set() {
     elem_[i].second->Decref();
 }
 
-RE2::Set::Set(Set&&) = default;
-RE2::Set& RE2::Set::operator=(Set&&) = default;
+RE2::Set::Set(Set&& other)
+    : options_(other.options_),
+      anchor_(other.anchor_),
+      elem_(std::move(other.elem_)),
+      compiled_(other.compiled_),
+      size_(other.size_),
+      prog_(std::move(other.prog_)) {
+  other.elem_.clear();
+  other.elem_.shrink_to_fit();
+  other.compiled_ = false;
+  other.size_ = 0;
+  other.prog_.reset();
+}
+
+RE2::Set& RE2::Set::operator=(Set&& other) {
+  this->~Set();
+  (void) new (this) Set(std::move(other));
+  return *this;
+}
 
 int RE2::Set::Add(const StringPiece& pattern, std::string* error) {
   if (compiled_) {
