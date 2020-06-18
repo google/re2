@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "util/test.h"
 #include "util/logging.h"
@@ -199,6 +200,31 @@ TEST(Set, Prefix) {
   ASSERT_EQ(s.Match("/prefix/42", &v), true);
   ASSERT_EQ(v.size(), 1);
   ASSERT_EQ(v[0], 0);
+}
+
+TEST(Set, MoveSemantics) {
+  RE2::Set s1(RE2::DefaultOptions, RE2::UNANCHORED);
+  ASSERT_EQ(s1.Add("foo\\d+", NULL), 0);
+  ASSERT_EQ(s1.Compile(), true);
+  ASSERT_EQ(s1.Match("abc foo1 xyz", NULL), true);
+  ASSERT_EQ(s1.Match("abc bar2 xyz", NULL), false);
+
+  // The moved-to object should do what the moved-from object did.
+  RE2::Set s2 = std::move(s1);
+  ASSERT_EQ(s2.Match("abc foo1 xyz", NULL), true);
+  ASSERT_EQ(s2.Match("abc bar2 xyz", NULL), false);
+
+  // The moved-from object should have been reset and be reusable.
+  ASSERT_EQ(s1.Add("bar\\d+", NULL), 0);
+  ASSERT_EQ(s1.Compile(), true);
+  ASSERT_EQ(s1.Match("abc foo1 xyz", NULL), false);
+  ASSERT_EQ(s1.Match("abc bar2 xyz", NULL), true);
+
+  // Verify that "overwriting" works and also doesn't leak memory.
+  // (The latter will need a leak detector such as LeakSanitizer.)
+  s1 = std::move(s2);
+  ASSERT_EQ(s1.Match("abc foo1 xyz", NULL), true);
+  ASSERT_EQ(s1.Match("abc bar2 xyz", NULL), false);
 }
 
 }  // namespace re2
