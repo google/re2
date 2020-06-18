@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "util/test.h"
 #include "util/logging.h"
@@ -289,6 +290,51 @@ TEST(FilteredRE2Test, EmptyStringInStringSetBug) {
   AddRegexpsAndCompile(regexps, arraysize(regexps), &v);
   EXPECT_TRUE(CheckExpectedAtoms(atoms, arraysize(atoms),
                                  "EmptyStringInStringSetBug", &v));
+}
+
+TEST(FilteredRE2Test, MoveSemantics) {
+  FilterTestVars v1;
+  int id;
+  v1.f.Add("foo\\d+", v1.opts, &id);
+  EXPECT_EQ(0, id);
+  v1.f.Compile(&v1.atoms);
+  EXPECT_EQ(1, v1.atoms.size());
+  EXPECT_EQ("foo", v1.atoms[0]);
+  v1.f.AllMatches("abc foo1 xyz", {0}, &v1.matches);
+  EXPECT_EQ(1, v1.matches.size());
+  EXPECT_EQ(0, v1.matches[0]);
+  v1.f.AllMatches("abc bar2 xyz", {0}, &v1.matches);
+  EXPECT_EQ(0, v1.matches.size());
+
+  // The moved-to object should do what the moved-from object did.
+  FilterTestVars v2;
+  v2.f = std::move(v1.f);
+  v2.f.AllMatches("abc foo1 xyz", {0}, &v2.matches);
+  EXPECT_EQ(1, v2.matches.size());
+  EXPECT_EQ(0, v2.matches[0]);
+  v2.f.AllMatches("abc bar2 xyz", {0}, &v2.matches);
+  EXPECT_EQ(0, v2.matches.size());
+
+  // The moved-from object should have been reset and be reusable.
+  v1.f.Add("bar\\d+", v1.opts, &id);
+  EXPECT_EQ(0, id);
+  v1.f.Compile(&v1.atoms);
+  EXPECT_EQ(1, v1.atoms.size());
+  EXPECT_EQ("bar", v1.atoms[0]);
+  v1.f.AllMatches("abc foo1 xyz", {0}, &v1.matches);
+  EXPECT_EQ(0, v1.matches.size());
+  v1.f.AllMatches("abc bar2 xyz", {0}, &v1.matches);
+  EXPECT_EQ(1, v1.matches.size());
+  EXPECT_EQ(0, v1.matches[0]);
+
+  // Verify that "overwriting" works and also doesn't leak memory.
+  // (The latter will need a leak detector such as LeakSanitizer.)
+  v1.f = std::move(v2.f);
+  v1.f.AllMatches("abc foo1 xyz", {0}, &v1.matches);
+  EXPECT_EQ(1, v1.matches.size());
+  EXPECT_EQ(0, v1.matches[0]);
+  v1.f.AllMatches("abc bar2 xyz", {0}, &v1.matches);
+  EXPECT_EQ(0, v1.matches.size());
 }
 
 }  //  namespace re2
