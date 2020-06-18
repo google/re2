@@ -41,8 +41,8 @@ class RE2::Set {
   Set(const Set&) = delete;
   Set& operator=(const Set&) = delete;
   // Movable.
-  Set(Set&&);
-  Set& operator=(Set&&);
+  Set(Set&& other);
+  Set& operator=(Set&& other);
 
   // Adds pattern to the set using the options passed to the constructor.
   // Returns the index that will identify the regexp in the output of Match(),
