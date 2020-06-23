@@ -21,22 +21,33 @@ Known differences between this API and the re module's API:
 
 Known issues with regard to building the C++ extension:
 
-  * Building requires RE2 and pybind11 to be installed on your system.
-    On Debian, for example, install the libre2-dev and pybind11-dev packages.
+  * Building requires RE2 to be installed on your system.
+    On Debian, for example, install the libre2-dev package.
+  * Building requires pybind11 to be installed on your system OR venv.
+    On Debian, for example, install the pybind11-dev package.
+    For a venv, install the pybind11 package from PyPI.
   * Building on macOS has not been tested yet and will possibly fail.
   * Building on Windows has not been tested yet and will probably fail.
 """
 
+def include_dirs():
+  try:
+    import pybind11
+    yield pybind11.get_include()
+  except ModuleNotFoundError:
+    pass
+
 ext_module = setuptools.Extension(
     name='_re2',
     sources=['_re2.cc'],
+    include_dirs=list(include_dirs()),
     libraries=['re2'],
     extra_compile_args=['-fvisibility=hidden'],
 )
 
 setuptools.setup(
     name='google-re2',
-    version='0.0.6',
+    version='0.0.7',
     description='RE2 Python bindings',
     long_description=long_description,
     long_description_content_type='text/plain',
