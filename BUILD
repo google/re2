@@ -15,7 +15,7 @@ config_setting(
 
 config_setting(
     name = "wasm",
-    values = {"cpu": "wasm"},
+    values = {"cpu": "wasm32"},
 )
 
 config_setting(
