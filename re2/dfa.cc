@@ -280,10 +280,10 @@ class DFA {
   // The generic search loop, inlined to create specialized versions.
   // cache_mutex_.r <= L < mutex_
   // Might unlock and relock cache_mutex_ via params->cache_lock.
-  inline bool InlinedSearchLoop(SearchParams* params,
-                                bool can_prefix_accel,
-                                bool want_earliest_match,
-                                bool run_forward);
+  template <bool can_prefix_accel,
+            bool want_earliest_match,
+            bool run_forward>
+  inline bool InlinedSearchLoop(SearchParams* params);
 
   // The specialized versions of InlinedSearchLoop.  The three letters
   // at the ends of the name denote the true/false values used as the
@@ -305,13 +305,6 @@ class DFA {
   // Might unlock and relock cache_mutex_ via params->cache_lock.
   bool FastSearchLoop(SearchParams* params);
 
-  // For debugging, a slow search loop that calls InlinedSearchLoop
-  // directly -- because the booleans passed are not constants, the
-  // loop is not specialized like the SearchFFF etc. versions, so it
-  // runs much more slowly.  Useful only for debugging.
-  // cache_mutex_.r <= L < mutex_
-  // Might unlock and relock cache_mutex_ via params->cache_lock.
-  bool SlowSearchLoop(SearchParams* params);
 
   // Looks up bytes in bytemap_ but handles case c == kByteEndText too.
   int ByteMap(int c) {
@@ -1321,10 +1314,10 @@ DFA::State* DFA::StateSaver::Restore() {
 // The bools are equal to the same-named variables in params, but
 // making them function arguments lets the inliner specialize
 // this function to each combination (see two paragraphs above).
-inline bool DFA::InlinedSearchLoop(SearchParams* params,
-                                   bool can_prefix_accel,
-                                   bool want_earliest_match,
-                                   bool run_forward) {
+template <bool can_prefix_accel,
+          bool want_earliest_match,
+          bool run_forward>
+inline bool DFA::InlinedSearchLoop(SearchParams* params) {
   State* start = params->start;
   const uint8_t* bp = BytePtr(params->text.data());  // start of text
   const uint8_t* p = bp;                             // text scanning point
@@ -1549,36 +1542,28 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params,
 
 // Inline specializations of the general loop.
 bool DFA::SearchFFF(SearchParams* params) {
-  return InlinedSearchLoop(params, 0, 0, 0);
+  return InlinedSearchLoop<false, false, false>(params);
 }
 bool DFA::SearchFFT(SearchParams* params) {
-  return InlinedSearchLoop(params, 0, 0, 1);
+  return InlinedSearchLoop<false, false, true>(params);
 }
 bool DFA::SearchFTF(SearchParams* params) {
-  return InlinedSearchLoop(params, 0, 1, 0);
+  return InlinedSearchLoop<false, true, false>(params);
 }
 bool DFA::SearchFTT(SearchParams* params) {
-  return InlinedSearchLoop(params, 0, 1, 1);
+  return InlinedSearchLoop<false, true, true>(params);
 }
 bool DFA::SearchTFF(SearchParams* params) {
-  return InlinedSearchLoop(params, 1, 0, 0);
+  return InlinedSearchLoop<true, false, false>(params);
 }
 bool DFA::SearchTFT(SearchParams* params) {
-  return InlinedSearchLoop(params, 1, 0, 1);
+  return InlinedSearchLoop<true, false, true>(params);
 }
 bool DFA::SearchTTF(SearchParams* params) {
-  return InlinedSearchLoop(params, 1, 1, 0);
+  return InlinedSearchLoop<true, true, false>(params);
 }
 bool DFA::SearchTTT(SearchParams* params) {
-  return InlinedSearchLoop(params, 1, 1, 1);
-}
-
-// For debugging, calls the general code directly.
-bool DFA::SlowSearchLoop(SearchParams* params) {
-  return InlinedSearchLoop(params,
-                           params->can_prefix_accel,
-                           params->want_earliest_match,
-                           params->run_forward);
+  return InlinedSearchLoop<true, true, true>(params);
 }
 
 // For performance, calls the appropriate specialized version
