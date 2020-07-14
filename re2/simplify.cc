@@ -28,8 +28,6 @@ bool Regexp::SimplifyRegexp(const StringPiece& src, ParseFlags flags,
   Regexp* sre = re->Simplify();
   re->Decref();
   if (sre == NULL) {
-    // Should not happen, since Simplify never fails.
-    LOG(ERROR) << "Simplify failed on " << src;
     if (status) {
       status->set_code(kRegexpInternalError);
       status->set_error_arg(src);
@@ -180,10 +178,20 @@ Regexp* Regexp::Simplify() {
   CoalesceWalker cw;
   Regexp* cre = cw.Walk(this, NULL);
   if (cre == NULL)
-    return cre;
+    return NULL;
+  if (cw.stopped_early()) {
+    cre->Decref();
+    return NULL;
+  }
   SimplifyWalker sw;
   Regexp* sre = sw.Walk(cre, NULL);
   cre->Decref();
+  if (sre == NULL)
+    return NULL;
+  if (sw.stopped_early()) {
+    sre->Decref();
+    return NULL;
+  }
   return sre;
 }
 
