@@ -648,14 +648,15 @@ Prefilter* Prefilter::FromRegexp(Regexp* re) {
     return NULL;
 
   Regexp* simple = re->Simplify();
-  Prefilter::Info *info = BuildInfo(simple);
+  if (simple == NULL)
+    return NULL;
 
+  Prefilter::Info* info = BuildInfo(simple);
   simple->Decref();
   if (info == NULL)
     return NULL;
 
   Prefilter* m = info->TakeMatch();
-
   delete info;
   return m;
 }
