@@ -1,0 +1,14 @@
+name: CI (Bazel)
+on:
+  push:
+    branches: [master]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - run: .github/bazel.sh
+      shell: bash
