@@ -1,0 +1,17 @@
+name: CI
+on:
+  push:
+    branches: [master]
+env:
+  CC: clang
+  CXX: clang++
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - run: make && make test
+      shell: bash
