@@ -17,16 +17,19 @@ jobs:
       shell: bash
   build-clang:
     runs-on: ubuntu-latest
-    container: ericwf/llvm:${{ matrix.tag }}
     strategy:
       matrix:
-        tag: [4.x, 5.x, 6.x, 7.x, 8.x, 9.x, 10.x, 11.x]
+        tag: [9, 10, 11]
     env:
-      CC: /compiler/bin/clang
-      CXX: /compiler/bin/clang++
+      CC: clang-${{ matrix.tag }}
+      CXX: clang++-${{ matrix.tag }}
     steps:
     - uses: actions/checkout@v2
-    - run: apt update && apt install make
+    - name: Install Clang ${{ matrix.tag }}
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x ./llvm.sh
+        sudo ./llvm.sh ${{ matrix.tag }}
       shell: bash
     - run: make && make test
       shell: bash
