@@ -368,12 +368,12 @@ class RE2 {
   //    (void*)NULL     (the corresponding matched sub-pattern is not copied)
   //
   // Returns true iff all of the following conditions are satisfied:
-  //   a. "text" matches "re" exactly
-  //   b. The number of matched sub-patterns is >= number of supplied pointers
+  //   a. "text" matches "re" fully - from the beginning to the end of "text".
+  //   b. The number of matched sub-patterns is >= number of supplied pointers.
   //   c. The "i"th argument has a suitable type for holding the
   //      string captured as the "i"th sub-pattern.  If you pass in
   //      NULL for the "i"th argument, or pass fewer arguments than
-  //      number of sub-patterns, "i"th captured sub-pattern is
+  //      number of sub-patterns, the "i"th captured sub-pattern is
   //      ignored.
   //
   // CAVEAT: An optional sub-pattern that does not exist in the
@@ -387,8 +387,17 @@ class RE2 {
     return Apply(FullMatchN, text, re, Arg(std::forward<A>(a))...);
   }
 
-  // Exactly like FullMatch(), except that "re" is allowed to match
-  // a substring of "text".
+  // Like FullMatch(), except that "re" is allowed to match a substring
+  // of "text".
+  //
+  // Returns true iff all of the following conditions are satisfied:
+  //   a. "text" matches "re" partially - for some substring of "text".
+  //   b. The number of matched sub-patterns is >= number of supplied pointers.
+  //   c. The "i"th argument has a suitable type for holding the
+  //      string captured as the "i"th sub-pattern.  If you pass in
+  //      NULL for the "i"th argument, or pass fewer arguments than
+  //      number of sub-patterns, the "i"th captured sub-pattern is
+  //      ignored.
   template <typename... A>
   static bool PartialMatch(const StringPiece& text, const RE2& re, A&&... a) {
     return Apply(PartialMatchN, text, re, Arg(std::forward<A>(a))...);
@@ -397,7 +406,16 @@ class RE2 {
   // Like FullMatch() and PartialMatch(), except that "re" has to match
   // a prefix of the text, and "input" is advanced past the matched
   // text.  Note: "input" is modified iff this routine returns true
-  // and "re" matched a non-empty substring of "text".
+  // and "re" matched a non-empty substring of "input".
+  //
+  // Returns true iff all of the following conditions are satisfied:
+  //   a. "input" matches "re" partially - for some prefix of "input".
+  //   b. The number of matched sub-patterns is >= number of supplied pointers.
+  //   c. The "i"th argument has a suitable type for holding the
+  //      string captured as the "i"th sub-pattern.  If you pass in
+  //      NULL for the "i"th argument, or pass fewer arguments than
+  //      number of sub-patterns, the "i"th captured sub-pattern is
+  //      ignored.
   template <typename... A>
   static bool Consume(StringPiece* input, const RE2& re, A&&... a) {
     return Apply(ConsumeN, input, re, Arg(std::forward<A>(a))...);
@@ -407,6 +425,15 @@ class RE2 {
   // the text.  That is, "re" need not start its match at the beginning
   // of "input".  For example, "FindAndConsume(s, "(\\w+)", &word)" finds
   // the next word in "s" and stores it in "word".
+  //
+  // Returns true iff all of the following conditions are satisfied:
+  //   a. "input" matches "re" partially - for some substring of "input".
+  //   b. The number of matched sub-patterns is >= number of supplied pointers.
+  //   c. The "i"th argument has a suitable type for holding the
+  //      string captured as the "i"th sub-pattern.  If you pass in
+  //      NULL for the "i"th argument, or pass fewer arguments than
+  //      number of sub-patterns, the "i"th captured sub-pattern is
+  //      ignored.
   template <typename... A>
   static bool FindAndConsume(StringPiece* input, const RE2& re, A&&... a) {
     return Apply(FindAndConsumeN, input, re, Arg(std::forward<A>(a))...);
