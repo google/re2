@@ -22,10 +22,12 @@ jobs:
       matrix:
         tag: [4.x, 5.x, 6.x, 7.x, 8.x, 9.x, 10.x, 11.x]
     env:
-      CC: clang
-      CXX: clang++
+      CC: /compiler/bin/clang
+      CXX: /compiler/bin/clang++
     steps:
     - uses: actions/checkout@v2
+    - run: apt update && apt install make
+      shell: bash
     - run: make && make test
       shell: bash
   build-gcc:
