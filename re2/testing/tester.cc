@@ -87,6 +87,20 @@ static uint32_t Engines() {
 
 // The result of running a match.
 struct TestInstance::Result {
+  Result()
+      : skipped(false),
+        matched(false),
+        untrusted(false),
+        have_submatch(false),
+        have_submatch0(false) {
+    ClearSubmatch();
+  }
+
+  void ClearSubmatch() {
+    for (int i = 0; i < kMaxSubmatch; i++)
+      submatch[i] = StringPiece();
+  }
+
   bool skipped;         // test skipped: wasn't applicable
   bool matched;         // found a match
   bool untrusted;       // don't really trust the answer
@@ -288,12 +302,20 @@ TestInstance::~TestInstance() {
 // Runs a single search using the named engine type.
 // This interface hides all the irregularities of the various
 // engine interfaces from the rest of this file.
+<<<<<<< HEAD   (c4ab9a Migrate from Kokoro to GitHub Actions for Bazel.)
 void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
                              absl::string_view orig_context,
                              Prog::Anchor anchor, Result* result) {
   // Result is not trivial, so we cannot freely clear it with memset(3),
   // but zeroing objects like so is safe and expedient for our purposes.
   memset(reinterpret_cast<void*>(result), 0, sizeof *result);
+=======
+void TestInstance::RunSearch(Engine type,
+                             const StringPiece& orig_text,
+                             const StringPiece& orig_context,
+                             Prog::Anchor anchor,
+                             Result* result) {
+>>>>>>> CHANGE (e7d218 Address `-Wclass-memaccess' warnings from GCC 10.x.)
   if (regexp_ == NULL) {
     result->skipped = true;
     return;
@@ -477,7 +499,7 @@ void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
   }
 
   if (!result->matched)
-    memset(result->submatch, 0, sizeof result->submatch);
+    result->ClearSubmatch();
 }
 
 // Checks whether r is okay given that correct is the right answer.
