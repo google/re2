@@ -119,7 +119,7 @@ template<typename T> T Regexp::Walker<T>::Copy(T arg) {
 
 // State about a single level in the traversal.
 template<typename T> struct WalkState {
-  WalkState<T>(Regexp* re, T parent)
+  WalkState(Regexp* re, T parent)
     : re(re),
       n(-1),
       parent_arg(parent),
