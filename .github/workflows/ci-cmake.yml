@@ -1,7 +1,9 @@
-name: CI (Bazel)
+<<<<<<< HEAD   (78d3a8 Fix a template that will break with GCC 11.x.)
+=======
+name: CI (CMake)
 on:
   push:
-    branches: [abseil]
+    branches: [master]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -11,5 +13,6 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@v2
-    - run: .github/bazel.sh
+    - run: .github/cmake.sh
       shell: bash
+>>>>>>> CHANGE (6ca648 Disable fail-fast in GitHub Actions.)
