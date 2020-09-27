@@ -12,6 +12,6 @@ jobs:
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-    - uses: actions/checkout@v2
-    - run: .github/bazel.sh
-      shell: bash
+      - uses: actions/checkout@v2
+      - run: .github/bazel.sh
+        shell: bash
