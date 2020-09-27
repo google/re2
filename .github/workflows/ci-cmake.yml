@@ -1,7 +1,9 @@
-name: CI (Bazel)
+<<<<<<< HEAD   (b8644d Set BAZELISK_GITHUB_TOKEN.)
+=======
+name: CI (CMake)
 on:
   push:
-    branches: [abseil]
+    branches: [master]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -9,9 +11,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-    env:
-      BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
-      - run: .github/bazel.sh
+      - run: .github/cmake.sh
         shell: bash
+>>>>>>> CHANGE (fc2c70 Fix some indentation.)
