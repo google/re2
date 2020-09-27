@@ -10,6 +10,8 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
     steps:
-    - uses: actions/checkout@v2
-    - run: .github/bazel.sh
-      shell: bash
+      - uses: actions/checkout@v2
+      - run: .github/bazel.sh
+        shell: bash
+        env:
+          BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
