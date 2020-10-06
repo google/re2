@@ -805,7 +805,7 @@ class RE2 {
 // Hex/Octal/Binary?
 
 // Special class for parsing into objects that define a ParseFrom() method
-template <class T>
+template <typename T>
 class _RE2_MatchObject {
  public:
   static inline bool Parse(const char* str, size_t n, void* dest) {
@@ -851,9 +851,9 @@ class RE2::Arg {
 #undef MAKE_PARSER
 
   // Generic constructor templates
-  template <class T> Arg(T* p)
+  template <typename T> Arg(T* p)
       : arg_(p), parser_(_RE2_MatchObject<T>::Parse) { }
-  template <class T> Arg(T* p, Parser parser)
+  template <typename T> Arg(T* p, Parser parser)
       : arg_(p), parser_(parser) { }
 
   // Parse the data

@@ -85,7 +85,7 @@ static CCTest tests[] = {
     { {-1} } },
 };
 
-template<class CharClass>
+template <typename CharClass>
 static void Broke(const char *desc, const CCTest* t, CharClass* cc) {
   if (t == NULL) {
     printf("\t%s:", desc);
@@ -136,7 +136,7 @@ void Delete(CharClassBuilder* cc) {
   delete cc;
 }
 
-template<class CharClass>
+template <typename CharClass>
 bool CorrectCC(CharClass *cc, CCTest *t, const char *desc) {
   typename CharClass::iterator it = cc->begin();
   int size = 0;
