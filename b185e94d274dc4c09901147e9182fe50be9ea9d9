@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "98e94a4c_8dedf21b",
+        "filename": "re2/re2.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 822,
+      "author": {
+        "id": 42397
+      },
+      "writtenOn": "2020-10-07T19:55:11Z",
+      "side": 1,
+      "message": "This is triggering a `-Werror, -Wunused-parameter` in SPIRV-Tools as we build our code with -Werror and we depend on this .h file (through effcee).\n\nI\u0027m not sure if we can fix this downstream without turning off -Werror so I think it needs to be fixed here?\n\n\nhttps://source.cloud.google.com/results/invocations/cfa0954a-848b-4cdc-a9e0-a292e4200174/targets/graphics_shader_compiler%2Fspirv-tools%2Flinux-clang-debug%2Fpresubmit/log",
+      "revId": "b185e94d274dc4c09901147e9182fe50be9ea9d9",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
