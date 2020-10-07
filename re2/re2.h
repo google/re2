@@ -819,7 +819,8 @@ class RE2::Arg {
  public:
   Arg() : Arg(nullptr) {}
   Arg(std::nullptr_t ptr)
-      : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
+      : arg_(ptr),
+        parser_([](const char* /*str*/, size_t /*n*/, void* /*dest*/) -> bool {
           return true;
         }) {}
 
