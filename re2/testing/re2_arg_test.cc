@@ -132,4 +132,24 @@ TEST(RE2ArgTest, Uint64Test) {
   PARSE_FOR_TYPE(uint64_t, 5);
 }
 
+TEST(RE2ArgTest, ParseFromTest) {
+  struct {
+    bool ParseFrom(const char* str, size_t n) {
+      LOG(INFO) << "str = " << str << ", n = " << n;
+      return true;
+    }
+  } obj1;
+  RE2::Arg arg1(&obj1);
+  EXPECT_TRUE(arg1.Parse("one", 3));
+
+  struct {
+    bool ParseFrom(const char* str, size_t n) {
+      LOG(INFO) << "str = " << str << ", n = " << n;
+      return false;
+    }
+  } obj2;
+  RE2::Arg arg2(&obj2);
+  EXPECT_FALSE(arg2.Parse("two", 3));
+}
+
 }  // namespace re2
