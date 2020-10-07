@@ -12,6 +12,7 @@
 
 #include "absl/base/macros.h"
 #include "gtest/gtest.h"
+#include "util/logging.h"
 #include "re2/re2.h"
 
 namespace re2 {
