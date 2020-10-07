@@ -10,8 +10,13 @@
 #include <stdint.h>
 #include <string.h>
 
+<<<<<<< HEAD   (c51d85 Rework RE2::Arg with templates instead of macros.)
 #include "absl/base/macros.h"
 #include "gtest/gtest.h"
+=======
+#include "util/test.h"
+#include "util/logging.h"
+>>>>>>> CHANGE (540e80 Add missing #include. Mea culpa.)
 #include "re2/re2.h"
 
 namespace re2 {
