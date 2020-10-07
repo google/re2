@@ -207,6 +207,7 @@
 #include <algorithm>
 #include <map>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #if defined(__APPLE__)
@@ -734,32 +735,12 @@ class RE2 {
   const Options& options() const { return options_; }
 
   // Argument converters; see below.
-  static inline Arg CRadix(short* x);
-  static inline Arg CRadix(unsigned short* x);
-  static inline Arg CRadix(int* x);
-  static inline Arg CRadix(unsigned int* x);
-  static inline Arg CRadix(long* x);
-  static inline Arg CRadix(unsigned long* x);
-  static inline Arg CRadix(long long* x);
-  static inline Arg CRadix(unsigned long long* x);
-
-  static inline Arg Hex(short* x);
-  static inline Arg Hex(unsigned short* x);
-  static inline Arg Hex(int* x);
-  static inline Arg Hex(unsigned int* x);
-  static inline Arg Hex(long* x);
-  static inline Arg Hex(unsigned long* x);
-  static inline Arg Hex(long long* x);
-  static inline Arg Hex(unsigned long long* x);
-
-  static inline Arg Octal(short* x);
-  static inline Arg Octal(unsigned short* x);
-  static inline Arg Octal(int* x);
-  static inline Arg Octal(unsigned int* x);
-  static inline Arg Octal(long* x);
-  static inline Arg Octal(unsigned long* x);
-  static inline Arg Octal(long long* x);
-  static inline Arg Octal(unsigned long long* x);
+  template <typename T>
+  static Arg CRadix(T* ptr);
+  template <typename T>
+  static Arg Hex(T* ptr);
+  template <typename T>
+  static Arg Octal(T* ptr);
 
  private:
   void Init(absl::string_view pattern, const Options& options);
@@ -802,35 +783,78 @@ class RE2 {
 
 /***** Implementation details *****/
 
-// Hex/Octal/Binary?
+namespace internal {
 
-// Special class for parsing into objects that define a ParseFrom() method
+// Types for which the 3-ary Parse() function template has specializations.
+template <typename T> struct Parse3ary : public std::false_type {};
+template <> struct Parse3ary<void> : public std::true_type {};
+template <> struct Parse3ary<std::string> : public std::true_type {};
+template <> struct Parse3ary<StringPiece> : public std::true_type {};
+template <> struct Parse3ary<char> : public std::true_type {};
+template <> struct Parse3ary<signed char> : public std::true_type {};
+template <> struct Parse3ary<unsigned char> : public std::true_type {};
+template <> struct Parse3ary<float> : public std::true_type {};
+template <> struct Parse3ary<double> : public std::true_type {};
+
 template <typename T>
-class _RE2_MatchObject {
- public:
-  static inline bool Parse(const char* str, size_t n, void* dest) {
-    if (dest == NULL) return true;
-    T* object = reinterpret_cast<T*>(dest);
-    return object->ParseFrom(str, n);
-  }
-};
+bool Parse(const char* str, size_t n, T* dest);
+
+// Types for which the 4-ary Parse() function template has specializations.
+template <typename T> struct Parse4ary : public std::false_type {};
+template <> struct Parse4ary<long> : public std::true_type {};
+template <> struct Parse4ary<unsigned long> : public std::true_type {};
+template <> struct Parse4ary<short> : public std::true_type {};
+template <> struct Parse4ary<unsigned short> : public std::true_type {};
+template <> struct Parse4ary<int> : public std::true_type {};
+template <> struct Parse4ary<unsigned int> : public std::true_type {};
+template <> struct Parse4ary<long long> : public std::true_type {};
+template <> struct Parse4ary<unsigned long long> : public std::true_type {};
+
+template <typename T>
+bool Parse(const char* str, size_t n, T* dest, int radix);
+
+}  // namespace internal
 
 class RE2::Arg {
  public:
-  // Empty constructor so we can declare arrays of RE2::Arg
-  Arg();
+  Arg() : Arg(nullptr) {}
+  Arg(std::nullptr_t ptr)
+      : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
+          return true;
+        }) {}
 
-  // Constructor specially designed for NULL arguments
-  Arg(void*);
-  Arg(std::nullptr_t);
+  template <typename T,
+            typename std::enable_if<internal::Parse3ary<T>::value,
+                                    int>::type = 0>
+  Arg(T* ptr)
+      : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
+          return internal::Parse(str, n, reinterpret_cast<T*>(dest));
+        }) {}
+
+  template <typename T,
+            typename std::enable_if<internal::Parse4ary<T>::value,
+                                    int>::type = 0>
+  Arg(T* ptr)
+      : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
+          return internal::Parse(str, n, reinterpret_cast<T*>(dest), 10);
+        }) {}
+
+  template <typename T,
+            typename std::enable_if<!(internal::Parse3ary<T>::value ||
+                                      internal::Parse4ary<T>::value),
+                                    int>::type = 0>
+  Arg(T* ptr)
+      : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
+          if (dest == NULL) return true;
+          return reinterpret_cast<T*>(dest)->ParseFrom(str, n);
+        }) {}
 
   typedef bool (*Parser)(const char* str, size_t n, void* dest);
 
-// Type-specific parsers
-#define MAKE_PARSER(type, name)            \
-  Arg(type* p) : arg_(p), parser_(name) {} \
-  Arg(type* p, Parser parser) : arg_(p), parser_(parser) {}
+  template <typename T>
+  Arg(T* ptr, Parser parser) : arg_(ptr), parser_(parser) {}
 
+<<<<<<< HEAD   (2d99ec Write `typename' in templates rather than `class'.)
   MAKE_PARSER(char,               parse_char)
   MAKE_PARSER(signed char,        parse_schar)
   MAKE_PARSER(unsigned char,      parse_uchar)
@@ -858,10 +882,16 @@ class RE2::Arg {
 
   // Parse the data
   bool Parse(const char* str, size_t n) const;
+=======
+  bool Parse(const char* str, size_t n) const {
+    return (*parser_)(str, n, arg_);
+  }
+>>>>>>> CHANGE (b185e9 Rework RE2::Arg with templates instead of macros.)
 
  private:
   void*         arg_;
   Parser        parser_;
+<<<<<<< HEAD   (2d99ec Write `typename' in templates rather than `class'.)
 
   static bool parse_null        (const char* str, size_t n, void* dest);
   static bool parse_char        (const char* str, size_t n, void* dest);
@@ -894,38 +924,30 @@ class RE2::Arg {
 
 #undef DECLARE_INTEGER_PARSER
 
+=======
+>>>>>>> CHANGE (b185e9 Rework RE2::Arg with templates instead of macros.)
 };
 
-inline RE2::Arg::Arg() : arg_(NULL), parser_(parse_null) { }
-inline RE2::Arg::Arg(void* p) : arg_(p), parser_(parse_null) { }
-inline RE2::Arg::Arg(std::nullptr_t p) : arg_(p), parser_(parse_null) { }
-
-inline bool RE2::Arg::Parse(const char* str, size_t n) const {
-  return (*parser_)(str, n, arg_);
+template <typename T>
+inline RE2::Arg RE2::CRadix(T* ptr) {
+  return RE2::Arg(ptr, [](const char* str, size_t n, void* dest) -> bool {
+    return internal::Parse(str, n, reinterpret_cast<T*>(dest), 0);
+  });
 }
 
-// This part of the parser, appropriate only for ints, deals with bases
-#define MAKE_INTEGER_PARSER(type, name)                    \
-  inline RE2::Arg RE2::Hex(type* ptr) {                    \
-    return RE2::Arg(ptr, RE2::Arg::parse_##name##_hex);    \
-  }                                                        \
-  inline RE2::Arg RE2::Octal(type* ptr) {                  \
-    return RE2::Arg(ptr, RE2::Arg::parse_##name##_octal);  \
-  }                                                        \
-  inline RE2::Arg RE2::CRadix(type* ptr) {                 \
-    return RE2::Arg(ptr, RE2::Arg::parse_##name##_cradix); \
-  }
+template <typename T>
+inline RE2::Arg RE2::Hex(T* ptr) {
+  return RE2::Arg(ptr, [](const char* str, size_t n, void* dest) -> bool {
+    return internal::Parse(str, n, reinterpret_cast<T*>(dest), 16);
+  });
+}
 
-MAKE_INTEGER_PARSER(short,              short)
-MAKE_INTEGER_PARSER(unsigned short,     ushort)
-MAKE_INTEGER_PARSER(int,                int)
-MAKE_INTEGER_PARSER(unsigned int,       uint)
-MAKE_INTEGER_PARSER(long,               long)
-MAKE_INTEGER_PARSER(unsigned long,      ulong)
-MAKE_INTEGER_PARSER(long long,          longlong)
-MAKE_INTEGER_PARSER(unsigned long long, ulonglong)
-
-#undef MAKE_INTEGER_PARSER
+template <typename T>
+inline RE2::Arg RE2::Octal(T* ptr) {
+  return RE2::Arg(ptr, [](const char* str, size_t n, void* dest) -> bool {
+    return internal::Parse(str, n, reinterpret_cast<T*>(dest), 8);
+  });
+}
 
 #ifndef SWIG
 // Silence warnings about missing initializers for members of LazyRE2.
