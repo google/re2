@@ -1040,7 +1040,7 @@ bool RE2::Rewrite(std::string* out,
 
 /***** Parsers for various types *****/
 
-namespace internal {
+namespace re2_internal {
 
 template <>
 bool Parse(const char* str, size_t n, void* dest) {
@@ -1289,7 +1289,7 @@ bool Parse(const char* str, size_t n, unsigned long long* dest, int radix) {
   return true;
 }
 
-}  // namespace internal
+}  // namespace re2_internal
 
 namespace hooks {
 
