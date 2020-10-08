@@ -783,7 +783,7 @@ class RE2 {
 
 /***** Implementation details *****/
 
-namespace internal {
+namespace re2_internal {
 
 // Types for which the 3-ary Parse() function template has specializations.
 template <typename T> struct Parse3ary : public std::false_type {};
@@ -813,7 +813,7 @@ template <> struct Parse4ary<unsigned long long> : public std::true_type {};
 template <typename T>
 bool Parse(const char* str, size_t n, T* dest, int radix);
 
-}  // namespace internal
+}  // namespace re2_internal
 
 class RE2::Arg {
  public:
@@ -824,24 +824,24 @@ class RE2::Arg {
         }) {}
 
   template <typename T,
-            typename std::enable_if<internal::Parse3ary<T>::value,
+            typename std::enable_if<re2_internal::Parse3ary<T>::value,
                                     int>::type = 0>
   Arg(T* ptr)
       : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
-          return internal::Parse(str, n, reinterpret_cast<T*>(dest));
+          return re2_internal::Parse(str, n, reinterpret_cast<T*>(dest));
         }) {}
 
   template <typename T,
-            typename std::enable_if<internal::Parse4ary<T>::value,
+            typename std::enable_if<re2_internal::Parse4ary<T>::value,
                                     int>::type = 0>
   Arg(T* ptr)
       : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
-          return internal::Parse(str, n, reinterpret_cast<T*>(dest), 10);
+          return re2_internal::Parse(str, n, reinterpret_cast<T*>(dest), 10);
         }) {}
 
   template <typename T,
-            typename std::enable_if<!(internal::Parse3ary<T>::value ||
-                                      internal::Parse4ary<T>::value),
+            typename std::enable_if<!(re2_internal::Parse3ary<T>::value ||
+                                      re2_internal::Parse4ary<T>::value),
                                     int>::type = 0>
   Arg(T* ptr)
       : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
@@ -866,21 +866,21 @@ class RE2::Arg {
 template <typename T>
 inline RE2::Arg RE2::CRadix(T* ptr) {
   return RE2::Arg(ptr, [](const char* str, size_t n, void* dest) -> bool {
-    return internal::Parse(str, n, reinterpret_cast<T*>(dest), 0);
+    return re2_internal::Parse(str, n, reinterpret_cast<T*>(dest), 0);
   });
 }
 
 template <typename T>
 inline RE2::Arg RE2::Hex(T* ptr) {
   return RE2::Arg(ptr, [](const char* str, size_t n, void* dest) -> bool {
-    return internal::Parse(str, n, reinterpret_cast<T*>(dest), 16);
+    return re2_internal::Parse(str, n, reinterpret_cast<T*>(dest), 16);
   });
 }
 
 template <typename T>
 inline RE2::Arg RE2::Octal(T* ptr) {
   return RE2::Arg(ptr, [](const char* str, size_t n, void* dest) -> bool {
-    return internal::Parse(str, n, reinterpret_cast<T*>(dest), 8);
+    return re2_internal::Parse(str, n, reinterpret_cast<T*>(dest), 8);
   });
 }
 
