@@ -816,38 +816,34 @@ bool Parse(const char* str, size_t n, T* dest, int radix);
 }  // namespace re2_internal
 
 class RE2::Arg {
+ private:
+  template <typename T>
+  using CanParse3ary = typename std::enable_if<
+      re2_internal::Parse3ary<T>::value,
+      int>::type;
+
+  template <typename T>
+  using CanParse4ary = typename std::enable_if<
+      re2_internal::Parse4ary<T>::value,
+      int>::type;
+
+  template <typename T>
+  using CanParseFrom = typename std::enable_if<
+      std::is_member_function_pointer<decltype(&T::ParseFrom)>::value,
+      int>::type;
+
  public:
   Arg() : Arg(nullptr) {}
-  Arg(std::nullptr_t ptr)
-      : arg_(ptr), parser_([](const char* /*str*/, size_t /*n*/, void* /*dest*/) -> bool {
-          return true;
-        }) {}
+  Arg(std::nullptr_t ptr) : arg_(ptr), parser_(DoNothing) {}
 
-  template <typename T,
-            typename std::enable_if<re2_internal::Parse3ary<T>::value,
-                                    int>::type = 0>
-  Arg(T* ptr)
-      : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
-          return re2_internal::Parse(str, n, reinterpret_cast<T*>(dest));
-        }) {}
+  template <typename T, CanParse3ary<T> = 0>
+  Arg(T* ptr) : arg_(ptr), parser_(DoParse3ary<T>) {}
 
-  template <typename T,
-            typename std::enable_if<re2_internal::Parse4ary<T>::value,
-                                    int>::type = 0>
-  Arg(T* ptr)
-      : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
-          return re2_internal::Parse(str, n, reinterpret_cast<T*>(dest), 10);
-        }) {}
+  template <typename T, CanParse4ary<T> = 0>
+  Arg(T* ptr) : arg_(ptr), parser_(DoParse4ary<T>) {}
 
-  template <typename T,
-            typename std::enable_if<!(re2_internal::Parse3ary<T>::value ||
-                                      re2_internal::Parse4ary<T>::value),
-                                    int>::type = 0>
-  Arg(T* ptr)
-      : arg_(ptr), parser_([](const char* str, size_t n, void* dest) -> bool {
-          if (dest == NULL) return true;
-          return reinterpret_cast<T*>(dest)->ParseFrom(str, n);
-        }) {}
+  template <typename T, CanParseFrom<T> = 0>
+  Arg(T* ptr) : arg_(ptr), parser_(DoParseFrom<T>) {}
 
   typedef bool (*Parser)(const char* str, size_t n, void* dest);
 
@@ -859,6 +855,26 @@ class RE2::Arg {
   }
 
  private:
+  static bool DoNothing(const char* /*str*/, size_t /*n*/, void* /*dest*/) {
+    return true;
+  }
+
+  template <typename T>
+  static bool DoParse3ary(const char* str, size_t n, void* dest) {
+    return re2_internal::Parse(str, n, reinterpret_cast<T*>(dest));
+  }
+
+  template <typename T>
+  static bool DoParse4ary(const char* str, size_t n, void* dest) {
+    return re2_internal::Parse(str, n, reinterpret_cast<T*>(dest), 10);
+  }
+
+  template <typename T>
+  static bool DoParseFrom(const char* str, size_t n, void* dest) {
+    if (dest == NULL) return true;
+    return reinterpret_cast<T*>(dest)->ParseFrom(str, n);
+  }
+
   void*         arg_;
   Parser        parser_;
 };
