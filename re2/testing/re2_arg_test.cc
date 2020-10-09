@@ -148,6 +148,8 @@ TEST(RE2ArgTest, ParseFromTest) {
       LOG(INFO) << "str = " << str << ", n = " << n;
       return false;
     }
+    // Ensure that RE2::Arg works even with overloaded ParseFrom().
+    void ParseFrom(const char* str) {}
   } obj2;
   RE2::Arg arg2(&obj2);
   EXPECT_FALSE(arg2.Parse("two", 3));
