@@ -827,11 +827,13 @@ class RE2::Arg {
       re2_internal::Parse4ary<T>::value,
       int>::type;
 
+#if !defined(__clang__) && defined(_MSC_VER)
   template <typename T>
   using CanParseFrom = typename std::enable_if<
       std::is_member_function_pointer<decltype(
           (bool (T::*)(const char*, size_t))&T::ParseFrom)>::value,
       int>::type;
+#endif
 
  public:
   Arg() : Arg(nullptr) {}
@@ -843,8 +845,10 @@ class RE2::Arg {
   template <typename T, CanParse4ary<T> = 0>
   Arg(T* ptr) : arg_(ptr), parser_(DoParse4ary<T>) {}
 
+#if !defined(__clang__) && defined(_MSC_VER)
   template <typename T, CanParseFrom<T> = 0>
   Arg(T* ptr) : arg_(ptr), parser_(DoParseFrom<T>) {}
+#endif
 
   typedef bool (*Parser)(const char* str, size_t n, void* dest);
 
@@ -870,11 +874,13 @@ class RE2::Arg {
     return re2_internal::Parse(str, n, reinterpret_cast<T*>(dest), 10);
   }
 
+#if !defined(__clang__) && defined(_MSC_VER)
   template <typename T>
   static bool DoParseFrom(const char* str, size_t n, void* dest) {
     if (dest == NULL) return true;
     return reinterpret_cast<T*>(dest)->ParseFrom(str, n);
   }
+#endif
 
   void*         arg_;
   Parser        parser_;
