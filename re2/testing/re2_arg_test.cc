@@ -135,7 +135,7 @@ TEST(RE2ArgTest, Uint64Test) {
 }
 
 TEST(RE2ArgTest, ParseFromTest) {
-#if !defined(__clang__) && defined(_MSC_VER)
+#if !defined(_MSC_VER)
   struct {
     bool ParseFrom(const char* str, size_t n) {
       LOG(INFO) << "str = " << str << ", n = " << n;
