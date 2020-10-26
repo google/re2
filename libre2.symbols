@@ -11,6 +11,9 @@
 		# re2::FilteredRE2*
 		_ZN3re211FilteredRE2*;
 		_ZNK3re211FilteredRE2*;
+		# re2::re2_internal*
+		_ZN3re212re2_internal*;
+		_ZNK3re212re2_internal*;
 	local:
 		*;
 };
