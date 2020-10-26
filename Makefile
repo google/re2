@@ -203,7 +203,7 @@ obj/dbg/libre2.a: $(DOFILES)
 	$(AR) $(ARFLAGS) obj/dbg/libre2.a $(DOFILES)
 
 .PRECIOUS: obj/so/libre2.$(SOEXT)
-obj/so/libre2.$(SOEXT): $(SOFILES)
+obj/so/libre2.$(SOEXT): $(SOFILES) libre2.symbols libre2.symbols.darwin
 	@mkdir -p obj/so
 	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES)
 	ln -sf libre2.$(SOEXTVER) $@
