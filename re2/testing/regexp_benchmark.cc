@@ -152,24 +152,29 @@ ParseImpl SearchParse1CachedPCRE, SearchParse1CachedRE2;
 
 // Generate random text that won't contain the search string,
 // to test worst-case search behavior.
-void MakeText(std::string* text, int64_t nbytes) {
-  srand(1);
-  text->resize(nbytes);
-  for (int64_t i = 0; i < nbytes; i++) {
-    // Generate a one-byte rune that isn't a control character (e.g. '\n').
-    // Clipping to 0x20 introduces some bias, but we don't need uniformity.
-    int byte = rand() & 0x7F;
-    if (byte < 0x20)
-      byte = 0x20;
-    (*text)[i] = byte;
-  }
+std::string RandomText(int64_t nbytes) {
+  static const std::string* const text = []() {
+    std::string* text = new std::string;
+    srand(1);
+    text->resize(16<<20);
+    for (int64_t i = 0; i < 16<<20; i++) {
+      // Generate a one-byte rune that isn't a control character (e.g. '\n').
+      // Clipping to 0x20 introduces some bias, but we don't need uniformity.
+      int byte = rand() & 0x7F;
+      if (byte < 0x20)
+        byte = 0x20;
+      (*text)[i] = byte;
+    }
+    return text;
+  }();
+  CHECK_LE(nbytes, 16<<20);
+  return text->substr(0, nbytes);
 }
 
 // Makes text of size nbytes, then calls run to search
 // the text for regexp iters times.
 void Search(benchmark::State& state, const char* regexp, SearchImpl* search) {
-  std::string s;
-  MakeText(&s, state.range(0));
+  std::string s = RandomText(state.range(0));
   search(state, regexp, s, Prog::kUnanchored, false);
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
@@ -273,8 +278,7 @@ void SearchBigFixed(benchmark::State& state, SearchImpl* search) {
   std::string s;
   s.append(state.range(0)/2, 'x');
   std::string regexp = "^" + s + ".*$";
-  std::string t;
-  MakeText(&t, state.range(0)/2);
+  std::string t = RandomText(state.range(0)/2);
   s += t;
   search(state, regexp.c_str(), s, Prog::kUnanchored, true);
   state.SetBytesProcessed(state.iterations() * state.range(0));
@@ -295,8 +299,7 @@ BENCHMARK_RANGE(Search_BigFixed_CachedRE2,     8, 1<<20)->ThreadRange(1, NumCPUs
 // Benchmark: FindAndConsume
 
 void FindAndConsume(benchmark::State& state) {
-  std::string s;
-  MakeText(&s, state.range(0));
+  std::string s = RandomText(state.range(0));
   s.append("Hello World");
   RE2 re("((Hello World))");
   for (auto _ : state) {
@@ -314,8 +317,7 @@ BENCHMARK_RANGE(FindAndConsume, 8, 16<<20)->ThreadRange(1, NumCPUs());
 
 void SearchSuccess(benchmark::State& state, const char* regexp,
                    SearchImpl* search) {
-  std::string s;
-  MakeText(&s, state.range(0));
+  std::string s = RandomText(state.range(0));
   search(state, regexp, s, Prog::kAnchored, true);
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
@@ -385,8 +387,7 @@ BENCHMARK_RANGE(Search_Success1_CachedBitState, 8, 2<<20)->ThreadRange(1, NumCPU
 // Note that OnePass doesn't implement it!
 
 void SearchAltMatch(benchmark::State& state, SearchImpl* search) {
-  std::string s;
-  MakeText(&s, state.range(0));
+  std::string s = RandomText(state.range(0));
   search(state, "\\C*", s, Prog::kAnchored, true);
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
@@ -770,8 +771,7 @@ BENCHMARK(BM_RE2_Compile)->ThreadRange(1, NumCPUs());
 // Makes text of size nbytes, then calls run to search
 // the text for regexp iters times.
 void SearchPhone(benchmark::State& state, ParseImpl* search) {
-  std::string s;
-  MakeText(&s, state.range(0));
+  std::string s = RandomText(state.range(0));
   s.append("(650) 253-0001");
   search(state, "(\\d{3}-|\\(\\d{3}\\)\\s+)(\\d{3}-\\d{4})", s);
   state.SetBytesProcessed(state.iterations() * state.range(0));
@@ -1507,8 +1507,7 @@ BENCHMARK(ASCIIMatchPCRE)->ThreadRange(1, NumCPUs());
 BENCHMARK(ASCIIMatchRE2)->ThreadRange(1, NumCPUs());
 
 void FullMatchPCRE(benchmark::State& state, const char *regexp) {
-  std::string s;
-  MakeText(&s, state.range(0));
+  std::string s = RandomText(state.range(0));
   s += "ABCDEFGHIJ";
   PCRE re(regexp);
   for (auto _ : state) {
@@ -1518,8 +1517,7 @@ void FullMatchPCRE(benchmark::State& state, const char *regexp) {
 }
 
 void FullMatchRE2(benchmark::State& state, const char *regexp) {
-  std::string s;
-  MakeText(&s, state.range(0));
+  std::string s = RandomText(state.range(0));
   s += "ABCDEFGHIJ";
   RE2 re(regexp, RE2::Latin1);
   for (auto _ : state) {
