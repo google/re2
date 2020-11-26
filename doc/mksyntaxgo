@@ -15,7 +15,7 @@ sam -d $out <<'!'
 ,s/\n\n\n+/\n\n/g
 ,x/(^.*	.*\n)+/ | awk -F'	' '{printf("  %-14s %s\n", $1, $2)}'
 1,2c
-// Copyright 2012 The Go Authors.  All rights reserved.
+// Copyright 2012 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
