@@ -721,8 +721,14 @@ bool Regexp::RequiredPrefixForAccel(std::string* prefix, bool* foldcase) {
   *foldcase = false;
 
   // No need for a walker: the regexp must either begin with or be
-  // a literal char or string.
+  // a literal char or string. We "see through" capturing groups,
+  // but make no effort to glue multiple prefix fragments together.
   Regexp* re = op_ == kRegexpConcat && nsub_ > 0 ? sub()[0] : this;
+  while (re->op_ == kRegexpCapture) {
+    re = re->sub()[0];
+    if (re->op_ == kRegexpConcat && re->nsub_ > 0)
+      re = re->sub()[0];
+  }
   if (re->op_ != kRegexpLiteral &&
       re->op_ != kRegexpLiteralString)
     return false;
