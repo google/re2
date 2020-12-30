@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fec0e167_710ec02c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2020-12-30T07:48:50Z",
+      "side": 1,
+      "message": "No cherry-pick to abseil branch: Abseil\u0027s Mutex is used there.\n",
+      "revId": "40bd10c06c3bf9f317e8ca600a101e06aeadc14e",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
