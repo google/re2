@@ -30,8 +30,8 @@ static PrefixTest tests[] = {
 
   // If the regexp immediately goes into
   // something not a literal match, there's no required prefix.
-  { "^(abc)", false },
   { "^a*",  false },
+  { "^(abc)", false },
 
   // Otherwise, it should work.
   { "^abc$", true, "abc", false, "(?-m:$)" },
@@ -84,17 +84,25 @@ static PrefixTest for_accel_tests[] = {
 
   // If the regexp immediately goes into
   // something not a literal match, there's no required prefix.
-  { "(abc)", false },
   { "a*",  false },
 
+  // Unlike RequiredPrefix(), RequiredPrefixForAccel() can "see through"
+  // capturing groups, but doesn't try to glue prefix fragments together.
+  { "(a?)def", false },
+  { "(ab?)def", true, "a", false },
+  { "(abc?)def", true, "ab", false },
+  { "(()a)def", false },
+  { "((a)b)def", true, "a", false },
+  { "((ab)c)def", true, "ab", false },
+
   // Otherwise, it should work.
-  { "abc$", true, "abc", false, },
-  { "abc", true, "abc", false, },
-  { "(?i)abc", true, "abc", true, },
-  { "abcd*", true, "abc", false, },
-  { "[Aa][Bb]cd*", true, "ab", true, },
-  { "ab[Cc]d*", true, "ab", false, },
-  { "☺abc", true, "☺abc", false, },
+  { "abc$", true, "abc", false },
+  { "abc", true, "abc", false },
+  { "(?i)abc", true, "abc", true },
+  { "abcd*", true, "abc", false },
+  { "[Aa][Bb]cd*", true, "ab", true },
+  { "ab[Cc]d*", true, "ab", false },
+  { "☺abc", true, "☺abc", false },
 };
 
 TEST(RequiredPrefixForAccel, SimpleTests) {
