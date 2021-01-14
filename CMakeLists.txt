@@ -56,8 +56,6 @@ if(USEPCRE)
   list(APPEND EXTRA_TARGET_LINK_LIBRARIES pcre)
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
 set(RE2_SOURCES
     re2/bitstate.cc
     re2/compile.cc
@@ -84,6 +82,7 @@ set(RE2_SOURCES
     )
 
 add_library(re2 ${RE2_SOURCES})
+target_include_directories (re2 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 add_library(re2::re2 ALIAS re2)
 
 if(RE2_BUILD_TESTING)
@@ -99,6 +98,7 @@ if(RE2_BUILD_TESTING)
       )
 
   add_library(testing STATIC ${TESTING_SOURCES})
+  target_link_libraries(testing PUBLIC re2)
 
   set(TEST_TARGETS
       charclass_test
@@ -130,13 +130,13 @@ if(RE2_BUILD_TESTING)
 
   foreach(target ${TEST_TARGETS})
     add_executable(${target} re2/testing/${target}.cc util/test.cc)
-    target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
+    target_link_libraries(${target} testing ${EXTRA_TARGET_LINK_LIBRARIES})
     add_test(NAME ${target} COMMAND ${target})
   endforeach(target)
 
   foreach(target ${BENCHMARK_TARGETS})
     add_executable(${target} re2/testing/${target}.cc util/benchmark.cc)
-    target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
+    target_link_libraries(${target} testing ${EXTRA_TARGET_LINK_LIBRARIES})
   endforeach(target)
 endif()
 
