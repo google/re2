@@ -1,7 +1,6 @@
 name: CI (Bazel)
 on:
   push:
-    branches: [master]
 jobs:
   build:
     runs-on: ${{ matrix.os }}

@@ -1,7 +1,6 @@
 name: CI (CMake)
 on:
   push:
-    branches: [master]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
