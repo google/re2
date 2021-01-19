@@ -427,6 +427,19 @@ bool RE2::Replace(std::string* str,
 int RE2::GlobalReplace(std::string* str,
                        const RE2& re,
                        const StringPiece& rewrite) {
+  std::string out;
+  int count = GlobalReplace(static_cast<const std::string&>(*str), re, rewrite, &out);
+  if (count > 0)
+    std::swap(out, *str);
+  return count;
+}
+
+int RE2::GlobalReplace(const std::string& str,
+                       const RE2& re,
+                       const StringPiece& rewrite,
+                       std::string* out) {
+  out->clear();
+
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
   if (nvec > 1 + re.NumberOfCapturingGroups())
@@ -434,10 +447,9 @@ int RE2::GlobalReplace(std::string* str,
   if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
-  const char* p = str->data();
-  const char* ep = p + str->size();
+  const char* p = str.data();
+  const char* ep = p + str.size();
   const char* lastend = NULL;
-  std::string out;
   int count = 0;
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
   // Iterate just once when fuzzing. Otherwise, we easily get bogged down
@@ -446,11 +458,11 @@ int RE2::GlobalReplace(std::string* str,
 #else
   while (p <= ep) {
 #endif
-    if (!re.Match(*str, static_cast<size_t>(p - str->data()),
-                  str->size(), UNANCHORED, vec, nvec))
+    if (!re.Match(str, static_cast<size_t>(p - str.data()),
+                  str.size(), UNANCHORED, vec, nvec))
       break;
     if (p < vec[0].data())
-      out.append(p, vec[0].data() - p);
+      out->append(p, vec[0].data() - p);
     if (vec[0].data() == lastend && vec[0].empty()) {
       // Disallow empty match at end of last match: skip ahead.
       //
@@ -469,7 +481,7 @@ int RE2::GlobalReplace(std::string* str,
           r = Runeerror;
         }
         if (!(n == 1 && r == Runeerror)) {  // no decoding error
-          out.append(p, n);
+          out->append(p, n);
           p += n;
           continue;
         }
@@ -477,11 +489,11 @@ int RE2::GlobalReplace(std::string* str,
       // Most likely, re is in Latin-1 mode. If it is in UTF-8 mode,
       // we fell through from above and the GIGO principle applies.
       if (p < ep)
-        out.append(p, 1);
+        out->append(p, 1);
       p++;
       continue;
     }
-    re.Rewrite(&out, rewrite, vec, nvec);
+    re.Rewrite(out, rewrite, vec, nvec);
     p = vec[0].data() + vec[0].size();
     lastend = p;
     count++;
@@ -491,9 +503,7 @@ int RE2::GlobalReplace(std::string* str,
     return 0;
 
   if (p < ep)
-    out.append(p, ep - p);
-  using std::swap;
-  swap(out, *str);
+    out->append(p, ep - p);
   return count;
 }
 

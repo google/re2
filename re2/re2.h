@@ -475,6 +475,22 @@ class RE2 {
                            const RE2& re,
                            const StringPiece& rewrite);
 
+  // Like Replace(), except replaces successive non-overlapping occurrences
+  // of the pattern in the string. Result string is written into "out".
+  //
+  //   std::string s = "yabba dabba doo";
+  //   std::string out;
+  //   CHECK(RE2::GlobalReplace(&s, "b+", "d", &out));
+  //
+  // Because GlobalReplace only replaces non-overlapping matches,
+  // replacing "ana" within "banana" makes only one replacement, not two.
+  //
+  // Returns the number of replacements made.
+  static int GlobalReplace(const std::string& str,
+                           const RE2& re,
+                           const StringPiece& rewrite,
+                           std::string* out);
+
   // Like Replace, except that if the pattern matches, "rewrite"
   // is copied into "out" with substitutions.  The non-matching
   // portions of "text" are ignored.

@@ -180,11 +180,32 @@ TEST(RE2, Replace) {
     std::string one(t->original);
     ASSERT_TRUE(RE2::Replace(&one, t->regexp, t->rewrite));
     ASSERT_EQ(one, t->single);
+
     std::string all(t->original);
     ASSERT_EQ(RE2::GlobalReplace(&all, t->regexp, t->rewrite), t->greplace_count)
       << "Got: " << all;
     ASSERT_EQ(all, t->global);
+
+    std::string result;
+    ASSERT_EQ(RE2::GlobalReplace(
+        std::string(t->original), t->regexp, t->rewrite, &result), t->greplace_count)
+      << "Got: " << all;
+    ASSERT_EQ(result, t->global);
   }
+}
+
+TEST(RE2, GlobalReplaceReuseResult) {
+  std::string s = "abcd";
+  std::string res;
+
+  ASSERT_EQ(1, RE2::GlobalReplace(s, "[a-c]+", "xyz", &res));
+  ASSERT_EQ("xyzd", res);
+
+  ASSERT_EQ(1, RE2::GlobalReplace(s, "[a-z]+", "123456789", &res));
+  ASSERT_EQ("123456789", res);
+
+  ASSERT_EQ(1, RE2::GlobalReplace(s, "[a-z]+", "", &res));
+  ASSERT_EQ("", res);
 }
 
 static void TestCheckRewriteString(const char* regexp, const char* rewrite,
