@@ -598,7 +598,7 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
     // by simply not continuing the loop.
     // This complements the special case in NFA::Step().
     if (p == NULL) {
-      (void)Step(runq, nextq, p < etext_ ? p[0] & 0xFF : -1, context, p);
+      (void) Step(runq, nextq, -1, context, p);
       DCHECK_EQ(runq->size(), 0);
       using std::swap;
       swap(nextq, runq);
