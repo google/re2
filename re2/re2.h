@@ -830,8 +830,9 @@ class RE2::Arg {
 #if !defined(_MSC_VER)
   template <typename T>
   using CanParseFrom = typename std::enable_if<
-      std::is_member_function_pointer<decltype(
-          (bool (T::*)(const char*, size_t))&T::ParseFrom)>::value,
+      std::is_member_function_pointer<
+          decltype(static_cast<bool (T::*)(const char*, size_t)>(
+              &T::ParseFrom))>::value,
       int>::type;
 #endif
 
