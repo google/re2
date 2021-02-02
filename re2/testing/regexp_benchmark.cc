@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 
 #include "absl/flags/flag.h"
@@ -20,6 +21,7 @@
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
+#include "util/mutex.h"
 #include "util/pcre.h"
 
 namespace re2 {
@@ -939,13 +941,52 @@ void SearchRE2(benchmark::State& state, const char* regexp,
 // regexp parsing and compiling once.  This lets us measure
 // search time without the per-regexp overhead.
 
+Prog* GetCachedProg(const char* regexp) {
+  static auto& mutex = *new Mutex;
+  MutexLock lock(&mutex);
+  static auto& cache = *new std::unordered_map<std::string, Prog*>;
+  Prog* prog = cache[regexp];
+  if (prog == NULL) {
+    Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
+    CHECK(re);
+    prog = re->CompileToProg(int64_t{1}<<31);  // mostly for the DFA
+    CHECK(prog);
+    cache[regexp] = prog;
+    re->Decref();
+  }
+  return prog;
+}
+
+PCRE* GetCachedPCRE(const char* regexp) {
+  static auto& mutex = *new Mutex;
+  MutexLock lock(&mutex);
+  static auto& cache = *new std::unordered_map<std::string, PCRE*>;
+  PCRE* re = cache[regexp];
+  if (re == NULL) {
+    re = new PCRE(regexp, PCRE::UTF8);
+    CHECK_EQ(re->error(), "");
+    cache[regexp] = re;
+  }
+  return re;
+}
+
+RE2* GetCachedRE2(const char* regexp) {
+  static auto& mutex = *new Mutex;
+  MutexLock lock(&mutex);
+  static auto& cache = *new std::unordered_map<std::string, RE2*>;
+  RE2* re = cache[regexp];
+  if (re == NULL) {
+    re = new RE2(regexp);
+    CHECK_EQ(re->error(), "");
+    cache[regexp] = re;
+  }
+  return re;
+}
+
 void SearchCachedDFA(benchmark::State& state, const char* regexp,
                      absl::string_view text, Prog::Anchor anchor,
                      bool expect_match) {
-  Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
-  CHECK(re);
-  Prog* prog = re->CompileToProg(int64_t{1}<<31);
-  CHECK(prog);
+  Prog* prog = GetCachedProg(regexp);
   for (auto _ : state) {
     bool failed = false;
     CHECK_EQ(prog->SearchDFA(text, absl::string_view(), anchor,
@@ -953,63 +994,45 @@ void SearchCachedDFA(benchmark::State& state, const char* regexp,
              expect_match);
     CHECK(!failed);
   }
-  delete prog;
-  re->Decref();
 }
 
 void SearchCachedNFA(benchmark::State& state, const char* regexp,
                      absl::string_view text, Prog::Anchor anchor,
                      bool expect_match) {
-  Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
-  CHECK(re);
-  Prog* prog = re->CompileToProg(0);
-  CHECK(prog);
+  Prog* prog = GetCachedProg(regexp);
   for (auto _ : state) {
     CHECK_EQ(prog->SearchNFA(text, absl::string_view(), anchor,
                              Prog::kFirstMatch, NULL, 0),
              expect_match);
   }
-  delete prog;
-  re->Decref();
 }
 
 void SearchCachedOnePass(benchmark::State& state, const char* regexp,
                          absl::string_view text, Prog::Anchor anchor,
                          bool expect_match) {
-  Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
-  CHECK(re);
-  Prog* prog = re->CompileToProg(0);
-  CHECK(prog);
+  Prog* prog = GetCachedProg(regexp);
   CHECK(prog->IsOnePass());
   for (auto _ : state) {
     CHECK_EQ(prog->SearchOnePass(text, text, anchor, Prog::kFirstMatch, NULL, 0),
              expect_match);
   }
-  delete prog;
-  re->Decref();
 }
 
 void SearchCachedBitState(benchmark::State& state, const char* regexp,
                           absl::string_view text, Prog::Anchor anchor,
                           bool expect_match) {
-  Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
-  CHECK(re);
-  Prog* prog = re->CompileToProg(0);
-  CHECK(prog);
+  Prog* prog = GetCachedProg(regexp);
   CHECK(prog->CanBitState());
   for (auto _ : state) {
     CHECK_EQ(prog->SearchBitState(text, text, anchor, Prog::kFirstMatch, NULL, 0),
              expect_match);
   }
-  delete prog;
-  re->Decref();
 }
 
 void SearchCachedPCRE(benchmark::State& state, const char* regexp,
                       absl::string_view text, Prog::Anchor anchor,
                       bool expect_match) {
-  PCRE re(regexp, PCRE::UTF8);
-  CHECK_EQ(re.error(), "");
+  PCRE& re = *GetCachedPCRE(regexp);
   for (auto _ : state) {
     if (anchor == Prog::kAnchored)
       CHECK_EQ(PCRE::FullMatch(text, re), expect_match);
@@ -1021,8 +1044,7 @@ void SearchCachedPCRE(benchmark::State& state, const char* regexp,
 void SearchCachedRE2(benchmark::State& state, const char* regexp,
                      absl::string_view text, Prog::Anchor anchor,
                      bool expect_match) {
-  RE2 re(regexp);
-  CHECK_EQ(re.error(), "");
+  RE2& re = *GetCachedRE2(regexp);
   for (auto _ : state) {
     if (anchor == Prog::kAnchored)
       CHECK_EQ(RE2::FullMatch(text, re), expect_match);
@@ -1114,79 +1136,105 @@ void Parse3RE2(benchmark::State& state, const char* regexp,
 }
 
 void Parse3CachedNFA(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                      absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   absl::string_view sp[4];  // 4 because sp[0] is whole match.
+=======
+                     const StringPiece& text) {
+  Prog* prog = GetCachedProg(regexp);
+  StringPiece sp[4];  // 4 because sp[0] is whole match.
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     CHECK(prog->SearchNFA(text, absl::string_view(), Prog::kAnchored,
                           Prog::kFullMatch, sp, 4));
   }
-  delete prog;
-  re->Decref();
 }
 
 void Parse3CachedOnePass(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                          absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
+=======
+                         const StringPiece& text) {
+  Prog* prog = GetCachedProg(regexp);
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   CHECK(prog->IsOnePass());
   absl::string_view sp[4];  // 4 because sp[0] is whole match.
   for (auto _ : state) {
     CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
   }
-  delete prog;
-  re->Decref();
 }
 
 void Parse3CachedBitState(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                           absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
+=======
+                          const StringPiece& text) {
+  Prog* prog = GetCachedProg(regexp);
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   CHECK(prog->CanBitState());
   absl::string_view sp[4];  // 4 because sp[0] is whole match.
   for (auto _ : state) {
     CHECK(prog->SearchBitState(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
   }
-  delete prog;
-  re->Decref();
 }
 
 void Parse3CachedBacktrack(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                            absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   absl::string_view sp[4];  // 4 because sp[0] is whole match.
+=======
+                           const StringPiece& text) {
+  Prog* prog = GetCachedProg(regexp);
+  StringPiece sp[4];  // 4 because sp[0] is whole match.
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     CHECK(prog->UnsafeSearchBacktrack(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 4));
   }
-  delete prog;
-  re->Decref();
 }
 
 void Parse3CachedPCRE(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                       absl::string_view text) {
   PCRE re(regexp, PCRE::UTF8);
   CHECK_EQ(re.error(), "");
   absl::string_view sp1, sp2, sp3;
+=======
+                      const StringPiece& text) {
+  PCRE& re = *GetCachedPCRE(regexp);
+  StringPiece sp1, sp2, sp3;
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     CHECK(PCRE::FullMatch(text, re, &sp1, &sp2, &sp3));
   }
 }
 
 void Parse3CachedRE2(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                      absl::string_view text) {
   RE2 re(regexp);
   CHECK_EQ(re.error(), "");
   absl::string_view sp1, sp2, sp3;
+=======
+                     const StringPiece& text) {
+  RE2& re = *GetCachedRE2(regexp);
+  StringPiece sp1, sp2, sp3;
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     CHECK(RE2::FullMatch(text, re, &sp1, &sp2, &sp3));
   }
@@ -1261,88 +1309,119 @@ void Parse1RE2(benchmark::State& state, const char* regexp,
 }
 
 void Parse1CachedNFA(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                      absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   absl::string_view sp[2];  // 2 because sp[0] is whole match.
+=======
+                     const StringPiece& text) {
+  Prog* prog = GetCachedProg(regexp);
+  StringPiece sp[2];  // 2 because sp[0] is whole match.
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     CHECK(prog->SearchNFA(text, absl::string_view(), Prog::kAnchored,
                           Prog::kFullMatch, sp, 2));
   }
-  delete prog;
-  re->Decref();
 }
 
 void Parse1CachedOnePass(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                          absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
+=======
+                         const StringPiece& text) {
+  Prog* prog = GetCachedProg(regexp);
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   CHECK(prog->IsOnePass());
   absl::string_view sp[2];  // 2 because sp[0] is whole match.
   for (auto _ : state) {
     CHECK(prog->SearchOnePass(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 2));
   }
-  delete prog;
-  re->Decref();
 }
 
 void Parse1CachedBitState(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                           absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
+=======
+                          const StringPiece& text) {
+  Prog* prog = GetCachedProg(regexp);
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   CHECK(prog->CanBitState());
   absl::string_view sp[2];  // 2 because sp[0] is whole match.
   for (auto _ : state) {
     CHECK(prog->SearchBitState(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 2));
   }
-  delete prog;
-  re->Decref();
 }
 
 void Parse1CachedBacktrack(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                            absl::string_view text) {
   Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
   CHECK(re);
   Prog* prog = re->CompileToProg(0);
   CHECK(prog);
   absl::string_view sp[2];  // 2 because sp[0] is whole match.
+=======
+                           const StringPiece& text) {
+  Prog* prog = GetCachedProg(regexp);
+  StringPiece sp[2];  // 2 because sp[0] is whole match.
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     CHECK(prog->UnsafeSearchBacktrack(text, text, Prog::kAnchored, Prog::kFullMatch, sp, 2));
   }
-  delete prog;
-  re->Decref();
 }
 
 void Parse1CachedPCRE(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                       absl::string_view text) {
   PCRE re(regexp, PCRE::UTF8);
   CHECK_EQ(re.error(), "");
   absl::string_view sp1;
+=======
+                      const StringPiece& text) {
+  PCRE& re = *GetCachedPCRE(regexp);
+  StringPiece sp1;
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     CHECK(PCRE::FullMatch(text, re, &sp1));
   }
 }
 
 void Parse1CachedRE2(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                      absl::string_view text) {
   RE2 re(regexp);
   CHECK_EQ(re.error(), "");
   absl::string_view sp1;
+=======
+                     const StringPiece& text) {
+  RE2& re = *GetCachedRE2(regexp);
+  StringPiece sp1;
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     CHECK(RE2::FullMatch(text, re, &sp1));
   }
 }
 
 void SearchParse2CachedPCRE(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                             absl::string_view text) {
   PCRE re(regexp, PCRE::UTF8);
   CHECK_EQ(re.error(), "");
+=======
+                            const StringPiece& text) {
+  PCRE& re = *GetCachedPCRE(regexp);
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     absl::string_view sp1, sp2;
     CHECK(PCRE::PartialMatch(text, re, &sp1, &sp2));
@@ -1350,9 +1429,14 @@ void SearchParse2CachedPCRE(benchmark::State& state, const char* regexp,
 }
 
 void SearchParse2CachedRE2(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                            absl::string_view text) {
   RE2 re(regexp);
   CHECK_EQ(re.error(), "");
+=======
+                           const StringPiece& text) {
+  RE2& re = *GetCachedRE2(regexp);
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     absl::string_view sp1, sp2;
     CHECK(RE2::PartialMatch(text, re, &sp1, &sp2));
@@ -1360,9 +1444,14 @@ void SearchParse2CachedRE2(benchmark::State& state, const char* regexp,
 }
 
 void SearchParse1CachedPCRE(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                             absl::string_view text) {
   PCRE re(regexp, PCRE::UTF8);
   CHECK_EQ(re.error(), "");
+=======
+                            const StringPiece& text) {
+  PCRE& re = *GetCachedPCRE(regexp);
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     absl::string_view sp1;
     CHECK(PCRE::PartialMatch(text, re, &sp1));
@@ -1370,9 +1459,14 @@ void SearchParse1CachedPCRE(benchmark::State& state, const char* regexp,
 }
 
 void SearchParse1CachedRE2(benchmark::State& state, const char* regexp,
+<<<<<<< HEAD   (4f5177 Use `static_cast<>` instead of a C-style cast.)
                            absl::string_view text) {
   RE2 re(regexp);
   CHECK_EQ(re.error(), "");
+=======
+                           const StringPiece& text) {
+  RE2& re = *GetCachedRE2(regexp);
+>>>>>>> CHANGE (0466ee Make *Cached* benchmarks actually use cached objects.)
   for (auto _ : state) {
     absl::string_view sp1;
     CHECK(RE2::PartialMatch(text, re, &sp1));
