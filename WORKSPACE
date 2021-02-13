@@ -7,6 +7,7 @@
 workspace(name = "com_googlesource_code_re2")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@com_googlesource_code_re2//:re2_configure.bzl", "re2_configure")
 
 http_archive(
     name = "rules_cc",
@@ -50,3 +51,5 @@ http_archive(
     strip_prefix = "six-master",
     urls = ["https://github.com/benjaminp/six/archive/master.zip"],
 )
+
+re2_configure(name = "local_config_re2")
