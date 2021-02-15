@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "50e41b1d_be7eb204",
+        "filename": "python/py_extension.bzl",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 32229
+      },
+      "writtenOn": "2021-02-15T20:17:12Z",
+      "side": 1,
+      "message": "IIUC this means py_extension is for C/C++ extensions only, with no supporting .py modules. Maybe add this as a doc comment for py_extension?",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 12
+      },
+      "revId": "e74f9b5099401dd0e6b769606c569998d15baa1c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6d4a039a_3457c7c6",
+        "filename": "python/py_extension.bzl",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 32229
+      },
+      "writtenOn": "2021-02-15T20:17:12Z",
+      "side": 1,
+      "message": "Maybe document these attrs with a \"doc \u003d ...\", in case somebody decides to copy-paste py_extension.bzl?",
+      "range": {
+        "startLine": 128,
+        "startChar": 0,
+        "endLine": 128,
+        "endChar": 8
+      },
+      "revId": "e74f9b5099401dd0e6b769606c569998d15baa1c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2d38e6ce_c586ed7c",
+        "filename": "python/py_extension.bzl",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 32229
+      },
+      "writtenOn": "2021-02-15T20:17:12Z",
+      "side": 1,
+      "message": "Link to the blocking bug?",
+      "range": {
+        "startLine": 138,
+        "startChar": 0,
+        "endLine": 138,
+        "endChar": 4
+      },
+      "revId": "e74f9b5099401dd0e6b769606c569998d15baa1c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
