@@ -4,16 +4,12 @@
 
 # Bazel (http://bazel.io/) BUILD file for RE2 Python.
 
-load("@local_config_re2//python:defs.bzl", "COPTS")
-load("@rules_cc//cc:defs.bzl", "cc_binary")
+load(":py_extension.bzl", "py_extension")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
-cc_binary(
-    name = "_re2.so",
+py_extension(
+    name = "_re2",
     srcs = ["_re2.cc"],
-    copts = COPTS + ["-fvisibility=hidden"],
-    linkshared = True,
-    linkstatic = True,
     deps = [
         "//:re2",
         "@com_google_absl//absl/memory",
