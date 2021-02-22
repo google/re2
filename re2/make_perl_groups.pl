@@ -76,7 +76,7 @@ sub PrintClass($$@) {
   } else {
     $negname =~ y/a-z/A-Z/;
   }
-  return "{ \"$escname\", +1, code$cnum, $n }", "{ \"$negname\", -1, code$cnum, $n }";
+  return "{ \"$escname\", +1, code$cnum, $n, 0, 0 }", "{ \"$negname\", -1, code$cnum, $n, 0, 0 }";
 }
 
 my $cnum = 0;
