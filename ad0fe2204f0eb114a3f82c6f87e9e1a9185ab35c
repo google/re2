@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9366323b_27c074d8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2021-02-22T02:29:46Z",
+      "side": 1,
+      "message": "Thanks for the suggestion, but as per the comment on line 1 of the file, a change such as this would be reverted by the next run of `make_perl_groups.pl`. I will take this from here.\n",
+      "revId": "ad0fe2204f0eb114a3f82c6f87e9e1a9185ab35c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
