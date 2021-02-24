@@ -168,6 +168,9 @@ class DFA {
   typedef absl::flat_hash_set<State*, StateHash, StateEqual> StateSet;
 
  private:
+  // Make it easier to swap in a scalable reader-writer mutex.
+  using CacheMutex = Mutex;
+
   enum {
     // Indices into start_ for unanchored searches.
     // Add kStartAnchored for anchored searches.
@@ -332,7 +335,11 @@ class DFA {
   // while holding cache_mutex_ for writing, to avoid interrupting other
   // readers.  Any State* pointers are only valid while cache_mutex_
   // is held.
+<<<<<<< HEAD   (67b855 Address some `-Wmissing-field-initializers' warnings.)
   absl::Mutex cache_mutex_;
+=======
+  CacheMutex cache_mutex_;
+>>>>>>> CHANGE (f8e389 Make it easier to swap in a scalable reader-writer mutex.)
   int64_t mem_budget_;     // Total memory budget for all States.
   int64_t state_budget_;   // Amount of memory remaining for new States.
   StateSet state_cache_;   // All States computed so far.
@@ -1108,7 +1115,11 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
 
 class DFA::RWLocker {
  public:
+<<<<<<< HEAD   (67b855 Address some `-Wmissing-field-initializers' warnings.)
   explicit RWLocker(absl::Mutex* mu);
+=======
+  explicit RWLocker(CacheMutex* mu);
+>>>>>>> CHANGE (f8e389 Make it easier to swap in a scalable reader-writer mutex.)
   ~RWLocker();
 
   // If the lock is only held for reading right now,
@@ -1118,14 +1129,22 @@ class DFA::RWLocker {
   void LockForWriting();
 
  private:
+<<<<<<< HEAD   (67b855 Address some `-Wmissing-field-initializers' warnings.)
   absl::Mutex* mu_;
+=======
+  CacheMutex* mu_;
+>>>>>>> CHANGE (f8e389 Make it easier to swap in a scalable reader-writer mutex.)
   bool writing_;
 
   RWLocker(const RWLocker&) = delete;
   RWLocker& operator=(const RWLocker&) = delete;
 };
 
+<<<<<<< HEAD   (67b855 Address some `-Wmissing-field-initializers' warnings.)
 DFA::RWLocker::RWLocker(absl::Mutex* mu) : mu_(mu), writing_(false) {
+=======
+DFA::RWLocker::RWLocker(CacheMutex* mu) : mu_(mu), writing_(false) {
+>>>>>>> CHANGE (f8e389 Make it easier to swap in a scalable reader-writer mutex.)
   mu_->ReaderLock();
 }
 
