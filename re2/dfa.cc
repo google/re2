@@ -167,6 +167,9 @@ class DFA {
   typedef std::unordered_set<State*, StateHash, StateEqual> StateSet;
 
  private:
+  // Make it easier to swap in a scalable reader-writer mutex.
+  using CacheMutex = Mutex;
+
   enum {
     // Indices into start_ for unanchored searches.
     // Add kStartAnchored for anchored searches.
@@ -331,7 +334,7 @@ class DFA {
   // while holding cache_mutex_ for writing, to avoid interrupting other
   // readers.  Any State* pointers are only valid while cache_mutex_
   // is held.
-  Mutex cache_mutex_;
+  CacheMutex cache_mutex_;
   int64_t mem_budget_;     // Total memory budget for all States.
   int64_t state_budget_;   // Amount of memory remaining for new States.
   StateSet state_cache_;   // All States computed so far.
@@ -1106,7 +1109,7 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
 
 class DFA::RWLocker {
  public:
-  explicit RWLocker(Mutex* mu);
+  explicit RWLocker(CacheMutex* mu);
   ~RWLocker();
 
   // If the lock is only held for reading right now,
@@ -1116,14 +1119,14 @@ class DFA::RWLocker {
   void LockForWriting();
 
  private:
-  Mutex* mu_;
+  CacheMutex* mu_;
   bool writing_;
 
   RWLocker(const RWLocker&) = delete;
   RWLocker& operator=(const RWLocker&) = delete;
 };
 
-DFA::RWLocker::RWLocker(Mutex* mu) : mu_(mu), writing_(false) {
+DFA::RWLocker::RWLocker(CacheMutex* mu) : mu_(mu), writing_(false) {
   mu_->ReaderLock();
 }
 
