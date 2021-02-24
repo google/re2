@@ -169,7 +169,7 @@ class DFA {
 
  private:
   // Make it easier to swap in a scalable reader-writer mutex.
-  using CacheMutex = Mutex;
+  using CacheMutex = absl::Mutex;
 
   enum {
     // Indices into start_ for unanchored searches.
