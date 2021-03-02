@@ -138,11 +138,6 @@ class WriterMutexLock {
   WriterMutexLock& operator=(const WriterMutexLock&) = delete;
 };
 
-// Catch bug where variable name is omitted, e.g. MutexLock (&mu);
-#define MutexLock(x) static_assert(false, "MutexLock declaration missing variable name")
-#define ReaderMutexLock(x) static_assert(false, "ReaderMutexLock declaration missing variable name")
-#define WriterMutexLock(x) static_assert(false, "WriterMutexLock declaration missing variable name")
-
 }  // namespace re2
 
 #endif  // UTIL_MUTEX_H_
