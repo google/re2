@@ -368,7 +368,7 @@ class RE2 {
   //    T               (where "bool T::ParseFrom(const char*, size_t)" exists)
   //    (void*)NULL     (the corresponding matched sub-pattern is not copied)
   //
-  // Returns true iff all of the following conditions are satisfied:
+  // Returns true if all of the following conditions are satisfied:
   //   a. "text" matches "re" fully - from the beginning to the end of "text".
   //   b. The number of matched sub-patterns is >= number of supplied pointers.
   //   c. The "i"th argument has a suitable type for holding the
@@ -391,7 +391,7 @@ class RE2 {
   // Like FullMatch(), except that "re" is allowed to match a substring
   // of "text".
   //
-  // Returns true iff all of the following conditions are satisfied:
+  // Returns true if all of the following conditions are satisfied:
   //   a. "text" matches "re" partially - for some substring of "text".
   //   b. The number of matched sub-patterns is >= number of supplied pointers.
   //   c. The "i"th argument has a suitable type for holding the
@@ -406,10 +406,10 @@ class RE2 {
 
   // Like FullMatch() and PartialMatch(), except that "re" has to match
   // a prefix of the text, and "input" is advanced past the matched
-  // text.  Note: "input" is modified iff this routine returns true
+  // text.  Note: "input" is modified if this routine returns true
   // and "re" matched a non-empty substring of "input".
   //
-  // Returns true iff all of the following conditions are satisfied:
+  // Returns true if all of the following conditions are satisfied:
   //   a. "input" matches "re" partially - for some prefix of "input".
   //   b. The number of matched sub-patterns is >= number of supplied pointers.
   //   c. The "i"th argument has a suitable type for holding the
@@ -427,7 +427,7 @@ class RE2 {
   // of "input".  For example, "FindAndConsume(s, "(\\w+)", &word)" finds
   // the next word in "s" and stores it in "word".
   //
-  // Returns true iff all of the following conditions are satisfied:
+  // Returns true if all of the following conditions are satisfied:
   //   a. "input" matches "re" partially - for some substring of "input".
   //   b. The number of matched sub-patterns is >= number of supplied pointers.
   //   c. The "i"th argument has a suitable type for holding the
@@ -479,7 +479,7 @@ class RE2 {
   // is copied into "out" with substitutions.  The non-matching
   // portions of "text" are ignored.
   //
-  // Returns true iff a match occurred and the extraction happened
+  // Returns true if a match occurred and the extraction happened
   // successfully;  if no match occurs, the string is left unaffected.
   //
   // REQUIRES: "text" must not alias any part of "*out".
