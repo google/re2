@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4c3d3da7_61432d1b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2021-04-20T03:45:48Z",
+      "side": 1,
+      "message": "No cherry-pick to abseil branch: GNU make isn\u0027t supported there.\n",
+      "revId": "6ec705dcd7a44a458f2b41630ab2101dc404053c",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
