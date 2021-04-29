@@ -133,6 +133,9 @@ bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v,
       error_info->kind = kNotCompiled;
     return false;
   }
+#ifdef RE2_HAVE_THREAD_LOCAL
+  hooks::context = NULL;
+#endif
   bool dfa_failed = false;
   std::unique_ptr<SparseSet> matches;
   if (v != NULL) {
