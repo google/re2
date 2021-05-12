@@ -308,6 +308,8 @@ RegexpTest simple_tests[] = {
   // Former bugs.
   { "a\\C*|ba\\C", "baba" },
   { "\\w*I\\w*", "Inc." },
+  { "(?:|a)*", "aaa" },
+  { "(?:|a)+", "aaa" },
 };
 
 TEST(Regexp, SearchTests) {

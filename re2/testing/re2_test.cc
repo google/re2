@@ -485,37 +485,37 @@ TEST(ProgramFanout, BigProgram) {
 
   std::vector<int> histogram;
 
-  // 3 is the largest non-empty bucket and has 1 element.
+  // 3 is the largest non-empty bucket and has 2 element.
   ASSERT_EQ(3, re1.ProgramFanout(&histogram));
-  ASSERT_EQ(1, histogram[3]);
+  ASSERT_EQ(2, histogram[3]);
 
-  // 6 is the largest non-empty bucket and has 10 elements.
+  // 6 is the largest non-empty bucket and has 11 elements.
   ASSERT_EQ(6, re10.ProgramFanout(&histogram));
-  ASSERT_EQ(10, histogram[6]);
+  ASSERT_EQ(11, histogram[6]);
 
-  // 9 is the largest non-empty bucket and has 100 elements.
+  // 9 is the largest non-empty bucket and has 101 elements.
   ASSERT_EQ(9, re100.ProgramFanout(&histogram));
-  ASSERT_EQ(100, histogram[9]);
+  ASSERT_EQ(101, histogram[9]);
 
-  // 13 is the largest non-empty bucket and has 1000 elements.
+  // 13 is the largest non-empty bucket and has 1001 elements.
   ASSERT_EQ(13, re1000.ProgramFanout(&histogram));
-  ASSERT_EQ(1000, histogram[13]);
+  ASSERT_EQ(1001, histogram[13]);
 
-  // 2 is the largest non-empty bucket and has 1 element.
+  // 2 is the largest non-empty bucket and has 2 element.
   ASSERT_EQ(2, re1.ReverseProgramFanout(&histogram));
-  ASSERT_EQ(1, histogram[2]);
+  ASSERT_EQ(2, histogram[2]);
 
-  // 5 is the largest non-empty bucket and has 10 elements.
+  // 5 is the largest non-empty bucket and has 11 elements.
   ASSERT_EQ(5, re10.ReverseProgramFanout(&histogram));
-  ASSERT_EQ(10, histogram[5]);
+  ASSERT_EQ(11, histogram[5]);
 
-  // 9 is the largest non-empty bucket and has 100 elements.
+  // 9 is the largest non-empty bucket and has 101 elements.
   ASSERT_EQ(9, re100.ReverseProgramFanout(&histogram));
-  ASSERT_EQ(100, histogram[9]);
+  ASSERT_EQ(101, histogram[9]);
 
-  // 12 is the largest non-empty bucket and has 1000 elements.
+  // 12 is the largest non-empty bucket and has 1001 elements.
   ASSERT_EQ(12, re1000.ReverseProgramFanout(&histogram));
-  ASSERT_EQ(1000, histogram[12]);
+  ASSERT_EQ(1001, histogram[12]);
 }
 
 // Issue 956519: handling empty character sets was
@@ -1639,6 +1639,21 @@ TEST(RE2, Issue104) {
   s = "人类";
   ASSERT_EQ(3, RE2::GlobalReplace(&s, "大*", "小"));
   ASSERT_EQ("小人小类小", s);
+}
+
+TEST(RE2, Issue310) {
+  // (?:|a)* matched more text than (?:|a)+ did.
+
+  std::string s = "aaa";
+  StringPiece m;
+
+  RE2 star("(?:|a)*");
+  ASSERT_TRUE(star.Match(s, 0, s.size(), RE2::UNANCHORED, &m, 1));
+  ASSERT_EQ(m, "") << " got m='" << m << "', want ''";
+
+  RE2 plus("(?:|a)+");
+  ASSERT_TRUE(plus.Match(s, 0, s.size(), RE2::UNANCHORED, &m, 1));
+  ASSERT_EQ(m, "") << " got m='" << m << "', want ''";
 }
 
 }  // namespace re2
