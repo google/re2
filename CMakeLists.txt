@@ -47,8 +47,8 @@ if(WIN32)
   add_definitions(-DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
 elseif(UNIX)
-  add_compile_options(-pthread)
-  list(APPEND EXTRA_TARGET_LINK_LIBRARIES -pthread)
+  set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+  find_package(Threads REQUIRED)
 endif()
 
 if(USEPCRE)
@@ -85,6 +85,10 @@ add_library(re2 ${RE2_SOURCES})
 target_include_directories(re2 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 set_target_properties(re2 PROPERTIES SOVERSION ${SONAME} VERSION ${SONAME}.0.0)
 add_library(re2::re2 ALIAS re2)
+
+if(UNIX)
+  target_link_libraries(re2 PUBLIC Threads::Threads)
+endif()
 
 if(RE2_BUILD_TESTING)
   set(TESTING_SOURCES
