@@ -5,10 +5,6 @@
 # Old enough to support Ubuntu Xenial.
 cmake_minimum_required(VERSION 3.5.1)
 
-if(POLICY CMP0048)
-  cmake_policy(SET CMP0048 NEW)
-endif()
-
 project(RE2 CXX)
 include(CTest)
 include(GNUInstallDirs)
@@ -137,12 +133,12 @@ if(RE2_BUILD_TESTING)
     add_executable(${target} re2/testing/${target}.cc util/test.cc)
     target_link_libraries(${target} testing ${EXTRA_TARGET_LINK_LIBRARIES})
     add_test(NAME ${target} COMMAND ${target})
-  endforeach(target)
+  endforeach()
 
   foreach(target ${BENCHMARK_TARGETS})
     add_executable(${target} re2/testing/${target}.cc util/benchmark.cc)
     target_link_libraries(${target} testing ${EXTRA_TARGET_LINK_LIBRARIES})
-  endforeach(target)
+  endforeach()
 endif()
 
 set(RE2_HEADERS
