@@ -953,6 +953,8 @@ Prog* GetCachedProg(const char* regexp) {
     CHECK(prog);
     cache[regexp] = prog;
     re->Decref();
+    // We must call this here - while we have exclusive access.
+    prog->IsOnePass();
   }
   return prog;
 }
