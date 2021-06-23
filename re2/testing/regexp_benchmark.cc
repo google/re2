@@ -949,7 +949,7 @@ Prog* GetCachedProg(const char* regexp) {
   if (prog == NULL) {
     Regexp* re = Regexp::Parse(regexp, Regexp::LikePerl, NULL);
     CHECK(re);
-    prog = re->CompileToProg(int64_t{1}<<31);  // mostly for the DFA
+    prog = re->CompileToProg(int64_t{1}<<30);  // mostly for the DFA
     CHECK(prog);
     cache[regexp] = prog;
     re->Decref();
