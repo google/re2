@@ -44,6 +44,8 @@ http_archive(
     urls = ["https://github.com/abseil/abseil-py/archive/master.zip"],
 )
 
+# RE2 doesn't depend on this anymore, but Abseil Python still does.
+# We should be able to delete this when their six.BUILD is deleted.
 http_archive(
     name = "six_archive",
     build_file = "@io_abseil_py//third_party:six.BUILD",

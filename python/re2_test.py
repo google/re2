@@ -10,7 +10,6 @@ from __future__ import print_function
 import collections
 import pickle
 import re
-import six
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -48,8 +47,7 @@ class Re2CompileTest(parameterized.TestCase):
   )
   def test_compile(self, pattern, expected_groups, expected_groupindex):
     regexp = re2.compile(pattern)
-    if re2._HAVE_LRU_CACHE:
-      self.assertIs(regexp, re2.compile(pattern))  # cached
+    self.assertIs(regexp, re2.compile(pattern))  # cached
     self.assertIsNotNone(regexp.options)
     self.assertEqual(expected_groups, regexp.groups)
     self.assertDictEqual(dict(expected_groupindex), regexp.groupindex)
@@ -162,14 +160,12 @@ class ReRegexpTest(parameterized.TestCase):
   @parameterized.parameters(
       (p.pattern, p.text, (p.spans if p.fullmatch else None)) for p in PARAMS)
   def test_fullmatch(self, pattern, text, expected_spans):
-    # NOT supported by the Python 2 re module!
-    if not (six.PY2 and self.MODULE is re):
-      match = self.MODULE.fullmatch(pattern, text)
-      if expected_spans is None:
-        self.assertIsNone(match)
-      else:
-        spans = [match.span(group) for group in range(match.re.groups + 1)]
-        self.assertListEqual(expected_spans, spans)
+    match = self.MODULE.fullmatch(pattern, text)
+    if expected_spans is None:
+      self.assertIsNone(match)
+    else:
+      spans = [match.span(group) for group in range(match.re.groups + 1)]
+      self.assertListEqual(expected_spans, spans)
 
   @parameterized.parameters(
       (u'', u'', [(0, 0)]),
@@ -278,11 +274,10 @@ class Re2RegexpTest(ReRegexpTest):
     self.assertListEqual(expected_matches, matches)
 
   def test_purge(self):
-    if re2._HAVE_LRU_CACHE:
-      re2.compile('Goodbye, world.')
-      self.assertGreater(re2._Regexp._make.cache_info().currsize, 0)
-      re2.purge()
-      self.assertEqual(re2._Regexp._make.cache_info().currsize, 0)
+    re2.compile('Goodbye, world.')
+    self.assertGreater(re2._Regexp._make.cache_info().currsize, 0)
+    re2.purge()
+    self.assertEqual(re2._Regexp._make.cache_info().currsize, 0)
 
 
 class Re2EscapeTest(parameterized.TestCase):
@@ -339,13 +334,11 @@ class ReMatchTest(parameterized.TestCase):
     text = u'Hello, world.\nI \u2665 RE2!\nGoodbye, world.\n'
     match = self.MODULE.search(pattern, text)
 
-    # NOT supported by the Python 2 re module!
-    if not (six.PY2 and self.MODULE is re):
-      self.assertEqual(u'\u2665 RE2!', match[0])
-      self.assertEqual(u'\u2665', match[1])
-      self.assertEqual(u'!', match[2])
-      self.assertEqual(u'\u2665', match[u'S'])
-      self.assertEqual(u'!', match[u'P'])
+    self.assertEqual(u'\u2665 RE2!', match[0])
+    self.assertEqual(u'\u2665', match[1])
+    self.assertEqual(u'!', match[2])
+    self.assertEqual(u'\u2665', match[u'S'])
+    self.assertEqual(u'!', match[u'P'])
 
     self.assertEqual(u'\u2665 RE2!', match.group())
     self.assertEqual(u'\u2665 RE2!', match.group(0))

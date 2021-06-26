@@ -26,23 +26,11 @@ from __future__ import division
 from __future__ import print_function
 
 import codecs
+import functools
 import itertools
-import six
+import struct
 
 import _re2
-
-if six.PY2:
-  try:
-    from backports import functools_lru_cache
-    _LRUCache = functools_lru_cache.lru_cache
-    _HAVE_LRU_CACHE = True
-  except ImportError:
-    _LRUCache = lambda *args, **kwargs: lambda func: func
-    _HAVE_LRU_CACHE = False
-else:
-  import functools
-  _LRUCache = functools.lru_cache
-  _HAVE_LRU_CACHE = True
 
 
 class error(Exception):
@@ -118,7 +106,7 @@ def _decode(b):
 
 
 def escape(pattern):
-  if isinstance(pattern, six.text_type):
+  if isinstance(pattern, str):
     encoded_pattern = _encode(pattern)
     escaped = _re2.RE2.QuoteMeta(encoded_pattern)
     decoded_escaped = _decode(escaped)
@@ -129,8 +117,7 @@ def escape(pattern):
 
 
 def purge():
-  if _HAVE_LRU_CACHE:
-    return _Regexp._make.cache_clear()
+  return _Regexp._make.cache_clear()
 
 
 _Anchor = _re2.RE2.Anchor
@@ -142,7 +129,7 @@ class _Regexp(object):
   __slots__ = ('_pattern', '_regexp')
 
   @classmethod
-  @_LRUCache(typed=True)
+  @functools.lru_cache(typed=True)
   def _make(cls, pattern, values):
     options = Options()
     for name, value in zip(Options.NAMES, values):
@@ -151,7 +138,7 @@ class _Regexp(object):
 
   def __init__(self, pattern, options):
     self._pattern = pattern
-    if isinstance(self._pattern, six.text_type):
+    if isinstance(self._pattern, str):
       if options.encoding == Options.Encoding.LATIN1:
         raise error('string type of pattern is Text (unicode in Python 2, str '
                     'in Python 3), but encoding specified in options is LATIN1')
@@ -182,7 +169,7 @@ class _Regexp(object):
     endpos = len(text) if endpos is None else max(0, min(endpos, len(text)))
     if pos > endpos:
       return
-    if isinstance(text, six.text_type):
+    if isinstance(text, str):
       encoded_text = _encode(text)
       encoded_pos = _re2.CharLenToBytes(encoded_text, 0, pos)
       if endpos == len(text):
@@ -319,7 +306,7 @@ class _Regexp(object):
   @property
   def groupindex(self):
     groups = self._regexp.NamedCapturingGroups()
-    if isinstance(self._pattern, six.text_type):
+    if isinstance(self._pattern, str):
       decoded_groups = [(_decode(group), index) for group, index in groups]
       return dict(decoded_groups)
     else:
@@ -361,14 +348,13 @@ class _Match(object):
   _GROUP_RE = compile(b'\\\\[1-9][0-9]?|\\\\g<\\w+>')
 
   @classmethod
-  @_LRUCache(typed=True)
+  @functools.lru_cache(typed=True)
   def _split(cls, template):
-    if isinstance(template, bytes):
-      chr = six.int2byte
+    if isinstance(template, str):
+      backslash = chr(0x5C)  # u'\\'
     else:
-      chr = six.unichr
+      backslash = struct.Struct('B').pack(0x5C)  # b'\\'
     empty = type(template)()
-    backslash = chr(0x5C)  # b'\\' or u'\\'
     pieces = [empty]
     index = template.find(backslash)
     while index != -1:
@@ -392,10 +378,10 @@ class _Match(object):
     return pieces
 
   def expand(self, template):
-    if isinstance(template, bytes):
-      unescape = codecs.escape_decode
-    else:
+    if isinstance(template, str):
       unescape = codecs.unicode_escape_decode
+    else:
+      unescape = codecs.escape_decode
     empty = type(template)()
     # Make a copy so that we don't clobber the cached pieces!
     pieces = list(self._split(template))
@@ -527,7 +513,7 @@ class Set(object):
     return cls(_Anchor.ANCHOR_BOTH, options=options)
 
   def Add(self, pattern):
-    if isinstance(pattern, six.text_type):
+    if isinstance(pattern, str):
       encoded_pattern = _encode(pattern)
       index = self._set.Add(encoded_pattern)
     else:
@@ -541,7 +527,7 @@ class Set(object):
       raise error('failed to compile Set')
 
   def Match(self, text):
-    if isinstance(text, six.text_type):
+    if isinstance(text, str):
       encoded_text = _encode(text)
       matches = self._set.Match(encoded_text)
     else:
@@ -560,7 +546,7 @@ class Filter(object):
   def Add(self, pattern, options=None):
     if not options:
       options = Options()
-    if isinstance(pattern, six.text_type):
+    if isinstance(pattern, str):
       encoded_pattern = _encode(pattern)
       index = self._filter.Add(encoded_pattern, options)
     else:
@@ -574,7 +560,7 @@ class Filter(object):
       raise error('failed to compile Filter')
 
   def Match(self, text, potential=False):
-    if isinstance(text, six.text_type):
+    if isinstance(text, str):
       encoded_text = _encode(text)
       matches = self._filter.Match(encoded_text, potential)
     else:
