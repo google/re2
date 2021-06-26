@@ -23,9 +23,6 @@ py_library(
     data = [":_re2.so"],
     imports = ["."],
     visibility = ["//visibility:public"],
-    deps = [
-        "@six_archive//:six",
-    ],
 )
 
 py_test(
@@ -36,6 +33,5 @@ py_test(
         ":re2",
         "@io_abseil_py//absl/testing:absltest",
         "@io_abseil_py//absl/testing:parameterized",
-        "@six_archive//:six",
     ],
 )

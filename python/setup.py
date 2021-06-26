@@ -64,5 +64,4 @@ setuptools.setup(
     ext_modules=[ext_module],
     py_modules=['re2'],
     python_requires='~=3.6',
-    install_requires=['six'],
 )
