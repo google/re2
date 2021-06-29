@@ -290,7 +290,7 @@ class Re2RegexpTest(ReRegexpTest):
     options = re2.Options()
     options.encoding = re2.Options.Encoding.LATIN1
     with self.assertRaisesRegex(re2.error,
-                                ('string type of pattern is Text .*, but '
+                                ('string type of pattern is str, but '
                                  'encoding specified in options is LATIN1')):
       re2.compile(u'.?', options=options)
 
