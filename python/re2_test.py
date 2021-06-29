@@ -68,6 +68,38 @@ class Re2CompileTest(parameterized.TestCase):
     self.assertListEqual([1, 1], regexp.programfanout)
     self.assertListEqual([3], regexp.reverseprogramfanout)
 
+  @parameterized.parameters(
+      (u'abc', 0, None),
+      (b'abc', 0, None),
+      (u'abc', 10, (b'abc', b'abc')),
+      (b'abc', 10, (b'abc', b'abc')),
+      (u'ab*c', 10, (b'ab', b'ac')),
+      (b'ab*c', 10, (b'ab', b'ac')),
+      (u'ab+c', 10, (b'abb', b'abc')),
+      (b'ab+c', 10, (b'abb', b'abc')),
+      (u'ab?c', 10, (b'abc', b'ac')),
+      (b'ab?c', 10, (b'abc', b'ac')),
+      (u'.*', 10, (b'', b'\xf4\xbf\xbf\xc0')),
+      (b'.*', 10, None),
+      (u'\\C*', 10, None),
+      (b'\\C*', 10, None),
+  )
+  def test_possiblematchrange(self, pattern, maxlen, expected_min_max):
+    # For brevity, the string type of pattern determines the encoding.
+    # It would otherwise be possible to have bytes with UTF8, but as per
+    # the module docstring, it isn't permitted to have str with LATIN1.
+    options = re2.Options()
+    if isinstance(pattern, str):
+      options.encoding = re2.Options.Encoding.UTF8
+    else:
+      options.encoding = re2.Options.Encoding.LATIN1
+    regexp = re2.compile(pattern, options=options)
+    if expected_min_max:
+      self.assertEqual(expected_min_max, regexp.possiblematchrange(maxlen))
+    else:
+      with self.assertRaisesRegex(re2.error, 'failed to compute match range'):
+        regexp.possiblematchrange(maxlen)
+
 
 Params = collections.namedtuple(
     'Params', ('pattern', 'text', 'spans', 'search', 'match', 'fullmatch'))
