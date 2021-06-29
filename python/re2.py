@@ -328,6 +328,12 @@ class _Regexp(object):
   def reverseprogramfanout(self):
     return self._regexp.ReverseProgramFanout()
 
+  def possiblematchrange(self, maxlen):
+    ok, min, max = self._regexp.PossibleMatchRange(maxlen)
+    if not ok:
+      raise error('failed to compute match range')
+    return min, max
+
 
 class _Match(object):
 

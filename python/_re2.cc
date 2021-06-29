@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -72,7 +73,7 @@ std::unique_ptr<RE2> RE2InitShim(py::buffer buffer,
 }
 
 py::bytes RE2ErrorShim(const RE2& self) {
-  // Return the std::string as bytes. That is, without decoding to Text.
+  // Return std::string as bytes. That is, without decoding to Text.
   return self.error();
 }
 
@@ -97,6 +98,13 @@ std::vector<int> RE2ReverseProgramFanoutShim(const RE2& self) {
   std::vector<int> histogram;
   self.ReverseProgramFanout(&histogram);
   return histogram;
+}
+
+std::tuple<bool, py::bytes, py::bytes> RE2PossibleMatchRangeShim(
+    const RE2& self, int maxlen) {
+  std::string min, max;
+  // Return std::string as bytes. That is, without decoding to Text.
+  return {self.PossibleMatchRange(&min, &max, maxlen), min, max};
 }
 
 std::vector<std::pair<ssize_t, ssize_t>> RE2MatchShim(const RE2& self,
@@ -132,7 +140,7 @@ std::vector<std::pair<ssize_t, ssize_t>> RE2MatchShim(const RE2& self,
 py::bytes RE2QuoteMetaShim(py::buffer buffer) {
   auto bytes = buffer.request();
   auto pattern = FromBytes(bytes);
-  // Return the std::string as bytes. That is, without decoding to Text.
+  // Return std::string as bytes. That is, without decoding to Text.
   return RE2::QuoteMeta(pattern);
 }
 
@@ -302,6 +310,7 @@ PYBIND11_MODULE(_re2, module) {
       .def("ReverseProgramSize", &RE2::ReverseProgramSize)
       .def("ProgramFanout", &RE2ProgramFanoutShim)
       .def("ReverseProgramFanout", &RE2ReverseProgramFanoutShim)
+      .def("PossibleMatchRange", &RE2PossibleMatchRangeShim)
       .def("Match", &RE2MatchShim)
       .def_static("QuoteMeta", &RE2QuoteMetaShim);
 
