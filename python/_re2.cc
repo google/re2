@@ -36,8 +36,8 @@ static inline int OneCharLen(const char* ptr) {
   return "\1\1\1\1\1\1\1\1\1\1\1\1\2\2\3\4"[(*ptr & 0xFF) >> 4];
 }
 
-// Helper function for when Python encodes Text to bytes and then needs to
-// convert Text offsets to bytes offsets. Assumes that text is valid UTF-8.
+// Helper function for when Python encodes str to bytes and then needs to
+// convert str offsets to bytes offsets. Assumes that text is valid UTF-8.
 ssize_t CharLenToBytes(py::buffer buffer, ssize_t pos, ssize_t len) {
   auto bytes = buffer.request();
   auto text = FromBytes(bytes);
@@ -50,8 +50,8 @@ ssize_t CharLenToBytes(py::buffer buffer, ssize_t pos, ssize_t len) {
   return ptr - (text.data() + pos);
 }
 
-// Helper function for when Python decodes bytes to Text and then needs to
-// convert bytes offsets to Text offsets. Assumes that text is valid UTF-8.
+// Helper function for when Python decodes bytes to str and then needs to
+// convert bytes offsets to str offsets. Assumes that text is valid UTF-8.
 ssize_t BytesToCharLen(py::buffer buffer, ssize_t pos, ssize_t endpos) {
   auto bytes = buffer.request();
   auto text = FromBytes(bytes);
@@ -73,7 +73,7 @@ std::unique_ptr<RE2> RE2InitShim(py::buffer buffer,
 }
 
 py::bytes RE2ErrorShim(const RE2& self) {
-  // Return std::string as bytes. That is, without decoding to Text.
+  // Return std::string as bytes. That is, without decoding to str.
   return self.error();
 }
 
@@ -103,7 +103,7 @@ std::vector<int> RE2ReverseProgramFanoutShim(const RE2& self) {
 std::tuple<bool, py::bytes, py::bytes> RE2PossibleMatchRangeShim(
     const RE2& self, int maxlen) {
   std::string min, max;
-  // Return std::string as bytes. That is, without decoding to Text.
+  // Return std::string as bytes. That is, without decoding to str.
   return {self.PossibleMatchRange(&min, &max, maxlen), min, max};
 }
 
@@ -140,7 +140,7 @@ std::vector<std::pair<ssize_t, ssize_t>> RE2MatchShim(const RE2& self,
 py::bytes RE2QuoteMetaShim(py::buffer buffer) {
   auto bytes = buffer.request();
   auto pattern = FromBytes(bytes);
-  // Return std::string as bytes. That is, without decoding to Text.
+  // Return std::string as bytes. That is, without decoding to str.
   return RE2::QuoteMeta(pattern);
 }
 

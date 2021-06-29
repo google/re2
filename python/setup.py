@@ -16,8 +16,8 @@ Known differences between this API and the re module's API:
   * The Options class replaces the re module's flags with RE2's options as
     gettable/settable properties. Please see re2.h for their documentation.
   * The pattern string and the input string do not have to be the same type.
-    Any Text (unicode in Python 2, str in Python 3) will be encoded to UTF-8.
-  * The pattern string cannot be Text if the options specify Latin-1 encoding.
+    Any str will be encoded to UTF-8.
+  * The pattern string cannot be str if the options specify Latin-1 encoding.
 
 Known issues with regard to building the C++ extension:
 

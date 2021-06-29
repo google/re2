@@ -12,8 +12,8 @@ Known differences between this API and the re module's API:
   * The Options class replaces the re module's flags with RE2's options as
     gettable/settable properties. Please see re2.h for their documentation.
   * The pattern string and the input string do not have to be the same type.
-    Any Text (unicode in Python 2, str in Python 3) will be encoded to UTF-8.
-  * The pattern string cannot be Text if the options specify Latin-1 encoding.
+    Any str will be encoded to UTF-8.
+  * The pattern string cannot be str if the options specify Latin-1 encoding.
 
 This module's LRU cache contains a maximum of 128 regular expression objects.
 Each regular expression object's underlying RE2 object uses a maximum of 8MiB
@@ -140,8 +140,8 @@ class _Regexp(object):
     self._pattern = pattern
     if isinstance(self._pattern, str):
       if options.encoding == Options.Encoding.LATIN1:
-        raise error('string type of pattern is Text (unicode in Python 2, str '
-                    'in Python 3), but encoding specified in options is LATIN1')
+        raise error('string type of pattern is str, but '
+                    'encoding specified in options is LATIN1')
       encoded_pattern = _encode(self._pattern)
       self._regexp = _re2.RE2(encoded_pattern, options)
     else:
@@ -151,14 +151,10 @@ class _Regexp(object):
 
   def __getstate__(self):
     options = {name: getattr(self.options, name) for name in Options.NAMES}
-    # Python 2 can't pickle the Encoding enum for some reason. :(
-    options['encoding'] = int(options['encoding'])
     return self.pattern, options
 
   def __setstate__(self, state):
     pattern, options = state
-    # See above.
-    options['encoding'] = Options.Encoding(options['encoding'])
     values = tuple(options[name] for name in Options.NAMES)
     other = _Regexp._make(pattern, values)
     self._pattern = other._pattern
@@ -194,7 +190,7 @@ class _Regexp(object):
         if offsets[0] == -1:
           offsets = offsets[1:]
         # Discard the rest of the items because they are useless now - and we
-        # could accumulate one item per Text offset in the pathological case!
+        # could accumulate one item per str offset in the pathological case!
         decoded_offsets = {last_offset: decoded_offsets[last_offset]}
         for offset in offsets:
           decoded_offsets[offset] = (
@@ -213,7 +209,7 @@ class _Regexp(object):
           break
         elif encoded_pos == spans[0][1]:
           # We matched the empty string at encoded_pos and would be stuck, so
-          # in order to make forward progress, increment the Text offset.
+          # in order to make forward progress, increment the str offset.
           encoded_pos += _re2.CharLenToBytes(encoded_text, encoded_pos, 1)
         else:
           encoded_pos = spans[0][1]
