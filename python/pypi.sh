@@ -8,7 +8,7 @@ SRCDIR=$(readlink --canonicalize $(dirname $0))
 DSTDIR=$(mktemp --directory --tmpdir $(basename $0).XXXXXXXXXX)
 
 cd ${SRCDIR}
-TAG=(perl -lne 'if (/(\d{4})(\d{2})(\d{2})/) { print "$1-$2-$3"; }' setup.py)
+TAG=$(perl -lne 'if (/(\d{4})(\d{2})(\d{2})/) { print "$1-$2-$3"; }' setup.py)
 
 cd ${DSTDIR}
 git clone --depth 1 --branch ${TAG} https://github.com/google/re2.git
