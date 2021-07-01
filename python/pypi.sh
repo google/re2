@@ -1,14 +1,17 @@
 #!/bin/bash
 # Uploads source and wheels to PyPI.
 # Expects to be used in a container:
-#   docker run -i -t --rm -v $PWD:/src quay.io/pypa/manylinux2014_x86_64
+#   docker run -i -t --pull always --rm -v $PWD:/src quay.io/pypa/manylinux2014_x86_64
 set -eux
 
 SRCDIR=$(readlink --canonicalize $(dirname $0))
 DSTDIR=$(mktemp --directory --tmpdir $(basename $0).XXXXXXXXXX)
 
+cd ${SRCDIR}
+TAG=(perl -lne 'if (/(\d{4})(\d{2})(\d{2})/) { print "$1-$2-$3"; }' setup.py)
+
 cd ${DSTDIR}
-git clone --depth 1 https://github.com/google/re2.git
+git clone --depth 1 --branch ${TAG} https://github.com/google/re2.git
 cd re2
 perl -i -lpe 'if (/^CXXFLAGS/) { $_ .= " -fPIC"; }' Makefile
 make -j$(nproc) static-install
