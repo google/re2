@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c1712e48_2c36e243",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2021-07-01T06:50:43Z",
+      "side": 1,
+      "message": "No cherry-pick to abseil branch: Migration from master to main.\n",
+      "revId": "ccdbd348259434cca6c66c66a35c5ef71ff3ee1a",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
