@@ -181,10 +181,11 @@ void Search(benchmark::State& state, const char* regexp, SearchImpl* search) {
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
-// These two are easy because they start with an A,
-// giving the search loop something to memchr for.
+// These three are easy because they have prefixes,
+// giving the search loop something to prefix accel.
 #define EASY0      "ABCDEFGHIJKLMNOPQRSTUVWXYZ$"
 #define EASY1      "A[AB]B[BC]C[CD]D[DE]E[EF]F[FG]G[GH]H[HI]I[IJ]J$"
+#define EASY2      "(?i)" EASY0
 
 // This is a little harder, since it starts with a character class
 // and thus can't be memchr'ed.  Could look for ABC and work backward,
@@ -227,6 +228,18 @@ BENCHMARK_RANGE(Search_Easy1_CachedNFA,     8, 256<<10)->ThreadRange(1, NumCPUs(
 BENCHMARK_RANGE(Search_Easy1_CachedPCRE,    8, 16<<20)->ThreadRange(1, NumCPUs());
 #endif
 BENCHMARK_RANGE(Search_Easy1_CachedRE2,     8, 16<<20)->ThreadRange(1, NumCPUs());
+
+void Search_Easy2_CachedDFA(benchmark::State& state)     { Search(state, EASY2, SearchCachedDFA); }
+void Search_Easy2_CachedNFA(benchmark::State& state)     { Search(state, EASY2, SearchCachedNFA); }
+void Search_Easy2_CachedPCRE(benchmark::State& state)    { Search(state, EASY2, SearchCachedPCRE); }
+void Search_Easy2_CachedRE2(benchmark::State& state)     { Search(state, EASY2, SearchCachedRE2); }
+
+BENCHMARK_RANGE(Search_Easy2_CachedDFA,     8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(Search_Easy2_CachedNFA,     8, 256<<10)->ThreadRange(1, NumCPUs());
+#ifdef USEPCRE
+BENCHMARK_RANGE(Search_Easy2_CachedPCRE,    8, 16<<20)->ThreadRange(1, NumCPUs());
+#endif
+BENCHMARK_RANGE(Search_Easy2_CachedRE2,     8, 16<<20)->ThreadRange(1, NumCPUs());
 
 void Search_Medium_CachedDFA(benchmark::State& state)     { Search(state, MEDIUM, SearchCachedDFA); }
 void Search_Medium_CachedNFA(benchmark::State& state)     { Search(state, MEDIUM, SearchCachedNFA); }
