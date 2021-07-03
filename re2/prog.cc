@@ -114,9 +114,8 @@ Prog::Prog()
     start_unanchored_(0),
     size_(0),
     bytemap_range_(0),
+    prefix_foldcase_(false),
     prefix_size_(0),
-    prefix_front_(-1),
-    prefix_back_(-1),
     list_count_(0),
     dfa_mem_(0),
     dfa_first_(NULL),
@@ -126,6 +125,8 @@ Prog::Prog()
 Prog::~Prog() {
   DeleteDFA(dfa_longest_);
   DeleteDFA(dfa_first_);
+  if (prefix_foldcase_)
+    delete[] prefix_dfa_;
 }
 
 typedef SparseSet Workq;
@@ -913,6 +914,177 @@ void Prog::ComputeHints(std::vector<Inst>* flat, int begin, int end) {
       ip->hint_foldcase_ |= hint<<1;
     }
   }
+}
+
+// This function takes the prefix as std::string (i.e. not const std::string&
+// as normal) because it's going to clobber it, so a temporary is convenient.
+static uint64_t* BuildShiftDFA(std::string prefix) {
+  // Convert any ASCII letters to lowercase; uppercase will be handled later.
+  for (char& b : prefix) {
+    if ('A' <= b && b <= 'Z')
+      b += 'a' - 'A';
+  }
+
+  // This constant is for convenience now and also for correctness later when
+  // we clobber the prefix, but still need to know how long it was initially.
+  const size_t size = prefix.size();
+
+  // Construct the NFA.
+  // The table is indexed by input byte; each element is a bitfield of states
+  // reachable by the input byte. Given a bitfield of the current states, the
+  // bitfield of states reachable from those is - for this specific purpose -
+  // always ((ncurr << 1) | 1). Intersecting the reachability bitfields gives
+  // the bitfield of the next states after stepping over whatever input byte.
+  // Credits for this technique: the Hyperscan paper by Geoff Langdale et al.
+  uint16_t nfa[256]{};
+  for (size_t i = 0; i < size; ++i) {
+    uint8_t b = prefix[i];
+    nfa[b] |= 1 << (i+1);
+  }
+  // This is the `\C*?` for unanchored search.
+  for (int b = 0; b < 256; ++b)
+    nfa[b] |= 1;
+
+  // This maps from DFA state to NFA states; the reverse mapping is used when
+  // recording transitions and gets implemented with plain old linear search.
+  // The "Shift DFA" technique limits this to ten states when using uint64_t;
+  // to allow for the initial state, we use at most nine bytes of the prefix.
+  // That same limit is also why uint16_t is sufficient for the NFA bitfield.
+  uint16_t states[10]{};
+  states[0] = 1;
+
+  // Construct the DFA.
+  // The table is indexed by input byte; each element is effectively a packed
+  // array of uint6_t; each array value is multiplied by six here in order to
+  // avoid having to do so later in the hot loop as well as shifting/masking.
+  // Credits for this technique: "Shift-based DFAs" on GitHub by Per Vognsen.
+  uint64_t* dfa = new uint64_t[256]{};
+  for (size_t dcurr = 0; dcurr < size; ++dcurr) {
+    uint8_t b = prefix[dcurr];
+    uint16_t ncurr = states[dcurr];
+    uint16_t nnext = nfa[b] & ((ncurr << 1) | 1);
+    size_t dnext = dcurr+1;
+    states[dnext] = nnext;
+  }
+
+  // Sort and unique the bytes of the prefix to avoid repeating work while we
+  // record transitions. This clobbers the prefix, but it's no longer needed.
+  std::sort(prefix.begin(), prefix.end());
+  prefix.erase(std::unique(prefix.begin(), prefix.end()), prefix.end());
+
+  // Record a transition from each state for each of the bytes of the prefix.
+  // Note that all other input bytes go back to the initial state by default.
+  for (size_t dcurr = 0; dcurr < size; ++dcurr) {
+    for (uint8_t b : prefix) {
+      uint16_t ncurr = states[dcurr];
+      uint16_t nnext = nfa[b] & ((ncurr << 1) | 1);
+      size_t dnext = 0;
+      while (states[dnext] != nnext)
+        ++dnext;
+      dfa[b] |= (dnext * 6) << (dcurr * 6);
+      // Convert ASCII letters to uppercase and record any extra transitions.
+      if ('a' <= b && b <= 'z') {
+        b -= 'a' - 'A';
+        dfa[b] |= (dnext * 6) << (dcurr * 6);
+      }
+    }
+  }
+  // This lets the final state "saturate", which will matter for performance:
+  // in the hot loop, we check for a match only at the end of each iteration,
+  // so we must keep signalling the match until we get around to checking it.
+  for (int b = 0; b < 256; ++b)
+    dfa[b] |= (size * 6) << (size * 6);
+
+  return dfa;
+}
+
+void Prog::ConfigurePrefixAccel(const std::string& prefix,
+                                bool prefix_foldcase) {
+  prefix_foldcase_ = prefix_foldcase;
+  prefix_size_ = prefix.size();
+  if (prefix_foldcase_) {
+    // Use PrefixAccel_ShiftDFA().
+    // ... and no more than nine bytes of the prefix. (See above for details.)
+    prefix_size_ = std::min(prefix_size_, size_t{9});
+    prefix_dfa_ = BuildShiftDFA(prefix.substr(0, prefix_size_));
+  } else if (prefix_size_ != 1) {
+    // Use PrefixAccel_FrontAndBack().
+    prefix_front_ = prefix.front();
+    prefix_back_ = prefix.back();
+  } else {
+    // Use memchr(3).
+    prefix_front_ = prefix.front();
+  }
+}
+
+const void* Prog::PrefixAccel_ShiftDFA(const void* data, size_t size) {
+  if (size < prefix_size_)
+    return NULL;
+
+  uint64_t curr = 0;
+  const uint64_t kFinal = prefix_size_ * 6;
+
+  // At the time of writing, rough benchmarks on a Broadwell machine showed
+  // that this unroll factor (i.e. eight) achieves a speedup factor of two.
+  if (size >= 8) {
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(data);
+    const uint8_t* endp = p + (size&~7);
+    while (p != endp) {
+      uint8_t b0 = p[0];
+      uint8_t b1 = p[1];
+      uint8_t b2 = p[2];
+      uint8_t b3 = p[3];
+      uint8_t b4 = p[4];
+      uint8_t b5 = p[5];
+      uint8_t b6 = p[6];
+      uint8_t b7 = p[7];
+
+      uint64_t next0 = prefix_dfa_[b0];
+      uint64_t next1 = prefix_dfa_[b1];
+      uint64_t next2 = prefix_dfa_[b2];
+      uint64_t next3 = prefix_dfa_[b3];
+      uint64_t next4 = prefix_dfa_[b4];
+      uint64_t next5 = prefix_dfa_[b5];
+      uint64_t next6 = prefix_dfa_[b6];
+      uint64_t next7 = prefix_dfa_[b7];
+
+      uint64_t curr0 = next0 >> (curr  & 63);
+      uint64_t curr1 = next1 >> (curr0 & 63);
+      uint64_t curr2 = next2 >> (curr1 & 63);
+      uint64_t curr3 = next3 >> (curr2 & 63);
+      uint64_t curr4 = next4 >> (curr3 & 63);
+      uint64_t curr5 = next5 >> (curr4 & 63);
+      uint64_t curr6 = next6 >> (curr5 & 63);
+      uint64_t curr7 = next7 >> (curr6 & 63);
+
+      if ((curr7 & 63) == kFinal) {
+        if ((curr0 & 63) == kFinal) return p+1-prefix_size_;
+        if ((curr1 & 63) == kFinal) return p+2-prefix_size_;
+        if ((curr2 & 63) == kFinal) return p+3-prefix_size_;
+        if ((curr3 & 63) == kFinal) return p+4-prefix_size_;
+        if ((curr4 & 63) == kFinal) return p+5-prefix_size_;
+        if ((curr5 & 63) == kFinal) return p+6-prefix_size_;
+        if ((curr6 & 63) == kFinal) return p+7-prefix_size_;
+        if ((curr7 & 63) == kFinal) return p+8-prefix_size_;
+      }
+
+      curr = curr7;
+      p += 8;
+    }
+    data = p;
+    size = size&7;
+  }
+
+  const uint8_t* p = reinterpret_cast<const uint8_t*>(data);
+  const uint8_t* endp = p + size;
+  while (p != endp) {
+    uint8_t b = *p++;
+    uint64_t next = prefix_dfa_[b];
+    curr = next >> (curr & 63);
+    if ((curr & 63) == kFinal)
+      return p-prefix_size_;
+  }
+  return NULL;
 }
 
 #if defined(__AVX2__)
