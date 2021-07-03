@@ -131,23 +131,35 @@ TEST(RequiredPrefixForAccel, SimpleTests) {
   }
 }
 
-TEST(PrefixAccel, BasicTest) {
-  Regexp* re = Regexp::Parse("abc\\d+", Regexp::LikePerl, NULL);
-  ASSERT_TRUE(re != NULL);
-  Prog* prog = re->CompileToProg(0);
-  ASSERT_TRUE(prog != NULL);
-  for (int i = 0; i < 100; i++) {
-    std::string text(i, 'a');
-    const char* p = reinterpret_cast<const char*>(
-        prog->PrefixAccel(text.data(), text.size()));
-    EXPECT_TRUE(p == NULL);
-    text.append("abc");
-    p = reinterpret_cast<const char*>(
-        prog->PrefixAccel(text.data(), text.size()));
-    EXPECT_EQ(i, p-text.data());
+static const char* prefix_accel_tests[] = {
+    "aababc\\d+",
+    "(?i)AABABC\\d+",
+};
+
+TEST(PrefixAccel, SimpleTests) {
+  for (size_t i = 0; i < arraysize(prefix_accel_tests); i++) {
+    const char* pattern = prefix_accel_tests[i];
+    Regexp* re = Regexp::Parse(pattern, Regexp::LikePerl, NULL);
+    ASSERT_TRUE(re != NULL);
+    Prog* prog = re->CompileToProg(0);
+    ASSERT_TRUE(prog != NULL);
+    ASSERT_TRUE(prog->can_prefix_accel());
+    for (int j = 0; j < 100; j++) {
+      std::string text(j, 'a');
+      const char* p = reinterpret_cast<const char*>(
+          prog->PrefixAccel(text.data(), text.size()));
+      EXPECT_TRUE(p == NULL);
+      text.append("aababc");
+      for (int k = 0; k < 100; k++) {
+        text.append(k, 'a');
+        p = reinterpret_cast<const char*>(
+            prog->PrefixAccel(text.data(), text.size()));
+        EXPECT_EQ(j, p - text.data());
+      }
+    }
+    delete prog;
+    re->Decref();
   }
-  delete prog;
-  re->Decref();
 }
 
 }  // namespace re2

@@ -220,10 +220,22 @@ class Prog {
   // Accelerates to the first likely occurrence of the prefix.
   // Returns a pointer to the first byte or NULL if not found.
   const void* PrefixAccel(const void* data, size_t size) {
-    DCHECK_GE(prefix_size_, 1);
-    return prefix_size_ == 1 ? memchr(data, prefix_front_, size)
-                             : PrefixAccel_FrontAndBack(data, size);
+    DCHECK(can_prefix_accel());
+    if (prefix_foldcase_) {
+      return PrefixAccel_ShiftDFA(data, size);
+    } else if (prefix_size_ != 1) {
+      return PrefixAccel_FrontAndBack(data, size);
+    } else {
+      return memchr(data, prefix_front_, size);
+    }
   }
+
+  // Configures prefix accel using the analysis performed during compilation.
+  void ConfigurePrefixAccel(const std::string& prefix, bool prefix_foldcase);
+
+  // An implementation of prefix accel that uses prefix_dfa_ to perform
+  // case-insensitive search.
+  const void* PrefixAccel_ShiftDFA(const void* data, size_t size);
 
   // An implementation of prefix accel that looks for prefix_front_ and
   // prefix_back_ to return fewer false positives than memchr(3) alone.
@@ -406,9 +418,16 @@ class Prog {
   int start_unanchored_;    // unanchored entry point for program
   int size_;                // number of instructions
   int bytemap_range_;       // bytemap_[x] < bytemap_range_
+
+  bool prefix_foldcase_;    // whether prefix is case-insensitive
   size_t prefix_size_;      // size of prefix (0 if no prefix)
-  int prefix_front_;        // first byte of prefix (-1 if no prefix)
-  int prefix_back_;         // last byte of prefix (-1 if no prefix)
+  union {
+    uint64_t* prefix_dfa_;  // "Shift DFA" for prefix
+    struct {
+      int prefix_front_;    // first byte of prefix
+      int prefix_back_;     // last byte of prefix
+    };
+  };
 
   int list_count_;                 // count of lists (see above)
   int inst_count_[kNumInst];       // count of instructions by opcode
