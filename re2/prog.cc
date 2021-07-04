@@ -981,11 +981,11 @@ static uint64_t* BuildShiftDFA(std::string prefix) {
       size_t dnext = 0;
       while (states[dnext] != nnext)
         ++dnext;
-      dfa[b] |= (dnext * 6) << (dcurr * 6);
+      dfa[b] |= static_cast<uint64_t>(dnext * 6) << (dcurr * 6);
       // Convert ASCII letters to uppercase and record any extra transitions.
       if ('a' <= b && b <= 'z') {
         b -= 'a' - 'A';
-        dfa[b] |= (dnext * 6) << (dcurr * 6);
+        dfa[b] |= static_cast<uint64_t>(dnext * 6) << (dcurr * 6);
       }
     }
   }
@@ -993,7 +993,7 @@ static uint64_t* BuildShiftDFA(std::string prefix) {
   // in the hot loop, we check for a match only at the end of each iteration,
   // so we must keep signalling the match until we get around to checking it.
   for (int b = 0; b < 256; ++b)
-    dfa[b] |= (size * 6) << (size * 6);
+    dfa[b] |= static_cast<uint64_t>(size * 6) << (size * 6);
 
   return dfa;
 }
