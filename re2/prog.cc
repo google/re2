@@ -956,7 +956,7 @@ static uint64_t* BuildShiftDFA(std::string prefix) {
   // Construct the DFA.
   // The table is indexed by input byte; each element is effectively a packed
   // array of uint6_t; each array value is multiplied by six here in order to
-  // avoid having to do so later in the hot loop as well as shifting/masking.
+  // avoid having to do so later in the hot loop as well as masking/shifting.
   // Credits for this technique: "Shift-based DFAs" on GitHub by Per Vognsen.
   uint64_t* dfa = new uint64_t[256]{};
   for (size_t dcurr = 0; dcurr < size; ++dcurr) {
@@ -1022,7 +1022,6 @@ const void* Prog::PrefixAccel_ShiftDFA(const void* data, size_t size) {
     return NULL;
 
   uint64_t curr = 0;
-  const uint64_t accept = prefix_size_ * 6;
 
   // At the time of writing, rough benchmarks on a Broadwell machine showed
   // that this unroll factor (i.e. eight) achieves a speedup factor of two.
@@ -1057,15 +1056,19 @@ const void* Prog::PrefixAccel_ShiftDFA(const void* data, size_t size) {
       uint64_t curr6 = next6 >> (curr5 & 63);
       uint64_t curr7 = next7 >> (curr6 & 63);
 
-      if ((curr7 & 63) == accept) {
-        if ((curr0 & 63) == accept) return p+1-prefix_size_;
-        if ((curr1 & 63) == accept) return p+2-prefix_size_;
-        if ((curr2 & 63) == accept) return p+3-prefix_size_;
-        if ((curr3 & 63) == accept) return p+4-prefix_size_;
-        if ((curr4 & 63) == accept) return p+5-prefix_size_;
-        if ((curr5 & 63) == accept) return p+6-prefix_size_;
-        if ((curr6 & 63) == accept) return p+7-prefix_size_;
-        if ((curr7 & 63) == accept) return p+8-prefix_size_;
+      if ((curr7 & 63) == prefix_size_ * 6) {
+        // At the time of writing, using the same masking subexpressions from
+        // the preceding lines caused Clang to clutter the hot loop computing
+        // them - even though they aren't actually needed for shifting! Hence
+        // these rewritten conditions, which achieve a speedup factor of two.
+        if (((curr7-curr0) & 63) == 0) return p+1-prefix_size_;
+        if (((curr7-curr1) & 63) == 0) return p+2-prefix_size_;
+        if (((curr7-curr2) & 63) == 0) return p+3-prefix_size_;
+        if (((curr7-curr3) & 63) == 0) return p+4-prefix_size_;
+        if (((curr7-curr4) & 63) == 0) return p+5-prefix_size_;
+        if (((curr7-curr5) & 63) == 0) return p+6-prefix_size_;
+        if (((curr7-curr6) & 63) == 0) return p+7-prefix_size_;
+        if (((curr7-curr7) & 63) == 0) return p+8-prefix_size_;
       }
 
       curr = curr7;
@@ -1081,7 +1084,7 @@ const void* Prog::PrefixAccel_ShiftDFA(const void* data, size_t size) {
     uint8_t b = *p++;
     uint64_t next = prefix_dfa_[b];
     curr = next >> (curr & 63);
-    if ((curr & 63) == accept)
+    if ((curr & 63) == prefix_size_ * 6)
       return p-prefix_size_;
   }
   return NULL;
