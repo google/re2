@@ -916,6 +916,10 @@ void Prog::ComputeHints(std::vector<Inst>* flat, int begin, int end) {
   }
 }
 
+// The final state will always be this, which frees up a register for the hot
+// loop and thus avoids the spilling that can occur when building with Clang.
+static const size_t kShiftDFAFinal = 9;
+
 // This function takes the prefix as std::string (i.e. not const std::string&
 // as normal) because it's going to clobber it, so a temporary is convenient.
 static uint64_t* BuildShiftDFA(std::string prefix) {
@@ -964,6 +968,8 @@ static uint64_t* BuildShiftDFA(std::string prefix) {
     uint16_t ncurr = states[dcurr];
     uint16_t nnext = nfa[b] & ((ncurr << 1) | 1);
     size_t dnext = dcurr+1;
+    if (dnext == size)
+      dnext = kShiftDFAFinal;
     states[dnext] = nnext;
   }
 
@@ -993,7 +999,7 @@ static uint64_t* BuildShiftDFA(std::string prefix) {
   // in the hot loop, we check for a match only at the end of each iteration,
   // so we must keep signalling the match until we get around to checking it.
   for (int b = 0; b < 256; ++b)
-    dfa[b] |= static_cast<uint64_t>(size * 6) << (size * 6);
+    dfa[b] |= static_cast<uint64_t>(kShiftDFAFinal * 6) << (kShiftDFAFinal * 6);
 
   return dfa;
 }
@@ -1005,7 +1011,7 @@ void Prog::ConfigurePrefixAccel(const std::string& prefix,
   if (prefix_foldcase_) {
     // Use PrefixAccel_ShiftDFA().
     // ... and no more than nine bytes of the prefix. (See above for details.)
-    prefix_size_ = std::min(prefix_size_, size_t{9});
+    prefix_size_ = std::min(prefix_size_, kShiftDFAFinal);
     prefix_dfa_ = BuildShiftDFA(prefix.substr(0, prefix_size_));
   } else if (prefix_size_ != 1) {
     // Use PrefixAccel_FrontAndBack().
@@ -1056,7 +1062,7 @@ const void* Prog::PrefixAccel_ShiftDFA(const void* data, size_t size) {
       uint64_t curr6 = next6 >> (curr5 & 63);
       uint64_t curr7 = next7 >> (curr6 & 63);
 
-      if ((curr7 & 63) == prefix_size_ * 6) {
+      if ((curr7 & 63) == kShiftDFAFinal * 6) {
         // At the time of writing, using the same masking subexpressions from
         // the preceding lines caused Clang to clutter the hot loop computing
         // them - even though they aren't actually needed for shifting! Hence
@@ -1084,7 +1090,7 @@ const void* Prog::PrefixAccel_ShiftDFA(const void* data, size_t size) {
     uint8_t b = *p++;
     uint64_t next = prefix_dfa_[b];
     curr = next >> (curr & 63);
-    if ((curr & 63) == prefix_size_ * 6)
+    if ((curr & 63) == kShiftDFAFinal * 6)
       return p-prefix_size_;
   }
   return NULL;
