@@ -132,6 +132,40 @@ TEST(RequiredPrefixForAccel, SimpleTests) {
   }
 }
 
+TEST(RequiredPrefixForAccel, CaseFoldingForKAndS) {
+  Regexp* re;
+  std::string p;
+  bool f;
+
+  // With Latin-1 encoding, `(?i)` prefixes can include 'k' and 's'.
+  re = Regexp::Parse("(?i)KLM", Regexp::LikePerl|Regexp::Latin1, NULL);
+  ASSERT_TRUE(re != NULL);
+  ASSERT_TRUE(re->RequiredPrefixForAccel(&p, &f));
+  ASSERT_EQ(p, "klm");
+  ASSERT_EQ(f, true);
+  re->Decref();
+
+  re = Regexp::Parse("(?i)STU", Regexp::LikePerl|Regexp::Latin1, NULL);
+  ASSERT_TRUE(re != NULL);
+  ASSERT_TRUE(re->RequiredPrefixForAccel(&p, &f));
+  ASSERT_EQ(p, "stu");
+  ASSERT_EQ(f, true);
+  re->Decref();
+
+  // With UTF-8 encoding, `(?i)` prefixes can't include 'k' and 's'.
+  // This is because they match U+212A and U+017F, respectively, and
+  // so the parser ends up emitting character classes, not literals.
+  re = Regexp::Parse("(?i)KLM", Regexp::LikePerl, NULL);
+  ASSERT_TRUE(re != NULL);
+  ASSERT_FALSE(re->RequiredPrefixForAccel(&p, &f));
+  re->Decref();
+
+  re = Regexp::Parse("(?i)STU", Regexp::LikePerl, NULL);
+  ASSERT_TRUE(re != NULL);
+  ASSERT_FALSE(re->RequiredPrefixForAccel(&p, &f));
+  re->Decref();
+}
+
 static const char* prefix_accel_tests[] = {
     "aababc\\d+",
     "(?i)AABABC\\d+",

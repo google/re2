@@ -923,12 +923,6 @@ static const size_t kShiftDFAFinal = 9;
 // This function takes the prefix as std::string (i.e. not const std::string&
 // as normal) because it's going to clobber it, so a temporary is convenient.
 static uint64_t* BuildShiftDFA(std::string prefix) {
-  // Convert any ASCII letters to lowercase; uppercase will be handled later.
-  for (char& b : prefix) {
-    if ('A' <= b && b <= 'Z')
-      b += 'a' - 'A';
-  }
-
   // This constant is for convenience now and also for correctness later when
   // we clobber the prefix, but still need to know how long it was initially.
   const size_t size = prefix.size();
@@ -988,6 +982,10 @@ static uint64_t* BuildShiftDFA(std::string prefix) {
         ++dnext;
       dfa[b] |= static_cast<uint64_t>(dnext * 6) << (dcurr * 6);
       // Convert ASCII letters to uppercase and record the extra transitions.
+      // Note that ASCII letters are guaranteed to be lowercase at this point
+      // because that's how the parser normalises them. #FunFact: 'k' and 's'
+      // match U+212A and U+017F, respectively, so they won't occur here when
+      // using UTF-8 encoding because the parser will emit character classes.
       if ('a' <= b && b <= 'z') {
         b -= 'a' - 'A';
         dfa[b] |= static_cast<uint64_t>(dnext * 6) << (dcurr * 6);
