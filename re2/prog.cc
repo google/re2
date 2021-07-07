@@ -938,7 +938,7 @@ static uint64_t* BuildShiftDFA(std::string prefix) {
   // reachable by the input byte. Given a bitfield of the current states, the
   // bitfield of states reachable from those is - for this specific purpose -
   // always ((ncurr << 1) | 1). Intersecting the reachability bitfields gives
-  // the bitfield of the next states after stepping over whatever input byte.
+  // the bitfield of the next states reached by stepping over the input byte.
   // Credits for this technique: the Hyperscan paper by Geoff Langdale et al.
   uint16_t nfa[256]{};
   for (size_t i = 0; i < size; ++i) {
@@ -954,15 +954,8 @@ static uint64_t* BuildShiftDFA(std::string prefix) {
   // The "Shift DFA" technique limits this to ten states when using uint64_t;
   // to allow for the initial state, we use at most nine bytes of the prefix.
   // That same limit is also why uint16_t is sufficient for the NFA bitfield.
-  uint16_t states[10]{};
+  uint16_t states[kShiftDFAFinal+1]{};
   states[0] = 1;
-
-  // Construct the DFA.
-  // The table is indexed by input byte; each element is effectively a packed
-  // array of uint6_t; each array value is multiplied by six here in order to
-  // avoid having to do so later in the hot loop as well as masking/shifting.
-  // Credits for this technique: "Shift-based DFAs" on GitHub by Per Vognsen.
-  uint64_t* dfa = new uint64_t[256]{};
   for (size_t dcurr = 0; dcurr < size; ++dcurr) {
     uint8_t b = prefix[dcurr];
     uint16_t ncurr = states[dcurr];
@@ -978,6 +971,12 @@ static uint64_t* BuildShiftDFA(std::string prefix) {
   std::sort(prefix.begin(), prefix.end());
   prefix.erase(std::unique(prefix.begin(), prefix.end()), prefix.end());
 
+  // Construct the DFA.
+  // The table is indexed by input byte; each element is effectively a packed
+  // array of uint6_t; each array value will be multiplied by six in order to
+  // avoid having to do so later in the hot loop as well as masking/shifting.
+  // Credits for this technique: "Shift-based DFAs" on GitHub by Per Vognsen.
+  uint64_t* dfa = new uint64_t[256]{};
   // Record a transition from each state for each of the bytes of the prefix.
   // Note that all other input bytes go back to the initial state by default.
   for (size_t dcurr = 0; dcurr < size; ++dcurr) {
