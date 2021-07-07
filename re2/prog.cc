@@ -1034,7 +1034,7 @@ const void* Prog::PrefixAccel_ShiftDFA(const void* data, size_t size) {
   if (size >= 8) {
     const uint8_t* p = reinterpret_cast<const uint8_t*>(data);
     const uint8_t* endp = p + (size&~7);
-    while (p != endp) {
+    do {
       uint8_t b0 = p[0];
       uint8_t b1 = p[1];
       uint8_t b2 = p[2];
@@ -1079,7 +1079,7 @@ const void* Prog::PrefixAccel_ShiftDFA(const void* data, size_t size) {
 
       curr = curr7;
       p += 8;
-    }
+    } while (p != endp);
     data = p;
     size = size&7;
   }
@@ -1138,7 +1138,7 @@ const void* Prog::PrefixAccel_FrontAndBack(const void* data, size_t size) {
     const __m256i* endfp = fp + size/sizeof(__m256i);
     const __m256i f_set1 = _mm256_set1_epi8(prefix_front_);
     const __m256i b_set1 = _mm256_set1_epi8(prefix_back_);
-    while (fp != endfp) {
+    do {
       const __m256i f_loadu = _mm256_loadu_si256(fp++);
       const __m256i b_loadu = _mm256_loadu_si256(bp++);
       const __m256i f_cmpeq = _mm256_cmpeq_epi8(f_set1, f_loadu);
@@ -1150,7 +1150,7 @@ const void* Prog::PrefixAccel_FrontAndBack(const void* data, size_t size) {
         const int fb_ctz = FindLSBSet(fb_movemask);
         return reinterpret_cast<const char*>(fp-1) + fb_ctz;
       }
-    }
+    } while (fp != endfp);
     data = fp;
     size = size%sizeof(__m256i);
   }
