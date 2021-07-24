@@ -310,10 +310,6 @@ class Prog {
   // FOR TESTING OR EXPERIMENTAL PURPOSES ONLY.
   int BuildEntireDFA(MatchKind kind, const DFAStateCallback& cb);
 
-  // Controls whether the DFA should bail out early if the NFA would be faster.
-  // FOR TESTING ONLY.
-  static void TEST_dfa_should_bail_when_slow(bool b);
-
   // Compute bytemap.
   void ComputeByteMap();
 
@@ -400,6 +396,10 @@ class Prog {
 
   // Computes hints for ByteRange instructions in [begin, end).
   void ComputeHints(std::vector<Inst>* flat, int begin, int end);
+
+  // Controls whether the DFA should bail out early if the NFA would be faster.
+  // FOR TESTING ONLY.
+  static void TESTING_ONLY_set_dfa_should_bail_when_slow(bool b);
 
  private:
   friend class Compiler;
