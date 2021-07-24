@@ -42,12 +42,12 @@
 
 namespace re2 {
 
-// Reduce the maximum repeat count by an order of magnitude when fuzzing.
-#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-static const int kMaxRepeat = 100;
-#else
-static const int kMaxRepeat = 1000;
-#endif
+// Controls the maximum repeat count permitted by the parser.
+static int maximum_repeat_count = 1000;
+
+void Regexp::FUZZING_ONLY_set_maximum_repeat_count(int i) {
+  maximum_repeat_count = i;
+}
 
 // Regular expression parse state.
 // The list of parsed regexps so far is maintained as a vector of
@@ -564,7 +564,9 @@ int RepetitionWalker::ShortVisit(Regexp* re, int parent_arg) {
 // A valid argument for the operator must already be on the stack.
 bool Regexp::ParseState::PushRepetition(int min, int max, absl::string_view s,
                                         bool nongreedy) {
-  if ((max != -1 && max < min) || min > kMaxRepeat || max > kMaxRepeat) {
+  if ((max != -1 && max < min) ||
+      min > maximum_repeat_count ||
+      max > maximum_repeat_count) {
     status_->set_code(kRegexpRepeatSize);
     status_->set_error_arg(s);
     return false;
@@ -587,7 +589,7 @@ bool Regexp::ParseState::PushRepetition(int min, int max, absl::string_view s,
   stacktop_ = re;
   if (min >= 2 || max >= 2) {
     RepetitionWalker w;
-    if (w.Walk(stacktop_, kMaxRepeat) == 0) {
+    if (w.Walk(stacktop_, maximum_repeat_count) == 0) {
       status_->set_code(kRegexpRepeatSize);
       status_->set_error_arg(s);
       return false;

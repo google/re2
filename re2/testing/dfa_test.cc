@@ -144,7 +144,7 @@ TEST(SingleThreaded, SearchDFA) {
   // NFA implementation instead.  (The DFA loses its speed advantage
   // if it can't get a good cache hit rate.)
   // Tell the DFA to trudge along instead.
-  Prog::TEST_dfa_should_bail_when_slow(false);
+  Prog::TESTING_ONLY_set_dfa_should_bail_when_slow(false);
   state_cache_resets = 0;
   search_failures = 0;
 
@@ -197,7 +197,7 @@ TEST(SingleThreaded, SearchDFA) {
   re->Decref();
 
   // Reset to original behaviour.
-  Prog::TEST_dfa_should_bail_when_slow(true);
+  Prog::TESTING_ONLY_set_dfa_should_bail_when_slow(true);
   ASSERT_GT(state_cache_resets, 0);
   ASSERT_EQ(search_failures, 0);
 }
@@ -223,7 +223,7 @@ static void DoSearch(Prog* prog, absl::string_view match,
 }
 
 TEST(Multithreaded, SearchDFA) {
-  Prog::TEST_dfa_should_bail_when_slow(false);
+  Prog::TESTING_ONLY_set_dfa_should_bail_when_slow(false);
   state_cache_resets = 0;
   search_failures = 0;
 
@@ -264,7 +264,7 @@ TEST(Multithreaded, SearchDFA) {
   re->Decref();
 
   // Reset to original behaviour.
-  Prog::TEST_dfa_should_bail_when_slow(true);
+  Prog::TESTING_ONLY_set_dfa_should_bail_when_slow(true);
   ASSERT_GT(state_cache_resets, 0);
   ASSERT_EQ(search_failures, 0);
 }
