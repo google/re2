@@ -12,6 +12,7 @@
 
 #include "re2/prefilter.h"
 #include "re2/re2.h"
+#include "re2/regexp.h"
 
 using re2::StringPiece;
 
@@ -49,6 +50,10 @@ void TestOneInput(StringPiece pattern, const RE2::Options& options,
     return;
   if (backslash_p > 1)
     return;
+
+  // The default is 1000. Even 100 turned out to be too generous
+  // for fuzzing, empirically speaking, so let's try 10 instead.
+  re2::Regexp::FUZZING_ONLY_set_maximum_repeat_count(10);
 
   RE2 re(pattern, options);
   if (!re.ok())

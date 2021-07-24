@@ -56,6 +56,10 @@ namespace re2 {
 // Controls whether the DFA should bail out early if the NFA would be faster.
 static bool dfa_should_bail_when_slow = true;
 
+void Prog::TESTING_ONLY_set_dfa_should_bail_when_slow(bool b) {
+  dfa_should_bail_when_slow = b;
+}
+
 // Changing this to true compiles in prints that trace execution of the DFA.
 // Generates a lot of output -- only useful for debugging.
 static const bool ExtraDebug = false;
@@ -1964,10 +1968,6 @@ int DFA::BuildAllStates(const Prog::DFAStateCallback& cb) {
 // Build out all states in DFA for kind.  Returns number of states.
 int Prog::BuildEntireDFA(MatchKind kind, const DFAStateCallback& cb) {
   return GetDFA(kind)->BuildAllStates(cb);
-}
-
-void Prog::TEST_dfa_should_bail_when_slow(bool b) {
-  dfa_should_bail_when_slow = b;
 }
 
 // Computes min and max for matching string.

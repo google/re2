@@ -449,6 +449,10 @@ class Regexp {
   // regardless of the return value.
   bool RequiredPrefixForAccel(std::string* prefix, bool* foldcase);
 
+  // Controls the maximum repeat count permitted by the parser.
+  // FOR FUZZING ONLY.
+  static void FUZZING_ONLY_set_maximum_repeat_count(int i);
+
  private:
   // Constructor allocates vectors as appropriate for operator.
   explicit Regexp(RegexpOp op, ParseFlags parse_flags);
