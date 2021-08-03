@@ -2032,7 +2032,8 @@ static bool IsValidCaptureName(const StringPiece& name) {
     CharClassBuilder ccb;
     for (StringPiece group :
          {"Lu", "Ll", "Lt", "Lm", "Lo", "Nl", "Mn", "Mc", "Nd", "Pc"})
-      AddUGroup(&ccb, LookupUnicodeGroup(group), +1, Regexp::NoParseFlags);
+      AddUGroup(&ccb, LookupGroup(group, unicode_groups, num_unicode_groups),
+                +1, Regexp::NoParseFlags);
     return ccb.GetCharClass();
   }();
 
