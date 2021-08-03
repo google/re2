@@ -955,7 +955,7 @@ CharClass* CharClass::Negate() {
   return cc;
 }
 
-bool CharClass::Contains(Rune r) {
+bool CharClass::Contains(Rune r) const {
   RuneRange* rr = ranges_;
   int n = nranges_;
   while (n > 0) {
