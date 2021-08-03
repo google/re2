@@ -254,7 +254,7 @@ class CharClass {
   bool full() { return nrunes_ == Runemax+1; }
   bool FoldsASCII() { return folds_ascii_; }
 
-  bool Contains(Rune r);
+  bool Contains(Rune r) const;
   CharClass* Negate();
 
  private:

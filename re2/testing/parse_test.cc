@@ -164,6 +164,7 @@ static Test tests[] = {
 
   // Test named captures
   { "(?P<name>a)", "cap{name:lit{a}}" },
+  { "(?P<中文>a)", "cap{中文:lit{a}}" },
 
   // Case-folded literals
   { "[Aa]", "litfold{a}" },
