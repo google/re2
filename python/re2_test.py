@@ -44,6 +44,7 @@ class Re2CompileTest(parameterized.TestCase):
   @parameterized.parameters(
       (u'(foo*)(?P<bar>qux+)', 2, [(u'bar', 2)]),
       (b'(foo*)(?P<bar>qux+)', 2, [(b'bar', 2)]),
+      (u'(foo*)(?P<中文>qux+)', 2, [(u'中文', 2)]),
   )
   def test_compile(self, pattern, expected_groups, expected_groupindex):
     regexp = re2.compile(pattern)

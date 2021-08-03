@@ -34,8 +34,8 @@ http_archive(
 
 http_archive(
     name = "rules_python",
-    strip_prefix = "rules_python-master",
-    urls = ["https://github.com/bazelbuild/rules_python/archive/master.zip"],
+    strip_prefix = "rules_python-main",
+    urls = ["https://github.com/bazelbuild/rules_python/archive/main.zip"],
 )
 
 http_archive(
