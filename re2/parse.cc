@@ -1406,15 +1406,29 @@ static int StringViewToRune(Rune* r, absl::string_view* sp,
     }
   }
 
+<<<<<<< HEAD   (4a4b75 Bump version to 0.2.20210801 for PyPI.)
   status->set_code(kRegexpBadUTF8);
   status->set_error_arg(absl::string_view());
+=======
+  if (status != NULL) {
+    status->set_code(kRegexpBadUTF8);
+    status->set_error_arg(StringPiece());
+  }
+>>>>>>> CHANGE (6a9941 Permit Unicode characters beyond ASCII in capture names.)
   return -1;
 }
 
+<<<<<<< HEAD   (4a4b75 Bump version to 0.2.20210801 for PyPI.)
 // Return whether name is valid UTF-8.
 // If not, set status to kRegexpBadUTF8.
 static bool IsValidUTF8(absl::string_view s, RegexpStatus* status) {
   absl::string_view t = s;
+=======
+// Returns whether name is valid UTF-8.
+// If not, sets status to kRegexpBadUTF8.
+static bool IsValidUTF8(const StringPiece& s, RegexpStatus* status) {
+  StringPiece t = s;
+>>>>>>> CHANGE (6a9941 Permit Unicode characters beyond ASCII in capture names.)
   Rune r;
   while (!t.empty()) {
     if (StringViewToRune(&r, &t, status) < 0)
@@ -2010,19 +2024,41 @@ bool Regexp::ParseState::ParseCharClass(absl::string_view* s, Regexp** out_re,
   return true;
 }
 
+<<<<<<< HEAD   (4a4b75 Bump version to 0.2.20210801 for PyPI.)
 // Is this a valid capture name?  [A-Za-z0-9_]+
 // PCRE limits names to 32 bytes.
 // Python rejects names starting with digits.
 // We don't enforce either of those.
 static bool IsValidCaptureName(absl::string_view name) {
+=======
+// Returns whether name is a valid capture name.
+static bool IsValidCaptureName(const StringPiece& name) {
+>>>>>>> CHANGE (6a9941 Permit Unicode characters beyond ASCII in capture names.)
   if (name.empty())
     return false;
-  for (size_t i = 0; i < name.size(); i++) {
-    int c = name[i];
-    if (('0' <= c && c <= '9') ||
-        ('a' <= c && c <= 'z') ||
-        ('A' <= c && c <= 'Z') ||
-        c == '_')
+
+  // Historically, we effectively used [0-9A-Za-z_]+ to validate; that
+  // followed Python 2 except for not restricting the first character.
+  // As of Python 3, Unicode characters beyond ASCII are also allowed;
+  // accordingly, we permit the Lu, Ll, Lt, Lm, Lo, Nl, Mn, Mc, Nd and
+  // Pc categories, but again without restricting the first character.
+  // Also, Unicode normalization (e.g. NFKC) isn't performed: Python 3
+  // performs it for identifiers, but seemingly not for capture names;
+  // if they start doing that for capture names, we won't follow suit.
+  static const CharClass* const cc = []() {
+    CharClassBuilder ccb;
+    for (StringPiece group :
+         {"Lu", "Ll", "Lt", "Lm", "Lo", "Nl", "Mn", "Mc", "Nd", "Pc"})
+      AddUGroup(&ccb, LookupUnicodeGroup(group), +1, Regexp::NoParseFlags);
+    return ccb.GetCharClass();
+  }();
+
+  StringPiece t = name;
+  Rune r;
+  while (!t.empty()) {
+    if (StringPieceToRune(&r, &t, NULL) < 0)
+      return false;
+    if (cc->Contains(r))
       continue;
     return false;
   }
