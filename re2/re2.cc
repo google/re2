@@ -801,7 +801,7 @@ bool RE2::Match(const StringPiece& text,
       // it doesn't have the shared state and occasional mutex that
       // the DFA does.
       if (can_one_pass && text.size() <= 4096 &&
-          (ncap > 1 || text.size() <= 8)) {
+          (ncap > 1 || text.size() <= 16)) {
         skipped_test = true;
         break;
       }
