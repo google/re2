@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [9, 10, 11, 12]
+        tag: [9, 10, 11, 12, 13]
     env:
       CC: clang-${{ matrix.tag }}
       CXX: clang++-${{ matrix.tag }}
