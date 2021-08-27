@@ -66,7 +66,7 @@ class Mutex {
 
 #if defined(MUTEX_IS_WIN32_SRWLOCK)
 
-Mutex::Mutex()             { InitializeSRWLock(&mutex_); }
+Mutex::Mutex()             : mutex_(SRWLOCK_INIT) { }
 Mutex::~Mutex()            { }
 void Mutex::Lock()         { AcquireSRWLockExclusive(&mutex_); }
 void Mutex::Unlock()       { ReleaseSRWLockExclusive(&mutex_); }
