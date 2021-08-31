@@ -967,8 +967,11 @@ namespace hooks {
 // thread_local, but for the sake of brevity, we lump together all versions
 // of Apple platforms that aren't macOS. If an iOS application really needs
 // the context pointee someday, we can get more specific then...
+//
+// As per https://github.com/google/re2/issues/325, thread_local support in
+// MinGW seems to be buggy. (FWIW, Abseil folks also avoid it.)
 #define RE2_HAVE_THREAD_LOCAL
-#if defined(__APPLE__) && !TARGET_OS_OSX
+#if (defined(__APPLE__) && !TARGET_OS_OSX) || defined(__MINGW32__)
 #undef RE2_HAVE_THREAD_LOCAL
 #endif
 
