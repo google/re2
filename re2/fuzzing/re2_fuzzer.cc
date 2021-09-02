@@ -5,20 +5,67 @@
 #include <fuzzer/FuzzedDataProvider.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <memory>
-#include <queue>
+#include <algorithm>
 #include <string>
 #include <vector>
 
-#include "re2/prefilter.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
+#include "re2/walker-inl.h"
 
 // NOT static, NOT signed.
 uint8_t dummy = 0;
 
+<<<<<<< HEAD   (1087a1 Bump version to 0.2.20210901 for PyPI.)
 void TestOneInput(absl::string_view pattern, const RE2::Options& options,
                   absl::string_view text) {
+=======
+// Walks substrings (i.e. kRegexpLiteralString subexpressions)
+// to determine their maximum length... in runes, but avoiding
+// overheads due to UTF-8 encoding is worthwhile when fuzzing.
+class SubstringWalker : public re2::Regexp::Walker<int> {
+ public:
+  SubstringWalker() = default;
+  ~SubstringWalker() override = default;
+
+  int PostVisit(re2::Regexp* re, int parent_arg, int pre_arg,
+                int* child_args, int nchild_args) override {
+    switch (re->op()) {
+      case re2::kRegexpConcat:
+      case re2::kRegexpAlternate:
+      case re2::kRegexpStar:
+      case re2::kRegexpPlus:
+      case re2::kRegexpQuest:
+      case re2::kRegexpRepeat:
+      case re2::kRegexpCapture: {
+        int max = -1;
+        for (int i = 0; i < nchild_args; i++)
+          max = std::max(max, child_args[i]);
+        return max;
+      }
+
+      case re2::kRegexpLiteralString:
+        return re->nrunes();
+
+      default:
+        break;
+    }
+    return -1;
+  }
+
+  // Should never be called: we use Walk(), not WalkExponential().
+  int ShortVisit(re2::Regexp* re, int parent_arg) override {
+    return parent_arg;
+  }
+
+ private:
+  SubstringWalker(const SubstringWalker&) = delete;
+  SubstringWalker& operator=(const SubstringWalker&) = delete;
+};
+
+void TestOneInput(StringPiece pattern, const RE2::Options& options,
+                  StringPiece text) {
+>>>>>>> CHANGE (df4dcc Inspect substrings with a Walker<> instead of Prefilter.)
   // Crudely limit the use of ., \p, \P, \d, \D, \s, \S, \w and \W.
   // Otherwise, we will waste time on inputs that have long runs of various
   // character classes. The fuzzer has shown itself to be easily capable of
@@ -61,23 +108,9 @@ void TestOneInput(absl::string_view pattern, const RE2::Options& options,
   // They can cause bug reports due to fuzzer timeouts when they
   // are repetitions (e.g. hundreds of NUL bytes) and matching is
   // unanchored. And they aren't interesting for fuzzing purposes.
-  std::unique_ptr<re2::Prefilter> prefilter(re2::Prefilter::FromRE2(&re));
-  if (prefilter == nullptr)
+  SubstringWalker w;
+  if (w.Walk(re.Regexp(), -1) > 9)
     return;
-  std::queue<re2::Prefilter*> nodes;
-  nodes.push(prefilter.get());
-  while (!nodes.empty()) {
-    re2::Prefilter* node = nodes.front();
-    nodes.pop();
-    if (node->op() == re2::Prefilter::ATOM) {
-      if (node->atom().size() > 9)
-        return;
-    } else if (node->op() == re2::Prefilter::AND ||
-               node->op() == re2::Prefilter::OR) {
-      for (re2::Prefilter* sub : *node->subs())
-        nodes.push(sub);
-    }
-  }
 
   // Don't waste time fuzzing high-size programs.
   // They can cause bug reports due to fuzzer timeouts.
