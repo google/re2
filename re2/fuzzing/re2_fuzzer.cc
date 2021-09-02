@@ -69,11 +69,15 @@ void TestOneInput(StringPiece pattern, const RE2::Options& options,
   // generating such patterns that fall within the other limits, but result
   // in timeouts nonetheless. The marginal cost is high - even more so when
   // counted repetition is involved - whereas the marginal benefit is zero.
+  // Crudely limit the use of 'k', 'K', 's' and 'S' too because they become
+  // three-element character classes when case-insensitive and using UTF-8.
   // TODO(junyer): Handle [:isalnum:] et al. when they start to cause pain.
   int char_class = 0;
   int backslash_p = 0;  // very expensive, so handle specially
   for (size_t i = 0; i < pattern.size(); i++) {
-    if (pattern[i] == '.')
+    if (pattern[i] == '.' ||
+        pattern[i] == 'k' || pattern[i] == 'K' ||
+        pattern[i] == 's' || pattern[i] == 'S')
       char_class++;
     if (pattern[i] != '\\')
       continue;
