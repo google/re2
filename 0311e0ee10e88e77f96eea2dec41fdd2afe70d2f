@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2d1a07e9_ce53a276",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2021-09-28T14:39:41Z",
+      "side": 1,
+      "message": "Apart from the comment below, dynamic unloading isn\u0027t something that we aim to support, so you will probably have to carry this patch downstream.",
+      "revId": "0311e0ee10e88e77f96eea2dec41fdd2afe70d2f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d7a63663_777c8a48",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2021-09-28T14:39:41Z",
+      "side": 1,
+      "message": "See https://google.github.io/styleguide/cppguide.html#Static_and_Global_Variables for why these are raw pointers.",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 75
+      },
+      "revId": "0311e0ee10e88e77f96eea2dec41fdd2afe70d2f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
