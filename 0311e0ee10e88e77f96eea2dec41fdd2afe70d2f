@@ -37,6 +37,41 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "5a6ee080_b694a7dc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 44222
+      },
+      "writtenOn": "2021-09-28T17:31:27Z",
+      "side": 1,
+      "message": "Would it be accepted the destruction of the pointers (without unique_ptr) with atexit called inside the call_once initialization?",
+      "parentUuid": "2d1a07e9_ce53a276",
+      "revId": "0311e0ee10e88e77f96eea2dec41fdd2afe70d2f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6ff7751b_93b36fa0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 44222
+      },
+      "writtenOn": "2021-09-28T17:31:27Z",
+      "side": 1,
+      "message": "Would it be accepted the destruction of the pointers (without unique_ptr) with atexit called inside the call_once initialization?",
+      "revId": "0311e0ee10e88e77f96eea2dec41fdd2afe70d2f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "d7a63663_777c8a48",
         "filename": "re2/re2.cc",
         "patchSetId": 1
