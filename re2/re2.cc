@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <atomic>
 #include <iterator>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <utility>
@@ -60,9 +61,9 @@ RE2::Options::Options(RE2::CannedOptions opt)
 
 // static empty objects for use as const references.
 // To avoid global constructors, allocated in RE2::Init().
-static const std::string* empty_string;
-static const std::map<std::string, int>* empty_named_groups;
-static const std::map<int, std::string>* empty_group_names;
+static std::unique_ptr<const std::string> empty_string;
+static std::unique_ptr<const std::map<std::string, int>> empty_named_groups;
+static std::unique_ptr<const std::map<int, std::string>> empty_group_names;
 
 // Converts from Regexp error code to RE2 error code.
 // Maybe some day they will diverge.  In any event, this
@@ -173,15 +174,15 @@ int RE2::Options::ParseFlags() const {
 void RE2::Init(const StringPiece& pattern, const Options& options) {
   static std::once_flag empty_once;
   std::call_once(empty_once, []() {
-    empty_string = new std::string;
-    empty_named_groups = new std::map<std::string, int>;
-    empty_group_names = new std::map<int, std::string>;
+    empty_string.reset(new std::string);
+    empty_named_groups.reset(new std::map<std::string, int>);
+    empty_group_names.reset(new std::map<int, std::string>);
   });
 
   pattern_.assign(pattern.data(), pattern.size());
   options_.Copy(options);
   entire_regexp_ = NULL;
-  error_ = empty_string;
+  error_ = empty_string.get();
   error_code_ = NoError;
   error_arg_.clear();
   prefix_.clear();
@@ -267,11 +268,11 @@ RE2::~RE2() {
     entire_regexp_->Decref();
   delete prog_;
   delete rprog_;
-  if (error_ != empty_string)
+  if (error_ != empty_string.get())
     delete error_;
-  if (named_groups_ != NULL && named_groups_ != empty_named_groups)
+  if (named_groups_ != NULL && named_groups_ != empty_named_groups.get())
     delete named_groups_;
-  if (group_names_ != NULL &&  group_names_ != empty_group_names)
+  if (group_names_ != NULL &&  group_names_ != empty_group_names.get())
     delete group_names_;
 }
 
@@ -352,7 +353,7 @@ const std::map<std::string, int>& RE2::NamedCapturingGroups() const {
     if (re->suffix_regexp_ != NULL)
       re->named_groups_ = re->suffix_regexp_->NamedCaptures();
     if (re->named_groups_ == NULL)
-      re->named_groups_ = empty_named_groups;
+      re->named_groups_ = empty_named_groups.get();
   }, this);
   return *named_groups_;
 }
@@ -363,7 +364,7 @@ const std::map<int, std::string>& RE2::CapturingGroupNames() const {
     if (re->suffix_regexp_ != NULL)
       re->group_names_ = re->suffix_regexp_->CaptureNames();
     if (re->group_names_ == NULL)
-      re->group_names_ = empty_group_names;
+      re->group_names_ = empty_group_names.get();
   }, this);
   return *group_names_;
 }
