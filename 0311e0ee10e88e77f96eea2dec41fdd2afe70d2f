@@ -107,6 +107,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "2d2548ff_f14fd737",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2021-09-29T13:00:08Z",
+      "side": 1,
+      "message": "The question isn\u0027t whether `atexit(3)` is portable – it is! The question is whether code that expects `atexit(3)` to work properly for dynamic unloading is portable. I don\u0027t think C, C++ or POSIX specify that `atexit(3)` does anything related to dynamic unloading, which is why I\u0027m nervous. Given *that* and our (Google\u0027s) lack of interest in this use case (see also https://abseil.io/about/compatibility, for example) and your being the only person who has requested this in the past 6.5 years... Sorry, I\u0027m just not willing to accept this upstream.",
+      "parentUuid": "d43a02a8_e7a266f1",
+      "revId": "0311e0ee10e88e77f96eea2dec41fdd2afe70d2f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "d7a63663_777c8a48",
         "filename": "re2/re2.cc",
         "patchSetId": 1
