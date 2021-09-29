@@ -88,6 +88,23 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d43a02a8_e7a266f1",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 44222
+      },
+      "writtenOn": "2021-09-29T10:10:38Z",
+      "side": 1,
+      "message": "I\u0027ve tested atexit in shared libraries in Linux, MacOS and Windows, all with recent toolchains. std::atexit is a standard C++ function (but so as destructions that you do not support).",
+      "revId": "0311e0ee10e88e77f96eea2dec41fdd2afe70d2f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d7a63663_777c8a48",
