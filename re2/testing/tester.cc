@@ -118,8 +118,8 @@ static std::string FormatCapture(absl::string_view text,
   if (s.data() == NULL)
     return "(?,?)";
   return absl::StrFormat("(%d,%d)",
-                         s.begin() - text.begin(),
-                         s.end() - text.begin());
+                         s.data() - text.data(),
+                         s.data() + s.size() - text.data());
 }
 
 // Returns whether text contains non-ASCII (>= 0x80) bytes.
@@ -315,6 +315,13 @@ void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
 
   absl::string_view text = orig_text;
   absl::string_view context = orig_context;
+  // Note: We use `.data() + .size()` rather than `.end()` since some debug
+  // implementations of `std::string_view` do not allow comparing iterators
+  // obtained from separate `string_view` objects.
+  const char* const text_begin = text.data();
+  const char* const text_end = text.data() + text.size();
+  const char* const context_begin = context.data();
+  const char* const context_end = context.data() + context.size();
 
   switch (type) {
     default:
@@ -402,7 +409,7 @@ void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
     case kEngineRE2:
     case kEngineRE2a:
     case kEngineRE2b: {
-      if (!re2_ || text.end() != context.end()) {
+      if (!re2_ || text_end != context_end) {
         result->skipped = true;
         break;
       }
@@ -417,8 +424,8 @@ void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
 
       result->matched = re2_->Match(
           context,
-          static_cast<size_t>(text.begin() - context.begin()),
-          static_cast<size_t>(text.end() - context.begin()),
+          static_cast<size_t>(text_begin - context_begin),
+          static_cast<size_t>(text_end - context_begin),
           re_anchor,
           result->submatch,
           nsubmatch);
@@ -427,8 +434,8 @@ void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
     }
 
     case kEnginePCRE: {
-      if (!re_ || text.begin() != context.begin() ||
-          text.end() != context.end()) {
+      if (!re_ || text_begin != context_begin ||
+          text_end != context_end) {
         result->skipped = true;
         break;
       }
@@ -605,9 +612,9 @@ void TestInstance::LogMatch(const char* prefix, Engine e,
     << " text "
     << absl::CEscape(text)
     << " ("
-    << text.begin() - context.begin()
+    << text.data() - context.data()
     << ","
-    << text.end() - context.begin()
+    << text.data() + text.size() - (context.data() + context.size())
     << ") of context "
     << absl::CEscape(context)
     << " (" << FormatKind(kind_)

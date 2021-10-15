@@ -453,15 +453,23 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
   if (context.data() == NULL)
     context = text;
 
+  // Note: We use `.data() + .size()` rather than `.end()` since some debug
+  // implementations of `std::string_view` do not allow comparing iterators
+  // obtained from separate `string_view` objects.
+  const char* const text_begin = text.data();
+  const char* const text_end = text.data() + text.size();
+  const char* const context_begin = context.data();
+  const char* const context_end = context.data() + context.size();
+
   // Sanity check: make sure that text lies within context.
-  if (text.begin() < context.begin() || text.end() > context.end()) {
+  if (text_begin < context_begin || text_end > context_end) {
     LOG(DFATAL) << "context does not contain text";
     return false;
   }
 
-  if (prog_->anchor_start() && context.begin() != text.begin())
+  if (prog_->anchor_start() && context_begin != text_begin)
     return false;
-  if (prog_->anchor_end() && context.end() != text.end())
+  if (prog_->anchor_end() && context_end != text_end)
     return false;
   anchored |= prog_->anchor_start();
   if (prog_->anchor_end()) {
@@ -492,7 +500,7 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
   // For debugging prints.
   btext_ = context.data();
   // For convenience.
-  etext_ = text.data() + text.size();
+  etext_ = text_end;
 
   if (ExtraDebug)
     absl::FPrintF(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
@@ -643,7 +651,8 @@ bool Prog::SearchNFA(absl::string_view text, absl::string_view context,
   }
   if (!nfa.Search(text, context, anchor == kAnchored, kind != kFirstMatch, match, nmatch))
     return false;
-  if (kind == kFullMatch && match[0].end() != text.end())
+  if (kind == kFullMatch &&
+      match[0].data() + match[0].size() != text.data() + text.size())
     return false;
   return true;
 }

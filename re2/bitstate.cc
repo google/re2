@@ -292,9 +292,10 @@ bool BitState::Search(absl::string_view text, absl::string_view context,
   context_ = context;
   if (context_.data() == NULL)
     context_ = text;
-  if (prog_->anchor_start() && context_.begin() != text.begin())
+  if (prog_->anchor_start() && context_.data() != text.data())
     return false;
-  if (prog_->anchor_end() && context_.end() != text.end())
+  if (prog_->anchor_end() &&
+      context_.data() + context_.size() != text.data() + text.size())
     return false;
   anchored_ = anchored || prog_->anchor_start();
   longest_ = longest || prog_->anchor_end();
@@ -373,7 +374,8 @@ bool Prog::SearchBitState(absl::string_view text, absl::string_view context,
   bool longest = kind != kFirstMatch;
   if (!b.Search(text, context, anchored, longest, match, nmatch))
     return false;
-  if (kind == kFullMatch && match[0].end() != text.end())
+  if (kind == kFullMatch &&
+      match[0].data() + match[0].size() != text.data() + text.size())
     return false;
   return true;
 }

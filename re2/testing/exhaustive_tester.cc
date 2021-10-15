@@ -69,8 +69,8 @@ static void PrintResult(const RE2& re, absl::string_view input,
       absl::PrintF("-");
     else
       absl::PrintF("%d-%d",
-                   m[i].begin() - input.begin(),
-                   m[i].end() - input.begin());
+                   m[i].data() - input.data(),
+                   m[i].data() + m[i].size() - input.data());
   }
 }
 

@@ -911,8 +911,13 @@ bool RE2::DoMatch(absl::string_view text,
     return false;
   }
 
-  if (consumed != NULL)
-    *consumed = static_cast<size_t>(vec[0].end() - text.begin());
+  if (consumed != NULL) {
+    // Note: We can't use `vec[0].end()` because MSVC in debug mode disallows
+    // subtracting iterators from different `string_view` objects, even if they
+    // point to the same underlying buffer.
+    const char* vec0_end = vec[0].data() + vec[0].size();
+    *consumed = static_cast<size_t>(vec0_end - text.data());
+  }
 
   if (n == 0 || args == NULL) {
     // We are not interested in results

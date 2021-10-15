@@ -235,9 +235,10 @@ bool Prog::SearchOnePass(absl::string_view text, absl::string_view context,
 
   if (context.data() == NULL)
     context = text;
-  if (anchor_start() && context.begin() != text.begin())
+  if (anchor_start() && context.data() != text.data())
     return false;
-  if (anchor_end() && context.end() != text.end())
+  if (anchor_end() &&
+      context.data() + context.size() != text.data() + text.size())
     return false;
   if (anchor_end())
     kind = kFullMatch;
