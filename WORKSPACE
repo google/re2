@@ -5,6 +5,7 @@
 # Bazel (http://bazel.io/) WORKSPACE file for RE2.
 
 workspace(name = "com_googlesource_code_re2")
+<<<<<<< HEAD   (b15818 Crudely limit the use of 'k', 'K', 's' and 'S' when fuzzing.)
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -52,3 +53,5 @@ http_archive(
     strip_prefix = "six-master",
     urls = ["https://github.com/benjaminp/six/archive/master.zip"],
 )
+=======
+>>>>>>> CHANGE (dd5f91 Switch back to native C++ rules.)
