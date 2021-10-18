@@ -23,8 +23,6 @@ config_setting(
     values = {"cpu": "x64_windows"},
 )
 
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
-
 cc_library(
     name = "re2",
     srcs = [
