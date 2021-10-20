@@ -456,14 +456,14 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
     context = text;
 
   // Sanity check: make sure that text lies within context.
-  if (text.begin() < context.begin() || text.end() > context.end()) {
+  if (BeginPtr(text) < BeginPtr(context) || EndPtr(text) > EndPtr(context)) {
     LOG(DFATAL) << "context does not contain text";
     return false;
   }
 
-  if (prog_->anchor_start() && context.begin() != text.begin())
+  if (prog_->anchor_start() && BeginPtr(context) != BeginPtr(text))
     return false;
-  if (prog_->anchor_end() && context.end() != text.end())
+  if (prog_->anchor_end() && EndPtr(context) != EndPtr(text))
     return false;
   anchored |= prog_->anchor_start();
   if (prog_->anchor_end()) {
@@ -492,9 +492,9 @@ bool NFA::Search(const StringPiece& text, const StringPiece& const_context,
   matched_ = false;
 
   // For debugging prints.
-  btext_ = context.data();
+  btext_ = BeginPtr(context);
   // For convenience.
-  etext_ = text.data() + text.size();
+  etext_ = EndPtr(text);
 
   if (ExtraDebug)
     fprintf(stderr, "NFA::Search %s (context: %s) anchored=%d longest=%d\n",
@@ -646,7 +646,7 @@ Prog::SearchNFA(const StringPiece& text, const StringPiece& context,
   }
   if (!nfa.Search(text, context, anchor == kAnchored, kind != kFirstMatch, match, nmatch))
     return false;
-  if (kind == kFullMatch && match[0].end() != text.end())
+  if (kind == kFullMatch && EndPtr(match[0]) != EndPtr(text))
     return false;
   return true;
 }
