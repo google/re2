@@ -293,9 +293,9 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
   context_ = context;
   if (context_.data() == NULL)
     context_ = text;
-  if (prog_->anchor_start() && context_.begin() != text.begin())
+  if (prog_->anchor_start() && BeginPtr(context_) != BeginPtr(text))
     return false;
-  if (prog_->anchor_end() && context_.end() != text.end())
+  if (prog_->anchor_end() && EndPtr(context_) != EndPtr(text))
     return false;
   anchored_ = anchored || prog_->anchor_start();
   longest_ = longest || prog_->anchor_end();
@@ -377,7 +377,7 @@ bool Prog::SearchBitState(const StringPiece& text,
   bool longest = kind != kFirstMatch;
   if (!b.Search(text, context, anchored, longest, match, nmatch))
     return false;
-  if (kind == kFullMatch && match[0].end() != text.end())
+  if (kind == kFullMatch && EndPtr(match[0]) != EndPtr(text))
     return false;
   return true;
 }

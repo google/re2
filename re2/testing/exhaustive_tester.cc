@@ -67,8 +67,8 @@ static void PrintResult(const RE2& re, const StringPiece& input, RE2::Anchor anc
       printf("-");
     else
       printf("%td-%td",
-             m[i].begin() - input.begin(),
-             m[i].end() - input.begin());
+             BeginPtr(m[i]) - BeginPtr(input),
+             EndPtr(m[i]) - BeginPtr(input));
   }
 }
 

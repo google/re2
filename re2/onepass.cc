@@ -237,9 +237,9 @@ bool Prog::SearchOnePass(const StringPiece& text,
   StringPiece context = const_context;
   if (context.data() == NULL)
     context = text;
-  if (anchor_start() && context.begin() != text.begin())
+  if (anchor_start() && BeginPtr(context) != BeginPtr(text))
     return false;
-  if (anchor_end() && context.end() != text.end())
+  if (anchor_end() && EndPtr(context) != EndPtr(text))
     return false;
   if (anchor_end())
     kind = kFullMatch;
