@@ -449,6 +449,17 @@ class Prog {
   Prog& operator=(const Prog&) = delete;
 };
 
+// std::string_view in MSVC has iterators that aren't just pointers and
+// that don't allow comparisons between different objects - not even if
+// those objects are views into the same string! Thus, we provide these
+// conversion functions for convenience.
+static inline const char* BeginPtr(absl::string_view s) {
+  return s.data();
+}
+static inline const char* EndPtr(absl::string_view s) {
+  return s.data() + s.size();
+}
+
 }  // namespace re2
 
 #endif  // RE2_PROG_H_
