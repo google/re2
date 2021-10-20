@@ -920,7 +920,7 @@ bool RE2::DoMatch(const StringPiece& text,
   }
 
   if (consumed != NULL)
-    *consumed = static_cast<size_t>(vec[0].end() - text.begin());
+    *consumed = static_cast<size_t>(EndPtr(vec[0]) - BeginPtr(text));
 
   if (n == 0 || args == NULL) {
     // We are not interested in results
