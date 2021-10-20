@@ -117,9 +117,15 @@ static std::string FormatCapture(absl::string_view text,
                                  absl::string_view s) {
   if (s.data() == NULL)
     return "(?,?)";
+<<<<<<< HEAD   (7a3e16 Switch back to native C++ rules.)
   return absl::StrFormat("(%d,%d)",
                          s.begin() - text.begin(),
                          s.end() - text.begin());
+=======
+  return StringPrintf("(%td,%td)",
+                      BeginPtr(s) - BeginPtr(text),
+                      EndPtr(s) - BeginPtr(text));
+>>>>>>> CHANGE (e013bd Don't assume that iterators can be compared.)
 }
 
 // Returns whether text contains non-ASCII (>= 0x80) bytes.
@@ -402,7 +408,7 @@ void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
     case kEngineRE2:
     case kEngineRE2a:
     case kEngineRE2b: {
-      if (!re2_ || text.end() != context.end()) {
+      if (!re2_ || EndPtr(text) != EndPtr(context)) {
         result->skipped = true;
         break;
       }
@@ -417,8 +423,8 @@ void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
 
       result->matched = re2_->Match(
           context,
-          static_cast<size_t>(text.begin() - context.begin()),
-          static_cast<size_t>(text.end() - context.begin()),
+          static_cast<size_t>(BeginPtr(text) - BeginPtr(context)),
+          static_cast<size_t>(EndPtr(text) - BeginPtr(context)),
           re_anchor,
           result->submatch,
           nsubmatch);
@@ -427,8 +433,8 @@ void TestInstance::RunSearch(Engine type, absl::string_view orig_text,
     }
 
     case kEnginePCRE: {
-      if (!re_ || text.begin() != context.begin() ||
-          text.end() != context.end()) {
+      if (!re_ || BeginPtr(text) != BeginPtr(context) ||
+          EndPtr(text) != EndPtr(context)) {
         result->skipped = true;
         break;
       }
@@ -605,9 +611,9 @@ void TestInstance::LogMatch(const char* prefix, Engine e,
     << " text "
     << absl::CEscape(text)
     << " ("
-    << text.begin() - context.begin()
+    << BeginPtr(text) - BeginPtr(context)
     << ","
-    << text.end() - context.begin()
+    << EndPtr(text) - BeginPtr(context)
     << ") of context "
     << absl::CEscape(context)
     << " (" << FormatKind(kind_)

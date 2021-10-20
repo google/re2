@@ -68,9 +68,15 @@ static void PrintResult(const RE2& re, absl::string_view input,
     if (m[i].data() == NULL)
       absl::PrintF("-");
     else
+<<<<<<< HEAD   (7a3e16 Switch back to native C++ rules.)
       absl::PrintF("%d-%d",
                    m[i].begin() - input.begin(),
                    m[i].end() - input.begin());
+=======
+      printf("%td-%td",
+             BeginPtr(m[i]) - BeginPtr(input),
+             EndPtr(m[i]) - BeginPtr(input));
+>>>>>>> CHANGE (e013bd Don't assume that iterators can be compared.)
   }
 }
 
