@@ -170,7 +170,7 @@ template<typename T> T Regexp::Walker<T>::WalkInternal(Regexp* re, T top_arg,
   for (;;) {
     T t;
     s = &stack_.top();
-    Regexp* re = s->re;
+    re = s->re;
     switch (s->n) {
       case -1: {
         if (--max_visits_ < 0) {
