@@ -244,8 +244,8 @@ re2/perl_groups.cc: re2/make_perl_groups.pl
 	perl $< > $@
 
 .PRECIOUS: re2/unicode_%.cc
-re2/unicode_%.cc: re2/make_unicode_%.py
-	python $< > $@
+re2/unicode_%.cc: re2/make_unicode_%.py re2/unicode.py
+	python3 $< > $@
 endif
 
 .PHONY: distclean
