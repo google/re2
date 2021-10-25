@@ -18,6 +18,40 @@ using re2::StringPiece;
 // NOT static, NOT signed.
 uint8_t dummy = 0;
 
+// Walks kRegexpConcat and kRegexpAlternate subexpressions
+// to determine their maximum length.
+class SubexpressionWalker : public re2::Regexp::Walker<int> {
+ public:
+  SubexpressionWalker() = default;
+  ~SubexpressionWalker() override = default;
+
+  int PostVisit(re2::Regexp* re, int parent_arg, int pre_arg,
+                int* child_args, int nchild_args) override {
+    switch (re->op()) {
+      case re2::kRegexpConcat:
+      case re2::kRegexpAlternate: {
+        int max = nchild_args;
+        for (int i = 0; i < nchild_args; i++)
+          max = std::max(max, child_args[i]);
+        return max;
+      }
+
+      default:
+        break;
+    }
+    return -1;
+  }
+
+  // Should never be called: we use Walk(), not WalkExponential().
+  int ShortVisit(re2::Regexp* re, int parent_arg) override {
+    return parent_arg;
+  }
+
+ private:
+  SubexpressionWalker(const SubexpressionWalker&) = delete;
+  SubexpressionWalker& operator=(const SubexpressionWalker&) = delete;
+};
+
 // Walks substrings (i.e. kRegexpLiteralString subexpressions)
 // to determine their maximum length... in runes, but avoiding
 // overheads due to UTF-8 encoding is worthwhile when fuzzing.
@@ -105,12 +139,17 @@ void TestOneInput(StringPiece pattern, const RE2::Options& options,
   if (!re.ok())
     return;
 
+  // Don't waste time fuzzing programs with large subexpressions.
+  // They can cause bug reports due to fuzzer timeouts. And they
+  // aren't interesting for fuzzing purposes.
+  if (SubexpressionWalker().Walk(re.Regexp(), -1) > 9)
+    return;
+
   // Don't waste time fuzzing programs with large substrings.
   // They can cause bug reports due to fuzzer timeouts when they
   // are repetitions (e.g. hundreds of NUL bytes) and matching is
   // unanchored. And they aren't interesting for fuzzing purposes.
-  SubstringWalker w;
-  if (w.Walk(re.Regexp(), -1) > 9)
+  if (SubstringWalker().Walk(re.Regexp(), -1) > 9)
     return;
 
   // Don't waste time fuzzing high-size programs.
