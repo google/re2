@@ -13,7 +13,7 @@ import re
 from six.moves import urllib
 
 # Directory or URL where Unicode tables reside.
-_UNICODE_DIR = "https://www.unicode.org/Public/13.0.0/ucd"
+_UNICODE_DIR = "https://www.unicode.org/Public/14.0.0/ucd"
 
 # Largest valid Unicode code value.
 _RUNE_MAX = 0x10FFFF
