@@ -185,9 +185,7 @@ template<typename T> T Regexp::Walker<T>::WalkInternal(Regexp* re, T top_arg,
         }
         s->n = 0;
         s->child_args = NULL;
-        if (re->nsub_ == 1)
-          s->child_args = &s->child_arg;
-        else if (re->nsub_ > 1)
+        if (re->nsub_ > 1)
           s->child_args = new T[re->nsub_];
         FALLTHROUGH_INTENDED;
       }
@@ -205,7 +203,8 @@ template<typename T> T Regexp::Walker<T>::WalkInternal(Regexp* re, T top_arg,
           }
         }
 
-        t = PostVisit(re, s->parent_arg, s->pre_arg, s->child_args, s->n);
+        T* child_args = (re->nsub_ == 1) ? &s->child_arg : s->child_args;
+        t = PostVisit(re, s->parent_arg, s->pre_arg, child_args, s->n);
         if (re->nsub_ > 1)
           delete[] s->child_args;
         break;
