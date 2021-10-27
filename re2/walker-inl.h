@@ -148,7 +148,8 @@ template<typename T> void Regexp::Walker<T>::Reset() {
   if (!stack_.empty()) {
     LOG(DFATAL) << "Stack not empty.";
     while (!stack_.empty()) {
-      delete[] stack_.top().child_args;
+      if (stack_.top().re->nsub_ > 1)
+        delete[] stack_.top().child_args;
       stack_.pop();
     }
   }
