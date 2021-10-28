@@ -207,6 +207,7 @@ class Prog {
   int list_count() { return list_count_; }
   int inst_count(InstOp op) { return inst_count_[op]; }
   uint16_t* list_heads() { return list_heads_.data(); }
+  size_t bit_state_text_max_size() { return bit_state_text_max_size_; }
   int64_t dfa_mem() { return dfa_mem_; }
   void set_dfa_mem(int64_t dfa_mem) { dfa_mem_ = dfa_mem; }
   bool anchor_start() { return anchor_start_; }
@@ -429,10 +430,11 @@ class Prog {
     };
   };
 
-  int list_count_;                 // count of lists (see above)
-  int inst_count_[kNumInst];       // count of instructions by opcode
-  PODArray<uint16_t> list_heads_;  // sparse array enumerating list heads
-                                   // not populated if size_ is overly large
+  int list_count_;                  // count of lists (see above)
+  int inst_count_[kNumInst];        // count of instructions by opcode
+  PODArray<uint16_t> list_heads_;   // sparse array enumerating list heads
+                                    // not populated if size_ is overly large
+  size_t bit_state_text_max_size_;  // upper bound (inclusive) on text.size()
 
   PODArray<Inst> inst_;              // pointer to instruction array
   PODArray<uint8_t> onepass_nodes_;  // data for OnePass nodes
