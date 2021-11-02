@@ -337,8 +337,8 @@ ifeq ($(shell uname),Darwin)
 else ifeq ($(shell uname),SunOS)
 	@echo Skipping test for libre2.a on SunOS.
 else
-	(cd obj && $(CXX) testinstall.cc -o testinstall $(CXXFLAGS) $(LDFLAGS))
-	obj/testinstall
+	(cd obj && $(CXX) testinstall.cc -o static-testinstall $(CXXFLAGS) $(LDFLAGS))
+	obj/static-testinstall
 endif
 
 .PHONY: shared-testinstall
@@ -347,11 +347,11 @@ shared-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -lre2 $(LDICU) $(LDF
 shared-testinstall:
 	@mkdir -p obj
 	@cp testinstall.cc obj
-	(cd obj && $(CXX) testinstall.cc -o testinstall $(CXXFLAGS) $(LDFLAGS))
+	(cd obj && $(CXX) testinstall.cc -o shared-testinstall $(CXXFLAGS) $(LDFLAGS))
 ifeq ($(shell uname),Darwin)
-	DYLD_LIBRARY_PATH="$(DESTDIR)$(libdir):$(DYLD_LIBRARY_PATH)" obj/testinstall
+	DYLD_LIBRARY_PATH="$(DESTDIR)$(libdir):$(DYLD_LIBRARY_PATH)" obj/shared-testinstall
 else
-	LD_LIBRARY_PATH="$(DESTDIR)$(libdir):$(LD_LIBRARY_PATH)" obj/testinstall
+	LD_LIBRARY_PATH="$(DESTDIR)$(libdir):$(LD_LIBRARY_PATH)" obj/shared-testinstall
 endif
 
 .PHONY: benchlog
