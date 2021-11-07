@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6b8036eb_95c9d992",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2021-11-07T04:21:45Z",
+      "side": 1,
+      "message": "Thanks for the patch! I think I would prefer simply wrapping the lines with `#ifdef NDEBUG`. Would you mind doing that instead? I also see now that I used `int` plus a cast instead of just using `size_t`... #shamecube\n",
+      "revId": "2a600abdcc6a6576e0860b6444469b8b5fd6c2fa",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
