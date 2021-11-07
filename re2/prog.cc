@@ -17,6 +17,7 @@
 #include <string.h>
 #include <algorithm>
 #include <memory>
+#include <numeric>
 #include <utility>
 
 #include "util/util.h"
@@ -611,10 +612,7 @@ void Prog::Flatten() {
     inst_count_[ip->opcode()]++;
   }
 
-  int total = 0;
-  for (int i = 0; i < kNumInst; i++)
-    total += inst_count_[i];
-  DCHECK_EQ(total, static_cast<int>(flat.size()));
+  DCHECK_EQ(std::accumulate(inst_count_, inst_count_ + kNumInst, 0UL), flat.size());
 
   // Remap start_unanchored and start.
   if (start_unanchored() == 0) {
