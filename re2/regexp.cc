@@ -585,8 +585,7 @@ class NamedCapturesWalker : public Regexp::Walker<Ignored> {
       // Record first occurrence of each name.
       // (The rule is that if you have the same name
       // multiple times, only the leftmost one counts.)
-      if (map_->find(*re->name()) == map_->end())
-        (*map_)[*re->name()] = re->cap();
+      map_->insert({*re->name(), re->cap()});
     }
     return ignored;
   }
