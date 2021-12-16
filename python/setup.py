@@ -59,9 +59,9 @@ setuptools.setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: C++',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     ext_modules=[ext_module],
     py_modules=['re2'],
-    python_requires='~=3.6',
+    python_requires='~=3.7',
 )
