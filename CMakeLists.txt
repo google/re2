@@ -152,12 +152,30 @@ set(RE2_HEADERS
     re2/stringpiece.h
     )
 
+
+# configurations
+include(CMakePackageConfigHelpers)
+set(RE2_CMAKE_PATH "${CMAKE_CURRENT_BINARY_DIR}/cmake/re2")
+set(RE2_VERSION_FILE "${RE2_CMAKE_PATH}/re2-config-version.cmake")
+write_basic_package_version_file(${RE2_VERSION_FILE}
+                                 VERSION "${SONAME}.0.0"
+                                 COMPATIBILITY SameMajorVersion
+                                 )
+
+set(RE2_CONFIG_FILE "${RE2_CMAKE_PATH}/re2-config.cmake")
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/re2-config.cmake.in
+                              ${RE2_CONFIG_FILE}
+                              INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/re2
+                              )
+
 install(FILES ${RE2_HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/re2)
-install(TARGETS re2 EXPORT re2Config
+install(TARGETS re2 EXPORT re2-targets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(EXPORT re2Config
+install(EXPORT re2-targets
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/re2 NAMESPACE re2::)
+install(FILES ${RE2_VERSION_FILE} ${RE2_CONFIG_FILE}
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/re2)
