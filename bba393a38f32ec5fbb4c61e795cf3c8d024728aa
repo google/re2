@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7a409890_c3a60111",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-01-05T12:10:04Z",
+      "side": 1,
+      "message": "Hi, Andrei. Could you please take a look at the edits that I made and confirm that everything looks good to you? Thank you!\n",
+      "revId": "bba393a38f32ec5fbb4c61e795cf3c8d024728aa",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
