@@ -16,6 +16,24 @@
       "message": "Hi, Andrei. Could you please take a look at the edits that I made and confirm that everything looks good to you? Thank you!\n",
       "revId": "bba393a38f32ec5fbb4c61e795cf3c8d024728aa",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "39e14f78_214dd965",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 44337
+      },
+      "writtenOn": "2022-01-05T14:47:24Z",
+      "side": 1,
+      "message": "Hi, Paul!\n\nThe changes you made look good to me!\n\nMay I ask how come you preferred the `re2Config.cmake` vs `re2-config.cmake`? It\u0027s just that I\u0027m curious cause I think both are valid.\n\nFound it funny that I somehow forgot what year we\u0027re in :(\n\nThanks for the help!",
+      "parentUuid": "7a409890_c3a60111",
+      "revId": "bba393a38f32ec5fbb4c61e795cf3c8d024728aa",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
