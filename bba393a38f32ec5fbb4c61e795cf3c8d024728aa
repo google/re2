@@ -34,6 +34,24 @@
       "parentUuid": "7a409890_c3a60111",
       "revId": "bba393a38f32ec5fbb4c61e795cf3c8d024728aa",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cdf9d744_e8044c45",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-01-06T11:35:26Z",
+      "side": 1,
+      "message": "I have no particular preference for `Config` versus `-config`. I just try to avoid renaming files unless there\u0027s a strong reason. :)",
+      "parentUuid": "39e14f78_214dd965",
+      "revId": "bba393a38f32ec5fbb4c61e795cf3c8d024728aa",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
