@@ -17,7 +17,7 @@ CXX?=g++
 CXXFLAGS?=-O3 -g
 LDFLAGS?=
 # required
-RE2_CXXFLAGS?=-std=c++11 -pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCPCRE)
+RE2_CXXFLAGS?=-pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCPCRE)
 RE2_LDFLAGS?=-pthread $(LDICU) $(LDPCRE)
 AR?=ar
 ARFLAGS?=rsc
@@ -327,7 +327,7 @@ testinstall: static-testinstall shared-testinstall
 	@echo
 
 .PHONY: static-testinstall
-static-testinstall: CXXFLAGS:=-std=c++11 -pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
+static-testinstall: CXXFLAGS:=-pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
 static-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -l:libre2.a $(LDICU) $(LDFLAGS)
 static-testinstall:
 	@mkdir -p obj
@@ -342,7 +342,7 @@ else
 endif
 
 .PHONY: shared-testinstall
-shared-testinstall: CXXFLAGS:=-std=c++11 -pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
+shared-testinstall: CXXFLAGS:=-pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
 shared-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -lre2 $(LDICU) $(LDFLAGS)
 shared-testinstall:
 	@mkdir -p obj
