@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a433d802_34bbf9f5",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-01-17T15:36:55Z",
+      "side": 1,
+      "message": "Thanks for the patch! If doing this is desirable, then it\u0027s presumably time to remove the flag from `Makefile` as well. (It seems that the most recent GCC and Clang releases default to C++17 and C++14, respectively.)\n",
+      "revId": "4a59a49b2524c1425ee7e0cab2e752d119273304",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
