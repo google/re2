@@ -16,8 +16,8 @@ http_archive(
 
 http_archive(
     name = "com_github_google_benchmark",
-    strip_prefix = "benchmark-master",
-    urls = ["https://github.com/google/benchmark/archive/master.zip"],
+    strip_prefix = "benchmark-main",
+    urls = ["https://github.com/google/benchmark/archive/main.zip"],
 )
 
 http_archive(
@@ -34,8 +34,8 @@ http_archive(
 
 http_archive(
     name = "io_abseil_py",
-    strip_prefix = "abseil-py-master",
-    urls = ["https://github.com/abseil/abseil-py/archive/master.zip"],
+    strip_prefix = "abseil-py-main",
+    urls = ["https://github.com/abseil/abseil-py/archive/main.zip"],
 )
 
 # RE2 doesn't depend on this anymore, but Abseil Python still does.
