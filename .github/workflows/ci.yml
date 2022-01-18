@@ -12,6 +12,13 @@ jobs:
     env:
       CC: clang
       CXX: clang++
+      # After commit a022cc0 removed the `-std` flag from Makefile (and re2.pc),
+      # this job started failing on macos-latest. I'm guessing that "AppleClang"
+      # is staying with `-ansi` (i.e. `-std=c89` or `-std=c++98`) as the default
+      # whereas upstream Clang changes the default over time much like GCC does.
+      # Thus, set the `-std` flag explicitly just to get this job passing again.
+      # (The other two flags are the default provided for CXXFLAGS in Makefile.)
+      CXXFLAGS: -O3 -g -std=c++11
     steps:
       - uses: actions/checkout@v2
       - run: make && make test
