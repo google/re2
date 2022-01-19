@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d94937b0_307f154e",
+        "filename": "re2/prog.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 5510
+      },
+      "writtenOn": "2022-01-19T10:19:56Z",
+      "side": 1,
+      "message": "should this be a size_t to avoid the static cast below?",
+      "range": {
+        "startLine": 615,
+        "startChar": 2,
+        "endLine": 615,
+        "endChar": 5
+      },
+      "revId": "8cb2acf39b03efdc78f63afffe32dc98f0c59710",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "33f08936_5160e121",
+        "filename": "re2/prog.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 5510
+      },
+      "writtenOn": "2022-01-19T10:19:56Z",
+      "side": 1,
+      "message": "Should this become a CHECK_EQ then?  if this #if is enabled, we should always use the variable by CHECKing it?",
+      "range": {
+        "startLine": 618,
+        "startChar": 2,
+        "endLine": 618,
+        "endChar": 11
+      },
+      "revId": "8cb2acf39b03efdc78f63afffe32dc98f0c59710",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
