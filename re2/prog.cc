@@ -611,10 +611,13 @@ void Prog::Flatten() {
     inst_count_[ip->opcode()]++;
   }
 
-  int total = 0;
+#if !defined(NDEBUG)
+  // Address a `-Wunused-but-set-variable' warning from Clang 13.x.
+  size_t total = 0;
   for (int i = 0; i < kNumInst; i++)
     total += inst_count_[i];
-  DCHECK_EQ(total, static_cast<int>(flat.size()));
+  CHECK_EQ(total, flat.size());
+#endif
 
   // Remap start_unanchored and start.
   if (start_unanchored() == 0) {
