@@ -3,22 +3,21 @@ on:
   push:
     branches: [main]
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  build-appleclang:
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        ver: [11, 14, 17, 20]
     env:
       CC: clang
       CXX: clang++
-      # After commit a022cc0 removed the `-std` flag from Makefile (and re2.pc),
-      # this job started failing on macos-latest. I'm guessing that "AppleClang"
-      # is staying with `-ansi` (i.e. `-std=c89` or `-std=c++98`) as the default
-      # whereas upstream Clang changes the default over time much like GCC does.
-      # Thus, set the `-std` flag explicitly just to get this job passing again.
+      # Unlike GCC and upstream Clang, AppleClang still defaults to `-std=c++98`
+      # for some reason. Also, the macOS image on GitHub Actions provides wildly
+      # numbered Xcode versions. Thus, rather than varying the compiler version,
+      # we set the `-std` flag explicitly in order to vary the language version.
       # (The other two flags are the default provided for CXXFLAGS in Makefile.)
-      CXXFLAGS: -O3 -g -std=c++11
+      CXXFLAGS: -O3 -g -std=c++${{ matrix.ver }}
     steps:
       - uses: actions/checkout@v2
       - run: make && make test
@@ -28,27 +27,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [9, 10, 11, 12, 13]
+        ver: [9, 10, 11, 12, 13]
     env:
-      CC: clang-${{ matrix.tag }}
-      CXX: clang++-${{ matrix.tag }}
+      CC: clang-${{ matrix.ver }}
+      CXX: clang++-${{ matrix.ver }}
     steps:
       - uses: actions/checkout@v2
-      - name: Install Clang ${{ matrix.tag }}
+      - name: Install Clang ${{ matrix.ver }}
         run: |
           wget https://apt.llvm.org/llvm.sh
           chmod +x ./llvm.sh
-          sudo ./llvm.sh ${{ matrix.tag }}
+          sudo ./llvm.sh ${{ matrix.ver }}
         shell: bash
       - run: make && make test
         shell: bash
   build-gcc:
     runs-on: ubuntu-latest
-    container: gcc:${{ matrix.tag }}
+    container: gcc:${{ matrix.ver }}
     strategy:
       fail-fast: false
       matrix:
-        tag: [6, 7, 8, 9, 10, 11]
+        ver: [6, 7, 8, 9, 10, 11]
     env:
       CC: gcc
       CXX: g++
