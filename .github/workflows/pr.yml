@@ -1,7 +1,12 @@
 name: PR
 on:
+<<<<<<< HEAD   (cd07df Close all GitHub pull requests automatically.)
   pull_request:
     branches: [abseil]
+=======
+  pull_request_target:
+    branches: [main]
+>>>>>>> CHANGE (9face2 Oops, I think I needed pull_request_target instead.)
     types: [opened]
 jobs:
   close:
