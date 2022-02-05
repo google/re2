@@ -11,6 +11,9 @@
 #include <string.h>
 #include <map>
 #include <string>
+#if __has_include(<string_view>) && __cplusplus >= 201703L
+#include <string_view>
+#endif
 #include <utility>
 #include <vector>
 #if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MINGW32__)
@@ -1655,5 +1658,32 @@ TEST(RE2, Issue310) {
   ASSERT_TRUE(plus.Match(s, 0, s.size(), RE2::UNANCHORED, &m, 1));
   ASSERT_EQ(m, "") << " got m='" << m << "', want ''";
 }
+
+#if __has_include(<string_view>) && __cplusplus >= 201703L
+TEST(RE2, StringView) {
+  RE2 r("(foo)|(bar)|(baz)");
+  std::string_view word1;
+  std::string_view word2;
+  std::string_view word3;
+
+  ASSERT_TRUE(RE2::PartialMatch("foo", r, &word1, &word2, &word3));
+  ASSERT_EQ(word1, "foo");
+  ASSERT_EQ(word2, "");
+  ASSERT_EQ(word3, "");
+  ASSERT_TRUE(RE2::PartialMatch("bar", r, &word1, &word2, &word3));
+  ASSERT_EQ(word1, "");
+  ASSERT_EQ(word2, "bar");
+  ASSERT_EQ(word3, "");
+  ASSERT_TRUE(RE2::PartialMatch("baz", r, &word1, &word2, &word3));
+  ASSERT_EQ(word1, "");
+  ASSERT_EQ(word2, "");
+  ASSERT_EQ(word3, "baz");
+  ASSERT_FALSE(RE2::PartialMatch("f", r, &word1, &word2, &word3));
+
+  std::string_view a;
+  ASSERT_TRUE(RE2::FullMatch("hello", "(foo)|hello", &a));
+  ASSERT_EQ(a, "");
+}
+#endif
 
 }  // namespace re2

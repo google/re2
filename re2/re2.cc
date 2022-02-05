@@ -1050,6 +1050,15 @@ bool Parse(const char* str, size_t n, std::string* dest) {
   return true;
 }
 
+#if __has_include(<string_view>) && __cplusplus >= 201703L
+template <>
+bool Parse(const char* str, size_t n, std::string_view* dest) {
+  if (dest == NULL) return true;
+  *dest = std::string_view(str, n);
+  return true;
+}
+#endif
+
 template <>
 bool Parse(const char* str, size_t n, StringPiece* dest) {
   if (dest == NULL) return true;

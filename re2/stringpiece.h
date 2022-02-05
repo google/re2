@@ -123,6 +123,22 @@ class StringPiece {
     return std::string(data_, size_);
   }
 
+#if __has_include(<string_view>) && __cplusplus >= 201703L
+  // Converts to `std::string_view`.
+  operator std::string_view() const {
+    if (!data_) return {};
+    return std::string_view(data_, size_);
+  }
+
+  std::string_view as_string_view() const {
+    return std::string_view(data_, size_);
+  }
+
+  std::string_view ToStringView() const {
+    return std::string_view(data_, size_);
+  }
+#endif
+
   void CopyToString(std::string* target) const {
     target->assign(data_, size_);
   }

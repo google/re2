@@ -208,6 +208,9 @@
 #include <map>
 #include <mutex>
 #include <string>
+#if __has_include(<string_view>) && __cplusplus >= 201703L
+#include <string_view>
+#endif
 #include <type_traits>
 #include <vector>
 
@@ -789,6 +792,9 @@ namespace re2_internal {
 template <typename T> struct Parse3ary : public std::false_type {};
 template <> struct Parse3ary<void> : public std::true_type {};
 template <> struct Parse3ary<std::string> : public std::true_type {};
+#if __has_include(<string_view>) && __cplusplus >= 201703L
+template <> struct Parse3ary<std::string_view> : public std::true_type {};
+#endif
 template <> struct Parse3ary<StringPiece> : public std::true_type {};
 template <> struct Parse3ary<char> : public std::true_type {};
 template <> struct Parse3ary<signed char> : public std::true_type {};
