@@ -1652,8 +1652,16 @@ static const UGroup* LookupUnicodeGroup(const StringPiece& name) {
   // Special case: "Any" means any.
   if (name == StringPiece("Any"))
     return &anygroup;
-  return LookupGroup(name, unicode_groups, num_unicode_groups);
+  static const char digits[] = "0123456789abcdef";
+  std::string hex(name.size()*2, 0);
+  for (StringPiece::size_type i = 0; i < name.size(); i++) {
+    int c = name[i] & 0xFF;
+    hex[2*i] = digits[c>>4];
+    hex[2*i+1] = digits[c&15];
+  }
+  return LookupGroup(hex, unicode_groups, num_unicode_groups);
 }
+
 #endif
 
 // Add a UGroup or its negation to the character class.
@@ -2032,7 +2040,7 @@ static bool IsValidCaptureName(const StringPiece& name) {
     CharClassBuilder ccb;
     for (StringPiece group :
          {"Lu", "Ll", "Lt", "Lm", "Lo", "Nl", "Mn", "Mc", "Nd", "Pc"})
-      AddUGroup(&ccb, LookupGroup(group, unicode_groups, num_unicode_groups),
+      AddUGroup(&ccb, LookupUnicodeGroup(group),
                 +1, Regexp::NoParseFlags);
     return ccb.GetCharClass();
   }();

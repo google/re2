@@ -7,7 +7,7 @@
 namespace re2 {
 
 
-static const URange16 C_range16[] = {
+static const URange16 X43_range16[] = {
 	{ 0, 31 },
 	{ 127, 159 },
 	{ 173, 173 },
@@ -26,7 +26,7 @@ static const URange16 C_range16[] = {
 	{ 65279, 65279 },
 	{ 65529, 65531 },
 };
-static const URange32 C_range32[] = {
+static const URange32 X43_range32[] = {
 	{ 69821, 69821 },
 	{ 69837, 69837 },
 	{ 78896, 78904 },
@@ -37,11 +37,11 @@ static const URange32 C_range32[] = {
 	{ 983040, 1048573 },
 	{ 1048576, 1114109 },
 };
-static const URange16 Cc_range16[] = {
+static const URange16 X4363_range16[] = {
 	{ 0, 31 },
 	{ 127, 159 },
 };
-static const URange16 Cf_range16[] = {
+static const URange16 X4366_range16[] = {
 	{ 173, 173 },
 	{ 1536, 1541 },
 	{ 1564, 1564 },
@@ -57,7 +57,7 @@ static const URange16 Cf_range16[] = {
 	{ 65279, 65279 },
 	{ 65529, 65531 },
 };
-static const URange32 Cf_range32[] = {
+static const URange32 X4366_range32[] = {
 	{ 69821, 69821 },
 	{ 69837, 69837 },
 	{ 78896, 78904 },
@@ -66,17 +66,17 @@ static const URange32 Cf_range32[] = {
 	{ 917505, 917505 },
 	{ 917536, 917631 },
 };
-static const URange16 Co_range16[] = {
+static const URange16 X436f_range16[] = {
 	{ 57344, 63743 },
 };
-static const URange32 Co_range32[] = {
+static const URange32 X436f_range32[] = {
 	{ 983040, 1048573 },
 	{ 1048576, 1114109 },
 };
-static const URange16 Cs_range16[] = {
+static const URange16 X4373_range16[] = {
 	{ 55296, 57343 },
 };
-static const URange16 L_range16[] = {
+static const URange16 X4c_range16[] = {
 	{ 65, 90 },
 	{ 97, 122 },
 	{ 170, 170 },
@@ -458,7 +458,7 @@ static const URange16 L_range16[] = {
 	{ 65490, 65495 },
 	{ 65498, 65500 },
 };
-static const URange32 L_range32[] = {
+static const URange32 X4c_range32[] = {
 	{ 65536, 65547 },
 	{ 65549, 65574 },
 	{ 65576, 65594 },
@@ -728,7 +728,7 @@ static const URange32 L_range32[] = {
 	{ 194560, 195101 },
 	{ 196608, 201546 },
 };
-static const URange16 Ll_range16[] = {
+static const URange16 X4c6c_range16[] = {
 	{ 97, 122 },
 	{ 181, 181 },
 	{ 223, 246 },
@@ -1347,7 +1347,7 @@ static const URange16 Ll_range16[] = {
 	{ 64275, 64279 },
 	{ 65345, 65370 },
 };
-static const URange32 Ll_range32[] = {
+static const URange32 X4c6c_range32[] = {
 	{ 66600, 66639 },
 	{ 66776, 66811 },
 	{ 66967, 66977 },
@@ -1389,7 +1389,7 @@ static const URange32 Ll_range32[] = {
 	{ 122635, 122654 },
 	{ 125218, 125251 },
 };
-static const URange16 Lm_range16[] = {
+static const URange16 X4c6d_range16[] = {
 	{ 688, 705 },
 	{ 710, 721 },
 	{ 736, 740 },
@@ -1448,7 +1448,7 @@ static const URange16 Lm_range16[] = {
 	{ 65392, 65392 },
 	{ 65438, 65439 },
 };
-static const URange32 Lm_range32[] = {
+static const URange32 X4c6d_range32[] = {
 	{ 67456, 67461 },
 	{ 67463, 67504 },
 	{ 67506, 67514 },
@@ -1462,7 +1462,7 @@ static const URange32 Lm_range32[] = {
 	{ 123191, 123197 },
 	{ 125259, 125259 },
 };
-static const URange16 Lo_range16[] = {
+static const URange16 X4c6f_range16[] = {
 	{ 170, 170 },
 	{ 186, 186 },
 	{ 443, 443 },
@@ -1754,7 +1754,7 @@ static const URange16 Lo_range16[] = {
 	{ 65490, 65495 },
 	{ 65498, 65500 },
 };
-static const URange32 Lo_range32[] = {
+static const URange32 X4c6f_range32[] = {
 	{ 65536, 65547 },
 	{ 65549, 65574 },
 	{ 65576, 65594 },
@@ -1967,7 +1967,7 @@ static const URange32 Lo_range32[] = {
 	{ 194560, 195101 },
 	{ 196608, 201546 },
 };
-static const URange16 Lt_range16[] = {
+static const URange16 X4c74_range16[] = {
 	{ 453, 453 },
 	{ 456, 456 },
 	{ 459, 459 },
@@ -1979,7 +1979,7 @@ static const URange16 Lt_range16[] = {
 	{ 8140, 8140 },
 	{ 8188, 8188 },
 };
-static const URange16 Lu_range16[] = {
+static const URange16 X4c75_range16[] = {
 	{ 65, 90 },
 	{ 192, 214 },
 	{ 216, 222 },
@@ -2586,7 +2586,7 @@ static const URange16 Lu_range16[] = {
 	{ 42997, 42997 },
 	{ 65313, 65338 },
 };
-static const URange32 Lu_range32[] = {
+static const URange32 X4c75_range32[] = {
 	{ 66560, 66599 },
 	{ 66736, 66771 },
 	{ 66928, 66938 },
@@ -2629,7 +2629,7 @@ static const URange32 Lu_range32[] = {
 	{ 120778, 120778 },
 	{ 125184, 125217 },
 };
-static const URange16 M_range16[] = {
+static const URange16 X4d_range16[] = {
 	{ 768, 879 },
 	{ 1155, 1161 },
 	{ 1425, 1469 },
@@ -2820,7 +2820,7 @@ static const URange16 M_range16[] = {
 	{ 65024, 65039 },
 	{ 65056, 65071 },
 };
-static const URange32 M_range32[] = {
+static const URange32 X4d_range32[] = {
 	{ 66045, 66045 },
 	{ 66272, 66272 },
 	{ 66422, 66426 },
@@ -2932,7 +2932,7 @@ static const URange32 M_range32[] = {
 	{ 125252, 125258 },
 	{ 917760, 917999 },
 };
-static const URange16 Mc_range16[] = {
+static const URange16 X4d63_range16[] = {
 	{ 2307, 2307 },
 	{ 2363, 2363 },
 	{ 2366, 2368 },
@@ -3045,7 +3045,7 @@ static const URange16 Mc_range16[] = {
 	{ 44009, 44010 },
 	{ 44012, 44012 },
 };
-static const URange32 Mc_range32[] = {
+static const URange32 X4d63_range32[] = {
 	{ 69632, 69632 },
 	{ 69634, 69634 },
 	{ 69762, 69762 },
@@ -3113,14 +3113,14 @@ static const URange32 Mc_range32[] = {
 	{ 119141, 119142 },
 	{ 119149, 119154 },
 };
-static const URange16 Me_range16[] = {
+static const URange16 X4d65_range16[] = {
 	{ 1160, 1161 },
 	{ 6846, 6846 },
 	{ 8413, 8416 },
 	{ 8418, 8420 },
 	{ 42608, 42610 },
 };
-static const URange16 Mn_range16[] = {
+static const URange16 X4d6e_range16[] = {
 	{ 768, 879 },
 	{ 1155, 1159 },
 	{ 1425, 1469 },
@@ -3334,7 +3334,7 @@ static const URange16 Mn_range16[] = {
 	{ 65024, 65039 },
 	{ 65056, 65071 },
 };
-static const URange32 Mn_range32[] = {
+static const URange32 X4d6e_range32[] = {
 	{ 66045, 66045 },
 	{ 66272, 66272 },
 	{ 66422, 66426 },
@@ -3460,7 +3460,7 @@ static const URange32 Mn_range32[] = {
 	{ 125252, 125258 },
 	{ 917760, 917999 },
 };
-static const URange16 N_range16[] = {
+static const URange16 X4e_range16[] = {
 	{ 48, 57 },
 	{ 178, 179 },
 	{ 185, 185 },
@@ -3529,7 +3529,7 @@ static const URange16 N_range16[] = {
 	{ 44016, 44025 },
 	{ 65296, 65305 },
 };
-static const URange32 N_range32[] = {
+static const URange32 X4e_range32[] = {
 	{ 65799, 65843 },
 	{ 65856, 65912 },
 	{ 65930, 65931 },
@@ -3598,7 +3598,7 @@ static const URange32 N_range32[] = {
 	{ 127232, 127244 },
 	{ 130032, 130041 },
 };
-static const URange16 Nd_range16[] = {
+static const URange16 X4e64_range16[] = {
 	{ 48, 57 },
 	{ 1632, 1641 },
 	{ 1776, 1785 },
@@ -3637,7 +3637,7 @@ static const URange16 Nd_range16[] = {
 	{ 44016, 44025 },
 	{ 65296, 65305 },
 };
-static const URange32 Nd_range32[] = {
+static const URange32 X4e64_range32[] = {
 	{ 66720, 66729 },
 	{ 68912, 68921 },
 	{ 69734, 69743 },
@@ -3664,7 +3664,7 @@ static const URange32 Nd_range32[] = {
 	{ 125264, 125273 },
 	{ 130032, 130041 },
 };
-static const URange16 Nl_range16[] = {
+static const URange16 X4e6c_range16[] = {
 	{ 5870, 5872 },
 	{ 8544, 8578 },
 	{ 8581, 8584 },
@@ -3673,14 +3673,14 @@ static const URange16 Nl_range16[] = {
 	{ 12344, 12346 },
 	{ 42726, 42735 },
 };
-static const URange32 Nl_range32[] = {
+static const URange32 X4e6c_range32[] = {
 	{ 65856, 65908 },
 	{ 66369, 66369 },
 	{ 66378, 66378 },
 	{ 66513, 66517 },
 	{ 74752, 74862 },
 };
-static const URange16 No_range16[] = {
+static const URange16 X4e6f_range16[] = {
 	{ 178, 179 },
 	{ 185, 185 },
 	{ 188, 190 },
@@ -3711,7 +3711,7 @@ static const URange16 No_range16[] = {
 	{ 12977, 12991 },
 	{ 43056, 43061 },
 };
-static const URange32 No_range32[] = {
+static const URange32 X4e6f_range32[] = {
 	{ 65799, 65843 },
 	{ 65909, 65912 },
 	{ 65930, 65931 },
@@ -3755,7 +3755,7 @@ static const URange32 No_range32[] = {
 	{ 126255, 126269 },
 	{ 127232, 127244 },
 };
-static const URange16 P_range16[] = {
+static const URange16 X50_range16[] = {
 	{ 33, 35 },
 	{ 37, 42 },
 	{ 44, 47 },
@@ -3890,7 +3890,7 @@ static const URange16 P_range16[] = {
 	{ 65373, 65373 },
 	{ 65375, 65381 },
 };
-static const URange32 P_range32[] = {
+static const URange32 X50_range32[] = {
 	{ 65792, 65794 },
 	{ 66463, 66463 },
 	{ 66512, 66512 },
@@ -3948,7 +3948,7 @@ static const URange32 P_range32[] = {
 	{ 121479, 121483 },
 	{ 125278, 125279 },
 };
-static const URange16 Pc_range16[] = {
+static const URange16 X5063_range16[] = {
 	{ 95, 95 },
 	{ 8255, 8256 },
 	{ 8276, 8276 },
@@ -3956,7 +3956,7 @@ static const URange16 Pc_range16[] = {
 	{ 65101, 65103 },
 	{ 65343, 65343 },
 };
-static const URange16 Pd_range16[] = {
+static const URange16 X5064_range16[] = {
 	{ 45, 45 },
 	{ 1418, 1418 },
 	{ 1470, 1470 },
@@ -3976,10 +3976,10 @@ static const URange16 Pd_range16[] = {
 	{ 65123, 65123 },
 	{ 65293, 65293 },
 };
-static const URange32 Pd_range32[] = {
+static const URange32 X5064_range32[] = {
 	{ 69293, 69293 },
 };
-static const URange16 Pe_range16[] = {
+static const URange16 X5065_range16[] = {
 	{ 41, 41 },
 	{ 93, 93 },
 	{ 125, 125 },
@@ -4057,7 +4057,7 @@ static const URange16 Pe_range16[] = {
 	{ 65376, 65376 },
 	{ 65379, 65379 },
 };
-static const URange16 Pf_range16[] = {
+static const URange16 X5066_range16[] = {
 	{ 187, 187 },
 	{ 8217, 8217 },
 	{ 8221, 8221 },
@@ -4069,7 +4069,7 @@ static const URange16 Pf_range16[] = {
 	{ 11805, 11805 },
 	{ 11809, 11809 },
 };
-static const URange16 Pi_range16[] = {
+static const URange16 X5069_range16[] = {
 	{ 171, 171 },
 	{ 8216, 8216 },
 	{ 8219, 8220 },
@@ -4082,7 +4082,7 @@ static const URange16 Pi_range16[] = {
 	{ 11804, 11804 },
 	{ 11808, 11808 },
 };
-static const URange16 Po_range16[] = {
+static const URange16 X506f_range16[] = {
 	{ 33, 35 },
 	{ 37, 39 },
 	{ 42, 42 },
@@ -4214,7 +4214,7 @@ static const URange16 Po_range16[] = {
 	{ 65377, 65377 },
 	{ 65380, 65381 },
 };
-static const URange32 Po_range32[] = {
+static const URange32 X506f_range32[] = {
 	{ 65792, 65794 },
 	{ 66463, 66463 },
 	{ 66512, 66512 },
@@ -4271,7 +4271,7 @@ static const URange32 Po_range32[] = {
 	{ 121479, 121483 },
 	{ 125278, 125279 },
 };
-static const URange16 Ps_range16[] = {
+static const URange16 X5073_range16[] = {
 	{ 40, 40 },
 	{ 91, 91 },
 	{ 123, 123 },
@@ -4352,7 +4352,7 @@ static const URange16 Ps_range16[] = {
 	{ 65375, 65375 },
 	{ 65378, 65378 },
 };
-static const URange16 S_range16[] = {
+static const URange16 X53_range16[] = {
 	{ 36, 36 },
 	{ 43, 43 },
 	{ 60, 62 },
@@ -4505,7 +4505,7 @@ static const URange16 S_range16[] = {
 	{ 65512, 65518 },
 	{ 65532, 65533 },
 };
-static const URange32 S_range32[] = {
+static const URange32 X53_range32[] = {
 	{ 65847, 65855 },
 	{ 65913, 65929 },
 	{ 65932, 65934 },
@@ -4590,7 +4590,7 @@ static const URange32 S_range32[] = {
 	{ 129792, 129938 },
 	{ 129940, 129994 },
 };
-static const URange16 Sc_range16[] = {
+static const URange16 X5363_range16[] = {
 	{ 36, 36 },
 	{ 162, 165 },
 	{ 1423, 1423 },
@@ -4610,12 +4610,12 @@ static const URange16 Sc_range16[] = {
 	{ 65504, 65505 },
 	{ 65509, 65510 },
 };
-static const URange32 Sc_range32[] = {
+static const URange32 X5363_range32[] = {
 	{ 73693, 73696 },
 	{ 123647, 123647 },
 	{ 126128, 126128 },
 };
-static const URange16 Sk_range16[] = {
+static const URange16 X536b_range16[] = {
 	{ 94, 94 },
 	{ 96, 96 },
 	{ 168, 168 },
@@ -4647,10 +4647,10 @@ static const URange16 Sk_range16[] = {
 	{ 65344, 65344 },
 	{ 65507, 65507 },
 };
-static const URange32 Sk_range32[] = {
+static const URange32 X536b_range32[] = {
 	{ 127995, 127999 },
 };
-static const URange16 Sm_range16[] = {
+static const URange16 X536d_range16[] = {
 	{ 43, 43 },
 	{ 60, 62 },
 	{ 124, 124 },
@@ -4705,7 +4705,7 @@ static const URange16 Sm_range16[] = {
 	{ 65506, 65506 },
 	{ 65513, 65516 },
 };
-static const URange32 Sm_range32[] = {
+static const URange32 X536d_range32[] = {
 	{ 120513, 120513 },
 	{ 120539, 120539 },
 	{ 120571, 120571 },
@@ -4718,7 +4718,7 @@ static const URange32 Sm_range32[] = {
 	{ 120771, 120771 },
 	{ 126704, 126705 },
 };
-static const URange16 So_range16[] = {
+static const URange16 X536f_range16[] = {
 	{ 166, 166 },
 	{ 169, 169 },
 	{ 174, 174 },
@@ -4834,7 +4834,7 @@ static const URange16 So_range16[] = {
 	{ 65517, 65518 },
 	{ 65532, 65533 },
 };
-static const URange32 So_range32[] = {
+static const URange32 X536f_range32[] = {
 	{ 65847, 65855 },
 	{ 65913, 65929 },
 	{ 65932, 65934 },
@@ -4908,7 +4908,7 @@ static const URange32 So_range32[] = {
 	{ 129792, 129938 },
 	{ 129940, 129994 },
 };
-static const URange16 Z_range16[] = {
+static const URange16 X5a_range16[] = {
 	{ 32, 32 },
 	{ 160, 160 },
 	{ 5760, 5760 },
@@ -4918,13 +4918,13 @@ static const URange16 Z_range16[] = {
 	{ 8287, 8287 },
 	{ 12288, 12288 },
 };
-static const URange16 Zl_range16[] = {
+static const URange16 X5a6c_range16[] = {
 	{ 8232, 8232 },
 };
-static const URange16 Zp_range16[] = {
+static const URange16 X5a70_range16[] = {
 	{ 8233, 8233 },
 };
-static const URange16 Zs_range16[] = {
+static const URange16 X5a73_range16[] = {
 	{ 32, 32 },
 	{ 160, 160 },
 	{ 5760, 5760 },
@@ -4933,20 +4933,20 @@ static const URange16 Zs_range16[] = {
 	{ 8287, 8287 },
 	{ 12288, 12288 },
 };
-static const URange32 Adlam_range32[] = {
+static const URange32 X41646c616d_range32[] = {
 	{ 125184, 125259 },
 	{ 125264, 125273 },
 	{ 125278, 125279 },
 };
-static const URange32 Ahom_range32[] = {
+static const URange32 X41686f6d_range32[] = {
 	{ 71424, 71450 },
 	{ 71453, 71467 },
 	{ 71472, 71494 },
 };
-static const URange32 Anatolian_Hieroglyphs_range32[] = {
+static const URange32 X416e61746f6c69616e5f486965726f676c79706873_range32[] = {
 	{ 82944, 83526 },
 };
-static const URange16 Arabic_range16[] = {
+static const URange16 X417261626963_range16[] = {
 	{ 1536, 1540 },
 	{ 1542, 1547 },
 	{ 1549, 1562 },
@@ -4970,7 +4970,7 @@ static const URange16 Arabic_range16[] = {
 	{ 65136, 65140 },
 	{ 65142, 65276 },
 };
-static const URange32 Arabic_range32[] = {
+static const URange32 X417261626963_range32[] = {
 	{ 69216, 69246 },
 	{ 126464, 126467 },
 	{ 126469, 126495 },
@@ -5007,35 +5007,35 @@ static const URange32 Arabic_range32[] = {
 	{ 126635, 126651 },
 	{ 126704, 126705 },
 };
-static const URange16 Armenian_range16[] = {
+static const URange16 X41726d656e69616e_range16[] = {
 	{ 1329, 1366 },
 	{ 1369, 1418 },
 	{ 1421, 1423 },
 	{ 64275, 64279 },
 };
-static const URange32 Avestan_range32[] = {
+static const URange32 X4176657374616e_range32[] = {
 	{ 68352, 68405 },
 	{ 68409, 68415 },
 };
-static const URange16 Balinese_range16[] = {
+static const URange16 X42616c696e657365_range16[] = {
 	{ 6912, 6988 },
 	{ 6992, 7038 },
 };
-static const URange16 Bamum_range16[] = {
+static const URange16 X42616d756d_range16[] = {
 	{ 42656, 42743 },
 };
-static const URange32 Bamum_range32[] = {
+static const URange32 X42616d756d_range32[] = {
 	{ 92160, 92728 },
 };
-static const URange32 Bassa_Vah_range32[] = {
+static const URange32 X42617373615f566168_range32[] = {
 	{ 92880, 92909 },
 	{ 92912, 92917 },
 };
-static const URange16 Batak_range16[] = {
+static const URange16 X426174616b_range16[] = {
 	{ 7104, 7155 },
 	{ 7164, 7167 },
 };
-static const URange16 Bengali_range16[] = {
+static const URange16 X42656e67616c69_range16[] = {
 	{ 2432, 2435 },
 	{ 2437, 2444 },
 	{ 2447, 2448 },
@@ -5051,65 +5051,65 @@ static const URange16 Bengali_range16[] = {
 	{ 2527, 2531 },
 	{ 2534, 2558 },
 };
-static const URange32 Bhaiksuki_range32[] = {
+static const URange32 X426861696b73756b69_range32[] = {
 	{ 72704, 72712 },
 	{ 72714, 72758 },
 	{ 72760, 72773 },
 	{ 72784, 72812 },
 };
-static const URange16 Bopomofo_range16[] = {
+static const URange16 X426f706f6d6f666f_range16[] = {
 	{ 746, 747 },
 	{ 12549, 12591 },
 	{ 12704, 12735 },
 };
-static const URange32 Brahmi_range32[] = {
+static const URange32 X427261686d69_range32[] = {
 	{ 69632, 69709 },
 	{ 69714, 69749 },
 	{ 69759, 69759 },
 };
-static const URange16 Braille_range16[] = {
+static const URange16 X427261696c6c65_range16[] = {
 	{ 10240, 10495 },
 };
-static const URange16 Buginese_range16[] = {
+static const URange16 X427567696e657365_range16[] = {
 	{ 6656, 6683 },
 	{ 6686, 6687 },
 };
-static const URange16 Buhid_range16[] = {
+static const URange16 X4275686964_range16[] = {
 	{ 5952, 5971 },
 };
-static const URange16 Canadian_Aboriginal_range16[] = {
+static const URange16 X43616e616469616e5f41626f726967696e616c_range16[] = {
 	{ 5120, 5759 },
 	{ 6320, 6389 },
 };
-static const URange32 Canadian_Aboriginal_range32[] = {
+static const URange32 X43616e616469616e5f41626f726967696e616c_range32[] = {
 	{ 72368, 72383 },
 };
-static const URange32 Carian_range32[] = {
+static const URange32 X43617269616e_range32[] = {
 	{ 66208, 66256 },
 };
-static const URange32 Caucasian_Albanian_range32[] = {
+static const URange32 X43617563617369616e5f416c62616e69616e_range32[] = {
 	{ 66864, 66915 },
 	{ 66927, 66927 },
 };
-static const URange32 Chakma_range32[] = {
+static const URange32 X4368616b6d61_range32[] = {
 	{ 69888, 69940 },
 	{ 69942, 69959 },
 };
-static const URange16 Cham_range16[] = {
+static const URange16 X4368616d_range16[] = {
 	{ 43520, 43574 },
 	{ 43584, 43597 },
 	{ 43600, 43609 },
 	{ 43612, 43615 },
 };
-static const URange16 Cherokee_range16[] = {
+static const URange16 X436865726f6b6565_range16[] = {
 	{ 5024, 5109 },
 	{ 5112, 5117 },
 	{ 43888, 43967 },
 };
-static const URange32 Chorasmian_range32[] = {
+static const URange32 X43686f7261736d69616e_range32[] = {
 	{ 69552, 69579 },
 };
-static const URange16 Common_range16[] = {
+static const URange16 X436f6d6d6f6e_range16[] = {
 	{ 0, 64 },
 	{ 91, 96 },
 	{ 123, 169 },
@@ -5202,7 +5202,7 @@ static const URange16 Common_range16[] = {
 	{ 65512, 65518 },
 	{ 65529, 65533 },
 };
-static const URange32 Common_range32[] = {
+static const URange32 X436f6d6d6f6e_range32[] = {
 	{ 65792, 65794 },
 	{ 65799, 65843 },
 	{ 65847, 65855 },
@@ -5287,18 +5287,18 @@ static const URange32 Common_range32[] = {
 	{ 917505, 917505 },
 	{ 917536, 917631 },
 };
-static const URange16 Coptic_range16[] = {
+static const URange16 X436f70746963_range16[] = {
 	{ 994, 1007 },
 	{ 11392, 11507 },
 	{ 11513, 11519 },
 };
-static const URange32 Cuneiform_range32[] = {
+static const URange32 X43756e6569666f726d_range32[] = {
 	{ 73728, 74649 },
 	{ 74752, 74862 },
 	{ 74864, 74868 },
 	{ 74880, 75075 },
 };
-static const URange32 Cypriot_range32[] = {
+static const URange32 X43797072696f74_range32[] = {
 	{ 67584, 67589 },
 	{ 67592, 67592 },
 	{ 67594, 67637 },
@@ -5306,10 +5306,10 @@ static const URange32 Cypriot_range32[] = {
 	{ 67644, 67644 },
 	{ 67647, 67647 },
 };
-static const URange32 Cypro_Minoan_range32[] = {
+static const URange32 X437970726f5f4d696e6f616e_range32[] = {
 	{ 77712, 77810 },
 };
-static const URange16 Cyrillic_range16[] = {
+static const URange16 X437972696c6c6963_range16[] = {
 	{ 1024, 1156 },
 	{ 1159, 1327 },
 	{ 7296, 7304 },
@@ -5319,16 +5319,16 @@ static const URange16 Cyrillic_range16[] = {
 	{ 42560, 42655 },
 	{ 65070, 65071 },
 };
-static const URange32 Deseret_range32[] = {
+static const URange32 X44657365726574_range32[] = {
 	{ 66560, 66639 },
 };
-static const URange16 Devanagari_range16[] = {
+static const URange16 X446576616e6167617269_range16[] = {
 	{ 2304, 2384 },
 	{ 2389, 2403 },
 	{ 2406, 2431 },
 	{ 43232, 43263 },
 };
-static const URange32 Dives_Akuru_range32[] = {
+static const URange32 X44697665735f416b757275_range32[] = {
 	{ 71936, 71942 },
 	{ 71945, 71945 },
 	{ 71948, 71955 },
@@ -5338,27 +5338,27 @@ static const URange32 Dives_Akuru_range32[] = {
 	{ 71995, 72006 },
 	{ 72016, 72025 },
 };
-static const URange32 Dogra_range32[] = {
+static const URange32 X446f677261_range32[] = {
 	{ 71680, 71739 },
 };
-static const URange32 Duployan_range32[] = {
+static const URange32 X4475706c6f79616e_range32[] = {
 	{ 113664, 113770 },
 	{ 113776, 113788 },
 	{ 113792, 113800 },
 	{ 113808, 113817 },
 	{ 113820, 113823 },
 };
-static const URange32 Egyptian_Hieroglyphs_range32[] = {
+static const URange32 X456779707469616e5f486965726f676c79706873_range32[] = {
 	{ 77824, 78894 },
 	{ 78896, 78904 },
 };
-static const URange32 Elbasan_range32[] = {
+static const URange32 X456c626173616e_range32[] = {
 	{ 66816, 66855 },
 };
-static const URange32 Elymaic_range32[] = {
+static const URange32 X456c796d616963_range32[] = {
 	{ 69600, 69622 },
 };
-static const URange16 Ethiopic_range16[] = {
+static const URange16 X457468696f706963_range16[] = {
 	{ 4608, 4680 },
 	{ 4682, 4685 },
 	{ 4688, 4694 },
@@ -5392,13 +5392,13 @@ static const URange16 Ethiopic_range16[] = {
 	{ 43808, 43814 },
 	{ 43816, 43822 },
 };
-static const URange32 Ethiopic_range32[] = {
+static const URange32 X457468696f706963_range32[] = {
 	{ 124896, 124902 },
 	{ 124904, 124907 },
 	{ 124909, 124910 },
 	{ 124912, 124926 },
 };
-static const URange16 Georgian_range16[] = {
+static const URange16 X47656f726769616e_range16[] = {
 	{ 4256, 4293 },
 	{ 4295, 4295 },
 	{ 4301, 4301 },
@@ -5410,20 +5410,20 @@ static const URange16 Georgian_range16[] = {
 	{ 11559, 11559 },
 	{ 11565, 11565 },
 };
-static const URange16 Glagolitic_range16[] = {
+static const URange16 X476c61676f6c69746963_range16[] = {
 	{ 11264, 11359 },
 };
-static const URange32 Glagolitic_range32[] = {
+static const URange32 X476c61676f6c69746963_range32[] = {
 	{ 122880, 122886 },
 	{ 122888, 122904 },
 	{ 122907, 122913 },
 	{ 122915, 122916 },
 	{ 122918, 122922 },
 };
-static const URange32 Gothic_range32[] = {
+static const URange32 X476f74686963_range32[] = {
 	{ 66352, 66378 },
 };
-static const URange32 Grantha_range32[] = {
+static const URange32 X4772616e746861_range32[] = {
 	{ 70400, 70403 },
 	{ 70405, 70412 },
 	{ 70415, 70416 },
@@ -5440,7 +5440,7 @@ static const URange32 Grantha_range32[] = {
 	{ 70502, 70508 },
 	{ 70512, 70516 },
 };
-static const URange16 Greek_range16[] = {
+static const URange16 X477265656b_range16[] = {
 	{ 880, 883 },
 	{ 885, 887 },
 	{ 890, 893 },
@@ -5475,12 +5475,12 @@ static const URange16 Greek_range16[] = {
 	{ 8486, 8486 },
 	{ 43877, 43877 },
 };
-static const URange32 Greek_range32[] = {
+static const URange32 X477265656b_range32[] = {
 	{ 65856, 65934 },
 	{ 65952, 65952 },
 	{ 119296, 119365 },
 };
-static const URange16 Gujarati_range16[] = {
+static const URange16 X47756a6172617469_range16[] = {
 	{ 2689, 2691 },
 	{ 2693, 2701 },
 	{ 2703, 2705 },
@@ -5496,7 +5496,7 @@ static const URange16 Gujarati_range16[] = {
 	{ 2790, 2801 },
 	{ 2809, 2815 },
 };
-static const URange32 Gunjala_Gondi_range32[] = {
+static const URange32 X47756e6a616c615f476f6e6469_range32[] = {
 	{ 73056, 73061 },
 	{ 73063, 73064 },
 	{ 73066, 73102 },
@@ -5504,7 +5504,7 @@ static const URange32 Gunjala_Gondi_range32[] = {
 	{ 73107, 73112 },
 	{ 73120, 73129 },
 };
-static const URange16 Gurmukhi_range16[] = {
+static const URange16 X4775726d756b6869_range16[] = {
 	{ 2561, 2563 },
 	{ 2565, 2570 },
 	{ 2575, 2576 },
@@ -5522,7 +5522,7 @@ static const URange16 Gurmukhi_range16[] = {
 	{ 2654, 2654 },
 	{ 2662, 2678 },
 };
-static const URange16 Han_range16[] = {
+static const URange16 X48616e_range16[] = {
 	{ 11904, 11929 },
 	{ 11931, 12019 },
 	{ 12032, 12245 },
@@ -5535,7 +5535,7 @@ static const URange16 Han_range16[] = {
 	{ 63744, 64109 },
 	{ 64112, 64217 },
 };
-static const URange32 Han_range32[] = {
+static const URange32 X48616e_range32[] = {
 	{ 94178, 94179 },
 	{ 94192, 94193 },
 	{ 131072, 173791 },
@@ -5546,7 +5546,7 @@ static const URange32 Han_range32[] = {
 	{ 194560, 195101 },
 	{ 196608, 201546 },
 };
-static const URange16 Hangul_range16[] = {
+static const URange16 X48616e67756c_range16[] = {
 	{ 4352, 4607 },
 	{ 12334, 12335 },
 	{ 12593, 12686 },
@@ -5562,19 +5562,19 @@ static const URange16 Hangul_range16[] = {
 	{ 65490, 65495 },
 	{ 65498, 65500 },
 };
-static const URange32 Hanifi_Rohingya_range32[] = {
+static const URange32 X48616e6966695f526f68696e677961_range32[] = {
 	{ 68864, 68903 },
 	{ 68912, 68921 },
 };
-static const URange16 Hanunoo_range16[] = {
+static const URange16 X48616e756e6f6f_range16[] = {
 	{ 5920, 5940 },
 };
-static const URange32 Hatran_range32[] = {
+static const URange32 X48617472616e_range32[] = {
 	{ 67808, 67826 },
 	{ 67828, 67829 },
 	{ 67835, 67839 },
 };
-static const URange16 Hebrew_range16[] = {
+static const URange16 X486562726577_range16[] = {
 	{ 1425, 1479 },
 	{ 1488, 1514 },
 	{ 1519, 1524 },
@@ -5585,20 +5585,20 @@ static const URange16 Hebrew_range16[] = {
 	{ 64323, 64324 },
 	{ 64326, 64335 },
 };
-static const URange16 Hiragana_range16[] = {
+static const URange16 X4869726167616e61_range16[] = {
 	{ 12353, 12438 },
 	{ 12445, 12447 },
 };
-static const URange32 Hiragana_range32[] = {
+static const URange32 X4869726167616e61_range32[] = {
 	{ 110593, 110879 },
 	{ 110928, 110930 },
 	{ 127488, 127488 },
 };
-static const URange32 Imperial_Aramaic_range32[] = {
+static const URange32 X496d70657269616c5f4172616d616963_range32[] = {
 	{ 67648, 67669 },
 	{ 67671, 67679 },
 };
-static const URange16 Inherited_range16[] = {
+static const URange16 X496e68657269746564_range16[] = {
 	{ 768, 879 },
 	{ 1157, 1158 },
 	{ 1611, 1621 },
@@ -5619,7 +5619,7 @@ static const URange16 Inherited_range16[] = {
 	{ 65024, 65039 },
 	{ 65056, 65069 },
 };
-static const URange32 Inherited_range32[] = {
+static const URange32 X496e68657269746564_range32[] = {
 	{ 66045, 66045 },
 	{ 66272, 66272 },
 	{ 70459, 70459 },
@@ -5631,24 +5631,24 @@ static const URange32 Inherited_range32[] = {
 	{ 119210, 119213 },
 	{ 917760, 917999 },
 };
-static const URange32 Inscriptional_Pahlavi_range32[] = {
+static const URange32 X496e736372697074696f6e616c5f5061686c617669_range32[] = {
 	{ 68448, 68466 },
 	{ 68472, 68479 },
 };
-static const URange32 Inscriptional_Parthian_range32[] = {
+static const URange32 X496e736372697074696f6e616c5f506172746869616e_range32[] = {
 	{ 68416, 68437 },
 	{ 68440, 68447 },
 };
-static const URange16 Javanese_range16[] = {
+static const URange16 X4a6176616e657365_range16[] = {
 	{ 43392, 43469 },
 	{ 43472, 43481 },
 	{ 43486, 43487 },
 };
-static const URange32 Kaithi_range32[] = {
+static const URange32 X4b6169746869_range32[] = {
 	{ 69760, 69826 },
 	{ 69837, 69837 },
 };
-static const URange16 Kannada_range16[] = {
+static const URange16 X4b616e6e616461_range16[] = {
 	{ 3200, 3212 },
 	{ 3214, 3216 },
 	{ 3218, 3240 },
@@ -5663,7 +5663,7 @@ static const URange16 Kannada_range16[] = {
 	{ 3302, 3311 },
 	{ 3313, 3314 },
 };
-static const URange16 Katakana_range16[] = {
+static const URange16 X4b6174616b616e61_range16[] = {
 	{ 12449, 12538 },
 	{ 12541, 12543 },
 	{ 12784, 12799 },
@@ -5672,7 +5672,7 @@ static const URange16 Katakana_range16[] = {
 	{ 65382, 65391 },
 	{ 65393, 65437 },
 };
-static const URange32 Katakana_range32[] = {
+static const URange32 X4b6174616b616e61_range32[] = {
 	{ 110576, 110579 },
 	{ 110581, 110587 },
 	{ 110589, 110590 },
@@ -5680,11 +5680,11 @@ static const URange32 Katakana_range32[] = {
 	{ 110880, 110882 },
 	{ 110948, 110951 },
 };
-static const URange16 Kayah_Li_range16[] = {
+static const URange16 X4b617961685f4c69_range16[] = {
 	{ 43264, 43309 },
 	{ 43311, 43311 },
 };
-static const URange32 Kharoshthi_range32[] = {
+static const URange32 X4b6861726f7368746869_range32[] = {
 	{ 68096, 68099 },
 	{ 68101, 68102 },
 	{ 68108, 68115 },
@@ -5694,25 +5694,25 @@ static const URange32 Kharoshthi_range32[] = {
 	{ 68159, 68168 },
 	{ 68176, 68184 },
 };
-static const URange32 Khitan_Small_Script_range32[] = {
+static const URange32 X4b686974616e5f536d616c6c5f536372697074_range32[] = {
 	{ 94180, 94180 },
 	{ 101120, 101589 },
 };
-static const URange16 Khmer_range16[] = {
+static const URange16 X4b686d6572_range16[] = {
 	{ 6016, 6109 },
 	{ 6112, 6121 },
 	{ 6128, 6137 },
 	{ 6624, 6655 },
 };
-static const URange32 Khojki_range32[] = {
+static const URange32 X4b686f6a6b69_range32[] = {
 	{ 70144, 70161 },
 	{ 70163, 70206 },
 };
-static const URange32 Khudawadi_range32[] = {
+static const URange32 X4b6875646177616469_range32[] = {
 	{ 70320, 70378 },
 	{ 70384, 70393 },
 };
-static const URange16 Lao_range16[] = {
+static const URange16 X4c616f_range16[] = {
 	{ 3713, 3714 },
 	{ 3716, 3716 },
 	{ 3718, 3722 },
@@ -5725,7 +5725,7 @@ static const URange16 Lao_range16[] = {
 	{ 3792, 3801 },
 	{ 3804, 3807 },
 };
-static const URange16 Latin_range16[] = {
+static const URange16 X4c6174696e_range16[] = {
 	{ 65, 90 },
 	{ 97, 122 },
 	{ 170, 170 },
@@ -5761,30 +5761,30 @@ static const URange16 Latin_range16[] = {
 	{ 65313, 65338 },
 	{ 65345, 65370 },
 };
-static const URange32 Latin_range32[] = {
+static const URange32 X4c6174696e_range32[] = {
 	{ 67456, 67461 },
 	{ 67463, 67504 },
 	{ 67506, 67514 },
 	{ 122624, 122654 },
 };
-static const URange16 Lepcha_range16[] = {
+static const URange16 X4c6570636861_range16[] = {
 	{ 7168, 7223 },
 	{ 7227, 7241 },
 	{ 7245, 7247 },
 };
-static const URange16 Limbu_range16[] = {
+static const URange16 X4c696d6275_range16[] = {
 	{ 6400, 6430 },
 	{ 6432, 6443 },
 	{ 6448, 6459 },
 	{ 6464, 6464 },
 	{ 6468, 6479 },
 };
-static const URange32 Linear_A_range32[] = {
+static const URange32 X4c696e6561725f41_range32[] = {
 	{ 67072, 67382 },
 	{ 67392, 67413 },
 	{ 67424, 67431 },
 };
-static const URange32 Linear_B_range32[] = {
+static const URange32 X4c696e6561725f42_range32[] = {
 	{ 65536, 65547 },
 	{ 65549, 65574 },
 	{ 65576, 65594 },
@@ -5793,26 +5793,26 @@ static const URange32 Linear_B_range32[] = {
 	{ 65616, 65629 },
 	{ 65664, 65786 },
 };
-static const URange16 Lisu_range16[] = {
+static const URange16 X4c697375_range16[] = {
 	{ 42192, 42239 },
 };
-static const URange32 Lisu_range32[] = {
+static const URange32 X4c697375_range32[] = {
 	{ 73648, 73648 },
 };
-static const URange32 Lycian_range32[] = {
+static const URange32 X4c796369616e_range32[] = {
 	{ 66176, 66204 },
 };
-static const URange32 Lydian_range32[] = {
+static const URange32 X4c796469616e_range32[] = {
 	{ 67872, 67897 },
 	{ 67903, 67903 },
 };
-static const URange32 Mahajani_range32[] = {
+static const URange32 X4d6168616a616e69_range32[] = {
 	{ 69968, 70006 },
 };
-static const URange32 Makasar_range32[] = {
+static const URange32 X4d616b61736172_range32[] = {
 	{ 73440, 73464 },
 };
-static const URange16 Malayalam_range16[] = {
+static const URange16 X4d616c6179616c616d_range16[] = {
 	{ 3328, 3340 },
 	{ 3342, 3344 },
 	{ 3346, 3396 },
@@ -5821,20 +5821,20 @@ static const URange16 Malayalam_range16[] = {
 	{ 3412, 3427 },
 	{ 3430, 3455 },
 };
-static const URange16 Mandaic_range16[] = {
+static const URange16 X4d616e64616963_range16[] = {
 	{ 2112, 2139 },
 	{ 2142, 2142 },
 };
-static const URange32 Manichaean_range32[] = {
+static const URange32 X4d616e6963686165616e_range32[] = {
 	{ 68288, 68326 },
 	{ 68331, 68342 },
 };
-static const URange32 Marchen_range32[] = {
+static const URange32 X4d61726368656e_range32[] = {
 	{ 72816, 72847 },
 	{ 72850, 72871 },
 	{ 72873, 72886 },
 };
-static const URange32 Masaram_Gondi_range32[] = {
+static const URange32 X4d61736172616d5f476f6e6469_range32[] = {
 	{ 72960, 72966 },
 	{ 72968, 72969 },
 	{ 72971, 73014 },
@@ -5843,133 +5843,133 @@ static const URange32 Masaram_Gondi_range32[] = {
 	{ 73023, 73031 },
 	{ 73040, 73049 },
 };
-static const URange32 Medefaidrin_range32[] = {
+static const URange32 X4d6564656661696472696e_range32[] = {
 	{ 93760, 93850 },
 };
-static const URange16 Meetei_Mayek_range16[] = {
+static const URange16 X4d65657465695f4d6179656b_range16[] = {
 	{ 43744, 43766 },
 	{ 43968, 44013 },
 	{ 44016, 44025 },
 };
-static const URange32 Mende_Kikakui_range32[] = {
+static const URange32 X4d656e64655f4b696b616b7569_range32[] = {
 	{ 124928, 125124 },
 	{ 125127, 125142 },
 };
-static const URange32 Meroitic_Cursive_range32[] = {
+static const URange32 X4d65726f697469635f43757273697665_range32[] = {
 	{ 68000, 68023 },
 	{ 68028, 68047 },
 	{ 68050, 68095 },
 };
-static const URange32 Meroitic_Hieroglyphs_range32[] = {
+static const URange32 X4d65726f697469635f486965726f676c79706873_range32[] = {
 	{ 67968, 67999 },
 };
-static const URange32 Miao_range32[] = {
+static const URange32 X4d69616f_range32[] = {
 	{ 93952, 94026 },
 	{ 94031, 94087 },
 	{ 94095, 94111 },
 };
-static const URange32 Modi_range32[] = {
+static const URange32 X4d6f6469_range32[] = {
 	{ 71168, 71236 },
 	{ 71248, 71257 },
 };
-static const URange16 Mongolian_range16[] = {
+static const URange16 X4d6f6e676f6c69616e_range16[] = {
 	{ 6144, 6145 },
 	{ 6148, 6148 },
 	{ 6150, 6169 },
 	{ 6176, 6264 },
 	{ 6272, 6314 },
 };
-static const URange32 Mongolian_range32[] = {
+static const URange32 X4d6f6e676f6c69616e_range32[] = {
 	{ 71264, 71276 },
 };
-static const URange32 Mro_range32[] = {
+static const URange32 X4d726f_range32[] = {
 	{ 92736, 92766 },
 	{ 92768, 92777 },
 	{ 92782, 92783 },
 };
-static const URange32 Multani_range32[] = {
+static const URange32 X4d756c74616e69_range32[] = {
 	{ 70272, 70278 },
 	{ 70280, 70280 },
 	{ 70282, 70285 },
 	{ 70287, 70301 },
 	{ 70303, 70313 },
 };
-static const URange16 Myanmar_range16[] = {
+static const URange16 X4d79616e6d6172_range16[] = {
 	{ 4096, 4255 },
 	{ 43488, 43518 },
 	{ 43616, 43647 },
 };
-static const URange32 Nabataean_range32[] = {
+static const URange32 X4e616261746165616e_range32[] = {
 	{ 67712, 67742 },
 	{ 67751, 67759 },
 };
-static const URange32 Nandinagari_range32[] = {
+static const URange32 X4e616e64696e6167617269_range32[] = {
 	{ 72096, 72103 },
 	{ 72106, 72151 },
 	{ 72154, 72164 },
 };
-static const URange16 New_Tai_Lue_range16[] = {
+static const URange16 X4e65775f5461695f4c7565_range16[] = {
 	{ 6528, 6571 },
 	{ 6576, 6601 },
 	{ 6608, 6618 },
 	{ 6622, 6623 },
 };
-static const URange32 Newa_range32[] = {
+static const URange32 X4e657761_range32[] = {
 	{ 70656, 70747 },
 	{ 70749, 70753 },
 };
-static const URange16 Nko_range16[] = {
+static const URange16 X4e6b6f_range16[] = {
 	{ 1984, 2042 },
 	{ 2045, 2047 },
 };
-static const URange32 Nushu_range32[] = {
+static const URange32 X4e75736875_range32[] = {
 	{ 94177, 94177 },
 	{ 110960, 111355 },
 };
-static const URange32 Nyiakeng_Puachue_Hmong_range32[] = {
+static const URange32 X4e7969616b656e675f507561636875655f486d6f6e67_range32[] = {
 	{ 123136, 123180 },
 	{ 123184, 123197 },
 	{ 123200, 123209 },
 	{ 123214, 123215 },
 };
-static const URange16 Ogham_range16[] = {
+static const URange16 X4f6768616d_range16[] = {
 	{ 5760, 5788 },
 };
-static const URange16 Ol_Chiki_range16[] = {
+static const URange16 X4f6c5f4368696b69_range16[] = {
 	{ 7248, 7295 },
 };
-static const URange32 Old_Hungarian_range32[] = {
+static const URange32 X4f6c645f48756e67617269616e_range32[] = {
 	{ 68736, 68786 },
 	{ 68800, 68850 },
 	{ 68858, 68863 },
 };
-static const URange32 Old_Italic_range32[] = {
+static const URange32 X4f6c645f4974616c6963_range32[] = {
 	{ 66304, 66339 },
 	{ 66349, 66351 },
 };
-static const URange32 Old_North_Arabian_range32[] = {
+static const URange32 X4f6c645f4e6f7274685f4172616269616e_range32[] = {
 	{ 68224, 68255 },
 };
-static const URange32 Old_Permic_range32[] = {
+static const URange32 X4f6c645f5065726d6963_range32[] = {
 	{ 66384, 66426 },
 };
-static const URange32 Old_Persian_range32[] = {
+static const URange32 X4f6c645f5065727369616e_range32[] = {
 	{ 66464, 66499 },
 	{ 66504, 66517 },
 };
-static const URange32 Old_Sogdian_range32[] = {
+static const URange32 X4f6c645f536f676469616e_range32[] = {
 	{ 69376, 69415 },
 };
-static const URange32 Old_South_Arabian_range32[] = {
+static const URange32 X4f6c645f536f7574685f4172616269616e_range32[] = {
 	{ 68192, 68223 },
 };
-static const URange32 Old_Turkic_range32[] = {
+static const URange32 X4f6c645f5475726b6963_range32[] = {
 	{ 68608, 68680 },
 };
-static const URange32 Old_Uyghur_range32[] = {
+static const URange32 X4f6c645f557967687572_range32[] = {
 	{ 69488, 69513 },
 };
-static const URange16 Oriya_range16[] = {
+static const URange16 X4f72697961_range16[] = {
 	{ 2817, 2819 },
 	{ 2821, 2828 },
 	{ 2831, 2832 },
@@ -5985,71 +5985,71 @@ static const URange16 Oriya_range16[] = {
 	{ 2911, 2915 },
 	{ 2918, 2935 },
 };
-static const URange32 Osage_range32[] = {
+static const URange32 X4f73616765_range32[] = {
 	{ 66736, 66771 },
 	{ 66776, 66811 },
 };
-static const URange32 Osmanya_range32[] = {
+static const URange32 X4f736d616e7961_range32[] = {
 	{ 66688, 66717 },
 	{ 66720, 66729 },
 };
-static const URange32 Pahawh_Hmong_range32[] = {
+static const URange32 X5061686177685f486d6f6e67_range32[] = {
 	{ 92928, 92997 },
 	{ 93008, 93017 },
 	{ 93019, 93025 },
 	{ 93027, 93047 },
 	{ 93053, 93071 },
 };
-static const URange32 Palmyrene_range32[] = {
+static const URange32 X50616c6d7972656e65_range32[] = {
 	{ 67680, 67711 },
 };
-static const URange32 Pau_Cin_Hau_range32[] = {
+static const URange32 X5061755f43696e5f486175_range32[] = {
 	{ 72384, 72440 },
 };
-static const URange16 Phags_Pa_range16[] = {
+static const URange16 X50686167735f5061_range16[] = {
 	{ 43072, 43127 },
 };
-static const URange32 Phoenician_range32[] = {
+static const URange32 X50686f656e696369616e_range32[] = {
 	{ 67840, 67867 },
 	{ 67871, 67871 },
 };
-static const URange32 Psalter_Pahlavi_range32[] = {
+static const URange32 X5073616c7465725f5061686c617669_range32[] = {
 	{ 68480, 68497 },
 	{ 68505, 68508 },
 	{ 68521, 68527 },
 };
-static const URange16 Rejang_range16[] = {
+static const URange16 X52656a616e67_range16[] = {
 	{ 43312, 43347 },
 	{ 43359, 43359 },
 };
-static const URange16 Runic_range16[] = {
+static const URange16 X52756e6963_range16[] = {
 	{ 5792, 5866 },
 	{ 5870, 5880 },
 };
-static const URange16 Samaritan_range16[] = {
+static const URange16 X53616d61726974616e_range16[] = {
 	{ 2048, 2093 },
 	{ 2096, 2110 },
 };
-static const URange16 Saurashtra_range16[] = {
+static const URange16 X53617572617368747261_range16[] = {
 	{ 43136, 43205 },
 	{ 43214, 43225 },
 };
-static const URange32 Sharada_range32[] = {
+static const URange32 X53686172616461_range32[] = {
 	{ 70016, 70111 },
 };
-static const URange32 Shavian_range32[] = {
+static const URange32 X5368617669616e_range32[] = {
 	{ 66640, 66687 },
 };
-static const URange32 Siddham_range32[] = {
+static const URange32 X5369646468616d_range32[] = {
 	{ 71040, 71093 },
 	{ 71096, 71133 },
 };
-static const URange32 SignWriting_range32[] = {
+static const URange32 X5369676e57726974696e67_range32[] = {
 	{ 120832, 121483 },
 	{ 121499, 121503 },
 	{ 121505, 121519 },
 };
-static const URange16 Sinhala_range16[] = {
+static const URange16 X53696e68616c61_range16[] = {
 	{ 3457, 3459 },
 	{ 3461, 3478 },
 	{ 3482, 3505 },
@@ -6063,61 +6063,61 @@ static const URange16 Sinhala_range16[] = {
 	{ 3558, 3567 },
 	{ 3570, 3572 },
 };
-static const URange32 Sinhala_range32[] = {
+static const URange32 X53696e68616c61_range32[] = {
 	{ 70113, 70132 },
 };
-static const URange32 Sogdian_range32[] = {
+static const URange32 X536f676469616e_range32[] = {
 	{ 69424, 69465 },
 };
-static const URange32 Sora_Sompeng_range32[] = {
+static const URange32 X536f72615f536f6d70656e67_range32[] = {
 	{ 69840, 69864 },
 	{ 69872, 69881 },
 };
-static const URange32 Soyombo_range32[] = {
+static const URange32 X536f796f6d626f_range32[] = {
 	{ 72272, 72354 },
 };
-static const URange16 Sundanese_range16[] = {
+static const URange16 X53756e64616e657365_range16[] = {
 	{ 7040, 7103 },
 	{ 7360, 7367 },
 };
-static const URange16 Syloti_Nagri_range16[] = {
+static const URange16 X53796c6f74695f4e61677269_range16[] = {
 	{ 43008, 43052 },
 };
-static const URange16 Syriac_range16[] = {
+static const URange16 X537972696163_range16[] = {
 	{ 1792, 1805 },
 	{ 1807, 1866 },
 	{ 1869, 1871 },
 	{ 2144, 2154 },
 };
-static const URange16 Tagalog_range16[] = {
+static const URange16 X546167616c6f67_range16[] = {
 	{ 5888, 5909 },
 	{ 5919, 5919 },
 };
-static const URange16 Tagbanwa_range16[] = {
+static const URange16 X54616762616e7761_range16[] = {
 	{ 5984, 5996 },
 	{ 5998, 6000 },
 	{ 6002, 6003 },
 };
-static const URange16 Tai_Le_range16[] = {
+static const URange16 X5461695f4c65_range16[] = {
 	{ 6480, 6509 },
 	{ 6512, 6516 },
 };
-static const URange16 Tai_Tham_range16[] = {
+static const URange16 X5461695f5468616d_range16[] = {
 	{ 6688, 6750 },
 	{ 6752, 6780 },
 	{ 6783, 6793 },
 	{ 6800, 6809 },
 	{ 6816, 6829 },
 };
-static const URange16 Tai_Viet_range16[] = {
+static const URange16 X5461695f56696574_range16[] = {
 	{ 43648, 43714 },
 	{ 43739, 43743 },
 };
-static const URange32 Takri_range32[] = {
+static const URange32 X54616b7269_range32[] = {
 	{ 71296, 71353 },
 	{ 71360, 71369 },
 };
-static const URange16 Tamil_range16[] = {
+static const URange16 X54616d696c_range16[] = {
 	{ 2946, 2947 },
 	{ 2949, 2954 },
 	{ 2958, 2960 },
@@ -6135,21 +6135,21 @@ static const URange16 Tamil_range16[] = {
 	{ 3031, 3031 },
 	{ 3046, 3066 },
 };
-static const URange32 Tamil_range32[] = {
+static const URange32 X54616d696c_range32[] = {
 	{ 73664, 73713 },
 	{ 73727, 73727 },
 };
-static const URange32 Tangsa_range32[] = {
+static const URange32 X54616e677361_range32[] = {
 	{ 92784, 92862 },
 	{ 92864, 92873 },
 };
-static const URange32 Tangut_range32[] = {
+static const URange32 X54616e677574_range32[] = {
 	{ 94176, 94176 },
 	{ 94208, 100343 },
 	{ 100352, 101119 },
 	{ 101632, 101640 },
 };
-static const URange16 Telugu_range16[] = {
+static const URange16 X54656c756775_range16[] = {
 	{ 3072, 3084 },
 	{ 3086, 3088 },
 	{ 3090, 3112 },
@@ -6164,14 +6164,14 @@ static const URange16 Telugu_range16[] = {
 	{ 3174, 3183 },
 	{ 3191, 3199 },
 };
-static const URange16 Thaana_range16[] = {
+static const URange16 X546861616e61_range16[] = {
 	{ 1920, 1969 },
 };
-static const URange16 Thai_range16[] = {
+static const URange16 X54686169_range16[] = {
 	{ 3585, 3642 },
 	{ 3648, 3675 },
 };
-static const URange16 Tibetan_range16[] = {
+static const URange16 X5469626574616e_range16[] = {
 	{ 3840, 3911 },
 	{ 3913, 3948 },
 	{ 3953, 3991 },
@@ -6180,26 +6180,26 @@ static const URange16 Tibetan_range16[] = {
 	{ 4046, 4052 },
 	{ 4057, 4058 },
 };
-static const URange16 Tifinagh_range16[] = {
+static const URange16 X546966696e616768_range16[] = {
 	{ 11568, 11623 },
 	{ 11631, 11632 },
 	{ 11647, 11647 },
 };
-static const URange32 Tirhuta_range32[] = {
+static const URange32 X54697268757461_range32[] = {
 	{ 70784, 70855 },
 	{ 70864, 70873 },
 };
-static const URange32 Toto_range32[] = {
+static const URange32 X546f746f_range32[] = {
 	{ 123536, 123566 },
 };
-static const URange32 Ugaritic_range32[] = {
+static const URange32 X5567617269746963_range32[] = {
 	{ 66432, 66461 },
 	{ 66463, 66463 },
 };
-static const URange16 Vai_range16[] = {
+static const URange16 X566169_range16[] = {
 	{ 42240, 42539 },
 };
-static const URange32 Vithkuqi_range32[] = {
+static const URange32 X566974686b757169_range32[] = {
 	{ 66928, 66938 },
 	{ 66940, 66954 },
 	{ 66956, 66962 },
@@ -6209,225 +6209,225 @@ static const URange32 Vithkuqi_range32[] = {
 	{ 66995, 67001 },
 	{ 67003, 67004 },
 };
-static const URange32 Wancho_range32[] = {
+static const URange32 X57616e63686f_range32[] = {
 	{ 123584, 123641 },
 	{ 123647, 123647 },
 };
-static const URange32 Warang_Citi_range32[] = {
+static const URange32 X576172616e675f43697469_range32[] = {
 	{ 71840, 71922 },
 	{ 71935, 71935 },
 };
-static const URange32 Yezidi_range32[] = {
+static const URange32 X59657a696469_range32[] = {
 	{ 69248, 69289 },
 	{ 69291, 69293 },
 	{ 69296, 69297 },
 };
-static const URange16 Yi_range16[] = {
+static const URange16 X5969_range16[] = {
 	{ 40960, 42124 },
 	{ 42128, 42182 },
 };
-static const URange32 Zanabazar_Square_range32[] = {
+static const URange32 X5a616e6162617a61725f537175617265_range32[] = {
 	{ 72192, 72263 },
 };
 // 4038 16-bit ranges, 1712 32-bit ranges
 const UGroup unicode_groups[] = {
-	{ "Adlam", +1, 0, 0, Adlam_range32, 3 },
-	{ "Ahom", +1, 0, 0, Ahom_range32, 3 },
-	{ "Anatolian_Hieroglyphs", +1, 0, 0, Anatolian_Hieroglyphs_range32, 1 },
-	{ "Arabic", +1, Arabic_range16, 22, Arabic_range32, 35 },
-	{ "Armenian", +1, Armenian_range16, 4, 0, 0 },
-	{ "Avestan", +1, 0, 0, Avestan_range32, 2 },
-	{ "Balinese", +1, Balinese_range16, 2, 0, 0 },
-	{ "Bamum", +1, Bamum_range16, 1, Bamum_range32, 1 },
-	{ "Bassa_Vah", +1, 0, 0, Bassa_Vah_range32, 2 },
-	{ "Batak", +1, Batak_range16, 2, 0, 0 },
-	{ "Bengali", +1, Bengali_range16, 14, 0, 0 },
-	{ "Bhaiksuki", +1, 0, 0, Bhaiksuki_range32, 4 },
-	{ "Bopomofo", +1, Bopomofo_range16, 3, 0, 0 },
-	{ "Brahmi", +1, 0, 0, Brahmi_range32, 3 },
-	{ "Braille", +1, Braille_range16, 1, 0, 0 },
-	{ "Buginese", +1, Buginese_range16, 2, 0, 0 },
-	{ "Buhid", +1, Buhid_range16, 1, 0, 0 },
-	{ "C", +1, C_range16, 17, C_range32, 9 },
-	{ "Canadian_Aboriginal", +1, Canadian_Aboriginal_range16, 2, Canadian_Aboriginal_range32, 1 },
-	{ "Carian", +1, 0, 0, Carian_range32, 1 },
-	{ "Caucasian_Albanian", +1, 0, 0, Caucasian_Albanian_range32, 2 },
-	{ "Cc", +1, Cc_range16, 2, 0, 0 },
-	{ "Cf", +1, Cf_range16, 14, Cf_range32, 7 },
-	{ "Chakma", +1, 0, 0, Chakma_range32, 2 },
-	{ "Cham", +1, Cham_range16, 4, 0, 0 },
-	{ "Cherokee", +1, Cherokee_range16, 3, 0, 0 },
-	{ "Chorasmian", +1, 0, 0, Chorasmian_range32, 1 },
-	{ "Co", +1, Co_range16, 1, Co_range32, 2 },
-	{ "Common", +1, Common_range16, 91, Common_range32, 83 },
-	{ "Coptic", +1, Coptic_range16, 3, 0, 0 },
-	{ "Cs", +1, Cs_range16, 1, 0, 0 },
-	{ "Cuneiform", +1, 0, 0, Cuneiform_range32, 4 },
-	{ "Cypriot", +1, 0, 0, Cypriot_range32, 6 },
-	{ "Cypro_Minoan", +1, 0, 0, Cypro_Minoan_range32, 1 },
-	{ "Cyrillic", +1, Cyrillic_range16, 8, 0, 0 },
-	{ "Deseret", +1, 0, 0, Deseret_range32, 1 },
-	{ "Devanagari", +1, Devanagari_range16, 4, 0, 0 },
-	{ "Dives_Akuru", +1, 0, 0, Dives_Akuru_range32, 8 },
-	{ "Dogra", +1, 0, 0, Dogra_range32, 1 },
-	{ "Duployan", +1, 0, 0, Duployan_range32, 5 },
-	{ "Egyptian_Hieroglyphs", +1, 0, 0, Egyptian_Hieroglyphs_range32, 2 },
-	{ "Elbasan", +1, 0, 0, Elbasan_range32, 1 },
-	{ "Elymaic", +1, 0, 0, Elymaic_range32, 1 },
-	{ "Ethiopic", +1, Ethiopic_range16, 32, Ethiopic_range32, 4 },
-	{ "Georgian", +1, Georgian_range16, 10, 0, 0 },
-	{ "Glagolitic", +1, Glagolitic_range16, 1, Glagolitic_range32, 5 },
-	{ "Gothic", +1, 0, 0, Gothic_range32, 1 },
-	{ "Grantha", +1, 0, 0, Grantha_range32, 15 },
-	{ "Greek", +1, Greek_range16, 33, Greek_range32, 3 },
-	{ "Gujarati", +1, Gujarati_range16, 14, 0, 0 },
-	{ "Gunjala_Gondi", +1, 0, 0, Gunjala_Gondi_range32, 6 },
-	{ "Gurmukhi", +1, Gurmukhi_range16, 16, 0, 0 },
-	{ "Han", +1, Han_range16, 11, Han_range32, 9 },
-	{ "Hangul", +1, Hangul_range16, 14, 0, 0 },
-	{ "Hanifi_Rohingya", +1, 0, 0, Hanifi_Rohingya_range32, 2 },
-	{ "Hanunoo", +1, Hanunoo_range16, 1, 0, 0 },
-	{ "Hatran", +1, 0, 0, Hatran_range32, 3 },
-	{ "Hebrew", +1, Hebrew_range16, 9, 0, 0 },
-	{ "Hiragana", +1, Hiragana_range16, 2, Hiragana_range32, 3 },
-	{ "Imperial_Aramaic", +1, 0, 0, Imperial_Aramaic_range32, 2 },
-	{ "Inherited", +1, Inherited_range16, 19, Inherited_range32, 10 },
-	{ "Inscriptional_Pahlavi", +1, 0, 0, Inscriptional_Pahlavi_range32, 2 },
-	{ "Inscriptional_Parthian", +1, 0, 0, Inscriptional_Parthian_range32, 2 },
-	{ "Javanese", +1, Javanese_range16, 3, 0, 0 },
-	{ "Kaithi", +1, 0, 0, Kaithi_range32, 2 },
-	{ "Kannada", +1, Kannada_range16, 13, 0, 0 },
-	{ "Katakana", +1, Katakana_range16, 7, Katakana_range32, 6 },
-	{ "Kayah_Li", +1, Kayah_Li_range16, 2, 0, 0 },
-	{ "Kharoshthi", +1, 0, 0, Kharoshthi_range32, 8 },
-	{ "Khitan_Small_Script", +1, 0, 0, Khitan_Small_Script_range32, 2 },
-	{ "Khmer", +1, Khmer_range16, 4, 0, 0 },
-	{ "Khojki", +1, 0, 0, Khojki_range32, 2 },
-	{ "Khudawadi", +1, 0, 0, Khudawadi_range32, 2 },
-	{ "L", +1, L_range16, 380, L_range32, 268 },
-	{ "Lao", +1, Lao_range16, 11, 0, 0 },
-	{ "Latin", +1, Latin_range16, 34, Latin_range32, 4 },
-	{ "Lepcha", +1, Lepcha_range16, 3, 0, 0 },
-	{ "Limbu", +1, Limbu_range16, 5, 0, 0 },
-	{ "Linear_A", +1, 0, 0, Linear_A_range32, 3 },
-	{ "Linear_B", +1, 0, 0, Linear_B_range32, 7 },
-	{ "Lisu", +1, Lisu_range16, 1, Lisu_range32, 1 },
-	{ "Ll", +1, Ll_range16, 617, Ll_range32, 40 },
-	{ "Lm", +1, Lm_range16, 57, Lm_range32, 12 },
-	{ "Lo", +1, Lo_range16, 290, Lo_range32, 211 },
-	{ "Lt", +1, Lt_range16, 10, 0, 0 },
-	{ "Lu", +1, Lu_range16, 605, Lu_range32, 41 },
-	{ "Lycian", +1, 0, 0, Lycian_range32, 1 },
-	{ "Lydian", +1, 0, 0, Lydian_range32, 2 },
-	{ "M", +1, M_range16, 189, M_range32, 110 },
-	{ "Mahajani", +1, 0, 0, Mahajani_range32, 1 },
-	{ "Makasar", +1, 0, 0, Makasar_range32, 1 },
-	{ "Malayalam", +1, Malayalam_range16, 7, 0, 0 },
-	{ "Mandaic", +1, Mandaic_range16, 2, 0, 0 },
-	{ "Manichaean", +1, 0, 0, Manichaean_range32, 2 },
-	{ "Marchen", +1, 0, 0, Marchen_range32, 3 },
-	{ "Masaram_Gondi", +1, 0, 0, Masaram_Gondi_range32, 7 },
-	{ "Mc", +1, Mc_range16, 111, Mc_range32, 66 },
-	{ "Me", +1, Me_range16, 5, 0, 0 },
-	{ "Medefaidrin", +1, 0, 0, Medefaidrin_range32, 1 },
-	{ "Meetei_Mayek", +1, Meetei_Mayek_range16, 3, 0, 0 },
-	{ "Mende_Kikakui", +1, 0, 0, Mende_Kikakui_range32, 2 },
-	{ "Meroitic_Cursive", +1, 0, 0, Meroitic_Cursive_range32, 3 },
-	{ "Meroitic_Hieroglyphs", +1, 0, 0, Meroitic_Hieroglyphs_range32, 1 },
-	{ "Miao", +1, 0, 0, Miao_range32, 3 },
-	{ "Mn", +1, Mn_range16, 212, Mn_range32, 124 },
-	{ "Modi", +1, 0, 0, Modi_range32, 2 },
-	{ "Mongolian", +1, Mongolian_range16, 5, Mongolian_range32, 1 },
-	{ "Mro", +1, 0, 0, Mro_range32, 3 },
-	{ "Multani", +1, 0, 0, Multani_range32, 5 },
-	{ "Myanmar", +1, Myanmar_range16, 3, 0, 0 },
-	{ "N", +1, N_range16, 67, N_range32, 67 },
-	{ "Nabataean", +1, 0, 0, Nabataean_range32, 2 },
-	{ "Nandinagari", +1, 0, 0, Nandinagari_range32, 3 },
-	{ "Nd", +1, Nd_range16, 37, Nd_range32, 25 },
-	{ "New_Tai_Lue", +1, New_Tai_Lue_range16, 4, 0, 0 },
-	{ "Newa", +1, 0, 0, Newa_range32, 2 },
-	{ "Nko", +1, Nko_range16, 2, 0, 0 },
-	{ "Nl", +1, Nl_range16, 7, Nl_range32, 5 },
-	{ "No", +1, No_range16, 29, No_range32, 42 },
-	{ "Nushu", +1, 0, 0, Nushu_range32, 2 },
-	{ "Nyiakeng_Puachue_Hmong", +1, 0, 0, Nyiakeng_Puachue_Hmong_range32, 4 },
-	{ "Ogham", +1, Ogham_range16, 1, 0, 0 },
-	{ "Ol_Chiki", +1, Ol_Chiki_range16, 1, 0, 0 },
-	{ "Old_Hungarian", +1, 0, 0, Old_Hungarian_range32, 3 },
-	{ "Old_Italic", +1, 0, 0, Old_Italic_range32, 2 },
-	{ "Old_North_Arabian", +1, 0, 0, Old_North_Arabian_range32, 1 },
-	{ "Old_Permic", +1, 0, 0, Old_Permic_range32, 1 },
-	{ "Old_Persian", +1, 0, 0, Old_Persian_range32, 2 },
-	{ "Old_Sogdian", +1, 0, 0, Old_Sogdian_range32, 1 },
-	{ "Old_South_Arabian", +1, 0, 0, Old_South_Arabian_range32, 1 },
-	{ "Old_Turkic", +1, 0, 0, Old_Turkic_range32, 1 },
-	{ "Old_Uyghur", +1, 0, 0, Old_Uyghur_range32, 1 },
-	{ "Oriya", +1, Oriya_range16, 14, 0, 0 },
-	{ "Osage", +1, 0, 0, Osage_range32, 2 },
-	{ "Osmanya", +1, 0, 0, Osmanya_range32, 2 },
-	{ "P", +1, P_range16, 133, P_range32, 56 },
-	{ "Pahawh_Hmong", +1, 0, 0, Pahawh_Hmong_range32, 5 },
-	{ "Palmyrene", +1, 0, 0, Palmyrene_range32, 1 },
-	{ "Pau_Cin_Hau", +1, 0, 0, Pau_Cin_Hau_range32, 1 },
-	{ "Pc", +1, Pc_range16, 6, 0, 0 },
-	{ "Pd", +1, Pd_range16, 18, Pd_range32, 1 },
-	{ "Pe", +1, Pe_range16, 76, 0, 0 },
-	{ "Pf", +1, Pf_range16, 10, 0, 0 },
-	{ "Phags_Pa", +1, Phags_Pa_range16, 1, 0, 0 },
-	{ "Phoenician", +1, 0, 0, Phoenician_range32, 2 },
-	{ "Pi", +1, Pi_range16, 11, 0, 0 },
-	{ "Po", +1, Po_range16, 130, Po_range32, 55 },
-	{ "Ps", +1, Ps_range16, 79, 0, 0 },
-	{ "Psalter_Pahlavi", +1, 0, 0, Psalter_Pahlavi_range32, 3 },
-	{ "Rejang", +1, Rejang_range16, 2, 0, 0 },
-	{ "Runic", +1, Runic_range16, 2, 0, 0 },
-	{ "S", +1, S_range16, 151, S_range32, 83 },
-	{ "Samaritan", +1, Samaritan_range16, 2, 0, 0 },
-	{ "Saurashtra", +1, Saurashtra_range16, 2, 0, 0 },
-	{ "Sc", +1, Sc_range16, 18, Sc_range32, 3 },
-	{ "Sharada", +1, 0, 0, Sharada_range32, 1 },
-	{ "Shavian", +1, 0, 0, Shavian_range32, 1 },
-	{ "Siddham", +1, 0, 0, Siddham_range32, 2 },
-	{ "SignWriting", +1, 0, 0, SignWriting_range32, 3 },
-	{ "Sinhala", +1, Sinhala_range16, 12, Sinhala_range32, 1 },
-	{ "Sk", +1, Sk_range16, 30, Sk_range32, 1 },
-	{ "Sm", +1, Sm_range16, 53, Sm_range32, 11 },
-	{ "So", +1, So_range16, 114, So_range32, 72 },
-	{ "Sogdian", +1, 0, 0, Sogdian_range32, 1 },
-	{ "Sora_Sompeng", +1, 0, 0, Sora_Sompeng_range32, 2 },
-	{ "Soyombo", +1, 0, 0, Soyombo_range32, 1 },
-	{ "Sundanese", +1, Sundanese_range16, 2, 0, 0 },
-	{ "Syloti_Nagri", +1, Syloti_Nagri_range16, 1, 0, 0 },
-	{ "Syriac", +1, Syriac_range16, 4, 0, 0 },
-	{ "Tagalog", +1, Tagalog_range16, 2, 0, 0 },
-	{ "Tagbanwa", +1, Tagbanwa_range16, 3, 0, 0 },
-	{ "Tai_Le", +1, Tai_Le_range16, 2, 0, 0 },
-	{ "Tai_Tham", +1, Tai_Tham_range16, 5, 0, 0 },
-	{ "Tai_Viet", +1, Tai_Viet_range16, 2, 0, 0 },
-	{ "Takri", +1, 0, 0, Takri_range32, 2 },
-	{ "Tamil", +1, Tamil_range16, 16, Tamil_range32, 2 },
-	{ "Tangsa", +1, 0, 0, Tangsa_range32, 2 },
-	{ "Tangut", +1, 0, 0, Tangut_range32, 4 },
-	{ "Telugu", +1, Telugu_range16, 13, 0, 0 },
-	{ "Thaana", +1, Thaana_range16, 1, 0, 0 },
-	{ "Thai", +1, Thai_range16, 2, 0, 0 },
-	{ "Tibetan", +1, Tibetan_range16, 7, 0, 0 },
-	{ "Tifinagh", +1, Tifinagh_range16, 3, 0, 0 },
-	{ "Tirhuta", +1, 0, 0, Tirhuta_range32, 2 },
-	{ "Toto", +1, 0, 0, Toto_range32, 1 },
-	{ "Ugaritic", +1, 0, 0, Ugaritic_range32, 2 },
-	{ "Vai", +1, Vai_range16, 1, 0, 0 },
-	{ "Vithkuqi", +1, 0, 0, Vithkuqi_range32, 8 },
-	{ "Wancho", +1, 0, 0, Wancho_range32, 2 },
-	{ "Warang_Citi", +1, 0, 0, Warang_Citi_range32, 2 },
-	{ "Yezidi", +1, 0, 0, Yezidi_range32, 3 },
-	{ "Yi", +1, Yi_range16, 2, 0, 0 },
-	{ "Z", +1, Z_range16, 8, 0, 0 },
-	{ "Zanabazar_Square", +1, 0, 0, Zanabazar_Square_range32, 1 },
-	{ "Zl", +1, Zl_range16, 1, 0, 0 },
-	{ "Zp", +1, Zp_range16, 1, 0, 0 },
-	{ "Zs", +1, Zs_range16, 7, 0, 0 },
+	{ "41646c616d", +1, 0, 0, X41646c616d_range32, 3 },
+	{ "41686f6d", +1, 0, 0, X41686f6d_range32, 3 },
+	{ "416e61746f6c69616e5f486965726f676c79706873", +1, 0, 0, X416e61746f6c69616e5f486965726f676c79706873_range32, 1 },
+	{ "417261626963", +1, X417261626963_range16, 22, X417261626963_range32, 35 },
+	{ "41726d656e69616e", +1, X41726d656e69616e_range16, 4, 0, 0 },
+	{ "4176657374616e", +1, 0, 0, X4176657374616e_range32, 2 },
+	{ "42616c696e657365", +1, X42616c696e657365_range16, 2, 0, 0 },
+	{ "42616d756d", +1, X42616d756d_range16, 1, X42616d756d_range32, 1 },
+	{ "42617373615f566168", +1, 0, 0, X42617373615f566168_range32, 2 },
+	{ "426174616b", +1, X426174616b_range16, 2, 0, 0 },
+	{ "42656e67616c69", +1, X42656e67616c69_range16, 14, 0, 0 },
+	{ "426861696b73756b69", +1, 0, 0, X426861696b73756b69_range32, 4 },
+	{ "426f706f6d6f666f", +1, X426f706f6d6f666f_range16, 3, 0, 0 },
+	{ "427261686d69", +1, 0, 0, X427261686d69_range32, 3 },
+	{ "427261696c6c65", +1, X427261696c6c65_range16, 1, 0, 0 },
+	{ "427567696e657365", +1, X427567696e657365_range16, 2, 0, 0 },
+	{ "4275686964", +1, X4275686964_range16, 1, 0, 0 },
+	{ "43", +1, X43_range16, 17, X43_range32, 9 },
+	{ "43616e616469616e5f41626f726967696e616c", +1, X43616e616469616e5f41626f726967696e616c_range16, 2, X43616e616469616e5f41626f726967696e616c_range32, 1 },
+	{ "43617269616e", +1, 0, 0, X43617269616e_range32, 1 },
+	{ "43617563617369616e5f416c62616e69616e", +1, 0, 0, X43617563617369616e5f416c62616e69616e_range32, 2 },
+	{ "4363", +1, X4363_range16, 2, 0, 0 },
+	{ "4366", +1, X4366_range16, 14, X4366_range32, 7 },
+	{ "4368616b6d61", +1, 0, 0, X4368616b6d61_range32, 2 },
+	{ "4368616d", +1, X4368616d_range16, 4, 0, 0 },
+	{ "436865726f6b6565", +1, X436865726f6b6565_range16, 3, 0, 0 },
+	{ "43686f7261736d69616e", +1, 0, 0, X43686f7261736d69616e_range32, 1 },
+	{ "436f", +1, X436f_range16, 1, X436f_range32, 2 },
+	{ "436f6d6d6f6e", +1, X436f6d6d6f6e_range16, 91, X436f6d6d6f6e_range32, 83 },
+	{ "436f70746963", +1, X436f70746963_range16, 3, 0, 0 },
+	{ "4373", +1, X4373_range16, 1, 0, 0 },
+	{ "43756e6569666f726d", +1, 0, 0, X43756e6569666f726d_range32, 4 },
+	{ "43797072696f74", +1, 0, 0, X43797072696f74_range32, 6 },
+	{ "437970726f5f4d696e6f616e", +1, 0, 0, X437970726f5f4d696e6f616e_range32, 1 },
+	{ "437972696c6c6963", +1, X437972696c6c6963_range16, 8, 0, 0 },
+	{ "44657365726574", +1, 0, 0, X44657365726574_range32, 1 },
+	{ "446576616e6167617269", +1, X446576616e6167617269_range16, 4, 0, 0 },
+	{ "44697665735f416b757275", +1, 0, 0, X44697665735f416b757275_range32, 8 },
+	{ "446f677261", +1, 0, 0, X446f677261_range32, 1 },
+	{ "4475706c6f79616e", +1, 0, 0, X4475706c6f79616e_range32, 5 },
+	{ "456779707469616e5f486965726f676c79706873", +1, 0, 0, X456779707469616e5f486965726f676c79706873_range32, 2 },
+	{ "456c626173616e", +1, 0, 0, X456c626173616e_range32, 1 },
+	{ "456c796d616963", +1, 0, 0, X456c796d616963_range32, 1 },
+	{ "457468696f706963", +1, X457468696f706963_range16, 32, X457468696f706963_range32, 4 },
+	{ "47656f726769616e", +1, X47656f726769616e_range16, 10, 0, 0 },
+	{ "476c61676f6c69746963", +1, X476c61676f6c69746963_range16, 1, X476c61676f6c69746963_range32, 5 },
+	{ "476f74686963", +1, 0, 0, X476f74686963_range32, 1 },
+	{ "4772616e746861", +1, 0, 0, X4772616e746861_range32, 15 },
+	{ "477265656b", +1, X477265656b_range16, 33, X477265656b_range32, 3 },
+	{ "47756a6172617469", +1, X47756a6172617469_range16, 14, 0, 0 },
+	{ "47756e6a616c615f476f6e6469", +1, 0, 0, X47756e6a616c615f476f6e6469_range32, 6 },
+	{ "4775726d756b6869", +1, X4775726d756b6869_range16, 16, 0, 0 },
+	{ "48616e", +1, X48616e_range16, 11, X48616e_range32, 9 },
+	{ "48616e67756c", +1, X48616e67756c_range16, 14, 0, 0 },
+	{ "48616e6966695f526f68696e677961", +1, 0, 0, X48616e6966695f526f68696e677961_range32, 2 },
+	{ "48616e756e6f6f", +1, X48616e756e6f6f_range16, 1, 0, 0 },
+	{ "48617472616e", +1, 0, 0, X48617472616e_range32, 3 },
+	{ "486562726577", +1, X486562726577_range16, 9, 0, 0 },
+	{ "4869726167616e61", +1, X4869726167616e61_range16, 2, X4869726167616e61_range32, 3 },
+	{ "496d70657269616c5f4172616d616963", +1, 0, 0, X496d70657269616c5f4172616d616963_range32, 2 },
+	{ "496e68657269746564", +1, X496e68657269746564_range16, 19, X496e68657269746564_range32, 10 },
+	{ "496e736372697074696f6e616c5f5061686c617669", +1, 0, 0, X496e736372697074696f6e616c5f5061686c617669_range32, 2 },
+	{ "496e736372697074696f6e616c5f506172746869616e", +1, 0, 0, X496e736372697074696f6e616c5f506172746869616e_range32, 2 },
+	{ "4a6176616e657365", +1, X4a6176616e657365_range16, 3, 0, 0 },
+	{ "4b6169746869", +1, 0, 0, X4b6169746869_range32, 2 },
+	{ "4b616e6e616461", +1, X4b616e6e616461_range16, 13, 0, 0 },
+	{ "4b6174616b616e61", +1, X4b6174616b616e61_range16, 7, X4b6174616b616e61_range32, 6 },
+	{ "4b617961685f4c69", +1, X4b617961685f4c69_range16, 2, 0, 0 },
+	{ "4b6861726f7368746869", +1, 0, 0, X4b6861726f7368746869_range32, 8 },
+	{ "4b686974616e5f536d616c6c5f536372697074", +1, 0, 0, X4b686974616e5f536d616c6c5f536372697074_range32, 2 },
+	{ "4b686d6572", +1, X4b686d6572_range16, 4, 0, 0 },
+	{ "4b686f6a6b69", +1, 0, 0, X4b686f6a6b69_range32, 2 },
+	{ "4b6875646177616469", +1, 0, 0, X4b6875646177616469_range32, 2 },
+	{ "4c", +1, X4c_range16, 380, X4c_range32, 268 },
+	{ "4c616f", +1, X4c616f_range16, 11, 0, 0 },
+	{ "4c6174696e", +1, X4c6174696e_range16, 34, X4c6174696e_range32, 4 },
+	{ "4c6570636861", +1, X4c6570636861_range16, 3, 0, 0 },
+	{ "4c696d6275", +1, X4c696d6275_range16, 5, 0, 0 },
+	{ "4c696e6561725f41", +1, 0, 0, X4c696e6561725f41_range32, 3 },
+	{ "4c696e6561725f42", +1, 0, 0, X4c696e6561725f42_range32, 7 },
+	{ "4c697375", +1, X4c697375_range16, 1, X4c697375_range32, 1 },
+	{ "4c6c", +1, X4c6c_range16, 617, X4c6c_range32, 40 },
+	{ "4c6d", +1, X4c6d_range16, 57, X4c6d_range32, 12 },
+	{ "4c6f", +1, X4c6f_range16, 290, X4c6f_range32, 211 },
+	{ "4c74", +1, X4c74_range16, 10, 0, 0 },
+	{ "4c75", +1, X4c75_range16, 605, X4c75_range32, 41 },
+	{ "4c796369616e", +1, 0, 0, X4c796369616e_range32, 1 },
+	{ "4c796469616e", +1, 0, 0, X4c796469616e_range32, 2 },
+	{ "4d", +1, X4d_range16, 189, X4d_range32, 110 },
+	{ "4d6168616a616e69", +1, 0, 0, X4d6168616a616e69_range32, 1 },
+	{ "4d616b61736172", +1, 0, 0, X4d616b61736172_range32, 1 },
+	{ "4d616c6179616c616d", +1, X4d616c6179616c616d_range16, 7, 0, 0 },
+	{ "4d616e64616963", +1, X4d616e64616963_range16, 2, 0, 0 },
+	{ "4d616e6963686165616e", +1, 0, 0, X4d616e6963686165616e_range32, 2 },
+	{ "4d61726368656e", +1, 0, 0, X4d61726368656e_range32, 3 },
+	{ "4d61736172616d5f476f6e6469", +1, 0, 0, X4d61736172616d5f476f6e6469_range32, 7 },
+	{ "4d63", +1, X4d63_range16, 111, X4d63_range32, 66 },
+	{ "4d65", +1, X4d65_range16, 5, 0, 0 },
+	{ "4d6564656661696472696e", +1, 0, 0, X4d6564656661696472696e_range32, 1 },
+	{ "4d65657465695f4d6179656b", +1, X4d65657465695f4d6179656b_range16, 3, 0, 0 },
+	{ "4d656e64655f4b696b616b7569", +1, 0, 0, X4d656e64655f4b696b616b7569_range32, 2 },
+	{ "4d65726f697469635f43757273697665", +1, 0, 0, X4d65726f697469635f43757273697665_range32, 3 },
+	{ "4d65726f697469635f486965726f676c79706873", +1, 0, 0, X4d65726f697469635f486965726f676c79706873_range32, 1 },
+	{ "4d69616f", +1, 0, 0, X4d69616f_range32, 3 },
+	{ "4d6e", +1, X4d6e_range16, 212, X4d6e_range32, 124 },
+	{ "4d6f6469", +1, 0, 0, X4d6f6469_range32, 2 },
+	{ "4d6f6e676f6c69616e", +1, X4d6f6e676f6c69616e_range16, 5, X4d6f6e676f6c69616e_range32, 1 },
+	{ "4d726f", +1, 0, 0, X4d726f_range32, 3 },
+	{ "4d756c74616e69", +1, 0, 0, X4d756c74616e69_range32, 5 },
+	{ "4d79616e6d6172", +1, X4d79616e6d6172_range16, 3, 0, 0 },
+	{ "4e", +1, X4e_range16, 67, X4e_range32, 67 },
+	{ "4e616261746165616e", +1, 0, 0, X4e616261746165616e_range32, 2 },
+	{ "4e616e64696e6167617269", +1, 0, 0, X4e616e64696e6167617269_range32, 3 },
+	{ "4e64", +1, X4e64_range16, 37, X4e64_range32, 25 },
+	{ "4e65775f5461695f4c7565", +1, X4e65775f5461695f4c7565_range16, 4, 0, 0 },
+	{ "4e657761", +1, 0, 0, X4e657761_range32, 2 },
+	{ "4e6b6f", +1, X4e6b6f_range16, 2, 0, 0 },
+	{ "4e6c", +1, X4e6c_range16, 7, X4e6c_range32, 5 },
+	{ "4e6f", +1, X4e6f_range16, 29, X4e6f_range32, 42 },
+	{ "4e75736875", +1, 0, 0, X4e75736875_range32, 2 },
+	{ "4e7969616b656e675f507561636875655f486d6f6e67", +1, 0, 0, X4e7969616b656e675f507561636875655f486d6f6e67_range32, 4 },
+	{ "4f6768616d", +1, X4f6768616d_range16, 1, 0, 0 },
+	{ "4f6c5f4368696b69", +1, X4f6c5f4368696b69_range16, 1, 0, 0 },
+	{ "4f6c645f48756e67617269616e", +1, 0, 0, X4f6c645f48756e67617269616e_range32, 3 },
+	{ "4f6c645f4974616c6963", +1, 0, 0, X4f6c645f4974616c6963_range32, 2 },
+	{ "4f6c645f4e6f7274685f4172616269616e", +1, 0, 0, X4f6c645f4e6f7274685f4172616269616e_range32, 1 },
+	{ "4f6c645f5065726d6963", +1, 0, 0, X4f6c645f5065726d6963_range32, 1 },
+	{ "4f6c645f5065727369616e", +1, 0, 0, X4f6c645f5065727369616e_range32, 2 },
+	{ "4f6c645f536f676469616e", +1, 0, 0, X4f6c645f536f676469616e_range32, 1 },
+	{ "4f6c645f536f7574685f4172616269616e", +1, 0, 0, X4f6c645f536f7574685f4172616269616e_range32, 1 },
+	{ "4f6c645f5475726b6963", +1, 0, 0, X4f6c645f5475726b6963_range32, 1 },
+	{ "4f6c645f557967687572", +1, 0, 0, X4f6c645f557967687572_range32, 1 },
+	{ "4f72697961", +1, X4f72697961_range16, 14, 0, 0 },
+	{ "4f73616765", +1, 0, 0, X4f73616765_range32, 2 },
+	{ "4f736d616e7961", +1, 0, 0, X4f736d616e7961_range32, 2 },
+	{ "50", +1, X50_range16, 133, X50_range32, 56 },
+	{ "5061686177685f486d6f6e67", +1, 0, 0, X5061686177685f486d6f6e67_range32, 5 },
+	{ "50616c6d7972656e65", +1, 0, 0, X50616c6d7972656e65_range32, 1 },
+	{ "5061755f43696e5f486175", +1, 0, 0, X5061755f43696e5f486175_range32, 1 },
+	{ "5063", +1, X5063_range16, 6, 0, 0 },
+	{ "5064", +1, X5064_range16, 18, X5064_range32, 1 },
+	{ "5065", +1, X5065_range16, 76, 0, 0 },
+	{ "5066", +1, X5066_range16, 10, 0, 0 },
+	{ "50686167735f5061", +1, X50686167735f5061_range16, 1, 0, 0 },
+	{ "50686f656e696369616e", +1, 0, 0, X50686f656e696369616e_range32, 2 },
+	{ "5069", +1, X5069_range16, 11, 0, 0 },
+	{ "506f", +1, X506f_range16, 130, X506f_range32, 55 },
+	{ "5073", +1, X5073_range16, 79, 0, 0 },
+	{ "5073616c7465725f5061686c617669", +1, 0, 0, X5073616c7465725f5061686c617669_range32, 3 },
+	{ "52656a616e67", +1, X52656a616e67_range16, 2, 0, 0 },
+	{ "52756e6963", +1, X52756e6963_range16, 2, 0, 0 },
+	{ "53", +1, X53_range16, 151, X53_range32, 83 },
+	{ "53616d61726974616e", +1, X53616d61726974616e_range16, 2, 0, 0 },
+	{ "53617572617368747261", +1, X53617572617368747261_range16, 2, 0, 0 },
+	{ "5363", +1, X5363_range16, 18, X5363_range32, 3 },
+	{ "53686172616461", +1, 0, 0, X53686172616461_range32, 1 },
+	{ "5368617669616e", +1, 0, 0, X5368617669616e_range32, 1 },
+	{ "5369646468616d", +1, 0, 0, X5369646468616d_range32, 2 },
+	{ "5369676e57726974696e67", +1, 0, 0, X5369676e57726974696e67_range32, 3 },
+	{ "53696e68616c61", +1, X53696e68616c61_range16, 12, X53696e68616c61_range32, 1 },
+	{ "536b", +1, X536b_range16, 30, X536b_range32, 1 },
+	{ "536d", +1, X536d_range16, 53, X536d_range32, 11 },
+	{ "536f", +1, X536f_range16, 114, X536f_range32, 72 },
+	{ "536f676469616e", +1, 0, 0, X536f676469616e_range32, 1 },
+	{ "536f72615f536f6d70656e67", +1, 0, 0, X536f72615f536f6d70656e67_range32, 2 },
+	{ "536f796f6d626f", +1, 0, 0, X536f796f6d626f_range32, 1 },
+	{ "53756e64616e657365", +1, X53756e64616e657365_range16, 2, 0, 0 },
+	{ "53796c6f74695f4e61677269", +1, X53796c6f74695f4e61677269_range16, 1, 0, 0 },
+	{ "537972696163", +1, X537972696163_range16, 4, 0, 0 },
+	{ "546167616c6f67", +1, X546167616c6f67_range16, 2, 0, 0 },
+	{ "54616762616e7761", +1, X54616762616e7761_range16, 3, 0, 0 },
+	{ "5461695f4c65", +1, X5461695f4c65_range16, 2, 0, 0 },
+	{ "5461695f5468616d", +1, X5461695f5468616d_range16, 5, 0, 0 },
+	{ "5461695f56696574", +1, X5461695f56696574_range16, 2, 0, 0 },
+	{ "54616b7269", +1, 0, 0, X54616b7269_range32, 2 },
+	{ "54616d696c", +1, X54616d696c_range16, 16, X54616d696c_range32, 2 },
+	{ "54616e677361", +1, 0, 0, X54616e677361_range32, 2 },
+	{ "54616e677574", +1, 0, 0, X54616e677574_range32, 4 },
+	{ "54656c756775", +1, X54656c756775_range16, 13, 0, 0 },
+	{ "546861616e61", +1, X546861616e61_range16, 1, 0, 0 },
+	{ "54686169", +1, X54686169_range16, 2, 0, 0 },
+	{ "5469626574616e", +1, X5469626574616e_range16, 7, 0, 0 },
+	{ "546966696e616768", +1, X546966696e616768_range16, 3, 0, 0 },
+	{ "54697268757461", +1, 0, 0, X54697268757461_range32, 2 },
+	{ "546f746f", +1, 0, 0, X546f746f_range32, 1 },
+	{ "5567617269746963", +1, 0, 0, X5567617269746963_range32, 2 },
+	{ "566169", +1, X566169_range16, 1, 0, 0 },
+	{ "566974686b757169", +1, 0, 0, X566974686b757169_range32, 8 },
+	{ "57616e63686f", +1, 0, 0, X57616e63686f_range32, 2 },
+	{ "576172616e675f43697469", +1, 0, 0, X576172616e675f43697469_range32, 2 },
+	{ "59657a696469", +1, 0, 0, X59657a696469_range32, 3 },
+	{ "5969", +1, X5969_range16, 2, 0, 0 },
+	{ "5a", +1, X5a_range16, 8, 0, 0 },
+	{ "5a616e6162617a61725f537175617265", +1, 0, 0, X5a616e6162617a61725f537175617265_range32, 1 },
+	{ "5a6c", +1, X5a6c_range16, 1, 0, 0 },
+	{ "5a70", +1, X5a70_range16, 1, 0, 0 },
+	{ "5a73", +1, X5a73_range16, 7, 0, 0 },
 };
 const int num_unicode_groups = 197;
 
