@@ -158,4 +158,26 @@ TEST(RE2ArgTest, ParseFromTest) {
 #endif
 }
 
+TEST(RE2ArgTest, OptionalDoubleTest) {
+  absl::optional<double> opt;
+  RE2::Arg arg(&opt);
+  EXPECT_TRUE(arg.Parse(NULL, 0));
+  EXPECT_FALSE(opt.has_value());
+  EXPECT_FALSE(arg.Parse("", 0));
+  EXPECT_TRUE(arg.Parse("28.30", 5));
+  EXPECT_TRUE(opt.has_value());
+  EXPECT_EQ(*opt, 28.30);
+}
+
+TEST(RE2ArgTest, OptionalIntWithCRadixTest) {
+  absl::optional<int> opt;
+  RE2::Arg arg = RE2::CRadix(&opt);
+  EXPECT_TRUE(arg.Parse(NULL, 0));
+  EXPECT_FALSE(opt.has_value());
+  EXPECT_FALSE(arg.Parse("", 0));
+  EXPECT_TRUE(arg.Parse("0xb0e", 5));
+  EXPECT_TRUE(opt.has_value());
+  EXPECT_EQ(*opt, 2830);
+}
+
 }  // namespace re2

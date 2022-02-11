@@ -216,6 +216,7 @@
 
 #include "absl/base/call_once.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 
 namespace re2 {
 class Prog;
@@ -812,6 +813,42 @@ template <> struct Parse4ary<unsigned long long> : public std::true_type {};
 
 template <typename T>
 bool Parse(const char* str, size_t n, T* dest, int radix);
+
+// Support absl::optional<T> for all T with a stock parser.
+template <typename T> struct Parse3ary<absl::optional<T>> : public Parse3ary<T> {};
+template <typename T> struct Parse4ary<absl::optional<T>> : public Parse4ary<T> {};
+
+template <typename T>
+bool Parse(const char* str, size_t n, absl::optional<T>* dest) {
+  if (str == NULL) {
+    if (dest != NULL)
+      dest->reset();
+    return true;
+  }
+  T tmp;
+  if (Parse(str, n, &tmp)) {
+    if (dest != NULL)
+      dest->emplace(std::move(tmp));
+    return true;
+  }
+  return false;
+}
+
+template <typename T>
+bool Parse(const char* str, size_t n, absl::optional<T>* dest, int radix) {
+  if (str == NULL) {
+    if (dest != NULL)
+      dest->reset();
+    return true;
+  }
+  T tmp;
+  if (Parse(str, n, &tmp, radix)) {
+    if (dest != NULL)
+      dest->emplace(std::move(tmp));
+    return true;
+  }
+  return false;
+}
 
 }  // namespace re2_internal
 
