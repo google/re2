@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "adf031fe_201e9afa",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5510
+      },
+      "writtenOn": "2022-02-15T11:40:23Z",
+      "side": 1,
+      "message": "After writing rust code, C++ idioms are weird and make me twitch.",
+      "revId": "a5876b5e978ae8e71b0d77de96e59aa928004cbb",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
