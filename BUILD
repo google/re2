@@ -8,21 +8,6 @@ licenses(["notice"])
 
 exports_files(["LICENSE"])
 
-config_setting(
-    name = "macos",
-    values = {"cpu": "darwin"},
-)
-
-config_setting(
-    name = "wasm",
-    values = {"cpu": "wasm32"},
-)
-
-config_setting(
-    name = "windows",
-    values = {"cpu": "x64_windows"},
-)
-
 cc_library(
     name = "re2",
     srcs = [
@@ -73,17 +58,17 @@ cc_library(
         "re2/stringpiece.h",
     ],
     copts = select({
-        ":wasm": [],
-        ":windows": [],
+        "@platforms//os:wasi": [],
+        "@platforms//os:windows": [],
         "//conditions:default": ["-pthread"],
     }),
     linkopts = select({
         # macOS doesn't need `-pthread' when linking and it appears that
         # older versions of Clang will warn about the unused command line
         # argument, so just don't pass it.
-        ":macos": [],
-        ":wasm": [],
-        ":windows": [],
+        "@platforms//os:macos": [],
+        "@platforms//os:wasi": [],
+        "@platforms//os:windows": [],
         "//conditions:default": ["-pthread"],
     }),
     visibility = ["//visibility:public"],
