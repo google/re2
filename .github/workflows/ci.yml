@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ver: [9, 10, 11, 12, 13]
+        ver: [9, 10, 11, 12, 13, 14]
     env:
       CC: clang-${{ matrix.ver }}
       CXX: clang++-${{ matrix.ver }}
