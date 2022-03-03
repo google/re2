@@ -4,7 +4,8 @@ For documentation about how to install and use RE2,
 visit https://github.com/google/re2/.
 
 The short version is:
-
+git clone https://code.googlesource.com/re2
+cd re2
 make
 make test
 make install
