@@ -138,7 +138,7 @@ class StringPiece {
   StringPiece substr(size_type pos = 0, size_type n = npos) const;
 
   int compare(const StringPiece& x) const {
-    size_type min_size = std::min(size(), x.size());
+    size_type min_size = (std::min)(size(), x.size());
     if (min_size > 0) {
       int r = memcmp(data(), x.data(), min_size);
       if (r < 0) return -1;
@@ -188,7 +188,7 @@ inline bool operator!=(const StringPiece& x, const StringPiece& y) {
 }
 
 inline bool operator<(const StringPiece& x, const StringPiece& y) {
-  StringPiece::size_type min_size = std::min(x.size(), y.size());
+  StringPiece::size_type min_size = (std::min)(x.size(), y.size());
   int r = min_size == 0 ? 0 : memcmp(x.data(), y.data(), min_size);
   return (r < 0) || (r == 0 && x.size() < y.size());
 }
