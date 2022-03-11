@@ -331,13 +331,13 @@ static-testinstall: CXXFLAGS:=-pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
 static-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -l:libre2.a $(LDICU) $(LDFLAGS)
 static-testinstall:
 	@mkdir -p obj
-	@cp testinstall.cc obj
+	@cp testinstall.cc obj/static-testinstall.cc
 ifeq ($(shell uname),Darwin)
 	@echo Skipping test for libre2.a on Darwin.
 else ifeq ($(shell uname),SunOS)
 	@echo Skipping test for libre2.a on SunOS.
 else
-	(cd obj && $(CXX) testinstall.cc -o static-testinstall $(CXXFLAGS) $(LDFLAGS))
+	(cd obj && $(CXX) static-testinstall.cc -o static-testinstall $(CXXFLAGS) $(LDFLAGS))
 	obj/static-testinstall
 endif
 
@@ -346,8 +346,8 @@ shared-testinstall: CXXFLAGS:=-pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
 shared-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -lre2 $(LDICU) $(LDFLAGS)
 shared-testinstall:
 	@mkdir -p obj
-	@cp testinstall.cc obj
-	(cd obj && $(CXX) testinstall.cc -o shared-testinstall $(CXXFLAGS) $(LDFLAGS))
+	@cp testinstall.cc obj/shared-testinstall.cc
+	(cd obj && $(CXX) shared-testinstall.cc -o shared-testinstall $(CXXFLAGS) $(LDFLAGS))
 ifeq ($(shell uname),Darwin)
 	DYLD_LIBRARY_PATH="$(DESTDIR)$(libdir):$(DYLD_LIBRARY_PATH)" obj/shared-testinstall
 else
