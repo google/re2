@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5f6ea077_2628f1f3",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-03-12T04:49:16Z",
+      "side": 1,
+      "message": "No cherry-pick to abseil branch: GNU make isn\u0027t supported there.\n",
+      "revId": "f2eff71ac32b81ecb93396f9e51973f52a22c4d4",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
