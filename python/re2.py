@@ -5,8 +5,13 @@
 
 It uses RE2 under the hood, of course, so various PCRE features
 (e.g. backreferences, look-around assertions) are not supported.
+See https://github.com/google/re2/wiki/Syntax for the canonical
+reference, but known syntactic "gotchas" relative to Python are:
 
-Known differences between this API and the re module's API:
+  * PCRE supports \Z and \z; RE2 supports \z; Python supports \z,
+    but calls it \Z. You must rewrite \Z to \z in pattern strings.
+
+Known differences between this module's API and the re module's API:
 
   * The error class does not provide any error information as attributes.
   * The Options class replaces the re module's flags with RE2's options as
