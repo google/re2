@@ -10,11 +10,6 @@ include(CMakePackageConfigHelpers)
 include(CTest)
 include(GNUInstallDirs)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 11)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
-
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
 option(USEPCRE "use PCRE in tests and benchmarks" OFF)
 
