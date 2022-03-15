@@ -10,6 +10,12 @@ include(CMakePackageConfigHelpers)
 include(CTest)
 include(GNUInstallDirs)
 
+# Unlike GCC and upstream Clang, AppleClang still defaults to `-std=c++98`
+# for some reason. Set CMAKE_CXX_STANDARD if we seem to need to set it. :/
+if(APPLE AND NOT CMAKE_CXX_FLAGS MATCHES "-std=" AND NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 11)
+endif()
+
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
 option(USEPCRE "use PCRE in tests and benchmarks" OFF)
 
