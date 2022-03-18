@@ -361,7 +361,6 @@ class Prog {
   // Returns true on success, false on error.
   bool PossibleMatchRange(std::string* min, std::string* max, int maxlen);
 
-  // EXPERIMENTAL! SUBJECT TO CHANGE!
   // Outputs the program fanout into the given sparse array.
   void Fanout(SparseArray<int>* fanout);
 
