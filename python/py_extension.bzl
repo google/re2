@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-load("@rules_cc//cc:action_names.bzl", "C_COMPILE_ACTION_NAME")
+load("@rules_cc//cc:action_names.bzl", "CPP_COMPILE_ACTION_NAME")
 load("@rules_cc//cc:find_cc_toolchain.bzl", "find_cc_toolchain")
 
 def _compile_impl(ctx):
@@ -20,7 +20,7 @@ def _compile_impl(ctx):
 
     executable = cc_common.get_tool_for_action(
         feature_configuration = feature_configuration,
-        action_name = C_COMPILE_ACTION_NAME,
+        action_name = CPP_COMPILE_ACTION_NAME,
     )
 
     variables = cc_common.create_compile_variables(
@@ -64,13 +64,13 @@ def _compile_impl(ctx):
 
     arguments = cc_common.get_memory_inefficient_command_line(
         feature_configuration = feature_configuration,
-        action_name = C_COMPILE_ACTION_NAME,
+        action_name = CPP_COMPILE_ACTION_NAME,
         variables = variables,
     )
 
     env = cc_common.get_environment_variables(
         feature_configuration = feature_configuration,
-        action_name = C_COMPILE_ACTION_NAME,
+        action_name = CPP_COMPILE_ACTION_NAME,
         variables = variables,
     )
 
