@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "re2/prefilter.h"
 #include "re2/sparse_array.h"
 
@@ -58,7 +59,9 @@ class PrefilterTree {
 
  private:
   typedef SparseArray<int> IntMap;
-  typedef std::map<int, int> StdIntMap;
+  typedef absl::flat_hash_map<int, int> StdIntMap;
+  // TODO(junyer): Use absl::flat_hash_set<Prefilter*> instead?
+  // It should be trivial to get rid of the stringification...
   typedef std::map<std::string, Prefilter*> NodeMap;
 
   // Each unique node has a corresponding Entry that helps in
