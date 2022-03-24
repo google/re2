@@ -67,7 +67,6 @@ void PrefilterTree::Compile(std::vector<std::string>* atom_vec) {
 
   compiled_ = true;
 
-  // TODO(junyer): Use std::unordered_set<Prefilter*> instead?
   NodeMap nodes;
   AssignUniqueIds(&nodes, atom_vec);
 

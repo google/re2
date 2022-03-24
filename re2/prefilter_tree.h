@@ -18,6 +18,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "util/util.h"
@@ -59,7 +60,9 @@ class PrefilterTree {
 
  private:
   typedef SparseArray<int> IntMap;
-  typedef std::map<int, int> StdIntMap;
+  typedef std::unordered_map<int, int> StdIntMap;
+  // TODO(junyer): Use std::unordered_set<Prefilter*> instead?
+  // It should be trivial to get rid of the stringification...
   typedef std::map<std::string, Prefilter*> NodeMap;
 
   // Each unique node has a corresponding Entry that helps in
