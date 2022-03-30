@@ -15,6 +15,12 @@ http_archive(
 )
 
 http_archive(
+    name = "bazel_skylib",
+    strip_prefix = "bazel-skylib-main",
+    urls = ["https://github.com/bazelbuild/bazel-skylib/archive/main.zip"],
+)
+
+http_archive(
     name = "com_github_google_benchmark",
     strip_prefix = "benchmark-main",
     urls = ["https://github.com/google/benchmark/archive/main.zip"],
