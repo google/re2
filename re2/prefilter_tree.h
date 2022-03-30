@@ -59,8 +59,12 @@ class PrefilterTree {
 
  private:
   typedef SparseArray<int> IntMap;
+<<<<<<< HEAD   (058d8f Use `absl::flat_hash_map<int, int>` for `StdIntMap`.)
   typedef absl::flat_hash_map<int, int> StdIntMap;
   // TODO(junyer): Use absl::flat_hash_set<Prefilter*> instead?
+=======
+  // TODO(junyer): Use std::unordered_set<Prefilter*> instead?
+>>>>>>> CHANGE (a464cf Replace `StdIntMap` with `std::vector<int>`.)
   // It should be trivial to get rid of the stringification...
   typedef std::map<std::string, Prefilter*> NodeMap;
 
@@ -79,7 +83,7 @@ class PrefilterTree {
     // are two different nodes, but they share the atom 'def'. So when
     // 'def' matches, it triggers two parents, corresponding to the two
     // different OR nodes.
-    StdIntMap* parents;
+    std::vector<int> parents;
 
     // When this node is ready to trigger the parent, what are the
     // regexps that are triggered.
