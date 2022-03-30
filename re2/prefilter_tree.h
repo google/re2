@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
 #include "re2/prefilter.h"
 #include "re2/sparse_array.h"
 
@@ -59,7 +58,6 @@ class PrefilterTree {
 
  private:
   typedef SparseArray<int> IntMap;
-  typedef absl::flat_hash_map<int, int> StdIntMap;
   // TODO(junyer): Use absl::flat_hash_set<Prefilter*> instead?
   // It should be trivial to get rid of the stringification...
   typedef std::map<std::string, Prefilter*> NodeMap;
@@ -79,7 +77,7 @@ class PrefilterTree {
     // are two different nodes, but they share the atom 'def'. So when
     // 'def' matches, it triggers two parents, corresponding to the two
     // different OR nodes.
-    StdIntMap* parents;
+    std::vector<int> parents;
 
     // When this node is ready to trigger the parent, what are the
     // regexps that are triggered.
