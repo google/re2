@@ -237,7 +237,7 @@ void PrefilterTree::AssignUniqueIds(NodeMap* nodes,
   // We use logarithms below to avoid the likelihood of underflow.
   double log_num_regexps = std::log(prefilter_vec_.size() - unfiltered_.size());
   // Hoisted this above the loop so that we don't thrash the heap.
-  std::vector<std::pair<int, int>> entries_by_num_edges;
+  std::vector<std::pair<size_t, int>> entries_by_num_edges;
   for (int i = static_cast<int>(v.size()) - 1; i >= 0; i--) {
     Prefilter* prefilter = v[i];
     // Pruning applies only to AND nodes because it "just" reduces
