@@ -270,9 +270,10 @@ void PrefilterTree::AssignUniqueIds(NodeMap* nodes,
         log_num_triggered -= log_num_regexps;
       } else if (parents.size() > 9) {
         auto it = std::find(parents.begin(), parents.end(), id);
-        DCHECK(it != parents.end());
-        parents.erase(it);
-        entries_[id].propagate_up_at_count--;
+        if (it != parents.end()) {
+          parents.erase(it);
+          entries_[id].propagate_up_at_count--;
+        }
       }
     }
   }
