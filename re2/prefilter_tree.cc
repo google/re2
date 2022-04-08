@@ -4,9 +4,9 @@
 
 #include "re2/prefilter_tree.h"
 
-#include <math.h>
 #include <stddef.h>
 #include <algorithm>
+#include <cmath>
 #include <map>
 #include <memory>
 #include <string>
