@@ -2,19 +2,13 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Old enough to support Ubuntu Xenial.
-cmake_minimum_required(VERSION 3.5.1)
+# Old enough to support Ubuntu Bionic.
+cmake_minimum_required(VERSION 3.10.2)
 
 project(RE2 CXX)
 include(CMakePackageConfigHelpers)
 include(CTest)
 include(GNUInstallDirs)
-
-# Unlike GCC and upstream Clang, AppleClang still defaults to `-std=c++98`
-# for some reason. Set CMAKE_CXX_STANDARD if we seem to need to set it. :/
-if(APPLE AND NOT CMAKE_CXX_FLAGS MATCHES "-std=" AND NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 11)
-endif()
 
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
 option(USEPCRE "use PCRE in tests and benchmarks" OFF)
@@ -84,6 +78,7 @@ set(RE2_SOURCES
     )
 
 add_library(re2 ${RE2_SOURCES})
+target_compile_features(re2 PUBLIC cxx_std_11)
 target_include_directories(re2 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 set_target_properties(re2 PROPERTIES SOVERSION ${SONAME} VERSION ${SONAME}.0.0)
 add_library(re2::re2 ALIAS re2)
@@ -105,6 +100,7 @@ if(RE2_BUILD_TESTING)
       )
 
   add_library(testing STATIC ${TESTING_SOURCES})
+  target_compile_features(testing PUBLIC cxx_std_11)
   target_link_libraries(testing PUBLIC re2)
 
   set(TEST_TARGETS
@@ -137,12 +133,14 @@ if(RE2_BUILD_TESTING)
 
   foreach(target ${TEST_TARGETS})
     add_executable(${target} re2/testing/${target}.cc util/test.cc)
+    target_compile_features(${target} PUBLIC cxx_std_11)
     target_link_libraries(${target} testing ${EXTRA_TARGET_LINK_LIBRARIES})
     add_test(NAME ${target} COMMAND ${target})
   endforeach()
 
   foreach(target ${BENCHMARK_TARGETS})
     add_executable(${target} re2/testing/${target}.cc util/benchmark.cc)
+    target_compile_features(${target} PUBLIC cxx_std_11)
     target_link_libraries(${target} testing ${EXTRA_TARGET_LINK_LIBRARIES})
   endforeach()
 endif()
