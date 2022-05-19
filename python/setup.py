@@ -31,7 +31,10 @@ Known issues with regard to building the C++ extension:
   * Building requires pybind11 to be installed on your system OR venv.
     On Debian, for example, install the pybind11-dev package.
     For a venv, install the pybind11 package from PyPI.
-  * Building on macOS has not been tested yet and will possibly fail.
+  * Building on macOS is known to work, but has been known to fail.
+    For example, the system Python may not know which compiler flags
+    to set when building bindings for software installed by Homebrew;
+    see https://docs.brew.sh/Homebrew-and-Python#brewed-python-modules.
   * Building on Windows has not been tested yet and will probably fail.
 """
 
