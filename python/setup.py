@@ -4,8 +4,7 @@
 
 import setuptools
 
-long_description = """\
-A drop-in replacement for the re module.
+long_description = r"""A drop-in replacement for the re module.
 
 It uses RE2 under the hood, of course, so various PCRE features
 (e.g. backreferences, look-around assertions) are not supported.
