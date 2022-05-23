@@ -1,7 +1,7 @@
 # Copyright 2019 The RE2 Authors.  All Rights Reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
-"""A drop-in replacement for the re module.
+r"""A drop-in replacement for the re module.
 
 It uses RE2 under the hood, of course, so various PCRE features
 (e.g. backreferences, look-around assertions) are not supported.
