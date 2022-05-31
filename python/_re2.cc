@@ -260,6 +260,9 @@ PYBIND11_MODULE(_re2, module) {
   encoding.value("LATIN1", RE2::Options::Encoding::EncodingLatin1);
 
   options.def(py::init<>())
+      .def_property("max_mem",                          //
+                    &RE2::Options::max_mem,             //
+                    &RE2::Options::set_max_mem)         //
       .def_property("encoding",                         //
                     &RE2::Options::encoding,            //
                     &RE2::Options::set_encoding)        //
@@ -272,9 +275,6 @@ PYBIND11_MODULE(_re2, module) {
       .def_property("log_errors",                       //
                     &RE2::Options::log_errors,          //
                     &RE2::Options::set_log_errors)      //
-      .def_property("max_mem",                          //
-                    &RE2::Options::max_mem,             //
-                    &RE2::Options::set_max_mem)         //
       .def_property("literal",                          //
                     &RE2::Options::literal,             //
                     &RE2::Options::set_literal)         //
