@@ -288,7 +288,7 @@ class RE2 {
   // The string specification for this RE2.  E.g.
   //   RE2 re("ab*c?d+");
   //   re.pattern();    // "ab*c?d+"
-  const std::string& pattern() const { return pattern_; }
+  const std::string& pattern() const { return *pattern_; }
 
   // If RE2 could not be created properly, returns an error string.
   // Else returns the empty string.
@@ -300,7 +300,7 @@ class RE2 {
 
   // If RE2 could not be created properly, returns the offending
   // portion of the regexp.
-  const std::string& error_arg() const { return error_arg_; }
+  const std::string& error_arg() const { return *error_arg_; }
 
   // Returns the program size, a very approximate measure of a regexp's "cost".
   // Larger numbers are more expensive than smaller numbers.
@@ -653,11 +653,11 @@ class RE2 {
     };
 
     Options() :
+      max_mem_(kDefaultMaxMem),
       encoding_(EncodingUTF8),
       posix_syntax_(false),
       longest_match_(false),
       log_errors_(true),
-      max_mem_(kDefaultMaxMem),
       literal_(false),
       never_nl_(false),
       dot_nl_(false),
@@ -670,6 +670,9 @@ class RE2 {
 
     /*implicit*/ Options(CannedOptions);
 
+    int64_t max_mem() const { return max_mem_; }
+    void set_max_mem(int64_t m) { max_mem_ = m; }
+
     Encoding encoding() const { return encoding_; }
     void set_encoding(Encoding encoding) { encoding_ = encoding; }
 
@@ -681,9 +684,6 @@ class RE2 {
 
     bool log_errors() const { return log_errors_; }
     void set_log_errors(bool b) { log_errors_ = b; }
-
-    int64_t max_mem() const { return max_mem_; }
-    void set_max_mem(int64_t m) { max_mem_ = m; }
 
     bool literal() const { return literal_; }
     void set_literal(bool b) { literal_ = b; }
@@ -716,11 +716,11 @@ class RE2 {
     int ParseFlags() const;
 
    private:
+    int64_t max_mem_;
     Encoding encoding_;
     bool posix_syntax_;
     bool longest_match_;
     bool log_errors_;
-    int64_t max_mem_;
     bool literal_;
     bool never_nl_;
     bool dot_nl_;
@@ -753,18 +753,23 @@ class RE2 {
 
   re2::Prog* ReverseProg() const;
 
-  std::string pattern_;         // string regular expression
-  Options options_;             // option flags
-  re2::Regexp* entire_regexp_;  // parsed regular expression
-  const std::string* error_;    // error indicator (or points to empty string)
-  ErrorCode error_code_;        // error code
-  std::string error_arg_;       // fragment of regexp showing error
-  std::string prefix_;          // required prefix (before suffix_regexp_)
-  bool prefix_foldcase_;        // prefix_ is ASCII case-insensitive
-  re2::Regexp* suffix_regexp_;  // parsed regular expression, prefix_ removed
-  re2::Prog* prog_;             // compiled program for regexp
-  int num_captures_;            // number of capturing groups
-  bool is_one_pass_;            // can use prog_->SearchOnePass?
+  // First cache line is relatively cold fields.
+  const std::string* pattern_;    // string regular expression
+  Options options_;               // option flags
+  re2::Regexp* entire_regexp_;    // parsed regular expression
+  re2::Regexp* suffix_regexp_;    // parsed regular expression, prefix_ removed
+  const std::string* error_;      // error indicator (or points to empty string)
+  const std::string* error_arg_;  // fragment of regexp showing error (or ditto)
+
+  // Second cache line is relatively hot fields.
+  // These are ordered oddly to pack everything.
+  int num_captures_;              // number of capturing groups
+  ErrorCode error_code_ : 29;     // error code (29 bits is more than enough)
+  bool longest_match_ : 1;        // cached copy of options_.longest_match()
+  bool is_one_pass_ : 1;          // can use prog_->SearchOnePass?
+  bool prefix_foldcase_ : 1;      // prefix_ is ASCII case-insensitive
+  std::string prefix_;            // required prefix (before suffix_regexp_)
+  re2::Prog* prog_;               // compiled program for regexp
 
   // Reverse Prog for DFA execution only
   mutable re2::Prog* rprog_;

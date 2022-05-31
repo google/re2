@@ -19,7 +19,7 @@ option(RE2_BUILD_TESTING "enable testing for RE2" ON)
 
 # ABI version
 # http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html
-set(SONAME 9)
+set(SONAME 10)
 
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
