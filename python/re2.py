@@ -47,11 +47,11 @@ class Options(_re2.RE2.Options):
   __slots__ = ()
 
   NAMES = (
+      'max_mem',
       'encoding',
       'posix_syntax',
       'longest_match',
       'log_errors',
-      'max_mem',
       'literal',
       'never_nl',
       'dot_nl',
