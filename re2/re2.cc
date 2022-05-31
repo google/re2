@@ -43,11 +43,11 @@ static const int kVecSize = 1+kMaxArgs;
 const int RE2::Options::kDefaultMaxMem;  // initialized in re2.h
 
 RE2::Options::Options(RE2::CannedOptions opt)
-  : encoding_(opt == RE2::Latin1 ? EncodingLatin1 : EncodingUTF8),
+  : max_mem_(kDefaultMaxMem),
+    encoding_(opt == RE2::Latin1 ? EncodingLatin1 : EncodingUTF8),
     posix_syntax_(opt == RE2::POSIX),
     longest_match_(opt == RE2::POSIX),
     log_errors_(opt != RE2::Quiet),
-    max_mem_(kDefaultMaxMem),
     literal_(false),
     never_nl_(false),
     dot_nl_(false),
@@ -178,18 +178,20 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
     empty_group_names = new std::map<int, std::string>;
   });
 
-  pattern_.assign(pattern.data(), pattern.size());
+  pattern_ = new std::string(pattern);
   options_.Copy(options);
   entire_regexp_ = NULL;
-  error_ = empty_string;
-  error_code_ = NoError;
-  error_arg_.clear();
-  prefix_.clear();
-  prefix_foldcase_ = false;
   suffix_regexp_ = NULL;
-  prog_ = NULL;
+  error_ = empty_string;
+  error_arg_ = empty_string;
+
   num_captures_ = -1;
+  error_code_ = NoError;
+  longest_match_ = options_.longest_match();
   is_one_pass_ = false;
+  prefix_foldcase_ = false;
+  prefix_.clear();
+  prog_ = NULL;
 
   rprog_ = NULL;
   named_groups_ = NULL;
@@ -197,25 +199,29 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
 
   RegexpStatus status;
   entire_regexp_ = Regexp::Parse(
-    pattern_,
+    *pattern_,
     static_cast<Regexp::ParseFlags>(options_.ParseFlags()),
     &status);
   if (entire_regexp_ == NULL) {
     if (options_.log_errors()) {
-      LOG(ERROR) << "Error parsing '" << trunc(pattern_) << "': "
+      LOG(ERROR) << "Error parsing '" << trunc(*pattern_) << "': "
                  << status.Text();
     }
     error_ = new std::string(status.Text());
     error_code_ = RegexpErrorToRE2(status.code());
-    error_arg_ = std::string(status.error_arg());
+    error_arg_ = new std::string(status.error_arg());
     return;
   }
 
+  bool foldcase;
   re2::Regexp* suffix;
-  if (entire_regexp_->RequiredPrefix(&prefix_, &prefix_foldcase_, &suffix))
+  if (entire_regexp_->RequiredPrefix(&prefix_, &foldcase, &suffix)) {
+    prefix_foldcase_ = foldcase;
     suffix_regexp_ = suffix;
-  else
+  }
+  else {
     suffix_regexp_ = entire_regexp_->Incref();
+  }
 
   // Two thirds of the memory goes to the forward Prog,
   // one third to the reverse prog, because the forward
@@ -223,7 +229,7 @@ void RE2::Init(const StringPiece& pattern, const Options& options) {
   prog_ = suffix_regexp_->CompileToProg(options_.max_mem()*2/3);
   if (prog_ == NULL) {
     if (options_.log_errors())
-      LOG(ERROR) << "Error compiling '" << trunc(pattern_) << "'";
+      LOG(ERROR) << "Error compiling '" << trunc(*pattern_) << "'";
     error_ = new std::string("pattern too large - compile failed");
     error_code_ = RE2::ErrorPatternTooLarge;
     return;
@@ -249,7 +255,8 @@ re2::Prog* RE2::ReverseProg() const {
         re->suffix_regexp_->CompileToReverseProg(re->options_.max_mem() / 3);
     if (re->rprog_ == NULL) {
       if (re->options_.log_errors())
-        LOG(ERROR) << "Error reverse compiling '" << trunc(re->pattern_) << "'";
+        LOG(ERROR) << "Error reverse compiling '" << trunc(*re->pattern_)
+                   << "'";
       // We no longer touch error_ and error_code_ because failing to compile
       // the reverse Prog is not a showstopper: falling back to NFA execution
       // is fine. More importantly, an RE2 object is supposed to be logically
@@ -261,18 +268,21 @@ re2::Prog* RE2::ReverseProg() const {
 }
 
 RE2::~RE2() {
+  if (group_names_ != empty_group_names)
+    delete group_names_;
+  if (named_groups_ != empty_named_groups)
+    delete named_groups_;
+  delete rprog_;
+  delete prog_;
+  if (error_arg_ != empty_string)
+    delete error_arg_;
+  if (error_ != empty_string)
+    delete error_;
   if (suffix_regexp_)
     suffix_regexp_->Decref();
   if (entire_regexp_)
     entire_regexp_->Decref();
-  delete prog_;
-  delete rprog_;
-  if (error_ != empty_string)
-    delete error_;
-  if (named_groups_ != NULL && named_groups_ != empty_named_groups)
-    delete named_groups_;
-  if (group_names_ != NULL &&  group_names_ != empty_group_names)
-    delete group_names_;
+  delete pattern_;
 }
 
 int RE2::ProgramSize() const {
@@ -686,9 +696,8 @@ bool RE2::Match(const StringPiece& text,
   }
 
   Prog::Anchor anchor = Prog::kUnanchored;
-  Prog::MatchKind kind = Prog::kFirstMatch;
-  if (options_.longest_match())
-    kind = Prog::kLongestMatch;
+  Prog::MatchKind kind =
+      longest_match_ ? Prog::kLongestMatch : Prog::kFirstMatch;
 
   bool can_one_pass = is_one_pass_ && ncap <= Prog::kMaxOnePassCapture;
   bool can_bit_state = prog_->CanBitState();
@@ -720,7 +729,7 @@ bool RE2::Match(const StringPiece& text,
           if (dfa_failed) {
             if (options_.log_errors())
               LOG(ERROR) << "DFA out of memory: "
-                         << "pattern length " << pattern_.size() << ", "
+                         << "pattern length " << pattern_->size() << ", "
                          << "program size " << prog->size() << ", "
                          << "list count " << prog->list_count() << ", "
                          << "bytemap range " << prog->bytemap_range();
@@ -740,7 +749,7 @@ bool RE2::Match(const StringPiece& text,
         if (dfa_failed) {
           if (options_.log_errors())
             LOG(ERROR) << "DFA out of memory: "
-                       << "pattern length " << pattern_.size() << ", "
+                       << "pattern length " << pattern_->size() << ", "
                        << "program size " << prog_->size() << ", "
                        << "list count " << prog_->list_count() << ", "
                        << "bytemap range " << prog_->bytemap_range();
@@ -766,7 +775,7 @@ bool RE2::Match(const StringPiece& text,
         if (dfa_failed) {
           if (options_.log_errors())
             LOG(ERROR) << "DFA out of memory: "
-                       << "pattern length " << pattern_.size() << ", "
+                       << "pattern length " << pattern_->size() << ", "
                        << "program size " << prog->size() << ", "
                        << "list count " << prog->list_count() << ", "
                        << "bytemap range " << prog->bytemap_range();
@@ -809,7 +818,7 @@ bool RE2::Match(const StringPiece& text,
         if (dfa_failed) {
           if (options_.log_errors())
             LOG(ERROR) << "DFA out of memory: "
-                       << "pattern length " << pattern_.size() << ", "
+                       << "pattern length " << pattern_->size() << ", "
                        << "program size " << prog_->size() << ", "
                        << "list count " << prog_->list_count() << ", "
                        << "bytemap range " << prog_->bytemap_range();
