@@ -51,7 +51,7 @@ int
 chartorune(Rune *rune, const char *str)
 {
 	int c, c1, c2, c3;
-	long l;
+	Rune l;
 
 	/*
 	 * one character sequence
@@ -212,7 +212,7 @@ int
 utflen(const char *s)
 {
 	int c;
-	long n;
+	int n;
 	Rune rune;
 
 	n = 0;
