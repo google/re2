@@ -3,11 +3,11 @@
 # license that can be found in the LICENSE file.
 """Injects copts into a compile command."""
 
-from distutils import sysconfig
 import subprocess
 import sys
+import sysconfig
 
 c = sys.argv.index('-c')
-sys.argv.insert(c, '-I' + sysconfig.get_python_inc())
+sys.argv.insert(c, '-I' + sysconfig.get_path('include'))
 sys.argv.insert(c, '-fvisibility=hidden')
 sys.exit(subprocess.call(sys.argv[1:]))
