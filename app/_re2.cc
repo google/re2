@@ -54,6 +54,8 @@ Info GetInfo(const std::string& pattern) {
   std::unique_ptr<Prog> prog(suffix->CompileToProg(options.max_mem()));
   if (prog == nullptr) {
     info.error = "failed to compile forward Prog";
+    suffix->Decref();
+    regexp->Decref();
     return info;
   }
 
