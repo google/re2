@@ -49,6 +49,13 @@ class Re2CompileTest(parameterized.TestCase):
   def test_compile(self, pattern, expected_groups, expected_groupindex):
     regexp = re2.compile(pattern)
     self.assertIs(regexp, re2.compile(pattern))  # cached
+    self.assertIs(regexp, re2.compile(regexp))  # cached
+    with self.assertRaisesRegex(re2.error,
+                                ('pattern is already compiled, so '
+                                 'options may not be specified')):
+      options = re2.Options()
+      options.log_errors = not options.log_errors
+      re2.compile(regexp, options=options)
     self.assertIsNotNone(regexp.options)
     self.assertEqual(expected_groups, regexp.groups)
     self.assertDictEqual(dict(expected_groupindex), regexp.groupindex)
