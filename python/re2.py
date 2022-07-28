@@ -64,8 +64,12 @@ class Options(_re2.RE2.Options):
 
 
 def compile(pattern, options=None):
-  if not options:
-    options = Options()
+  if isinstance(pattern, _Regexp):
+    if options:
+      raise error('pattern is already compiled, so '
+                  'options may not be specified')
+    pattern = pattern._pattern
+  options = options or Options()
   values = tuple(getattr(options, name) for name in Options.NAMES)
   return _Regexp._make(pattern, values)
 
@@ -156,7 +160,7 @@ class _Regexp(object):
 
   def __getstate__(self):
     options = {name: getattr(self.options, name) for name in Options.NAMES}
-    return self.pattern, options
+    return self._pattern, options
 
   def __setstate__(self, state):
     pattern, options = state
@@ -503,8 +507,7 @@ class Set(object):
   __slots__ = ('_set')
 
   def __init__(self, anchor, options=None):
-    if not options:
-      options = Options()
+    options = options or Options()
     self._set = _re2.Set(anchor, options)
 
   @classmethod
@@ -551,8 +554,7 @@ class Filter(object):
     self._filter = _re2.Filter()
 
   def Add(self, pattern, options=None):
-    if not options:
-      options = Options()
+    options = options or Options()
     if isinstance(pattern, str):
       encoded_pattern = _encode(pattern)
       index = self._filter.Add(encoded_pattern, options)
