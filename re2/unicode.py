@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import os
 import re
-from six.moves import urllib
+import urllib.request
 
 # Directory or URL where Unicode tables reside.
 _UNICODE_DIR = "https://www.unicode.org/Public/14.0.0/ucd"
