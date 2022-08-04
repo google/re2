@@ -274,10 +274,8 @@ class RE2 {
   // Need to have the const char* and const std::string& forms for implicit
   // conversions when passing string literals to FullMatch and PartialMatch.
   // Otherwise the StringPiece form would be sufficient.
-#ifndef SWIG
   RE2(const char* pattern);
   RE2(const std::string& pattern);
-#endif
   RE2(const StringPiece& pattern);
   RE2(const StringPiece& pattern, const Options& options);
   ~RE2();
@@ -333,7 +331,6 @@ class RE2 {
   static bool FindAndConsumeN(StringPiece* input, const RE2& re,
                               const Arg* const args[], int n);
 
-#ifndef SWIG
  private:
   template <typename F, typename SP>
   static inline bool Apply(F f, SP sp, const RE2& re) {
@@ -439,7 +436,6 @@ class RE2 {
   static bool FindAndConsume(StringPiece* input, const RE2& re, A&&... a) {
     return Apply(FindAndConsumeN, input, re, Arg(std::forward<A>(a))...);
   }
-#endif
 
   // Replace the first match of "re" in "str" with "rewrite".
   // Within "rewrite", backslash-escaped digits (\1 to \9) can be
@@ -913,7 +909,6 @@ inline RE2::Arg RE2::Octal(T* ptr) {
   });
 }
 
-#ifndef SWIG
 // Silence warnings about missing initializers for members of LazyRE2.
 #if !defined(__clang__) && defined(__GNUC__) && __GNUC__ >= 6
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
@@ -964,7 +959,6 @@ class LazyRE2 {
 
   void operator=(const LazyRE2&);  // disallowed
 };
-#endif
 
 namespace hooks {
 
