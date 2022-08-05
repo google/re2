@@ -52,12 +52,13 @@ class StringPiece {
   // expected.
   StringPiece()
       : data_(NULL), size_(0) {}
-#ifdef __cpp_lib_string_view
-  StringPiece(const std::string_view& str)
+
+  // Construct from anything that looks string-like with data() and size().
+  // Such as std::string, std::string_view or absl::string_view
+  template <typename StringT = std::string>
+  StringPiece(const StringT& str)
       : data_(str.data()), size_(str.size()) {}
-#endif
-  StringPiece(const std::string& str)
-      : data_(str.data()), size_(str.size()) {}
+
   StringPiece(const char* str)
       : data_(str), size_(str == NULL ? 0 : strlen(str)) {}
   StringPiece(const char* str, size_type len)
