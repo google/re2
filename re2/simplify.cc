@@ -370,8 +370,8 @@ void CoalesceWalker::DoCoalesce(Regexp** r1ptr, Regexp** r2ptr) {
       break;
 
     default:
-      LOG(DFATAL) << "DoCoalesce failed: r1->op() is " << r1->op();
       nre->Decref();
+      LOG(DFATAL) << "DoCoalesce failed: r1->op() is " << r1->op();
       return;
   }
 
@@ -431,8 +431,8 @@ void CoalesceWalker::DoCoalesce(Regexp** r1ptr, Regexp** r2ptr) {
     }
 
     default:
-      LOG(DFATAL) << "DoCoalesce failed: r2->op() is " << r2->op();
       nre->Decref();
+      LOG(DFATAL) << "DoCoalesce failed: r2->op() is " << r2->op();
       return;
   }
 
