@@ -1586,8 +1586,6 @@ static bool ParseEscape(absl::string_view* s, Rune* rp,
     //   return true;
   }
 
-  LOG(DFATAL) << "Not reached in ParseEscape.";
-
 BadEscape:
   // Unrecognized escape sequence.
   status->set_code(kRegexpBadEscape);
@@ -2056,8 +2054,8 @@ bool Regexp::ParseState::ParsePerlFlags(absl::string_view* s) {
 
   // Caller is supposed to check this.
   if (!(flags_ & PerlX) || t.size() < 2 || t[0] != '(' || t[1] != '?') {
-    LOG(DFATAL) << "Bad call to ParseState::ParsePerlFlags";
     status_->set_code(kRegexpInternalError);
+    LOG(DFATAL) << "Bad call to ParseState::ParsePerlFlags";
     return false;
   }
 
