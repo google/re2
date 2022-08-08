@@ -511,7 +511,7 @@ void Prog::ComputeByteMap() {
 
   builder.Build(bytemap_, &bytemap_range_);
 
-  if (0) {  // For debugging, use trivial bytemap.
+  if ((0)) {  // For debugging, use trivial bytemap.
     LOG(ERROR) << "Using trivial bytemap.";
     for (int i = 0; i < 256; i++)
       bytemap_[i] = static_cast<uint8_t>(i);

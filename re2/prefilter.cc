@@ -532,8 +532,8 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
   switch (re->op()) {
     default:
     case kRegexpRepeat:
-      LOG(DFATAL) << "Bad regexp op " << re->op();
       info = EmptyString();
+      LOG(DFATAL) << "Bad regexp op " << re->op();
       break;
 
     case kRegexpNoMatch:
