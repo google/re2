@@ -1675,8 +1675,8 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
   if (!AnalyzeSearchHelper(params, info, flags)) {
     ResetCache(params->cache_lock);
     if (!AnalyzeSearchHelper(params, info, flags)) {
-      LOG(DFATAL) << "Failed to analyze start state.";
       params->failed = true;
+      LOG(DFATAL) << "Failed to analyze start state.";
       return false;
     }
   }
