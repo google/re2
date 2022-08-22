@@ -217,6 +217,7 @@
 #include "absl/base/call_once.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "re2/stringpiece.h"
 
 namespace re2 {
 class Prog;

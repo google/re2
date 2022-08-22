@@ -51,6 +51,7 @@ cc_library(
         "re2/filtered_re2.h",
         "re2/re2.h",
         "re2/set.h",
+        "re2/stringpiece.h",
     ],
     copts = select({
         "@platforms//os:wasi": [],
