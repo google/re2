@@ -282,6 +282,20 @@ class RE2 {
   RE2(absl::string_view pattern, const Options& options);
   ~RE2();
 
+  // Not copyable.
+  // RE2 objects are expensive. You should probably use std::shared_ptr<RE2>
+  // instead. If you really must copy, RE2(first.pattern(), first.options())
+  // effectively does so: it produces a second object that mimics the first.
+  RE2(const RE2&) = delete;
+  RE2& operator=(const RE2&) = delete;
+  // Not movable.
+  // RE2 objects are thread-safe and logically immutable. You should probably
+  // use std::unique_ptr<RE2> instead. Otherwise, consider std::deque<RE2> if
+  // direct emplacement into a container is desired. If you really must move,
+  // be prepared to submit a design document along with your feature request.
+  RE2(RE2&&) = delete;
+  RE2& operator=(RE2&&) = delete;
+
   // Returns whether RE2 was created properly.
   bool ok() const { return error_code() == NoError; }
 
@@ -776,12 +790,18 @@ class RE2 {
   // Map from capture indices to names
   mutable const std::map<int, std::string>* group_names_;
 
+<<<<<<< HEAD   (6543c3 Resurrect `stringpiece.h` and its `re2::StringPiece` alias.)
   mutable absl::once_flag rprog_once_;
   mutable absl::once_flag named_groups_once_;
   mutable absl::once_flag group_names_once_;
 
   RE2(const RE2&) = delete;
   RE2& operator=(const RE2&) = delete;
+=======
+  mutable std::once_flag rprog_once_;
+  mutable std::once_flag named_groups_once_;
+  mutable std::once_flag group_names_once_;
+>>>>>>> CHANGE (e31fa3 Document why `RE2` objects are neither copyable nor movable.)
 };
 
 /***** Implementation details *****/
