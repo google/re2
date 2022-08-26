@@ -1,12 +1,10 @@
-runtime: python27
-api_version: 1
-threadsafe: true
-
+runtime: python310
 handlers:
 - url: /
+  secure: always
   static_files: deploy/index.html
   upload: deploy/index.html
-
 - url: /(.*)
+  secure: always
   static_files: deploy/\1
   upload: deploy/(.*)

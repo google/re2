@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 import {css, html, LitElement, render} from 'lit';
-import {customElement, state} from 'lit/decorators.js';
+import {customElement} from 'lit/decorators.js';
 
 import /*default*/ loadModule from './_re2';
 import {Info, MainModule} from './_re2';
@@ -16,111 +16,91 @@ loadModule().then((module: MainModule) => {
 
 @customElement('re2-dev')
 export class RE2Dev extends LitElement {
-  @state() private _info: Info|null = null;
-
-  private _update(pattern: string) {
-    if (pattern) {
-      this._info = _re2.getInfo(pattern);
-    } else {
-      this._info = null;
-    }
-    this.requestUpdate();
-  }
+  private _pattern: string = '';
+  private _info: Info|null = null;
 
   constructor() {
     super();
-    var pattern: string = decodeURIComponent(window.location.hash.slice(1));
-    this._update(pattern);
-  }
-
-  static override styles = css`
-    .error {
-      color: red;
-      font-family: monospace;
-      font-weight: bold;
-      white-space: pre-line;
-    }
-
-    .info {
-      color: darkgreen;
-      font-family: monospace;
-      font-weight: bold;
-      white-space: pre-line;
-    }
-  `;
-
-  override render() {
-    return html`
-      <div>
-        <input type="text" size="64" @change=${this._onChange}/>
-      </div>
-      ${this._renderInfo(this._info)}
-    `;
+    this._pattern = decodeURIComponent(window.location.hash.slice(1));
+    this._info = this._pattern ? _re2.getInfo(this._pattern) : null;
+    this.requestUpdate();
   }
 
   private _onChange = (e: Event) => {
-    var pattern: string = (e.target as HTMLInputElement).value;
-    this._update(pattern);
-    window.location.hash = '#' + encodeURIComponent(pattern);
+    this._pattern = (e.target as HTMLInputElement).value;
+    this._info = this._pattern ? _re2.getInfo(this._pattern) : null;
+    this.requestUpdate();
+    window.location.hash = '#' + encodeURIComponent(this._pattern);
   };
 
-  private _renderInfo(info: Info|null) {
-    if (info === null) {
-      return html`
-      `;
-    } else if (info.error) {
-      return html`
-        <div>
-          pattern:
-          <span class="info">${info.pattern}</span>
-        </div>
-        <div>
-          error:
-          <span class="error">${info.error}</span>
-        </div>
-      `;
-    } else {
-      return html`
-        <div>
-          pattern:
-          <span class="info">${info.pattern}</span>
-        </div>
-        <div>
-          prefix:
-          <span class="info">${info.prefix}</span>
-          _foldcase:
-          <span class="info">${info.prefix_foldcase}</span>
-        </div>
-        <div>
-          accel_prefix:
-          <span class="info">${info.accel_prefix}</span>
-          _foldcase:
-          <span class="info">${info.accel_prefix_foldcase}</span>
-        </div>
-        <div>
-          num_captures:
-          <span class="info">${info.num_captures}</span>
-        </div>
-        <div>
-          is_one_pass:
-          <span class="info">${info.is_one_pass}</span>
-        </div>
-        <div>
-          can_bit_state:
-          <span class="info">${info.can_bit_state}</span>
-        </div>
-        <div>
-          bytecode:
-          <br/>
-          <span class="info">${info.bytecode}</span>
-        </div>
-        <div>
-          bytemap:
-          <br/>
-          <span class="info">${info.bytemap}</span>
-        </div>
-      `;
+  static override styles = css`
+.code {
+  font-family: monospace;
+  white-space: pre-line;
+}
+`;
+
+  override render() {
+    var fragments = [];
+    fragments.push(html`
+<div>
+  <input type="text" size="48" @change=${this._onChange} .value=${this._pattern}>
+</div>
+`);
+
+    if (this._info === null) {
+      return html`${fragments}`;
     }
+
+    if (this._info.error) {
+      fragments.push(html`
+<br>
+<div>
+  error:
+  <span class="code">${this._info.error}</span>
+</div>
+`);
+      return html`${fragments}`;
+    }
+
+    fragments.push(html`
+<br>
+<div>
+  pattern:
+  <span class="code">${this._info.pattern}</span>
+  <br>
+  prefix:
+  <span class="code">${this._info.prefix}</span>
+  ·
+  _foldcase:
+  <span class="code">${this._info.prefix_foldcase}</span>
+  <br>
+  accel_prefix:
+  <span class="code">${this._info.accel_prefix}</span>
+  ·
+  _foldcase:
+  <span class="code">${this._info.accel_prefix_foldcase}</span>
+  <br>
+  num_captures:
+  <span class="code">${this._info.num_captures}</span>
+  <br>
+  is_one_pass:
+  <span class="code">${this._info.is_one_pass}</span>
+  <br>
+  can_bit_state:
+  <span class="code">${this._info.can_bit_state}</span>
+  <br>
+  <br>
+  bytecode:
+  <br>
+  <span class="code">${this._info.bytecode}</span>
+  <br>
+  bytemap:
+  <br>
+  <span class="code">${this._info.bytemap}</span>
+</div>
+`);
+    return html`${fragments}`;
   }
 }
 
