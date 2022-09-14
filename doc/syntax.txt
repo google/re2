@@ -292,6 +292,7 @@ Javanese
 Kaithi
 Kannada
 Katakana
+Kawi
 Kayah_Li
 Kharoshthi
 Khitan_Small_Script
@@ -326,6 +327,7 @@ Mro
 Multani
 Myanmar
 Nabataean
+Nag_Mundari
 Nandinagari
 New_Tai_Lue
 Newa
