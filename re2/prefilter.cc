@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "util/util.h"
@@ -286,13 +287,6 @@ std::string Prefilter::Info::ToString() {
   return "";
 }
 
-// Add the strings from src to dst.
-static void CopyIn(const std::set<std::string>& src,
-                   std::set<std::string>* dst) {
-  for (ConstSSIter i = src.begin(); i != src.end(); ++i)
-    dst->insert(*i);
-}
-
 // Add the cross-product of a and b to dst.
 // (For each string i in a and j in b, add i+j.)
 static void CrossProduct(const std::set<std::string>& a,
@@ -343,8 +337,13 @@ Prefilter::Info* Prefilter::Info::Alt(Info* a, Info* b) {
   Info *ab = new Info();
 
   if (a->is_exact_ && b->is_exact_) {
-    CopyIn(a->exact_, &ab->exact_);
-    CopyIn(b->exact_, &ab->exact_);
+    // Avoid string copies by moving the larger exact_.set into
+    // ab directly, then merge in the smaller set. 
+    if (a->exact_.size() < b->exact_.size())
+      std::swap(a, b);
+
+    ab->exact_ = std::move(a->exact_);
+    ab->exact_.insert(b->exact_.begin(), b->exact_.end());
     ab->is_exact_ = true;
   } else {
     // Either a or b has is_exact_ = false. If the other
