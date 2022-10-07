@@ -70,6 +70,30 @@
       },
       "revId": "30faf65830b70d46b3b967b8de9f271fea4b55a5",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1b01e30d_c1f0b234",
+        "filename": "re2/prefilter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 44657
+      },
+      "writtenOn": "2022-10-07T16:00:02Z",
+      "side": 1,
+      "message": "Ah! That makes sense.\nThanks for the detailed description.\n\nI saw a few compiler based #ifdefs in re2, but non specifically for C++17.\n\nKeeping this as resolved.",
+      "parentUuid": "3de48efe_ebf0a69f",
+      "range": {
+        "startLine": 345,
+        "startChar": 4,
+        "endLine": 345,
+        "endChar": 14
+      },
+      "revId": "30faf65830b70d46b3b967b8de9f271fea4b55a5",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
