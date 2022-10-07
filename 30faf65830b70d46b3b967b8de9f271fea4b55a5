@@ -46,6 +46,30 @@
       },
       "revId": "30faf65830b70d46b3b967b8de9f271fea4b55a5",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3de48efe_ebf0a69f",
+        "filename": "re2/prefilter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 44652
+      },
+      "writtenOn": "2022-10-07T14:57:15Z",
+      "side": 1,
+      "message": "I\u0027m not the steward obviously, but I\u0027m going to advise against 2.\n\n`Alt` is a static factory \"constructor\" for this class, and documented as such on \nline 209. There are 13 other functions that do similar work, and make similar assumptions about the state of a new Info(). \n\nIf we had a magic wand, I agree that traditional constructors may be useful, however, we get nearly all the performance improvements with these few lines. \n\nI think what you\u0027re recommending would be a cleaner C++ implementation. However, I\u0027d expect the entirety of this class\u0027s factory functions to be moved over, to keep it consistent with other functions like `Quest`. I\u0027m not seeing the ROI on that.\n\n---\n\nC++17 would be useful. If I were the owner, I probably wouldn\u0027t want this to be the first place that someone introduces a `#ifdef cpp17`, but if that mechanism already exists elsewhere, I\u0027d be happy to update it.\n\nIn practice? It\u0027s probably not a huge win in our production workload. In tests on my end, I was seeing calls to `Alt` like:\n\n```\n|a.exact| \u003d 1, |b.exact| \u003d 0. Copy 1 strings into ab. Copy 0 string into ab.\n \nDestroy |a|, destroy |b| (2 string destructors called)\n\n... \u003c15k iterations later\u003e\n\n|a.exact| \u003d 15k. |b.exact| \u003d 1. Copy 15k strings into ab. Copy 1 string into ab. \n\nDestroy |a|, destroy |b|, (15001 string desctructors called)\n```\n\nWith this version:\n\n```\n|a.exact| \u003d 15k, |b.exact| \u003d 1. Move 15k in O(1), copy 1 string, destroy 1 string.\n```\n\nWe\u0027re *still* destroying 15k strings when we could just be potentially saving them. That being said, the move saves the lion share of the work. If cpp17 is a no-go, I\u0027m not hung up on it.",
+      "parentUuid": "216cfee2_49d61a23",
+      "range": {
+        "startLine": 345,
+        "startChar": 4,
+        "endLine": 345,
+        "endChar": 14
+      },
+      "revId": "30faf65830b70d46b3b967b8de9f271fea4b55a5",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
