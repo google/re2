@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "216cfee2_49d61a23",
+        "filename": "re2/prefilter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 44657
+      },
+      "writtenOn": "2022-10-07T14:14:20Z",
+      "side": 1,
+      "message": "There is a subtle difference in logic between the previous code and this version. \n\nIn the earlier version, content of a-\u003eexact_ and b-\u003eexact_ was copied (set-unioned) into ab-\u003eexact_. \n\nIn this version, ab-\u003eexact_ \u003d a-\u003eexact_ UNION b-\u003eexact_.\n\nThe difference being that any pre-existing values in ab-\u003eexact_ (that may be defined by the constructor of Info()) will get lost in the second version.\n\nNow looking at the Info class, it doesn\u0027t seem possible right now, but we don\u0027t know how this file is touched or evolves in the future.\n\nI was thinking of the following two options:\n1. simply do ab-\u003eexact_.insert(a) and ab-\u003eexact_.insert(b), keeping the current behavior intact.\n2. overload the constructor of Info to take two sets, whose union it stores in exact_. Then, we simply call Info *ab \u003d Info(a-\u003eexact_, b-\u003eexact_). \nDoing so will ensure anyone in future changing the constructor to set any pre-existing value in exact_ does not need to worry about the code here.\n\n2 can follow 1 in a separate CL as well. 😊",
+      "range": {
+        "startLine": 345,
+        "startChar": 4,
+        "endLine": 345,
+        "endChar": 14
+      },
+      "revId": "30faf65830b70d46b3b967b8de9f271fea4b55a5",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
