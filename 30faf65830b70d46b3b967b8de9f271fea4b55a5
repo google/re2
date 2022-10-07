@@ -22,6 +22,30 @@
       },
       "revId": "30faf65830b70d46b3b967b8de9f271fea4b55a5",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bf59ae1d_cd9354d5",
+        "filename": "re2/prefilter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 44657
+      },
+      "writtenOn": "2022-10-07T14:37:57Z",
+      "side": 1,
+      "message": "Spoke too soon.\nReading more about it, 1 doesn\u0027t help at all, since the contents of a set are const.\n\nConsider doing 2 to provide a safer interface (unless re2 maintainers are okay with this design as well).\n\nC++17 merge would have been super useful indeed. Can\u0027t we do something like:\nif C++17 do X else do Y? :P",
+      "parentUuid": "216cfee2_49d61a23",
+      "range": {
+        "startLine": 345,
+        "startChar": 4,
+        "endLine": 345,
+        "endChar": 14
+      },
+      "revId": "30faf65830b70d46b3b967b8de9f271fea4b55a5",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
