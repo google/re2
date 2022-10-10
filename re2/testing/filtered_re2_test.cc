@@ -106,12 +106,13 @@ AtomTest atom_tests[] = {
     // substring in an OR are removed; that is, only the shortest
     // substring is kept.
     "SubstrAtomRemovesSuperStrInOr", {
-      "(abc123|abc|ghi789|abc1234).*[x-z]+",
+      "(abc123|abc|defxyz|ghi789|abc1234|xyz).*[x-z]+",
       "abcd..yyy..yyyzzz",
       "mnmnpp[a-z]+PPP"
     }, {
       "abc",
       "ghi789",
+      "xyz",
       "abcd",
       "yyy",
       "yyyzzz",
