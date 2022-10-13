@@ -4,15 +4,14 @@
 
 # Bazel (http://bazel.io/) BUILD file for RE2 Python.
 
-load(":py_extension.bzl", "py_extension")
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
-py_extension(
+pybind_extension(
     name = "_re2",
     srcs = ["_re2.cc"],
     deps = [
         "//:re2",
-        "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
     ],
 )
