@@ -2,7 +2,11 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+import os
 import setuptools
+import setuptools.command.build_ext
+import shutil
+import sys
 
 long_description = r"""A drop-in replacement for the re module.
 
@@ -37,12 +41,32 @@ Known issues with regard to building the C++ extension:
   * Building on Windows has not been tested yet and will probably fail.
 """
 
+
+class BuildExt(setuptools.command.build_ext.build_ext):
+
+  def build_extension(self, ext):
+    # We will always be setting this when we are using Bazel
+    # because AppleClang never increases the `-std` version.
+    if 'BAZEL_CXXOPTS' not in os.environ:
+      return super().build_extension(ext)
+
+    # For @pybind11_bazel's `python_configure()`.
+    os.environ['PYTHON_BIN_PATH'] = sys.executable
+    self.spawn(['bazel', 'clean'])
+    self.spawn(['bazel', 'build', '--compilation_mode=opt', '--', ':all'])
+    self.spawn(['bazel', 'test', '--compilation_mode=opt', '--test_output=errors', '--', ':all'])
+    # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
+    # is the filename in the destination directory, which is what's needed.
+    shutil.copyfile('../bazel-bin/python/_re2.so', self.get_ext_fullpath(ext.name))
+
+
 def include_dirs():
   try:
     import pybind11
     yield pybind11.get_include()
   except ModuleNotFoundError:
     pass
+
 
 ext_module = setuptools.Extension(
     name='_re2',
@@ -54,7 +78,7 @@ ext_module = setuptools.Extension(
 
 setuptools.setup(
     name='google-re2',
-    version='0.2.20220601',
+    version='1.0',
     description='RE2 Python bindings',
     long_description=long_description,
     long_description_content_type='text/plain',
@@ -68,6 +92,7 @@ setuptools.setup(
         'Programming Language :: C++',
         'Programming Language :: Python :: 3.7',
     ],
+    cmdclass={'build_ext': BuildExt},
     ext_modules=[ext_module],
     py_modules=['re2'],
     python_requires='~=3.7',
