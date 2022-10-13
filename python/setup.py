@@ -2,7 +2,12 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+import os
 import setuptools
+import setuptools.command.build_ext
+import shutil
+import subprocess
+import sys
 
 long_description = r"""A drop-in replacement for the re module.
 
@@ -37,6 +42,32 @@ Known issues with regard to building the C++ extension:
   * Building on Windows has not been tested yet and will probably fail.
 """
 
+
+class BuildExt(setuptools.command.build_ext.build_ext):
+
+  def build_extension(self, ext):
+    env = dict(os.environ)
+    env['PYTHON_BIN_PATH'] = sys.executable
+    subprocess.check_call(
+        args=['bazel', 'clean'],
+        env=env,
+    )
+    subprocess.check_call(
+        args=['bazel', 'build', '--compilation_mode=opt', '--',
+              '//python:all'],
+        env=env,
+    )
+    subprocess.check_call(
+        args=['bazel', 'test', '--compilation_mode=opt', '--test_output=errors', '--',
+              '//python:all'],
+        env=env,
+    )
+    # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
+    # is the filename in the destination directory, which is what's needed.
+    shutil.copyfile('../bazel-bin/python/_re2.so',
+                    self.get_ext_fullpath(ext.name))
+
+
 def include_dirs():
   try:
     import pybind11
@@ -44,17 +75,30 @@ def include_dirs():
   except ModuleNotFoundError:
     pass
 
-ext_module = setuptools.Extension(
-    name='_re2',
-    sources=['_re2.cc'],
-    include_dirs=list(include_dirs()),
-    libraries=['re2'],
-    extra_compile_args=['-fvisibility=hidden'],
-)
+
+# We will always be setting this when we are using Bazel
+# because AppleClang never increases the `-std` version.
+if 'BAZEL_CXXOPTS' in os.environ:
+  ext_module = setuptools.Extension(
+      name='_re2',
+      sources=[],
+  )
+  cmdclass = {'build_ext': BuildExt}
+else:
+  ext_module = setuptools.Extension(
+      name='_re2',
+      sources=['_re2.cc'],
+      include_dirs=list(include_dirs()),
+      libraries=['re2'],
+      extra_compile_args=['-fvisibility=hidden'],
+  )
+  cmdclass = {}
 
 setuptools.setup(
     name='google-re2',
-    version='0.2.20220601',
+    # As per https://peps.python.org/pep-0427/#file-name-convention,
+    # a version number is separate from its (optional) build number.
+    version='1.0-1',
     description='RE2 Python bindings',
     long_description=long_description,
     long_description_content_type='text/plain',
@@ -71,4 +115,5 @@ setuptools.setup(
     ext_modules=[ext_module],
     py_modules=['re2'],
     python_requires='~=3.7',
+    cmdclass=cmdclass,
 )
