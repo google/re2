@@ -43,3 +43,20 @@ http_archive(
     strip_prefix = "abseil-py-main",
     urls = ["https://github.com/abseil/abseil-py/archive/main.zip"],
 )
+
+http_archive(
+    name = "pybind11_bazel",
+    strip_prefix = "pybind11_bazel-master",
+    urls = ["https://github.com/pybind/pybind11_bazel/archive/master.zip"],
+)
+
+http_archive(
+    name = "pybind11",
+    build_file = "@pybind11_bazel//:pybind11.BUILD",
+    strip_prefix = "pybind11-master",
+    urls = ["https://github.com/pybind/pybind11/archive/master.zip"],
+)
+
+load("@pybind11_bazel//:python_configure.bzl", "python_configure")
+
+python_configure(name = "local_config_python")
