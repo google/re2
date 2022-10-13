@@ -10,7 +10,6 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "re2/filtered_re2.h"
 #include "re2/re2.h"
@@ -69,7 +68,7 @@ std::unique_ptr<RE2> RE2InitShim(py::buffer buffer,
                                  const RE2::Options& options) {
   auto bytes = buffer.request();
   auto pattern = FromBytes(bytes);
-  return absl::make_unique<RE2>(pattern, options);
+  return std::make_unique<RE2>(pattern, options);
 }
 
 py::bytes RE2ErrorShim(const RE2& self) {
@@ -203,7 +202,7 @@ class Filter {
     RE2::Options options;
     options.set_literal(true);
     options.set_case_sensitive(false);
-    set_ = absl::make_unique<RE2::Set>(options, RE2::UNANCHORED);
+    set_ = std::make_unique<RE2::Set>(options, RE2::UNANCHORED);
     for (int i = 0; i < static_cast<int>(atoms.size()); ++i) {
       if (set_->Add(atoms[i], /*error=*/NULL) != i) {
         // Should never happen: the atom is a literal!
