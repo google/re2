@@ -81,7 +81,7 @@ def _compile_impl(ctx):
         outputs = [out],
         inputs = depset(
             direct = [src, py3_runtime.interpreter, ctx.file._inject_copts],
-            transitive = [
+            transitive = [py3_runtime.files, cc_toolchain.all_files] + [
                 dep[CcInfo].compilation_context.headers
                 for dep in ctx.attr.deps
             ],
