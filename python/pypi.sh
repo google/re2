@@ -45,10 +45,9 @@ else
 
   cd ${DSTDIR}
   sed -i -E \
-    -e '/absl\/memory\/memory\.h/d' \
     -e 's/absl\/strings\/string_view\.h/re2\/stringpiece.h/' \
     -e 's/absl::string_view/re2::StringPiece/' \
-    -e 's/absl::make_unique<([^>]+)>\(([^)]+)\)/std::unique_ptr<\1>(new \1(\2))/' \
+    -e 's/std::make_unique<([^>]+)>\(([^)]+)\)/std::unique_ptr<\1>(new \1(\2))/' \
     _re2.cc
   for TAG in ${TAGS[@]}; do
     PYTHON3=/opt/python/${TAG}/bin/python3
