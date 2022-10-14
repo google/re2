@@ -1,0 +1,18 @@
+<<<<<<< HEAD   (de42ee Add toolchain dependencies for `py_extension()`.)
+=======
+name: CI (CMake)
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - run: .github/cmake.sh
+        shell: bash
+>>>>>>> CHANGE (18b058 Bump versions of actions to address warnings.)
