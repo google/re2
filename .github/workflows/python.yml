@@ -1,0 +1,13 @@
+name: Python
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        required: true
+        type: number
+jobs:
+  retrigger:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh workflow run python.yml -f build=${{ inputs.build }} --ref abseil
+        shell: bash
