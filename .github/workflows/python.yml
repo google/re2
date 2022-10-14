@@ -1,0 +1,101 @@
+name: Python
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        required: true
+        type: number
+jobs:
+  bdist_wheel-macos:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-11, macos-12]
+        ver: ['3.7', '3.8', '3.9', '3.10']
+    env:
+      BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BAZEL_CXXOPTS: '-std=c++14'
+      BAZEL_USE_CPP_ONLY_TOOLCHAIN: 1
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.ver }}
+      - name: python setup.py bdist_wheel
+        run: |
+          OS=${{ matrix.os }}
+          OS=${OS/#macos-/macosx-}
+          python setup.py bdist_wheel \
+            --plat-name=${OS}-$(uname -m)
+        shell: bash
+        working-directory: python
+      - name: Buff wheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install delocate
+          python -m delocate.cmd.delocate_wheel --wheel-dir=tmp dist/*
+          rm dist/*
+          python -m wheel unpack tmp/*
+          python -m wheel pack --dest-dir=dist --build-number=${{ inputs.build }} google_re2-*
+        shell: bash
+        working-directory: python
+      - run: ls -l dist/*
+        shell: bash
+        working-directory: python
+  bdist_wheel-ubuntu:
+    runs-on: ubuntu-latest
+    container: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['quay.io/pypa/manylinux2014_x86_64', 'quay.io/pypa/manylinux_2_28_x86_64']
+        ver: ['3.7', '3.8', '3.9', '3.10']
+    env:
+      BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BAZEL_CXXOPTS: '-std=c++14'
+      BAZEL_USE_CPP_ONLY_TOOLCHAIN: 1
+    steps:
+      - uses: actions/checkout@v3
+      - uses: bazelbuild/setup-bazelisk@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.ver }}
+      - name: python setup.py bdist_wheel
+        run: |
+          python setup.py bdist_wheel
+        shell: bash
+        working-directory: python
+      - name: Buff wheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install auditwheel
+          python -m auditwheel repair --wheel-dir=tmp dist/*
+          rm dist/*
+          python -m wheel unpack tmp/*
+          python -m wheel pack --dest-dir=dist --build-number=${{ inputs.build }} google_re2-*
+        shell: bash
+        working-directory: python
+      - run: ls -l dist/*
+        shell: bash
+        working-directory: python
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: python setup.py sdist
+        run: |
+          sed -i -E \
+            -e 's/absl\/strings\/string_view\.h/re2\/stringpiece.h/' \
+            -e 's/absl::string_view/re2::StringPiece/' \
+            -e 's/std::make_unique<([^>]+)>\(([^)]+)\)/std::unique_ptr<\1>(new \1(\2))/' \
+            _re2.cc
+          python setup.py sdist
+        shell: bash
+        working-directory: python
+      - run: ls -l dist/*
+        shell: bash
+        working-directory: python
