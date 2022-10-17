@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8069c24d_84b94734",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-10-17T14:15:14Z",
+      "side": 1,
+      "message": "No cherry-pick to abseil branch: the workflow must be in the default branch.",
+      "revId": "db7c4dc0595bd3793d3d2a7f1a8ae04a32a2bedb",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
