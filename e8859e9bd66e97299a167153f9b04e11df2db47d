@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "44d5b187_0567c0ba",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 44677
+      },
+      "writtenOn": "2022-10-17T08:24:07Z",
+      "side": 1,
+      "message": "respectful and kind;\nabout Chromium;\nabout features and code, not the individuals involved.",
+      "revId": "e8859e9bd66e97299a167153f9b04e11df2db47d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
