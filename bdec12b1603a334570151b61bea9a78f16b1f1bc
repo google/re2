@@ -26,6 +26,30 @@
     {
       "unresolved": false,
       "key": {
+        "uuid": "138a9146_50504c4b",
+        "filename": ".github/workflows/python.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-10-17T13:20:18Z",
+      "side": 1,
+      "message": "At the moment, I\u0027m not certain that further weirdness won\u0027t arise during testing, but I might factor this out in a followup change, yeah.",
+      "parentUuid": "3d1ed9a3_753d188f",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 26
+      },
+      "revId": "bdec12b1603a334570151b61bea9a78f16b1f1bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
         "uuid": "92635060_4b45f819",
         "filename": "/PATCHSET_LEVEL",
         "patchSetId": 4
@@ -37,6 +61,24 @@
       "writtenOn": "2022-10-17T12:29:55Z",
       "side": 1,
       "message": "I wish github actions were testable without committing, but I haven\u0027t found a way 😞",
+      "revId": "bdec12b1603a334570151b61bea9a78f16b1f1bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "865c63ca_134c9e04",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-10-17T13:20:18Z",
+      "side": 1,
+      "message": "Indeed. V_V",
+      "parentUuid": "92635060_4b45f819",
       "revId": "bdec12b1603a334570151b61bea9a78f16b1f1bc",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
