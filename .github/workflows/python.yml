@@ -1,0 +1,13 @@
+name: Python
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        required: true
+        type: number
+jobs:
+  no-op:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "These aren't the droids you're looking for."
+        shell: bash
