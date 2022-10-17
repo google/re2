@@ -33,19 +33,13 @@ jobs:
           OS=${OS/#macos-/macosx-}
           python setup.py bdist_wheel \
             --plat-name=${OS}-$(uname -m)
-        shell: bash
-        working-directory: python
-      - name: Buff wheel
-        run: |
           python -m delocate.cmd.delocate_wheel --wheel-dir=tmp dist/*
-          rm dist/*
-          python -m wheel unpack tmp/*
-          python -m wheel pack --dest-dir=dist --build-number=${{ inputs.build }} google_re2-*
         shell: bash
         working-directory: python
-      - run: ls -l dist/*
-        shell: bash
-        working-directory: python
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ hashFiles('python/tmp/*') }}
+          path: python/tmp/*
   bdist_wheel-linux-x64:
     runs-on: ubuntu-latest
     container: ${{ matrix.os }}
@@ -71,19 +65,13 @@ jobs:
       - name: python setup.py bdist_wheel
         run: |
           python setup.py bdist_wheel
-        shell: bash
-        working-directory: python
-      - name: Buff wheel
-        run: |
           python -m auditwheel repair --wheel-dir=tmp dist/*
-          rm dist/*
-          python -m wheel unpack tmp/*
-          python -m wheel pack --dest-dir=dist --build-number=${{ inputs.build }} google_re2-*
         shell: bash
         working-directory: python
-      - run: ls -l dist/*
-        shell: bash
-        working-directory: python
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ hashFiles('python/tmp/*') }}
+          path: python/tmp/*
   bdist_wheel-linux-arm64:
     runs-on: [self-hosted, linux, arm64]
     container: ${{ matrix.os }}
@@ -109,27 +97,31 @@ jobs:
       - name: python setup.py bdist_wheel
         run: |
           python setup.py bdist_wheel
-        shell: bash
-        working-directory: python
-      - name: Buff wheel
-        run: |
           python -m auditwheel repair --wheel-dir=tmp dist/*
-          rm dist/*
-          python -m wheel unpack tmp/*
-          python -m wheel pack --dest-dir=dist --build-number=${{ inputs.build }} google_re2-*
         shell: bash
         working-directory: python
-      - run: ls -l dist/*
-        shell: bash
-        working-directory: python
-  sdist:
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ hashFiles('python/tmp/*') }}
+          path: python/tmp/*
+  publish:
+    needs:
+      - bdist_wheel-macos-x64
+      - bdist_wheel-linux-x64
+      - bdist_wheel-linux-arm64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - name: python setup.py sdist
+      - name: Prepare Python 3.x environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade wheel
+        shell: bash
+      - if: ${{ inputs.build }} == 1
+        name: python setup.py sdist
         run: |
           sed -i -E \
             -e 's/absl\/strings\/string_view\.h/re2\/stringpiece.h/' \
@@ -139,6 +131,17 @@ jobs:
           python setup.py sdist
         shell: bash
         working-directory: python
-      - run: ls -l dist/*
+      - uses: actions/download-artifact@v3
+        with:
+          path: python/tmp
+      - name: Set build number to ${{ inputs.build }}
+        run: |
+          mkdir -p dist
+          for WHEEL in tmp/*/google_re2-*; do
+            python -m wheel unpack ${WHEEL}
+            python -m wheel pack --dest-dir=dist --build-number=${{ inputs.build }} google_re2-*
+            rm -rf google_re2-*
+          done
+          ls -l dist/*
         shell: bash
         working-directory: python
