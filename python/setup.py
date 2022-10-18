@@ -88,6 +88,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
       self.spawn(['lipo', '-create'] +
                  [f'_re2.{arch}.so' for arch in ('x86_64', 'arm64')] +
                  ['-output', self.get_ext_fullpath(ext.name)])
+    self.spawn(['bazel', 'shutdown'])
 
 
 def include_dirs():
