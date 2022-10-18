@@ -67,7 +67,7 @@ jobs:
         working-directory: python
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ hashFiles('python/google_re2-*.whl) }}
+          name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
   bdist_wheel-linux-arm64:
     runs-on: [self-hosted, linux, arm64]
