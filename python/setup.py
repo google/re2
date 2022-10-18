@@ -71,7 +71,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     elif sysconfig.get_platform().startswith('macosx-'):
       base_bazel_cxxopts = os.environ.get('BAZEL_CXXOPTS')
       base_bazel_linkopts = os.environ.get('BAZEL_LINKOPTS')
-      for arch in 'x86_64', 'arm64':
+      for arch in ('x86_64', 'arm64'):
         os.environ['BAZEL_CXXOPTS'] = (
             f'{base_bazel_cxxopts}:--target={arch}-apple-macosx'
             if base_bazel_cxxopts else f'--target={arch}-apple-macosx')
@@ -86,7 +86,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
       # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
       # is the filename in the destination directory, which is what's needed.
       self.spawn(['lipo', '-create'] +
-                 [f'_re2.{arch}.so' for arch in 'x86_64', 'arm64'] +
+                 [f'_re2.{arch}.so' for arch in ('x86_64', 'arm64')] +
                  ['-output', self.get_ext_fullpath(ext.name)])
 
 
