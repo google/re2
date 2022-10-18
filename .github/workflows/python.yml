@@ -39,7 +39,9 @@ jobs:
           path: python/google_re2-*.whl
   bdist_wheel-linux-x64:
     runs-on: ubuntu-latest
-    container: ${{ matrix.os }}
+    container:
+      image: ${{ matrix.os }}
+      options: --init
     strategy:
       fail-fast: false
       matrix:
@@ -71,7 +73,9 @@ jobs:
           path: python/google_re2-*.whl
   bdist_wheel-linux-arm64:
     runs-on: [self-hosted, linux, arm64]
-    container: ${{ matrix.os }}
+    container:
+      image: ${{ matrix.os }}
+      options: --init
     strategy:
       fail-fast: false
       matrix:
