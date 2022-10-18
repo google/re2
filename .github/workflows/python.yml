@@ -89,7 +89,7 @@ jobs:
       # - uses: bazelbuild/setup-bazelisk@v2
       - name: Install Bazelisk
         run: |
-          wget https://github.com/bazelbuild/bazelisk/releases/download/v1.14.0/bazelisk-linux-arm64
+          curl -LO https://github.com/bazelbuild/bazelisk/releases/download/v1.14.0/bazelisk-linux-arm64
           chmod +x ${PWD}/bazelisk-linux-arm64
           ln -sf ${PWD}/bazelisk-linux-arm64 /usr/local/bin/bazel
         shell: bash
