@@ -39,11 +39,13 @@ jobs:
           path: python/google_re2-*.whl
   bdist_wheel-linux-x64:
     runs-on: ubuntu-latest
-    container: ${{ matrix.os }}
+    container:
+      image: quay.io/pypa/${{ matrix.os }}
+      options: --init
     strategy:
       fail-fast: false
       matrix:
-        os: ['quay.io/pypa/manylinux2014_x86_64', 'quay.io/pypa/manylinux_2_28_x86_64']
+        os: ['manylinux2014_x86_64', 'manylinux_2_28_x86_64']
         ver: ['3.7', '3.8', '3.9', '3.10']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -71,11 +73,13 @@ jobs:
           path: python/google_re2-*.whl
   bdist_wheel-linux-arm64:
     runs-on: [self-hosted, linux, arm64]
-    container: ${{ matrix.os }}
+    container:
+      image: quay.io/pypa/${{ matrix.os }}
+      options: --init
     strategy:
       fail-fast: false
       matrix:
-        os: ['quay.io/pypa/manylinux2014_aarch64', 'quay.io/pypa/manylinux_2_28_aarch64']
+        os: ['manylinux2014_aarch64', 'manylinux_2_28_aarch64']
         ver: ['3.7', '3.8', '3.9', '3.10']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
