@@ -7,6 +7,7 @@ import setuptools
 import setuptools.command.build_ext
 import shutil
 import sys
+import sysconfig
 
 long_description = r"""A drop-in replacement for the re module.
 
@@ -52,12 +53,41 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     # For @pybind11_bazel's `python_configure()`.
     os.environ['PYTHON_BIN_PATH'] = sys.executable
-    self.spawn(['bazel', 'clean'])
-    self.spawn(['bazel', 'build', '--compilation_mode=opt', '--', ':all'])
-    self.spawn(['bazel', 'test', '--compilation_mode=opt', '--test_output=errors', '--', ':all'])
-    # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
-    # is the filename in the destination directory, which is what's needed.
-    shutil.copyfile('../bazel-bin/python/_re2.so', self.get_ext_fullpath(ext.name))
+
+    # pyformat: disable
+    bazel_clean = ['bazel', 'clean']
+    bazel_build = ['bazel', 'build', '--compilation_mode=opt', '--', ':all']
+    bazel_test  = ['bazel', 'test',  '--compilation_mode=opt', '--test_output=errors', '--', ':all']
+    # pyformat: enable
+
+    if sysconfig.get_platform().startswith('linux-'):
+      self.spawn(bazel_clean)
+      self.spawn(bazel_build)
+      self.spawn(bazel_test)
+      # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
+      # is the filename in the destination directory, which is what's needed.
+      shutil.copyfile('../bazel-bin/python/_re2.so',
+                      self.get_ext_fullpath(ext.name))
+    elif sysconfig.get_platform().startswith('macosx-'):
+      base_bazel_cxxopts = os.environ.get('BAZEL_CXXOPTS')
+      base_bazel_linkopts = os.environ.get('BAZEL_LINKOPTS')
+      for arch in 'x86_64', 'arm64':
+        os.environ['BAZEL_CXXOPTS'] = (
+            f'{base_bazel_cxxopts}:--target={arch}-apple-macosx'
+            if base_bazel_cxxopts else f'--target={arch}-apple-macosx')
+        os.environ['BAZEL_LINKOPTS'] = (
+            f'{base_bazel_linkopts}:--target={arch}-apple-macosx'
+            if base_bazel_linkopts else f'--target={arch}-apple-macosx')
+        self.spawn(bazel_clean)
+        self.spawn(bazel_build)
+        if arch == os.uname().machine:
+          self.spawn(bazel_test)
+        shutil.copyfile('../bazel-bin/python/_re2.so', f'_re2.{arch}.so')
+      # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
+      # is the filename in the destination directory, which is what's needed.
+      self.spawn(['lipo', '-create'] +
+                 [f'_re2.{arch}.so' for arch in 'x86_64', 'arm64'] +
+                 ['-output', self.get_ext_fullpath(ext.name)])
 
 
 def include_dirs():

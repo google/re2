@@ -29,17 +29,14 @@ jobs:
         shell: bash
       - name: python setup.py bdist_wheel
         run: |
-          OS=${{ matrix.os }}
-          OS=${OS/#macos-/macosx-}
-          python setup.py bdist_wheel \
-            --plat-name=${OS}-$(uname -m)
-          python -m delocate.cmd.delocate_wheel --wheel-dir=tmp dist/*
+          python setup.py bdist_wheel
+          python -m delocate.cmd.delocate_wheel --wheel-dir=. dist/*
         shell: bash
         working-directory: python
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ hashFiles('python/tmp/*') }}
-          path: python/tmp/*
+          name: ${{ hashFiles('python/google_re2-*.whl') }}
+          path: python/google_re2-*.whl
   bdist_wheel-linux-x64:
     runs-on: ubuntu-latest
     container: ${{ matrix.os }}
@@ -65,13 +62,13 @@ jobs:
       - name: python setup.py bdist_wheel
         run: |
           python setup.py bdist_wheel
-          python -m auditwheel repair --wheel-dir=tmp dist/*
+          python -m auditwheel repair --wheel-dir=. dist/*
         shell: bash
         working-directory: python
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ hashFiles('python/tmp/*') }}
-          path: python/tmp/*
+          name: ${{ hashFiles('python/google_re2-*.whl) }}
+          path: python/google_re2-*.whl
   bdist_wheel-linux-arm64:
     runs-on: [self-hosted, linux, arm64]
     container: ${{ matrix.os }}
@@ -97,13 +94,13 @@ jobs:
       - name: python setup.py bdist_wheel
         run: |
           python setup.py bdist_wheel
-          python -m auditwheel repair --wheel-dir=tmp dist/*
+          python -m auditwheel repair --wheel-dir=. dist/*
         shell: bash
         working-directory: python
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ hashFiles('python/tmp/*') }}
-          path: python/tmp/*
+          name: ${{ hashFiles('python/google_re2-*.whl') }}
+          path: python/google_re2-*.whl
   publish:
     needs:
       - bdist_wheel-macos-x64
@@ -133,12 +130,12 @@ jobs:
         working-directory: python
       - uses: actions/download-artifact@v3
         with:
-          path: python/tmp
+          path: python
       - name: Set build number to ${{ inputs.build }}
         run: |
           mkdir -p dist
-          for WHEEL in tmp/*/google_re2-*; do
-            python -m wheel unpack ${WHEEL}
+          for WHL in */google_re2-*.whl; do
+            python -m wheel unpack ${WHL}
             python -m wheel pack --dest-dir=dist --build-number=${{ inputs.build }} google_re2-*
             rm -rf google_re2-*
           done
