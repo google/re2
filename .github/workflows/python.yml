@@ -29,10 +29,7 @@ jobs:
         shell: bash
       - name: python setup.py bdist_wheel
         run: |
-          OS=${{ matrix.os }}
-          OS=${OS/#macos-/macosx-}
-          python setup.py bdist_wheel \
-            --plat-name=${OS}-$(uname -m)
+          python setup.py bdist_wheel
           python -m delocate.cmd.delocate_wheel --wheel-dir=tmp dist/*
         shell: bash
         working-directory: python
