@@ -133,7 +133,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade wheel
         shell: bash
-      - if: ${{ inputs.build }} == 1
+      - if: inputs.build == 1
         name: python setup.py sdist
         run: |
           sed -i -E \
