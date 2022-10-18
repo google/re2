@@ -55,7 +55,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     os.environ['PYTHON_BIN_PATH'] = sys.executable
 
     # pyformat: disable
-    bazel_clean = ['bazel', 'clean']
+    bazel_clean = ['bazel', 'clean', '--expunge']
     bazel_build = ['bazel', 'build', '--compilation_mode=opt', '--', ':all']
     bazel_test  = ['bazel', 'test',  '--compilation_mode=opt', '--test_output=errors', '--', ':all']
     # pyformat: enable
