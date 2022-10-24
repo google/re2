@@ -6,7 +6,7 @@ on:
         required: true
         type: number
 jobs:
-  bdist_wheel-macos-x64:
+  bdist_wheel-macosx_universal2:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -40,7 +40,8 @@ jobs:
         with:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
-  bdist_wheel-linux-x64:
+          retention-days: 1
+  bdist_wheel-manylinux_x86_64:
     runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/${{ matrix.os }}
@@ -74,7 +75,8 @@ jobs:
         with:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
-  bdist_wheel-linux-arm64:
+          retention-days: 1
+  bdist_wheel-manylinux_aarch64:
     runs-on: [self-hosted, linux, arm64]
     container:
       image: quay.io/pypa/${{ matrix.os }}
@@ -90,16 +92,8 @@ jobs:
       BAZEL_USE_CPP_ONLY_TOOLCHAIN: 1
     steps:
       - uses: actions/checkout@v3
-      # As per https://github.com/bazelbuild/setup-bazelisk/issues/60,
-      # ARM64 isn't supported... yet; I have sent a PR to fix the bug.
-      # TODO(junyer): Use the action whenever a new release is tagged.
-      # - uses: bazelbuild/setup-bazelisk@v2
-      - name: Install Bazelisk
-        run: |
-          curl -LO https://github.com/bazelbuild/bazelisk/releases/download/v1.14.0/bazelisk-linux-arm64
-          chmod +x ${PWD}/bazelisk-linux-arm64
-          ln -sf ${PWD}/bazelisk-linux-arm64 /usr/local/bin/bazel
-        shell: bash
+      # TODO(junyer): Use `v2` whenever a new release is tagged.
+      - uses: bazelbuild/setup-bazelisk@21ca4ef21b3c48589841639a51c57f40e4cc0e61
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           ln -sf /usr/local/bin/python${{ matrix.ver }} /usr/local/bin/python
@@ -117,11 +111,12 @@ jobs:
         with:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
+          retention-days: 1
   publish:
     needs:
-      - bdist_wheel-macos-x64
-      - bdist_wheel-linux-x64
-      - bdist_wheel-linux-arm64
+      - bdist_wheel-macosx_universal2
+      - bdist_wheel-manylinux_x86_64
+      - bdist_wheel-manylinux_aarch64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -155,6 +150,9 @@ jobs:
             python -m wheel pack --dest-dir=dist --build-number=${{ inputs.build }} google_re2-*
             rm -rf google_re2-*
           done
-          ls -l dist/*
         shell: bash
         working-directory: python
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: python/dist
