@@ -66,17 +66,22 @@
 //    CHECK(RE2::FullMatch(latin1_string, RE2(latin1_pattern, RE2::Latin1)));
 //
 // -----------------------------------------------------------------------
-// MATCHING WITH SUBSTRING EXTRACTION:
+// SUBMATCH EXTRACTION:
 //
-// You can supply extra pointer arguments to extract matched substrings.
+// You can supply extra pointer arguments to extract submatches.
 // On match failure, none of the pointees will have been modified.
-// On match success, the substrings will be converted (as necessary) and
+// On match success, the submatches will be converted (as necessary) and
 // their values will be assigned to their pointees until all conversions
 // have succeeded or one conversion has failed.
 // On conversion failure, the pointees will be in an indeterminate state
 // because the caller has no way of knowing which conversion failed.
+<<<<<<< HEAD   (6bf3a3 ARM64 can't use `bazelbuild/setup-bazelisk` yet.)
 // However, conversion cannot fail for types like string and string_view
 // that do not inspect the substring contents. Hence, in the common case
+=======
+// However, conversion cannot fail for types like string and StringPiece
+// that do not inspect the submatch contents. Hence, in the common case
+>>>>>>> CHANGE (cb6d6e Reword some comments in `re2.h`.)
 // where all of the pointees are of such types, failure is always due to
 // match failure and thus none of the pointees will have been modified.
 //
@@ -100,10 +105,10 @@
 // Example: integer overflow causes failure
 //    CHECK(!RE2::FullMatch("ruby:1234567891234", "\\w+:(\\d+)", &i));
 //
-// NOTE(rsc): Asking for substrings slows successful matches quite a bit.
+// NOTE(rsc): Asking for submatches slows successful matches quite a bit.
 // This may get a little faster in the future, but right now is slower
 // than PCRE.  On the other hand, failed matches run *very* fast (faster
-// than PCRE), as do matches without substring extraction.
+// than PCRE), as do matches without submatch extraction.
 //
 // -----------------------------------------------------------------------
 // PARTIAL MATCHES
