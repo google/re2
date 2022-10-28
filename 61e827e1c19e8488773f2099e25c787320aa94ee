@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ec996dfd_2e97fb35",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-10-28T03:17:54Z",
+      "side": 1,
+      "message": "GitHub-hosted runners for macOS don\u0027t have Python 3.11 yet, but this is manually triggered and won\u0027t be used until everything is ready, which will be soon anyway.",
+      "revId": "61e827e1c19e8488773f2099e25c787320aa94ee",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
