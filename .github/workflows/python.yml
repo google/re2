@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-11, macos-12]
-        ver: ['3.7', '3.8', '3.9', '3.10']
+        ver: ['3.7', '3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CXXOPTS: '-std=c++14'
@@ -50,7 +50,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ['manylinux2014_x86_64', 'manylinux_2_28_x86_64']
-        ver: ['3.7', '3.8', '3.9', '3.10']
+        ver: ['3.7', '3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CXXOPTS: '-std=c++14'
@@ -85,23 +85,15 @@ jobs:
       fail-fast: false
       matrix:
         os: ['manylinux2014_aarch64', 'manylinux_2_28_aarch64']
-        ver: ['3.7', '3.8', '3.9', '3.10']
+        ver: ['3.7', '3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CXXOPTS: '-std=c++14'
       BAZEL_USE_CPP_ONLY_TOOLCHAIN: 1
     steps:
       - uses: actions/checkout@v3
-      # As per https://github.com/bazelbuild/setup-bazelisk/issues/60,
-      # ARM64 isn't supported... yet; I have sent a PR to fix the bug.
-      # TODO(junyer): Use the action whenever a new release is tagged.
-      # - uses: bazelbuild/setup-bazelisk@v2
-      - name: Install Bazelisk
-        run: |
-          curl -LO https://github.com/bazelbuild/bazelisk/releases/download/v1.14.0/bazelisk-linux-arm64
-          chmod +x ${PWD}/bazelisk-linux-arm64
-          ln -sf ${PWD}/bazelisk-linux-arm64 /usr/local/bin/bazel
-        shell: bash
+      # TODO(junyer): Use `v2` whenever a new release is tagged.
+      - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           ln -sf /usr/local/bin/python${{ matrix.ver }} /usr/local/bin/python
