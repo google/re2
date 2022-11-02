@@ -15,6 +15,11 @@
 #include "re2/re2.h"
 #include "re2/set.h"
 
+#ifdef _WIN32
+#include <basetsd.h>
+#define ssize_t SSIZE_T
+#endif
+
 namespace re2_python {
 
 // This is conventional.
