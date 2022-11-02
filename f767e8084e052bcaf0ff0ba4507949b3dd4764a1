@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "79768089_08a34d93",
+        "filename": "python/setup.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2022-11-02T17:29:45Z",
+      "side": 1,
+      "message": "Do you want to add a comment here that yes, \"_re2.so\" is the correct name, and it gets renamed to a .dll by setuptools?",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 77
+      },
+      "revId": "f767e8084e052bcaf0ff0ba4507949b3dd4764a1",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
