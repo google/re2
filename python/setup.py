@@ -88,6 +88,17 @@ class BuildExt(setuptools.command.build_ext.build_ext):
       self.spawn(['lipo', '-create'] +
                  [f'_re2.{arch}.so' for arch in ('x86_64', 'arm64')] +
                  ['-output', self.get_ext_fullpath(ext.name)])
+    elif sysconfig.get_platform().startswith('win-'):
+      self.spawn(bazel_clean)
+      self.spawn(bazel_build)
+      # TODO(junyer): Run the tests! @pybind11_bazel will presumably need to
+      # adopt whatever https://github.com/bazelbuild/rules_python/issues/824
+      # provides. The extension will have to be named "_re2.pyd", I believe.
+      # self.spawn(bazel_test)
+      # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
+      # is the filename in the destination directory, which is what's needed.
+      shutil.copyfile('../bazel-bin/python/_re2.so',
+                      self.get_ext_fullpath(ext.name))
     self.spawn(['bazel', 'shutdown'])
 
 
