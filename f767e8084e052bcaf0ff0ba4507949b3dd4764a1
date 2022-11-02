@@ -22,6 +22,30 @@
       },
       "revId": "f767e8084e052bcaf0ff0ba4507949b3dd4764a1",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e296f7a4_fff8242e",
+        "filename": "python/setup.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-11-02T17:38:24Z",
+      "side": 1,
+      "message": "I expanded the comment above slightly to clarify. :)",
+      "parentUuid": "79768089_08a34d93",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 77
+      },
+      "revId": "f767e8084e052bcaf0ff0ba4507949b3dd4764a1",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
