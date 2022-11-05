@@ -1,0 +1,9 @@
+# Explicitly request C++14, as on macOS the default version is c++11,
+# which is too old to build Abseil, and BAZEL_CXXOPT is not respected
+# when using the xcode_toolchains. Setting
+# BAZEL_USE_CPP_ONLY_TOOLCHAIN=1 skips xcode_toolchains, which also
+# skips implicit frameworks, namely CoreFoundation, which are
+# required.
+build --copt="-std=c++14"
+build:posix --copt="-std=c++14"
+build:windows --copt="/std:c++14"
