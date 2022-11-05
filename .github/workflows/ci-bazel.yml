@@ -11,10 +11,6 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Abseil requires C++14 at minimum.
-      BAZEL_CXXOPTS: ${{ startsWith(matrix.os, 'windows-') && '/std:c++14' || '-std=c++14' }}
-      # On macOS, Bazel doesn't use `BAZEL_CXXOPTS` unless told to eschew Xcode.
-      BAZEL_USE_CPP_ONLY_TOOLCHAIN: 1
     steps:
       - uses: actions/checkout@v3
       - run: .github/bazel.sh
