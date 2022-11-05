@@ -46,18 +46,18 @@ Known issues with regard to building the C++ extension:
 class BuildExt(setuptools.command.build_ext.build_ext):
 
   def build_extension(self, ext):
-    # We will always be setting this when we are using Bazel
-    # because AppleClang never increases the `-std` version.
-    if 'BAZEL_CXXOPTS' not in os.environ:
+    # We will always be setting this when we are using Bazel.
+    if 'BAZEL_CONFIG' not in os.environ:
       return super().build_extension(ext)
+    bazel_config = os.environ['BAZEL_CONFIG']
 
     # For @pybind11_bazel's `python_configure()`.
     os.environ['PYTHON_BIN_PATH'] = sys.executable
 
     # pyformat: disable
     bazel_clean = ['bazel', 'clean', '--expunge']
-    bazel_build = ['bazel', 'build', '--compilation_mode=opt', '--', ':all']
-    bazel_test  = ['bazel', 'test',  '--compilation_mode=opt', '--test_output=errors', '--', ':all']
+    bazel_build = ['bazel', 'build', f'--config={bazel_config}', '--compilation_mode=opt', '--', ':all']
+    bazel_test  = ['bazel', 'test',  f'--config={bazel_config}', '--compilation_mode=opt', '--test_output=errors', '--', ':all']
     # pyformat: enable
 
     if sysconfig.get_platform().startswith('linux-'):
@@ -69,17 +69,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
       shutil.copyfile('../bazel-bin/python/_re2.so',
                       self.get_ext_fullpath(ext.name))
     elif sysconfig.get_platform().startswith('macosx-'):
-      base_bazel_cxxopts = os.environ.get('BAZEL_CXXOPTS')
-      base_bazel_linkopts = os.environ.get('BAZEL_LINKOPTS')
       for arch in ('x86_64', 'arm64'):
-        os.environ['BAZEL_CXXOPTS'] = (
-            f'{base_bazel_cxxopts}:--target={arch}-apple-macosx'
-            if base_bazel_cxxopts else f'--target={arch}-apple-macosx')
-        os.environ['BAZEL_LINKOPTS'] = (
-            f'{base_bazel_linkopts}:--target={arch}-apple-macosx'
-            if base_bazel_linkopts else f'--target={arch}-apple-macosx')
+        copt = ['--copt=--target={arch}-apple-macosx']
+        linkopt = [f'--linkopt=--target={arch}-apple-macosx']
         self.spawn(bazel_clean)
-        self.spawn(bazel_build)
+        self.spawn(bazel_build + copt + linkopt)
         if arch == os.uname().machine:
           self.spawn(bazel_test)
         shutil.copyfile('../bazel-bin/python/_re2.so', f'_re2.{arch}.so')
