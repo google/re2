@@ -24,14 +24,21 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade wheel delocate
+          python -m pip install --upgrade absl-py
         shell: bash
-      - name: python setup.py bdist_wheel
+      - name: Build wheel
         run: |
           OS=${{ matrix.os }}.0
           OS=${OS/#macos-/macosx-}
           python setup.py bdist_wheel \
             --plat-name=${OS}-universal2
           python -m delocate.cmd.delocate_wheel --wheel-dir=. dist/*
+        shell: bash
+        working-directory: python
+      - name: Test wheel
+        run: |
+          python -m pip install google_re2-*.whl
+          python re2_test.py
         shell: bash
         working-directory: python
       - uses: actions/upload-artifact@v3
@@ -60,11 +67,18 @@ jobs:
           ln -sf /usr/local/bin/python${{ matrix.ver }} /usr/local/bin/python3
           python -m pip install --upgrade pip
           python -m pip install --upgrade wheel auditwheel
+          python -m pip install --upgrade absl-py
         shell: bash
-      - name: python setup.py bdist_wheel
+      - name: Build wheel
         run: |
           python setup.py bdist_wheel
           python -m auditwheel repair --wheel-dir=. dist/*
+        shell: bash
+        working-directory: python
+      - name: Test wheel
+        run: |
+          python -m pip install google_re2-*.whl
+          python re2_test.py
         shell: bash
         working-directory: python
       - uses: actions/upload-artifact@v3
@@ -94,11 +108,18 @@ jobs:
           ln -sf /usr/local/bin/python${{ matrix.ver }} /usr/local/bin/python3
           python -m pip install --upgrade pip
           python -m pip install --upgrade wheel auditwheel
+          python -m pip install --upgrade absl-py
         shell: bash
-      - name: python setup.py bdist_wheel
+      - name: Build wheel
         run: |
           python setup.py bdist_wheel
           python -m auditwheel repair --wheel-dir=. dist/*
+        shell: bash
+        working-directory: python
+      - name: Test wheel
+        run: |
+          python -m pip install google_re2-*.whl
+          python re2_test.py
         shell: bash
         working-directory: python
       - uses: actions/upload-artifact@v3
@@ -123,11 +144,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade wheel
+          python -m pip install --upgrade absl-py
         shell: bash
-      - name: python setup.py bdist_wheel
+      - name: Build wheel
         run: |
           python setup.py bdist_wheel
           cp dist/* .
+        shell: bash
+        working-directory: python
+      - name: Test wheel
+        run: |
+          python -m pip install google_re2-*.whl
+          python re2_test.py
         shell: bash
         working-directory: python
       - uses: actions/upload-artifact@v3
