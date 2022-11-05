@@ -7,7 +7,6 @@ import setuptools
 import setuptools.command.build_ext
 import shutil
 import sys
-import sysconfig
 
 long_description = r"""A drop-in replacement for the re module.
 
@@ -49,44 +48,23 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     if 'RUNNER_OS' not in os.environ:
       return super().build_extension(ext)
 
-    config = f'--config={os.environ["RUNNER_OS"].lower()}'
     # For @pybind11_bazel's `python_configure()`.
     os.environ['PYTHON_BIN_PATH'] = sys.executable
 
-    # pyformat: disable
-    bazel_clean    = ['bazel', 'clean', '--expunge']
-    bazel_build    = ['bazel', 'build', config, '--compilation_mode=opt', '--', ':all']
-    bazel_shutdown = ['bazel', 'shutdown']
-    # pyformat: enable
+    cmd = ['bazel', 'clean', '--expunge']
+    self.spawn(cmd)
 
-    if sysconfig.get_platform().startswith('linux-'):
-      self.spawn(bazel_clean)
-      self.spawn(bazel_build)
-      # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
-      # is the filename in the destination directory, which is what's needed.
-      shutil.copyfile('../bazel-bin/python/_re2.so',
-                      self.get_ext_fullpath(ext.name))
-    elif sysconfig.get_platform().startswith('macosx-'):
-      for arch in ('x86_64', 'arm64'):
-        self.spawn(bazel_clean)
-        bazel_build_for_arch = bazel_build.copy()
-        bazel_build_for_arch.insert(bazel_build_for_arch.index(config),
-                                    f'--cpu=darwin_{arch}')
-        self.spawn(bazel_build_for_arch)
-        shutil.copyfile('../bazel-bin/python/_re2.so', f'_re2.{arch}.so')
-      # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
-      # is the filename in the destination directory, which is what's needed.
-      self.spawn(['lipo', '-create'] +
-                 [f'_re2.{arch}.so' for arch in ('x86_64', 'arm64')] +
-                 ['-output', self.get_ext_fullpath(ext.name)])
-    elif sysconfig.get_platform().startswith('win-'):
-      self.spawn(bazel_clean)
-      self.spawn(bazel_build)
-      # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
-      # is the filename in the destination directory, which is what's needed.
-      shutil.copyfile('../bazel-bin/python/_re2.so',
-                      self.get_ext_fullpath(ext.name))
-    self.spawn(bazel_shutdown)
+    cmd = ['bazel', 'build', '--compilation_mode=opt']
+    cmd.append(f'--config={os.environ["RUNNER_OS"].lower()}')
+    if 'BAZEL_CPU' in os.environ:
+      cmd.append(f'--cpu={os.environ["BAZEL_CPU"].lower()}')
+    cmd += ['--', ':all']
+    self.spawn(cmd)
+
+    # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
+    # is the filename in the destination directory, which is what's needed.
+    shutil.copyfile('../bazel-bin/python/_re2.so',
+                    self.get_ext_fullpath(ext.name))
 
 
 def include_dirs():
