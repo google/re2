@@ -46,42 +46,35 @@ Known issues with regard to building the C++ extension:
 class BuildExt(setuptools.command.build_ext.build_ext):
 
   def build_extension(self, ext):
-    # We will always be setting this when we are using Bazel
-    # because AppleClang never increases the `-std` version.
-    if 'BAZEL_CXXOPTS' not in os.environ:
+    if 'RUNNER_OS' not in os.environ:
       return super().build_extension(ext)
 
+    config = f'--config={os.environ['RUNNER_OS'].lower()}'
     # For @pybind11_bazel's `python_configure()`.
     os.environ['PYTHON_BIN_PATH'] = sys.executable
 
     # pyformat: disable
-    bazel_clean = ['bazel', 'clean', '--expunge']
-    bazel_build = ['bazel', 'build', '--compilation_mode=opt', '--', ':all']
-    bazel_test  = ['bazel', 'test',  '--compilation_mode=opt', '--test_output=errors', '--', ':all']
+    bazel_clean    = ['bazel', 'clean', '--expunge']
+    bazel_build    = ['bazel', 'build', config, '--compilation_mode=opt', '--', ':all']
+    bazel_shutdown = ['bazel', 'shutdown']
     # pyformat: enable
 
     if sysconfig.get_platform().startswith('linux-'):
       self.spawn(bazel_clean)
       self.spawn(bazel_build)
-      self.spawn(bazel_test)
       # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
       # is the filename in the destination directory, which is what's needed.
       shutil.copyfile('../bazel-bin/python/_re2.so',
                       self.get_ext_fullpath(ext.name))
     elif sysconfig.get_platform().startswith('macosx-'):
-      base_bazel_cxxopts = os.environ.get('BAZEL_CXXOPTS')
-      base_bazel_linkopts = os.environ.get('BAZEL_LINKOPTS')
       for arch in ('x86_64', 'arm64'):
-        os.environ['BAZEL_CXXOPTS'] = (
-            f'{base_bazel_cxxopts}:--target={arch}-apple-macosx'
-            if base_bazel_cxxopts else f'--target={arch}-apple-macosx')
-        os.environ['BAZEL_LINKOPTS'] = (
-            f'{base_bazel_linkopts}:--target={arch}-apple-macosx'
-            if base_bazel_linkopts else f'--target={arch}-apple-macosx')
         self.spawn(bazel_clean)
-        self.spawn(bazel_build)
-        if arch == os.uname().machine:
-          self.spawn(bazel_test)
+        bazel_build_for_arch = bazel_build.copy()
+        bazel_build_for_arch.insert(bazel_build_arch.index(config),
+                                    f'--cxxopt=--target={arch}-apple-macosx')
+        bazel_build_for_arch.insert(bazel_build_arch.index(config),
+                                    f'--linkopt=--target={arch}-apple-macosx')
+        self.spawn(bazel_build_for_arch)
         shutil.copyfile('../bazel-bin/python/_re2.so', f'_re2.{arch}.so')
       # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
       # is the filename in the destination directory, which is what's needed.
@@ -91,16 +84,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     elif sysconfig.get_platform().startswith('win-'):
       self.spawn(bazel_clean)
       self.spawn(bazel_build)
-      # TODO(junyer): Run the tests! @pybind11_bazel will presumably need to
-      # adopt whatever https://github.com/bazelbuild/rules_python/issues/824
-      # provides. The extension will have to be named "_re2.pyd", I believe,
-      # rather than "_re2.so". (The renaming below takes care of the wheel.)
-      # self.spawn(bazel_test)
       # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
       # is the filename in the destination directory, which is what's needed.
       shutil.copyfile('../bazel-bin/python/_re2.so',
                       self.get_ext_fullpath(ext.name))
-    self.spawn(['bazel', 'shutdown'])
+    self.spawn(bazel_shutdown)
 
 
 def include_dirs():

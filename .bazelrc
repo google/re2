@@ -1,0 +1,18 @@
+# Copyright 2022 The RE2 Authors.  All Rights Reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# Default to Linux.
+build --config=linux
+
+# Abseil requires C++14 at minimum.
+# Previously, the flag was set via `BAZEL_CXXOPTS`. On macOS, we also had to set
+# `BAZEL_USE_CPP_ONLY_TOOLCHAIN` since Bazel wouldn't respect the former without
+# the latter. However, the latter stopped Bazel from using Xcode and `-framework
+# Foundation`, which CCTZ (vendored into Abseil) requires.
+build:linux --cxxopt=-std=c++14
+build:macos --cxxopt=-std=c++14
+build:windows --cxxopt=/std:c++14
+
+# Print test logs for failed tests.
+test --test_output=errors
