@@ -65,6 +65,9 @@ jobs:
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: darwin_${{ matrix.arch.bazel-name }}
+      # Stop macOS from reporting the system version as 10.x.
+      # Otherwise, Python refuses to install the built wheel!
+      SYSTEM_VERSION_COMPAT: 0
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -103,7 +106,10 @@ jobs:
       matrix:
         arch:
           - { name: X64,   bazel-name: x64,   python-name: amd64 }
-          - { name: ARM64, bazel-name: arm64, python-name: arm64 }
+          # FIXME: Compiling succeeds, but linking fails with an error like
+          # "LINK : fatal error LNK1104: cannot open file 'python311.lib'".
+          # Maybe we will need GitHub-hosted runners for Windows on ARM64?!
+          # - { name: ARM64, bazel-name: arm64, python-name: arm64 }
         ver: ['3.7', '3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
