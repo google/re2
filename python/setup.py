@@ -49,7 +49,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     if 'RUNNER_OS' not in os.environ:
       return super().build_extension(ext)
 
-    config = f'--config={os.environ['RUNNER_OS'].lower()}'
+    config = f'--config={os.environ["RUNNER_OS"].lower()}'
     # For @pybind11_bazel's `python_configure()`.
     os.environ['PYTHON_BIN_PATH'] = sys.executable
 
