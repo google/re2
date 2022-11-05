@@ -70,9 +70,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
       for arch in ('x86_64', 'arm64'):
         self.spawn(bazel_clean)
         bazel_build_for_arch = bazel_build.copy()
-        bazel_build_for_arch.insert(bazel_build_arch.index(config),
+        bazel_build_for_arch.insert(bazel_build_for_arch.index(config),
                                     f'--cxxopt=--target={arch}-apple-macosx')
-        bazel_build_for_arch.insert(bazel_build_arch.index(config),
+        bazel_build_for_arch.insert(bazel_build_for_arch.index(config),
                                     f'--linkopt=--target={arch}-apple-macosx')
         self.spawn(bazel_build_for_arch)
         shutil.copyfile('../bazel-bin/python/_re2.so', f'_re2.{arch}.so')
