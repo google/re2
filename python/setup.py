@@ -71,9 +71,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         self.spawn(bazel_clean)
         bazel_build_for_arch = bazel_build.copy()
         bazel_build_for_arch.insert(bazel_build_for_arch.index(config),
-                                    f'--cxxopt=--target={arch}-apple-macosx')
-        bazel_build_for_arch.insert(bazel_build_for_arch.index(config),
-                                    f'--linkopt=--target={arch}-apple-macosx')
+                                    f'--cpu=darwin_{arch}')
         self.spawn(bazel_build_for_arch)
         shutil.copyfile('../bazel-bin/python/_re2.so', f'_re2.{arch}.so')
       # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
