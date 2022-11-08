@@ -6,7 +6,7 @@
     "@rollup/plugin-node-resolve": "*",
     "@web/rollup-plugin-html": "*",
     "@web/rollup-plugin-import-meta-assets": "*",
-    "rollup": "*",
+    "rollup": "~2",
     "rollup-plugin-terser": "*",
     "tslib": "*",
     "typescript": "*"
