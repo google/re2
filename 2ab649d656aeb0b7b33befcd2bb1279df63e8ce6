@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "bf5b1c08_1880b321",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-11-09T02:59:38Z",
+      "side": 1,
+      "message": "The `.wasm` file is an order of magnitude smaller, but Bazel does things like `--gc-sections` that I wasn\u0027t doing before. Also, the app still seemed to work fine.",
+      "revId": "2ab649d656aeb0b7b33befcd2bb1279df63e8ce6",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
