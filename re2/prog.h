@@ -51,9 +51,10 @@ enum EmptyOp {
 
 class DFA;
 class Regexp;
-
+class RegexAutomaton;
 // Compiled form of regexp program.
 class Prog {
+    friend RegexAutomaton;
  public:
   Prog();
   ~Prog();

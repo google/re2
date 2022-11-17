@@ -64,11 +64,13 @@ void Prog::TESTING_ONLY_set_dfa_should_bail_when_slow(bool b) {
 // Generates a lot of output -- only useful for debugging.
 static const bool ExtraDebug = false;
 
+class RegexAutomaton;
 // A DFA implementation of a regular expression program.
 // Since this is entirely a forward declaration mandated by C++,
 // some of the comments here are better understood after reading
 // the comments in the sections that follow the DFA definition.
 class DFA {
+    friend RegexAutomaton;
  public:
   DFA(Prog* prog, Prog::MatchKind kind, int64_t max_mem);
   ~DFA();
@@ -264,6 +266,8 @@ class DFA {
     const char* ep;  // "out" parameter: end pointer for match
     SparseSet* matches;
 
+      SearchParams(SearchParams&&) = default;
+      SearchParams& operator=(SearchParams&&) = default;
    private:
     SearchParams(const SearchParams&) = delete;
     SearchParams& operator=(const SearchParams&) = delete;
