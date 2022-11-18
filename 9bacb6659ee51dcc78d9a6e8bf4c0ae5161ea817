@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9fe6be7b_2ae9bef6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2022-11-18T16:42:08Z",
+      "side": 1,
+      "message": "No cherry-pick to abseil branch: pkg-config isn\u0027t supported there.",
+      "revId": "9bacb6659ee51dcc78d9a6e8bf4c0ae5161ea817",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
