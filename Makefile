@@ -316,9 +316,10 @@ shared-install: obj/so/libre2.$(SOEXT) common-install
 common-install:
 	mkdir -p $(DESTDIR)$(includedir)/re2 $(DESTDIR)$(libdir)/pkgconfig
 	$(INSTALL_DATA) $(INSTALL_HFILES) $(DESTDIR)$(includedir)/re2
-	$(INSTALL_DATA) re2.pc $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	$(SED_INPLACE) -e "s#@includedir@#$(includedir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	$(SED_INPLACE) -e "s#@libdir@#$(libdir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(INSTALL_DATA) re2.pc.in $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(SED_INPLACE) -e "s#@CMAKE_INSTALL_FULL_INCLUDEDIR@#$(includedir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(SED_INPLACE) -e "s#@CMAKE_INSTALL_FULL_LIBDIR@#$(libdir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(SED_INPLACE) -e "s#@SONAME@#$(SONAME)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 
 .PHONY: testinstall
 testinstall: static-testinstall shared-testinstall
