@@ -2,8 +2,9 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Old enough to support Ubuntu Bionic.
-cmake_minimum_required(VERSION 3.10.2)
+# Old enough to support Ubuntu Bionic,
+# but just the MAJOR.MINOR components.
+cmake_minimum_required(VERSION 3.10)
 
 project(RE2 CXX)
 include(CMakePackageConfigHelpers)
