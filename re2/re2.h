@@ -752,6 +752,10 @@ class RE2 {
   template <typename T>
   static Arg Octal(T* ptr);
 
+  // Controls the maximum count permitted by GlobalReplace(); -1 is unlimited.
+  // FOR FUZZING ONLY.
+  static void FUZZING_ONLY_set_maximum_global_replace_count(int i);
+
  private:
   void Init(const StringPiece& pattern, const Options& options);
 
