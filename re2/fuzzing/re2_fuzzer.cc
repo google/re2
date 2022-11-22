@@ -131,6 +131,9 @@ void TestOneInput(StringPiece pattern, const RE2::Options& options,
   if (backslash_p > 1)
     return;
 
+  // Iterate just once when fuzzing. Otherwise, we easily get bogged down
+  // and coverage is unlikely to improve despite significant expense.
+  RE2::FUZZING_ONLY_set_maximum_global_replace_count(1);
   // The default is 1000. Even 100 turned out to be too generous
   // for fuzzing, empirically speaking, so let's try 10 instead.
   re2::Regexp::FUZZING_ONLY_set_maximum_repeat_count(10);
