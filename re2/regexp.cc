@@ -73,16 +73,27 @@ bool Regexp::QuickDestroy() {
   return false;
 }
 
-// Lazily allocated.
-static absl::Mutex* ref_mutex;
-static std::map<Regexp*, int>* ref_map;
+// Similar to EmptyStorage in re2.cc.
+struct RefStorage {
+  absl::Mutex ref_mutex;
+  std::map<Regexp*, int> ref_map;
+};
+alignas(RefStorage) static char ref_storage[sizeof(RefStorage)];
+
+static inline absl::Mutex* ref_mutex() {
+  return &reinterpret_cast<RefStorage*>(ref_storage)->ref_mutex;
+}
+
+static inline std::map<Regexp*, int>* ref_map() {
+  return &reinterpret_cast<RefStorage*>(ref_storage)->ref_map;
+}
 
 int Regexp::Ref() {
   if (ref_ < kMaxRef)
     return ref_;
 
-  absl::MutexLock l(ref_mutex);
-  return (*ref_map)[this];
+  absl::MutexLock l(ref_mutex());
+  return (*ref_map())[this];
 }
 
 // Increments reference count, returns object as convenience.
@@ -90,18 +101,17 @@ Regexp* Regexp::Incref() {
   if (ref_ >= kMaxRef-1) {
     static absl::once_flag ref_once;
     absl::call_once(ref_once, []() {
-      ref_mutex = new absl::Mutex;
-      ref_map = new std::map<Regexp*, int>;
+      (void) new (ref_storage) RefStorage;
     });
 
     // Store ref count in overflow map.
-    absl::MutexLock l(ref_mutex);
+    absl::MutexLock l(ref_mutex());
     if (ref_ == kMaxRef) {
       // already overflowed
-      (*ref_map)[this]++;
+      (*ref_map())[this]++;
     } else {
       // overflowing now
-      (*ref_map)[this] = kMaxRef;
+      (*ref_map())[this] = kMaxRef;
       ref_ = kMaxRef;
     }
     return this;
@@ -115,13 +125,13 @@ Regexp* Regexp::Incref() {
 void Regexp::Decref() {
   if (ref_ == kMaxRef) {
     // Ref count is stored in overflow map.
-    absl::MutexLock l(ref_mutex);
-    int r = (*ref_map)[this] - 1;
+    absl::MutexLock l(ref_mutex());
+    int r = (*ref_map())[this] - 1;
     if (r < kMaxRef) {
       ref_ = static_cast<uint16_t>(r);
-      ref_map->erase(this);
+      ref_map()->erase(this);
     } else {
-      (*ref_map)[this] = r;
+      (*ref_map())[this] = r;
     }
     return;
   }
