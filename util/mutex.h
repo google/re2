@@ -10,6 +10,10 @@
  * You should assume the locks are *not* re-entrant.
  */
 
+#ifdef RE2_NO_THREADS
+#include <assert.h>
+#define MUTEX_IS_LOCK_COUNTER
+#else
 #ifdef _WIN32
 // Requires Windows Vista or Windows Server 2008 at minimum.
 #include <windows.h>
@@ -25,8 +29,11 @@
 #define MUTEX_IS_PTHREAD_RWLOCK
 #endif
 #endif
+#endif
 
-#if defined(MUTEX_IS_WIN32_SRWLOCK)
+#if defined(MUTEX_IS_LOCK_COUNTER)
+typedef int MutexType;
+#elif defined(MUTEX_IS_WIN32_SRWLOCK)
 typedef SRWLOCK MutexType;
 #elif defined(MUTEX_IS_PTHREAD_RWLOCK)
 #include <pthread.h>
@@ -64,7 +71,16 @@ class Mutex {
   Mutex& operator=(const Mutex&) = delete;
 };
 
-#if defined(MUTEX_IS_WIN32_SRWLOCK)
+#if defined(MUTEX_IS_LOCK_COUNTER)
+
+Mutex::Mutex()             : mutex_(0) { }
+Mutex::~Mutex()            { assert(mutex_ == 0); }
+void Mutex::Lock()         { assert(--mutex_ == -1); }
+void Mutex::Unlock()       { assert(mutex_++ == -1); }
+void Mutex::ReaderLock()   { assert(++mutex_ > 0); }
+void Mutex::ReaderUnlock() { assert(mutex_-- > 0); }
+
+#elif defined(MUTEX_IS_WIN32_SRWLOCK)
 
 Mutex::Mutex()             : mutex_(SRWLOCK_INIT) { }
 Mutex::~Mutex()            { }
