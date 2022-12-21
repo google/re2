@@ -3,9 +3,9 @@
 // license that can be found in the LICENSE file.
 
 import nodeResolve from '@rollup/plugin-node-resolve';
+import terser from '@rollup/plugin-terser';
 import html from '@web/rollup-plugin-html';
 import {importMetaAssets} from '@web/rollup-plugin-import-meta-assets';
-import {terser} from 'rollup-plugin-terser';
 
 export default {
   input: 'index.html',

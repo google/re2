@@ -9,6 +9,7 @@ cc_binary(
     srcs = ["_re2.cc"],
     linkopts = [
         "--bind",
+        "-sENVIRONMENT=web",
         "-sMODULARIZE=1",
         "-sEXPORT_ES6=1",
         "-sEXPORT_NAME=loadModule",
