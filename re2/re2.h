@@ -485,6 +485,11 @@ class RE2 {
                            const RE2& re,
                            const StringPiece& rewrite);
 
+  static int GlobalReplace(const StringPiece& str,
+                           const RE2& re,
+                           const StringPiece& rewrite, 
+                           std::string& out);
+
   // Like Replace, except that if the pattern matches, "rewrite"
   // is copied into "out" with substitutions.  The non-matching
   // portions of "text" are ignored.
@@ -766,6 +771,11 @@ class RE2 {
                int n) const;
 
   re2::Prog* ReverseProg() const;
+
+  static int _GlobalReplace(const StringPiece& str,
+                            const RE2& re,
+                            const StringPiece& rewrite, 
+                            std::string& out);
 
   // First cache line is relatively cold fields.
   const std::string* pattern_;    // string regular expression

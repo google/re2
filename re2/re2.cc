@@ -461,6 +461,30 @@ bool RE2::Replace(std::string* str,
 int RE2::GlobalReplace(std::string* str,
                        const RE2& re,
                        const StringPiece& rewrite) {
+  std::string out;
+  int count = _GlobalReplace(*str, re, rewrite, out);
+  if (count > 0) {
+    using std::swap;
+    swap(out, *str);
+  }
+  return count;
+}
+
+int RE2::GlobalReplace(const StringPiece& str,
+                       const RE2& re,
+                       const StringPiece& rewrite, 
+                       std::string& out) {
+  int count = _GlobalReplace(str, re, rewrite, out);
+  if (count == 0) {
+    out.append(str.data(), str.size());
+  }
+  return count;
+}
+
+int RE2::_GlobalReplace(const StringPiece& str,
+                        const RE2& re,
+                        const StringPiece& rewrite, 
+                        std::string& out) {
   StringPiece vec[kVecSize];
   int nvec = 1 + MaxSubmatch(rewrite);
   if (nvec > 1 + re.NumberOfCapturingGroups())
@@ -468,17 +492,16 @@ int RE2::GlobalReplace(std::string* str,
   if (nvec > static_cast<int>(arraysize(vec)))
     return false;
 
-  const char* p = str->data();
-  const char* ep = p + str->size();
+  const char* p = str.data();
+  const char* ep = p + str.size();
   const char* lastend = NULL;
-  std::string out;
   int count = 0;
   while (p <= ep) {
     if (maximum_global_replace_count != -1 &&
         count >= maximum_global_replace_count)
       break;
-    if (!re.Match(*str, static_cast<size_t>(p - str->data()),
-                  str->size(), UNANCHORED, vec, nvec))
+    if (!re.Match(str, static_cast<size_t>(p - str.data()),
+                  str.size(), UNANCHORED, vec, nvec))
       break;
     if (p < vec[0].data())
       out.append(p, vec[0].data() - p);
@@ -523,8 +546,6 @@ int RE2::GlobalReplace(std::string* str,
 
   if (p < ep)
     out.append(p, ep - p);
-  using std::swap;
-  swap(out, *str);
   return count;
 }
 
