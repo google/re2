@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "77b5aa46_0ddc946d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-01-10T06:49:03Z",
+      "side": 1,
+      "message": "Sorry, this isn\u0027t something that I\u0027m willing to accept upstream.",
+      "revId": "0d0c5ad49be28c6784fd388381f11e5a317ada3d",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
