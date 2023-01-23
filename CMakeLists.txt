@@ -54,6 +54,7 @@ if(USEPCRE)
 endif()
 
 set(RE2_SOURCES
+    re2/bitmap256.cc
     re2/bitstate.cc
     re2/compile.cc
     re2/dfa.cc
