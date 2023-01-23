@@ -11,7 +11,10 @@
 #include <stdint.h>
 #include <string.h>
 
+<<<<<<< HEAD   (d0b1f8 Fix the app build.)
 #include "absl/base/macros.h"
+=======
+>>>>>>> CHANGE (0d40a4 Introduce `bitmap256.cc` for `FindNextSetBit()`.)
 #include "util/logging.h"
 
 namespace re2 {
@@ -82,6 +85,7 @@ class Bitmap256 {
   uint64_t words_[4];
 };
 
+<<<<<<< HEAD   (d0b1f8 Fix the app build.)
 int Bitmap256::FindNextSetBit(int c) const {
   DCHECK_GE(c, 0);
   DCHECK_LE(c, 255);
@@ -112,6 +116,8 @@ int Bitmap256::FindNextSetBit(int c) const {
   }
 }
 
+=======
+>>>>>>> CHANGE (0d40a4 Introduce `bitmap256.cc` for `FindNextSetBit()`.)
 }  // namespace re2
 
 #endif  // RE2_BITMAP256_H_
