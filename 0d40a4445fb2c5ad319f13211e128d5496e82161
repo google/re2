@@ -16,6 +16,24 @@
       "message": "I\u0027d suggest putting brackets around (~uint64_t{0}) vs ~(uint64_t{0} \u003c\u003c (c % 64) just for clarity.",
       "revId": "0d40a4445fb2c5ad319f13211e128d5496e82161",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "735db16d_98259845",
+        "filename": "re2/bitmap256.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-01-23T15:44:59Z",
+      "side": 1,
+      "message": "`~` works like `!` and (unary) `-` in terms of precedence and associativity, so I would prefer not to add parentheses in this case. (Too many parentheses is itself an issue for readability.)",
+      "parentUuid": "a89cf90f_1716e734",
+      "revId": "0d40a4445fb2c5ad319f13211e128d5496e82161",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
