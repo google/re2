@@ -7,7 +7,7 @@
 # CCICU=$(shell pkg-config icu-uc --cflags) -DRE2_USE_ICU
 # LDICU=$(shell pkg-config icu-uc --libs)
 
-# To build against PCRE for testing or benchmarking,
+# To build against PCRE for testing and benchmarking,
 # uncomment the next two lines:
 # CCPCRE=-I/usr/local/include -DUSEPCRE
 # LDPCRE=-L/usr/local/lib -lpcre
@@ -40,6 +40,12 @@ else ifeq ($(shell uname),SunOS)
 SED_INPLACE=sed -i
 else
 SED_INPLACE=sed -i
+endif
+
+# The pkg-config Requires: field.
+REQUIRES=
+ifdef LDICU
+REQUIRES+=icu-uc
 endif
 
 # ABI version
@@ -320,6 +326,7 @@ common-install:
 	$(INSTALL_DATA) re2.pc.in $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 	$(SED_INPLACE) -e "s#@CMAKE_INSTALL_FULL_INCLUDEDIR@#$(includedir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 	$(SED_INPLACE) -e "s#@CMAKE_INSTALL_FULL_LIBDIR@#$(libdir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	$(SED_INPLACE) -e "s#@REQUIRES@#$(REQUIRES)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 	$(SED_INPLACE) -e "s#@SONAME@#$(SONAME)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 
 .PHONY: testinstall
@@ -329,27 +336,27 @@ testinstall: static-testinstall shared-testinstall
 	@echo
 
 .PHONY: static-testinstall
-static-testinstall: CXXFLAGS:=-pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
-static-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -l:libre2.a $(LDICU) $(LDFLAGS)
 static-testinstall:
-	@mkdir -p obj
-	@cp testinstall.cc obj/static-testinstall.cc
 ifeq ($(shell uname),Darwin)
 	@echo Skipping test for libre2.a on Darwin.
 else ifeq ($(shell uname),SunOS)
 	@echo Skipping test for libre2.a on SunOS.
 else
-	(cd obj && $(CXX) static-testinstall.cc -o static-testinstall $(CXXFLAGS) $(LDFLAGS))
+	@mkdir -p obj
+	@cp testinstall.cc obj/static-testinstall.cc
+	(cd obj && export PKG_CONFIG_PATH=$(DESTDIR)$(libdir)/pkgconfig; \
+	  $(CXX) static-testinstall.cc -o static-testinstall $(CXXFLAGS) $(LDFLAGS) \
+	  $$(pkg-config re2 --cflags --libs | sed -e "s#-lre2#-l:libre2.a#"))
 	obj/static-testinstall
 endif
 
 .PHONY: shared-testinstall
-shared-testinstall: CXXFLAGS:=-pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
-shared-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -lre2 $(LDICU) $(LDFLAGS)
 shared-testinstall:
 	@mkdir -p obj
 	@cp testinstall.cc obj/shared-testinstall.cc
-	(cd obj && $(CXX) shared-testinstall.cc -o shared-testinstall $(CXXFLAGS) $(LDFLAGS))
+	(cd obj && export PKG_CONFIG_PATH=$(DESTDIR)$(libdir)/pkgconfig; \
+	  $(CXX) shared-testinstall.cc -o shared-testinstall $(CXXFLAGS) $(LDFLAGS) \
+	  $$(pkg-config re2 --cflags --libs))
 ifeq ($(shell uname),Darwin)
 	DYLD_LIBRARY_PATH="$(DESTDIR)$(libdir):$(DYLD_LIBRARY_PATH)" obj/shared-testinstall
 else

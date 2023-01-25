@@ -12,11 +12,17 @@ include(CTest)
 include(GNUInstallDirs)
 
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
-option(USEPCRE "use PCRE in tests and benchmarks" OFF)
+option(RE2_USE_ICU "build against ICU for full Unicode properties support" OFF)
+
+# For historical reasons, this is just "USEPCRE", not "RE2_USE_PCRE".
+option(USEPCRE "build against PCRE for testing and benchmarking" OFF)
 
 # CMake seems to have no way to enable/disable testing per subproject,
 # so we provide an option similar to BUILD_TESTING, but just for RE2.
 option(RE2_BUILD_TESTING "enable testing for RE2" ON)
+
+# The pkg-config Requires: field.
+set(REQUIRES)
 
 # ABI version
 # http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html
@@ -43,9 +49,17 @@ endif()
 if(WIN32)
   add_definitions(-DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
-elseif(UNIX)
+endif()
+
+if(UNIX)
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
+endif()
+
+if(RE2_USE_ICU)
+  find_package(ICU REQUIRED COMPONENTS uc)
+  add_definitions(-DRE2_USE_ICU)
+  list(APPEND REQUIRES icu-uc)
 endif()
 
 if(USEPCRE)
@@ -87,6 +101,10 @@ add_library(re2::re2 ALIAS re2)
 
 if(UNIX)
   target_link_libraries(re2 PUBLIC Threads::Threads)
+endif()
+
+if(RE2_USE_ICU)
+  target_link_libraries(re2 PUBLIC ICU::uc)
 endif()
 
 if(RE2_BUILD_TESTING)
