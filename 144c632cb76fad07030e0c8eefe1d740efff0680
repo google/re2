@@ -16,6 +16,24 @@
       "message": "Many thanks for the patch! `hit_limit_` is `int32_t` for... historical reasons, but we should really just change it to `int` and forget the header change. Would you be willing to do that? :)",
       "revId": "144c632cb76fad07030e0c8eefe1d740efff0680",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0cee826b_5eb0689e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 44747
+      },
+      "writtenOn": "2023-01-30T20:15:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9574ba26_3a36e4de",
+      "revId": "144c632cb76fad07030e0c8eefe1d740efff0680",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
