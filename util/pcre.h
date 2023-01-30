@@ -163,6 +163,7 @@
 
 #include "util/util.h"
 #include "re2/stringpiece.h"
+#include <cstdint>
 
 #ifdef USEPCRE
 #include <pcre.h>
