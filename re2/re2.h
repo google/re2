@@ -591,7 +591,7 @@ class RE2 {
   // Replace(). E.g. if rewrite == "foo \\2,\\1", returns 2.
   static int MaxSubmatch(const StringPiece& rewrite);
 
-  // Append the "rewrite" string, with backslash subsitutions from "vec",
+  // Append the "rewrite" string, with backslash substitutions from "vec",
   // to string "out".
   // Returns true on success.  This method can fail because of a malformed
   // rewrite string.  CheckRewriteString guarantees that the rewrite will
