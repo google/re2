@@ -90,14 +90,39 @@ set(RE2_SOURCES
     re2/unicode_casefold.cc
     re2/unicode_groups.cc
     util/rune.cc
-    util/strutil.cc
-    )
+    util/strutil.cc)
 
-add_library(re2 ${RE2_SOURCES})
+set(RE2_HEADERS
+    re2/bitmap256.h
+    re2/pod_array.h
+    re2/prefilter_tree.h
+    re2/re2.h
+    re2/set.h
+    re2/sparse_set.h
+    re2/unicode_casefold.h
+    re2/walker-inl.h
+    re2/filtered_re2.h
+    re2/prefilter.h
+    re2/prog.h
+    re2/regexp.h
+    re2/sparse_array.h
+    re2/stringpiece.h
+    re2/unicode_groups.h)
+
+add_library(re2 ${RE2_SOURCES} ${RE2_HEADERS})
 target_compile_features(re2 PUBLIC cxx_std_11)
 target_include_directories(re2 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 set_target_properties(re2 PROPERTIES SOVERSION ${SONAME} VERSION ${SONAME}.0.0)
 add_library(re2::re2 ALIAS re2)
+
+if(APPLE)
+  set_target_properties(re2 PROPERTIES
+    FRAMEWORK TRUE
+    FRAMEWORK_VERSION A
+    MACOSX_FRAMEWORK_IDENTIFIER com.google.re2
+    PUBLIC_HEADER "${RE2_HEADERS}"
+  )
+endif()
 
 if(UNIX)
   target_link_libraries(re2 PUBLIC Threads::Threads)
@@ -176,6 +201,7 @@ install(FILES ${RE2_HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/re2)
 install(TARGETS re2
         EXPORT re2Targets
+        FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
