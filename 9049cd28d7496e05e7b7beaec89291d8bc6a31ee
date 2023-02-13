@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ce69ffac_18775184",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-02-13T18:34:20Z",
+      "side": 1,
+      "message": "No cherry-pick to abseil branch: CMake isn\u0027t supported there.",
+      "revId": "9049cd28d7496e05e7b7beaec89291d8bc6a31ee",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
