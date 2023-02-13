@@ -17,6 +17,11 @@ option(RE2_USE_ICU "build against ICU for full Unicode properties support" OFF)
 # For historical reasons, this is just "USEPCRE", not "RE2_USE_PCRE".
 option(USEPCRE "build against PCRE for testing and benchmarking" OFF)
 
+# See https://groups.google.com/g/re2-dev/c/P6_NM0YIWvA for details.
+# This has no effect unless RE2 is being built for an Apple platform
+# such as macOS or iOS.
+option(RE2_BUILD_FRAMEWORK "build RE2 as a framework" OFF)
+
 # CMake seems to have no way to enable/disable testing per subproject,
 # so we provide an option similar to BUILD_TESTING, but just for RE2.
 option(RE2_BUILD_TESTING "enable testing for RE2" ON)
@@ -109,6 +114,13 @@ set_target_properties(re2 PROPERTIES PUBLIC_HEADER "${RE2_HEADERS}")
 set_target_properties(re2 PROPERTIES SOVERSION ${SONAME} VERSION ${SONAME}.0.0)
 add_library(re2::re2 ALIAS re2)
 
+if(APPLE AND RE2_BUILD_FRAMEWORK)
+  set_target_properties(re2 PROPERTIES
+                        FRAMEWORK TRUE
+                        FRAMEWORK_VERSION A
+                        MACOSX_FRAMEWORK_IDENTIFIER com.googlesource.code.re2)
+endif()
+
 if(UNIX)
   target_link_libraries(re2 PUBLIC Threads::Threads)
 endif()
@@ -180,6 +192,7 @@ install(TARGETS re2
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/re2
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT re2Targets
