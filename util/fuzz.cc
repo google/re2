@@ -10,12 +10,12 @@
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size);
 
 int main(int argc, char** argv) {
-  uint8_t data[32];
-  for (int i = 0; i < 32; i++) {
-    for (int j = 0; j < 32; j++) {
+  uint8_t data[4096];
+  for (int i = 0; i < 4096; i++) {
+    for (int j = 0; j < 4096; j++) {
       data[j] = random() & 0xFF;
     }
-    LLVMFuzzerTestOneInput(data, 32);
+    LLVMFuzzerTestOneInput(data, 4096);
   }
   return 0;
 }
