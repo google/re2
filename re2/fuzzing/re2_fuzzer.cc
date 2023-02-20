@@ -9,8 +9,10 @@
 #include <string>
 #include <vector>
 
+#include "re2/filtered_re2.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
+#include "re2/set.h"
 #include "re2/walker-inl.h"
 
 // NOT static, NOT signed.
@@ -93,8 +95,13 @@ class SubstringWalker : public re2::Regexp::Walker<int> {
   SubstringWalker& operator=(const SubstringWalker&) = delete;
 };
 
+<<<<<<< HEAD   (1aaea6 Fix a typographical error.)
 void TestOneInput(absl::string_view pattern, const RE2::Options& options,
                   absl::string_view text) {
+=======
+void TestOneInput(StringPiece pattern, const RE2::Options& options,
+                  RE2::Anchor anchor, StringPiece text) {
+>>>>>>> CHANGE (446e4c Fuzz `RE2::Set` and `FilteredRE2`.)
   // Crudely limit the use of ., \p, \P, \d, \D, \s, \S, \w and \W.
   // Otherwise, we will waste time on inputs that have long runs of various
   // character classes. The fuzzer has shown itself to be easily capable of
@@ -207,6 +214,29 @@ void TestOneInput(absl::string_view pattern, const RE2::Options& options,
   dummy += re.NamedCapturingGroups().size();
   dummy += re.CapturingGroupNames().size();
   dummy += RE2::QuoteMeta(pattern).size();
+
+  RE2::Set set(options, anchor);
+  int index = set.Add(pattern, /*error=*/NULL);  // -1 on error
+  if (index != -1 && set.Compile()) {
+    std::vector<int> matches;
+    set.Match(text, &matches);
+  }
+
+  re2::FilteredRE2 filter;
+  index = -1;  // not clobbered on error
+  filter.Add(pattern, options, &index);
+  if (index != -1) {
+    std::vector<std::string> atoms;
+    filter.Compile(&atoms);
+    // Pretend that all atoms match, which
+    // triggers the AND-OR tree maximally.
+    std::vector<int> matched_atoms;
+    matched_atoms.reserve(atoms.size());
+    for (size_t i = 0; i < atoms.size(); ++i)
+      matched_atoms.push_back(static_cast<int>(i));
+    std::vector<int> matches;
+    filter.AllMatches(text, matched_atoms, &matches);
+  }
 }
 
 // Entry point for libFuzzer.
@@ -240,9 +270,17 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   options.set_word_boundary(fdp.ConsumeBool());
   options.set_one_line(fdp.ConsumeBool());
 
+  // ConsumeEnum<RE2::Anchor>() would require RE2::Anchor to specify
+  // kMaxValue, so just use PickValueInArray<RE2::Anchor>() instead.
+  RE2::Anchor anchor = fdp.PickValueInArray<RE2::Anchor>({
+      RE2::UNANCHORED,
+      RE2::ANCHOR_START,
+      RE2::ANCHOR_BOTH,
+  });
+
   std::string pattern = fdp.ConsumeRandomLengthString(999);
   std::string text = fdp.ConsumeRandomLengthString(999);
 
-  TestOneInput(pattern, options, text);
+  TestOneInput(pattern, options, anchor, text);
   return 0;
 }
