@@ -5,14 +5,12 @@
 #include <memory>
 #include <string>
 
-#include "emscripten/bind.h"
+#include <emscripten/bind.h>
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
 
-using re2::Prog;
-using re2::Regexp;
-using re2::RegexpStatus;
+namespace re2_app {
 
 struct Info {
   std::string pattern;
@@ -33,9 +31,10 @@ Info GetInfo(const std::string& pattern) {
   info.pattern = pattern;
 
   RE2::Options options;
-  RegexpStatus status;
-  Regexp* regexp = Regexp::Parse(
-      pattern, static_cast<Regexp::ParseFlags>(options.ParseFlags()), &status);
+  re2::RegexpStatus status;
+  re2::Regexp* regexp = re2::Regexp::Parse(
+      pattern, static_cast<re2::Regexp::ParseFlags>(options.ParseFlags()),
+      &status);
   if (regexp == nullptr) {
     info.error = "failed to parse pattern: " + status.Text();
     return info;
@@ -43,7 +42,7 @@ Info GetInfo(const std::string& pattern) {
 
   std::string prefix;
   bool prefix_foldcase;
-  Regexp* suffix;
+  re2::Regexp* suffix;
   if (regexp->RequiredPrefix(&prefix, &prefix_foldcase, &suffix)) {
     info.prefix = prefix;
     info.prefix_foldcase = prefix_foldcase;
@@ -51,7 +50,7 @@ Info GetInfo(const std::string& pattern) {
     suffix = regexp->Incref();
   }
 
-  std::unique_ptr<Prog> prog(suffix->CompileToProg(options.max_mem()));
+  std::unique_ptr<re2::Prog> prog(suffix->CompileToProg(options.max_mem()));
   if (prog == nullptr) {
     info.error = "failed to compile forward Prog";
     suffix->Decref();
@@ -91,3 +90,5 @@ EMSCRIPTEN_BINDINGS(_re2) {
 
   emscripten::function("getInfo", &GetInfo);
 }
+
+}  // namespace re2_app
