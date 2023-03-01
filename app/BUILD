@@ -15,8 +15,5 @@ cc_binary(
         "-sEXPORT_NAME=loadModule",
         "-sUSE_PTHREADS=0",
     ],
-    deps = [
-        "//:re2",
-        "@com_google_absl//absl/strings",
-    ],
+    deps = ["//:re2"],
 )
