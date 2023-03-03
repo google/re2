@@ -596,9 +596,28 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
   //mutex_.AssertHeld();
 
   // Construct array of instruction ids for the new state.
-  // Only ByteRange, EmptyWidth, and Match instructions are useful to keep:
-  // those are the only operators with any effect in
-  // RunWorkqOnEmptyString or RunWorkqOnByte.
+  // In some cases, kInstAltMatch may trigger an upgrade to FullMatchState.
+  // Otherwise, "compress" q down to list heads for storage; StateToWorkq()
+  // will "decompress" it for computation by exploring from each list head.
+  //
+  // Historically, only kInstByteRange, kInstEmptyWidth and kInstMatch were
+  // useful to keep, but it turned out that kInstAlt was necessary to keep:
+  //
+  // > [*] kInstAlt would seem useless to record in a state, since
+  // > we've already followed both its arrows and saved all the
+  // > interesting states we can reach from there.  The problem
+  // > is that one of the empty-width instructions might lead
+  // > back to the same kInstAlt (if an empty-width operator is starred),
+  // > producing a different evaluation order depending on whether
+  // > we keep the kInstAlt to begin with.  Sigh.
+  // > A specific case that this affects is /(^|a)+/ matching "a".
+  // > If we don't save the kInstAlt, we will match the whole "a" (0,1)
+  // > but in fact the correct leftmost-first match is the leading "" (0,0).
+  //
+  // Recall that flattening transformed the Prog from "tree" form to "list"
+  // form: in the former, kInstAlt existed explicitly... and abundantly; in
+  // the latter, it's implied between the instructions that compose a list.
+  // Thus, because the information wasn't lost, the bug doesn't remanifest.
   PODArray<int> inst(q->size());
   int n = 0;
   uint32_t needflags = 0;  // flags needed by kInstEmptyWidth instructions
