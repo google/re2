@@ -124,11 +124,11 @@ class DFA {
 // (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70932)
 #if !defined(__clang__) && defined(__GNUC__) && __GNUC__ == 6 && __GNUC_MINOR__ >= 1
     std::atomic<State*> next_[0];   // Outgoing arrows from State,
+                                    // one per input byte class
 #else
     std::atomic<State*> next_[];    // Outgoing arrows from State,
+                                    // one per input byte class
 #endif
-
-                        // one per input byte class
   };
 
   enum {
@@ -769,15 +769,18 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint32_t flag) {
   // State*, empirically.
   const int kStateCacheOverhead = 40;
   int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
-  int mem = sizeof(State) + nnext*sizeof(std::atomic<State*>) +
-            ninst*sizeof(int);
-  if (mem_budget_ < mem + kStateCacheOverhead) {
+  int mem = sizeof(State) + nnext*sizeof(std::atomic<State*>);
+  int instmem = ninst*sizeof(int);
+  if (mem_budget_ < mem + instmem + kStateCacheOverhead) {
     mem_budget_ = -1;
     return NULL;
   }
-  mem_budget_ -= mem + kStateCacheOverhead;
+  mem_budget_ -= mem + instmem + kStateCacheOverhead;
 
   // Allocate new state along with room for next_ and inst_.
+  // inst_ is stored separately since it's colder; this also
+  // means that the States for a given DFA are the same size
+  // class, so the allocator can hopefully pack them better.
   char* space = std::allocator<char>().allocate(mem);
   State* s = new (space) State;
   (void) new (s->next_) std::atomic<State*>[nnext];
@@ -785,8 +788,9 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint32_t flag) {
   // (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=64658)
   for (int i = 0; i < nnext; i++)
     (void) new (s->next_ + i) std::atomic<State*>(NULL);
-  s->inst_ = new (s->next_ + nnext) int[ninst];
-  memmove(s->inst_, inst, ninst*sizeof s->inst_[0]);
+  s->inst_ = std::allocator<int>().allocate(ninst);
+  (void) new (s->inst_) int[ninst];
+  memmove(s->inst_, inst, instmem);
   s->ninst_ = ninst;
   s->flag_ = flag;
   if (ExtraDebug)
@@ -804,12 +808,12 @@ void DFA::ClearCache() {
   while (begin != end) {
     StateSet::iterator tmp = begin;
     ++begin;
+    // Deallocate the instruction array, which is stored separately as above.
+    std::allocator<int>().deallocate((*tmp)->inst_, (*tmp)->ninst_);
     // Deallocate the blob of memory that we allocated in DFA::CachedState().
     // We recompute mem in order to benefit from sized delete where possible.
-    int ninst = (*tmp)->ninst_;
     int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
-    int mem = sizeof(State) + nnext*sizeof(std::atomic<State*>) +
-              ninst*sizeof(int);
+    int mem = sizeof(State) + nnext*sizeof(std::atomic<State*>);
     std::allocator<char>().deallocate(reinterpret_cast<char*>(*tmp), mem);
   }
   state_cache_.clear();
