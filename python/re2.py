@@ -26,14 +26,9 @@ of memory (by default). Hence, this module's LRU cache uses a maximum of 1GiB
 of memory (by default), but in most cases, it should use much less than that.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import codecs
 import functools
 import itertools
-import struct
 
 import _re2
 
@@ -353,18 +348,18 @@ class _Match(object):
 
   # Python prioritises three-digit octal numbers over group escapes.
   # For example, \100 should not be handled the same way as \g<10>0.
-  _OCTAL_RE = compile(b'\\\\[0-7][0-7][0-7]')
+  _OCTAL_RE = compile('\\\\[0-7][0-7][0-7]')
 
   # Python supports \1 through \99 (inclusive) and \g<...> syntax.
-  _GROUP_RE = compile(b'\\\\[1-9][0-9]?|\\\\g<\\w+>')
+  _GROUP_RE = compile('\\\\[1-9][0-9]?|\\\\g<\\w+>')
 
   @classmethod
   @functools.lru_cache(typed=True)
   def _split(cls, template):
     if isinstance(template, str):
-      backslash = chr(0x5C)  # u'\\'
+      backslash = '\\'
     else:
-      backslash = struct.Struct('B').pack(0x5C)  # b'\\'
+      backslash = b'\\'
     empty = type(template)()
     pieces = [empty]
     index = template.find(backslash)
