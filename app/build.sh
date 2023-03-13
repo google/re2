@@ -5,7 +5,7 @@ SRCDIR=$(readlink --canonicalize $(dirname $0))
 DSTDIR=$(mktemp --directory --tmpdir $(basename $0).XXXXXXXXXX)
 
 BAZEL=/tmp/bazel
-BAZELISK_RELEASE=v1.15.0
+BAZELISK_RELEASE=v1.16.0
 
 if [[ ${UID} -ne 0 ]]; then
   if [[ -d deploy ]]; then
