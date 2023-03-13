@@ -3,10 +3,6 @@
 # license that can be found in the LICENSE file.
 """Tests for google3.third_party.re2.python.re2."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import collections
 import pickle
 import re
