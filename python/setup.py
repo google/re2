@@ -89,9 +89,11 @@ setuptools.setup(
     description='RE2 Python bindings',
     long_description=long_description,
     long_description_content_type='text/plain',
-    url='https://github.com/google/re2',
     author='The RE2 Authors',
     author_email='re2-dev@googlegroups.com',
+    url='https://github.com/google/re2',
+    py_modules=['re2'],
+    ext_modules=[ext_module],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -100,7 +102,5 @@ setuptools.setup(
         'Programming Language :: Python :: 3.7',
     ],
     cmdclass={'build_ext': BuildExt},
-    ext_modules=[ext_module],
-    py_modules=['re2'],
     python_requires='~=3.7',
 )
