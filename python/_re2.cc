@@ -233,6 +233,10 @@ class Filter {
     return matches;
   }
 
+  const RE2& GetRE2(int index) const {
+    return filter_.GetRE2(index);
+  }
+
  private:
   re2::FilteredRE2 filter_;
   std::unique_ptr<RE2::Set> set_;
@@ -326,7 +330,9 @@ PYBIND11_MODULE(_re2, module) {
   filter.def(py::init<>())
       .def("Add", &Filter::Add)
       .def("Compile", &Filter::Compile)
-      .def("Match", &Filter::Match);
+      .def("Match", &Filter::Match)
+      .def("GetRE2", &Filter::GetRE2,
+           py::return_value_policy::reference_internal);
 }
 
 }  // namespace re2_python
