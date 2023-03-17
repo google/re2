@@ -471,6 +471,12 @@ class FilterTest(absltest.TestCase):
     self.assertItemsEqual([0, 1], f.Match('Hello, world.'))
     self.assertIsNone(f.Match('HELLO, WORLD.'))
 
+    self.assertRaises(IndexError, f.re, -1)
+    self.assertRaises(IndexError, f.re, 3)
+    self.assertEqual('Goodbye, \\w+\\.', f.re(2).pattern)
+    # Verify whether the underlying RE2 object is usable.
+    self.assertEqual(0, f.re(2).groups)
+
 
 if __name__ == '__main__':
   absltest.main()

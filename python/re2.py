@@ -413,7 +413,7 @@ class _Match(object):
         group = self._regexp.groupindex[group]
       except KeyError:
         raise IndexError('bad group name')
-    if group < 0 or group > self._regexp.groups:
+    if not 0 <= group <= self._regexp.groups:
       raise IndexError('bad group index')
     span = self._spans[group]
     if span == _NULL_SPAN:
@@ -441,17 +441,17 @@ class _Match(object):
     return dict(items)
 
   def start(self, group=0):
-    if group < 0 or group > self._regexp.groups:
+    if not 0 <= group <= self._regexp.groups:
       raise IndexError('bad group index')
     return self._spans[group][0]
 
   def end(self, group=0):
-    if group < 0 or group > self._regexp.groups:
+    if not 0 <= group <= self._regexp.groups:
       raise IndexError('bad group index')
     return self._spans[group][1]
 
   def span(self, group=0):
-    if group < 0 or group > self._regexp.groups:
+    if not 0 <= group <= self._regexp.groups:
       raise IndexError('bad group index')
     return self._spans[group]
 
@@ -543,10 +543,11 @@ class Set(object):
 class Filter(object):
   """A Pythonic wrapper around FilteredRE2."""
 
-  __slots__ = ('_filter')
+  __slots__ = ('_filter', '_patterns')
 
   def __init__(self):
     self._filter = _re2.Filter()
+    self._patterns = []
 
   def Add(self, pattern, options=None):
     options = options or Options()
@@ -557,6 +558,7 @@ class Filter(object):
       index = self._filter.Add(pattern, options)
     if index == -1:
       raise error('failed to add %r to Filter' % pattern)
+    self._patterns.append(pattern)
     return index
 
   def Compile(self):
@@ -570,3 +572,11 @@ class Filter(object):
     else:
       matches = self._filter.Match(text, potential)
     return matches or None
+
+  def re(self, index):
+    if not 0 <= index < len(self._patterns):
+      raise IndexError('bad index')
+    proxy = object.__new__(_Regexp)
+    proxy._pattern = self._patterns[index]
+    proxy._regexp = self._filter.GetRE2(index)
+    return proxy
