@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "lit": "*"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "*",
+    "@rollup/plugin-terser": "*",
+    "@web/rollup-plugin-html": "*",
+    "@web/rollup-plugin-import-meta-assets": "*",
+    "rollup": "~2",
+    "tslib": "*",
+    "typescript": "*"
+  }
+}

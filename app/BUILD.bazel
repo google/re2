@@ -1,0 +1,19 @@
+# Copyright 2009 The RE2 Authors.  All Rights Reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# Bazel (http://bazel.io/) BUILD file for RE2 app.
+
+cc_binary(
+    name = "_re2.js",
+    srcs = ["_re2.cc"],
+    linkopts = [
+        "--bind",
+        "-sENVIRONMENT=web",
+        "-sMODULARIZE=1",
+        "-sEXPORT_ES6=1",
+        "-sEXPORT_NAME=loadModule",
+        "-sUSE_PTHREADS=0",
+    ],
+    deps = ["//:re2"],
+)
