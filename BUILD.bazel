@@ -36,7 +36,6 @@ cc_library(
         "re2/simplify.cc",
         "re2/sparse_array.h",
         "re2/sparse_set.h",
-        "re2/stringpiece.cc",
         "re2/tostring.cc",
         "re2/unicode_casefold.cc",
         "re2/unicode_casefold.h",
@@ -44,13 +43,10 @@ cc_library(
         "re2/unicode_groups.h",
         "re2/walker-inl.h",
         "util/logging.h",
-        "util/mix.h",
-        "util/mutex.h",
         "util/rune.cc",
         "util/strutil.cc",
         "util/strutil.h",
         "util/utf.h",
-        "util/util.h",
     ],
     hdrs = [
         "re2/filtered_re2.h",
@@ -73,6 +69,19 @@ cc_library(
         "//conditions:default": ["-pthread"],
     }),
     visibility = ["//visibility:public"],
+    deps = [
+        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:fixed_array",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/container:inlined_vector",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_absl//absl/types:span",
+    ],
 )
 
 cc_library(
@@ -93,20 +102,24 @@ cc_library(
         "re2/testing/regexp_generator.h",
         "re2/testing/string_generator.h",
         "re2/testing/tester.h",
-        "util/benchmark.h",
-        "util/flags.h",
         "util/malloc_counter.h",
         "util/pcre.h",
-        "util/test.h",
     ],
-    deps = [":re2"],
+    deps = [
+        ":re2",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_googletest//:gtest",
+    ],
 )
 
 cc_library(
     name = "test",
     testonly = 1,
-    srcs = ["util/test.cc"],
-    deps = [":testing"],
+    srcs = [],
+    deps = [
+        ":testing",
+        "@com_google_googletest//:gtest_main",
+    ],
 )
 
 cc_test(
@@ -252,8 +265,11 @@ cc_test(
 cc_library(
     name = "benchmark",
     testonly = 1,
-    srcs = ["util/benchmark.cc"],
-    deps = [":testing"],
+    srcs = [],
+    deps = [
+        ":testing",
+        "@com_github_google_benchmark//:benchmark_main",
+    ],
 )
 
 cc_binary(
