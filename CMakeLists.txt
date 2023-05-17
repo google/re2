@@ -31,13 +31,13 @@ set(REQUIRES)
 
 # ABI version
 # http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html
-set(SONAME 10)
+set(SONAME 11)
 
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  if(MSVC_VERSION LESS 1900)
-    message(FATAL_ERROR "you need Visual Studio 2015 or later")
+  if(MSVC_VERSION LESS 1920)
+    message(FATAL_ERROR "you need Visual Studio 2019 or later")
   endif()
   if(BUILD_SHARED_LIBS)
     # See http://www.kitware.com/blog/home/post/939 for details.
@@ -61,6 +61,24 @@ if(UNIX)
   find_package(Threads REQUIRED)
 endif()
 
+set(ABSL_DEPS
+    absl_base
+    absl_core_headers
+    absl_fixed_array
+    absl_flags
+    absl_flat_hash_map
+    absl_flat_hash_set
+    absl_inlined_vector
+    absl_optional
+    absl_span
+    absl_str_format
+    absl_strings
+    absl_synchronization
+    )
+
+find_package(absl REQUIRED)
+list(APPEND REQUIRES ${ABSL_DEPS})
+
 if(RE2_USE_ICU)
   find_package(ICU REQUIRED COMPONENTS uc)
   add_definitions(-DRE2_USE_ICU)
@@ -71,6 +89,12 @@ if(USEPCRE)
   add_definitions(-DUSEPCRE)
   list(APPEND EXTRA_TARGET_LINK_LIBRARIES pcre)
 endif()
+
+# TODO(junyer): Use string(JOIN " " ...) whenever CMake 3.12 (or newer) becomes
+# the minimum required: that will make this hack slightly less filthy. For now,
+# CMake does the same thing as string(CONCAT ...), basically, if we don't quote
+# ${REQUIRES}, so quote it despite prevailing style.
+string(REPLACE ";" " " REQUIRES "${REQUIRES}")
 
 set(RE2_SOURCES
     re2/bitmap256.cc
@@ -90,7 +114,6 @@ set(RE2_SOURCES
     re2/regexp.cc
     re2/set.cc
     re2/simplify.cc
-    re2/stringpiece.cc
     re2/tostring.cc
     re2/unicode_casefold.cc
     re2/unicode_groups.cc
@@ -106,7 +129,7 @@ set(RE2_HEADERS
     )
 
 add_library(re2 ${RE2_SOURCES})
-target_compile_features(re2 PUBLIC cxx_std_11)
+target_compile_features(re2 PUBLIC cxx_std_14)
 target_include_directories(re2 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 # CMake gives "set_target_properties called with incorrect number of arguments."
 # errors if we don't quote ${RE2_HEADERS}, so quote it despite prevailing style.
@@ -125,11 +148,19 @@ if(UNIX)
   target_link_libraries(re2 PUBLIC Threads::Threads)
 endif()
 
+foreach(dep ${ABSL_DEPS})
+  string(REGEX REPLACE "^absl_" "absl::" dep ${dep})
+  target_link_libraries(re2 PUBLIC ${dep})
+endforeach()
+
 if(RE2_USE_ICU)
   target_link_libraries(re2 PUBLIC ICU::uc)
 endif()
 
 if(RE2_BUILD_TESTING)
+  find_package(GTest REQUIRED)
+  find_package(benchmark REQUIRED)
+
   set(TESTING_SOURCES
       re2/testing/backtrack.cc
       re2/testing/dump.cc
@@ -142,7 +173,7 @@ if(RE2_BUILD_TESTING)
       )
 
   add_library(testing STATIC ${TESTING_SOURCES})
-  target_compile_features(testing PUBLIC cxx_std_11)
+  target_compile_features(testing PUBLIC cxx_std_14)
   target_link_libraries(testing PUBLIC re2)
 
   set(TEST_TARGETS
@@ -174,16 +205,16 @@ if(RE2_BUILD_TESTING)
       )
 
   foreach(target ${TEST_TARGETS})
-    add_executable(${target} re2/testing/${target}.cc util/test.cc)
-    target_compile_features(${target} PUBLIC cxx_std_11)
-    target_link_libraries(${target} testing ${EXTRA_TARGET_LINK_LIBRARIES})
+    add_executable(${target} re2/testing/${target}.cc)
+    target_compile_features(${target} PUBLIC cxx_std_14)
+    target_link_libraries(${target} testing GTest::GTest GTest::Main ${EXTRA_TARGET_LINK_LIBRARIES})
     add_test(NAME ${target} COMMAND ${target})
   endforeach()
 
   foreach(target ${BENCHMARK_TARGETS})
-    add_executable(${target} re2/testing/${target}.cc util/benchmark.cc)
-    target_compile_features(${target} PUBLIC cxx_std_11)
-    target_link_libraries(${target} testing ${EXTRA_TARGET_LINK_LIBRARIES})
+    add_executable(${target} re2/testing/${target}.cc)
+    target_compile_features(${target} PUBLIC cxx_std_14)
+    target_link_libraries(${target} testing GTest::GTest benchmark::benchmark_main ${EXTRA_TARGET_LINK_LIBRARIES})
   endforeach()
 endif()
 
