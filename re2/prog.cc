@@ -19,11 +19,10 @@
 #include <memory>
 #include <utility>
 
-#include "util/util.h"
+#include "absl/base/macros.h"
+#include "absl/strings/str_format.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "re2/bitmap256.h"
-#include "re2/stringpiece.h"
 
 namespace re2 {
 
@@ -74,34 +73,34 @@ void Prog::Inst::InitFail() {
 std::string Prog::Inst::Dump() {
   switch (opcode()) {
     default:
-      return StringPrintf("opcode %d", static_cast<int>(opcode()));
+      return absl::StrFormat("opcode %d", static_cast<int>(opcode()));
 
     case kInstAlt:
-      return StringPrintf("alt -> %d | %d", out(), out1_);
+      return absl::StrFormat("alt -> %d | %d", out(), out1_);
 
     case kInstAltMatch:
-      return StringPrintf("altmatch -> %d | %d", out(), out1_);
+      return absl::StrFormat("altmatch -> %d | %d", out(), out1_);
 
     case kInstByteRange:
-      return StringPrintf("byte%s [%02x-%02x] %d -> %d",
-                          foldcase() ? "/i" : "",
-                          lo_, hi_, hint(), out());
+      return absl::StrFormat("byte%s [%02x-%02x] %d -> %d",
+                             foldcase() ? "/i" : "",
+                             lo_, hi_, hint(), out());
 
     case kInstCapture:
-      return StringPrintf("capture %d -> %d", cap_, out());
+      return absl::StrFormat("capture %d -> %d", cap_, out());
 
     case kInstEmptyWidth:
-      return StringPrintf("emptywidth %#x -> %d",
-                          static_cast<int>(empty_), out());
+      return absl::StrFormat("emptywidth %#x -> %d",
+                             static_cast<int>(empty_), out());
 
     case kInstMatch:
-      return StringPrintf("match! %d", match_id());
+      return absl::StrFormat("match! %d", match_id());
 
     case kInstNop:
-      return StringPrintf("nop -> %d", out());
+      return absl::StrFormat("nop -> %d", out());
 
     case kInstFail:
-      return StringPrintf("fail");
+      return absl::StrFormat("fail");
   }
 }
 
@@ -143,7 +142,7 @@ static std::string ProgToString(Prog* prog, Workq* q) {
   for (Workq::iterator i = q->begin(); i != q->end(); ++i) {
     int id = *i;
     Prog::Inst* ip = prog->inst(id);
-    s += StringPrintf("%d. %s\n", id, ip->Dump().c_str());
+    s += absl::StrFormat("%d. %s\n", id, ip->Dump());
     AddToQueue(q, ip->out());
     if (ip->opcode() == kInstAlt || ip->opcode() == kInstAltMatch)
       AddToQueue(q, ip->out1());
@@ -156,9 +155,9 @@ static std::string FlattenedProgToString(Prog* prog, int start) {
   for (int id = start; id < prog->size(); id++) {
     Prog::Inst* ip = prog->inst(id);
     if (ip->last())
-      s += StringPrintf("%d. %s\n", id, ip->Dump().c_str());
+      s += absl::StrFormat("%d. %s\n", id, ip->Dump());
     else
-      s += StringPrintf("%d+ %s\n", id, ip->Dump().c_str());
+      s += absl::StrFormat("%d+ %s\n", id, ip->Dump());
   }
   return s;
 }
@@ -189,7 +188,7 @@ std::string Prog::DumpByteMap() {
     while (c < 256-1 && bytemap_[c+1] == b)
       c++;
     int hi = c;
-    map += StringPrintf("[%02x-%02x] -> %d\n", lo, hi, b);
+    map += absl::StrFormat("[%02x-%02x] -> %d\n", lo, hi, b);
   }
   return map;
 }
@@ -284,7 +283,7 @@ void Prog::Optimize() {
   }
 }
 
-uint32_t Prog::EmptyFlags(const StringPiece& text, const char* p) {
+uint32_t Prog::EmptyFlags(absl::string_view text, const char* p) {
   int flags = 0;
 
   // ^ and \A
@@ -813,7 +812,7 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap,
         flat->back().set_opcode(kInstAltMatch);
         flat->back().set_out(static_cast<int>(flat->size()));
         flat->back().out1_ = static_cast<uint32_t>(flat->size())+1;
-        FALLTHROUGH_INTENDED;
+        ABSL_FALLTHROUGH_INTENDED;
 
       case kInstAlt:
         stk->push_back(ip->out1());

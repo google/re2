@@ -12,16 +12,15 @@
 #include <string.h>
 #include <algorithm>
 #include <map>
-#include <mutex>
 #include <string>
 #include <vector>
 
-#include "util/util.h"
+#include "absl/base/call_once.h"
+#include "absl/base/macros.h"
+#include "absl/synchronization/mutex.h"
 #include "util/logging.h"
-#include "util/mutex.h"
 #include "util/utf.h"
 #include "re2/pod_array.h"
-#include "re2/stringpiece.h"
 #include "re2/walker-inl.h"
 
 namespace re2 {
@@ -76,12 +75,12 @@ bool Regexp::QuickDestroy() {
 
 // Similar to EmptyStorage in re2.cc.
 struct RefStorage {
-  Mutex ref_mutex;
+  absl::Mutex ref_mutex;
   std::map<Regexp*, int> ref_map;
 };
 alignas(RefStorage) static char ref_storage[sizeof(RefStorage)];
 
-static inline Mutex* ref_mutex() {
+static inline absl::Mutex* ref_mutex() {
   return &reinterpret_cast<RefStorage*>(ref_storage)->ref_mutex;
 }
 
@@ -93,20 +92,20 @@ int Regexp::Ref() {
   if (ref_ < kMaxRef)
     return ref_;
 
-  MutexLock l(ref_mutex());
+  absl::MutexLock l(ref_mutex());
   return (*ref_map())[this];
 }
 
 // Increments reference count, returns object as convenience.
 Regexp* Regexp::Incref() {
   if (ref_ >= kMaxRef-1) {
-    static std::once_flag ref_once;
-    std::call_once(ref_once, []() {
+    static absl::once_flag ref_once;
+    absl::call_once(ref_once, []() {
       (void) new (ref_storage) RefStorage;
     });
 
     // Store ref count in overflow map.
-    MutexLock l(ref_mutex());
+    absl::MutexLock l(ref_mutex());
     if (ref_ == kMaxRef) {
       // already overflowed
       (*ref_map())[this]++;
@@ -126,7 +125,7 @@ Regexp* Regexp::Incref() {
 void Regexp::Decref() {
   if (ref_ == kMaxRef) {
     // Ref count is stored in overflow map.
-    MutexLock l(ref_mutex());
+    absl::MutexLock l(ref_mutex());
     int r = (*ref_map())[this] - 1;
     if (r < kMaxRef) {
       ref_ = static_cast<uint16_t>(r);
@@ -519,7 +518,7 @@ static const char *kErrorStrings[] = {
 };
 
 std::string RegexpStatus::CodeText(enum RegexpStatusCode code) {
-  if (code < 0 || code >= arraysize(kErrorStrings))
+  if (code < 0 || code >= ABSL_ARRAYSIZE(kErrorStrings))
     code = kRegexpInternalError;
   return kErrorStrings[code];
 }

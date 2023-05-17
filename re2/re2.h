@@ -75,7 +75,7 @@
 // have succeeded or one conversion has failed.
 // On conversion failure, the pointees will be in an indeterminate state
 // because the caller has no way of knowing which conversion failed.
-// However, conversion cannot fail for types like string and StringPiece
+// However, conversion cannot fail for types like string and string_view
 // that do not inspect the submatch contents. Hence, in the common case
 // where all of the pointees are of such types, failure is always due to
 // match failure and thus none of the pointees will have been modified.
@@ -140,12 +140,12 @@
 //
 // The "Consume" operation may be useful if you want to repeatedly
 // match regular expressions at the front of a string and skip over
-// them as they match.  This requires use of the "StringPiece" type,
+// them as they match.  This requires use of the string_view type,
 // which represents a sub-range of a real string.
 //
 // Example: read lines of the form "var = value" from a string.
-//      std::string contents = ...;     // Fill string somehow
-//      StringPiece input(contents);    // Wrap a StringPiece around it
+//      std::string contents = ...;         // Fill string somehow
+//      absl::string_view input(contents);  // Wrap a string_view around it
 //
 //      std::string var;
 //      int value;
@@ -206,7 +206,6 @@
 #include <stdint.h>
 #include <algorithm>
 #include <map>
-#include <mutex>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -215,6 +214,9 @@
 #include <TargetConditionals.h>
 #endif
 
+#include "absl/base/call_once.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "re2/stringpiece.h"
 
 namespace re2 {
@@ -273,11 +275,11 @@ class RE2 {
 
   // Need to have the const char* and const std::string& forms for implicit
   // conversions when passing string literals to FullMatch and PartialMatch.
-  // Otherwise the StringPiece form would be sufficient.
+  // Otherwise the absl::string_view form would be sufficient.
   RE2(const char* pattern);
   RE2(const std::string& pattern);
-  RE2(const StringPiece& pattern);
-  RE2(const StringPiece& pattern, const Options& options);
+  RE2(absl::string_view pattern);
+  RE2(absl::string_view pattern, const Options& options);
   ~RE2();
 
   // Not copyable.
@@ -336,13 +338,13 @@ class RE2 {
   // the functions whose names are the prefix before the 'N'. It is sometimes
   // useful to invoke them directly, but the syntax is awkward, so the 'N'-less
   // versions should be preferred.
-  static bool FullMatchN(const StringPiece& text, const RE2& re,
+  static bool FullMatchN(absl::string_view text, const RE2& re,
                          const Arg* const args[], int n);
-  static bool PartialMatchN(const StringPiece& text, const RE2& re,
+  static bool PartialMatchN(absl::string_view text, const RE2& re,
                             const Arg* const args[], int n);
-  static bool ConsumeN(StringPiece* input, const RE2& re,
+  static bool ConsumeN(absl::string_view* input, const RE2& re,
                        const Arg* const args[], int n);
-  static bool FindAndConsumeN(StringPiece* input, const RE2& re,
+  static bool FindAndConsumeN(absl::string_view* input, const RE2& re,
                               const Arg* const args[], int n);
 
  private:
@@ -374,10 +376,10 @@ class RE2 {
   //
   // The provided pointer arguments can be pointers to any scalar numeric
   // type, or one of:
-  //    std::string     (matched piece is copied to string)
-  //    StringPiece     (StringPiece is mutated to point to matched piece)
-  //    T               (where "bool T::ParseFrom(const char*, size_t)" exists)
-  //    (void*)NULL     (the corresponding matched sub-pattern is not copied)
+  //    std::string        (matched piece is copied to string)
+  //    absl::string_view  (string_view is mutated to point to matched piece)
+  //    T                  ("bool T::ParseFrom(const char*, size_t)" must exist)
+  //    (void*)NULL        (the corresponding matched sub-pattern is not copied)
   //
   // Returns true iff all of the following conditions are satisfied:
   //   a. "text" matches "re" fully - from the beginning to the end of "text".
@@ -395,7 +397,7 @@ class RE2 {
   //    int number;
   //    RE2::FullMatch("abc", "[a-z]+(\\d+)?", &number);
   template <typename... A>
-  static bool FullMatch(const StringPiece& text, const RE2& re, A&&... a) {
+  static bool FullMatch(absl::string_view text, const RE2& re, A&&... a) {
     return Apply(FullMatchN, text, re, Arg(std::forward<A>(a))...);
   }
 
@@ -411,7 +413,7 @@ class RE2 {
   //      number of sub-patterns, the "i"th captured sub-pattern is
   //      ignored.
   template <typename... A>
-  static bool PartialMatch(const StringPiece& text, const RE2& re, A&&... a) {
+  static bool PartialMatch(absl::string_view text, const RE2& re, A&&... a) {
     return Apply(PartialMatchN, text, re, Arg(std::forward<A>(a))...);
   }
 
@@ -429,7 +431,7 @@ class RE2 {
   //      number of sub-patterns, the "i"th captured sub-pattern is
   //      ignored.
   template <typename... A>
-  static bool Consume(StringPiece* input, const RE2& re, A&&... a) {
+  static bool Consume(absl::string_view* input, const RE2& re, A&&... a) {
     return Apply(ConsumeN, input, re, Arg(std::forward<A>(a))...);
   }
 
@@ -447,7 +449,7 @@ class RE2 {
   //      number of sub-patterns, the "i"th captured sub-pattern is
   //      ignored.
   template <typename... A>
-  static bool FindAndConsume(StringPiece* input, const RE2& re, A&&... a) {
+  static bool FindAndConsume(absl::string_view* input, const RE2& re, A&&... a) {
     return Apply(FindAndConsumeN, input, re, Arg(std::forward<A>(a))...);
   }
 
@@ -466,7 +468,7 @@ class RE2 {
   // false otherwise.
   static bool Replace(std::string* str,
                       const RE2& re,
-                      const StringPiece& rewrite);
+                      absl::string_view rewrite);
 
   // Like Replace(), except replaces successive non-overlapping occurrences
   // of the pattern in the string with the rewrite. E.g.
@@ -483,7 +485,7 @@ class RE2 {
   // Returns the number of replacements made.
   static int GlobalReplace(std::string* str,
                            const RE2& re,
-                           const StringPiece& rewrite);
+                           absl::string_view rewrite);
 
   // Like Replace, except that if the pattern matches, "rewrite"
   // is copied into "out" with substitutions.  The non-matching
@@ -493,9 +495,9 @@ class RE2 {
   // successfully;  if no match occurs, the string is left unaffected.
   //
   // REQUIRES: "text" must not alias any part of "*out".
-  static bool Extract(const StringPiece& text,
+  static bool Extract(absl::string_view text,
                       const RE2& re,
-                      const StringPiece& rewrite,
+                      absl::string_view rewrite,
                       std::string* out);
 
   // Escapes all potentially meaningful regexp characters in
@@ -504,7 +506,7 @@ class RE2 {
   //           1.5-2.0?
   // may become:
   //           1\.5\-2\.0\?
-  static std::string QuoteMeta(const StringPiece& unquoted);
+  static std::string QuoteMeta(absl::string_view unquoted);
 
   // Computes range for any strings matching regexp. The min and max can in
   // some cases be arbitrarily precise, so the caller gets to specify the
@@ -565,15 +567,15 @@ class RE2 {
   // Doesn't make sense to use nsubmatch > 1 + NumberOfCapturingGroups(),
   // but will be handled correctly.
   //
-  // Passing text == StringPiece(NULL, 0) will be handled like any other
+  // Passing text == absl::string_view() will be handled like any other
   // empty string, but note that on return, it will not be possible to tell
   // whether submatch i matched the empty string or did not match:
   // either way, submatch[i].data() == NULL.
-  bool Match(const StringPiece& text,
+  bool Match(absl::string_view text,
              size_t startpos,
              size_t endpos,
              Anchor re_anchor,
-             StringPiece* submatch,
+             absl::string_view* submatch,
              int nsubmatch) const;
 
   // Check that the given rewrite string is suitable for use with this
@@ -584,12 +586,12 @@ class RE2 {
   //     '\' followed by anything other than a digit or '\'.
   // A true return value guarantees that Replace() and Extract() won't
   // fail because of a bad rewrite string.
-  bool CheckRewriteString(const StringPiece& rewrite,
+  bool CheckRewriteString(absl::string_view rewrite,
                           std::string* error) const;
 
   // Returns the maximum submatch needed for the rewrite to be done by
   // Replace(). E.g. if rewrite == "foo \\2,\\1", returns 2.
-  static int MaxSubmatch(const StringPiece& rewrite);
+  static int MaxSubmatch(absl::string_view rewrite);
 
   // Append the "rewrite" string, with backslash substitutions from "vec",
   // to string "out".
@@ -597,8 +599,8 @@ class RE2 {
   // rewrite string.  CheckRewriteString guarantees that the rewrite will
   // be sucessful.
   bool Rewrite(std::string* out,
-               const StringPiece& rewrite,
-               const StringPiece* vec,
+               absl::string_view rewrite,
+               const absl::string_view* vec,
                int veclen) const;
 
   // Constructor options
@@ -757,9 +759,9 @@ class RE2 {
   static void FUZZING_ONLY_set_maximum_global_replace_count(int i);
 
  private:
-  void Init(const StringPiece& pattern, const Options& options);
+  void Init(absl::string_view pattern, const Options& options);
 
-  bool DoMatch(const StringPiece& text,
+  bool DoMatch(absl::string_view text,
                Anchor re_anchor,
                size_t* consumed,
                const Arg* const args[],
@@ -792,9 +794,9 @@ class RE2 {
   // Map from capture indices to names
   mutable const std::map<int, std::string>* group_names_;
 
-  mutable std::once_flag rprog_once_;
-  mutable std::once_flag named_groups_once_;
-  mutable std::once_flag group_names_once_;
+  mutable absl::once_flag rprog_once_;
+  mutable absl::once_flag named_groups_once_;
+  mutable absl::once_flag group_names_once_;
 };
 
 /***** Implementation details *****/
@@ -805,7 +807,7 @@ namespace re2_internal {
 template <typename T> struct Parse3ary : public std::false_type {};
 template <> struct Parse3ary<void> : public std::true_type {};
 template <> struct Parse3ary<std::string> : public std::true_type {};
-template <> struct Parse3ary<StringPiece> : public std::true_type {};
+template <> struct Parse3ary<absl::string_view> : public std::true_type {};
 template <> struct Parse3ary<char> : public std::true_type {};
 template <> struct Parse3ary<signed char> : public std::true_type {};
 template <> struct Parse3ary<unsigned char> : public std::true_type {};
@@ -828,6 +830,42 @@ template <> struct Parse4ary<unsigned long long> : public std::true_type {};
 
 template <typename T>
 bool Parse(const char* str, size_t n, T* dest, int radix);
+
+// Support absl::optional<T> for all T with a stock parser.
+template <typename T> struct Parse3ary<absl::optional<T>> : public Parse3ary<T> {};
+template <typename T> struct Parse4ary<absl::optional<T>> : public Parse4ary<T> {};
+
+template <typename T>
+bool Parse(const char* str, size_t n, absl::optional<T>* dest) {
+  if (str == NULL) {
+    if (dest != NULL)
+      dest->reset();
+    return true;
+  }
+  T tmp;
+  if (Parse(str, n, &tmp)) {
+    if (dest != NULL)
+      dest->emplace(std::move(tmp));
+    return true;
+  }
+  return false;
+}
+
+template <typename T>
+bool Parse(const char* str, size_t n, absl::optional<T>* dest, int radix) {
+  if (str == NULL) {
+    if (dest != NULL)
+      dest->reset();
+    return true;
+  }
+  T tmp;
+  if (Parse(str, n, &tmp, radix)) {
+    if (dest != NULL)
+      dest->emplace(std::move(tmp));
+    return true;
+  }
+  return false;
+}
 
 }  // namespace re2_internal
 
@@ -955,7 +993,7 @@ class LazyRE2 {
 
   // Named accessor/initializer:
   RE2* get() const {
-    std::call_once(once_, &LazyRE2::Init, this);
+    absl::call_once(once_, &LazyRE2::Init, this);
     return ptr_;
   }
 
@@ -965,7 +1003,7 @@ class LazyRE2 {
   NoArg barrier_against_excess_initializers_;
 
   mutable RE2* ptr_;
-  mutable std::once_flag once_;
+  mutable absl::once_flag once_;
 
  private:
   static void Init(const LazyRE2* lazy_re2) {

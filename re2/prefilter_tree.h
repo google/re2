@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "util/util.h"
 #include "re2/prefilter.h"
 #include "re2/sparse_array.h"
 
@@ -59,7 +58,7 @@ class PrefilterTree {
 
  private:
   typedef SparseArray<int> IntMap;
-  // TODO(junyer): Use std::unordered_set<Prefilter*> instead?
+  // TODO(junyer): Use absl::flat_hash_set<Prefilter*> instead?
   // It should be trivial to get rid of the stringification...
   typedef std::map<std::string, Prefilter*> NodeMap;
 
