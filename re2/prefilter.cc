@@ -10,9 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include "util/util.h"
+#include "absl/strings/str_format.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "util/utf.h"
 #include "re2/re2.h"
 #include "re2/unicode_casefold.h"
@@ -664,7 +663,7 @@ std::string Prefilter::DebugString() const {
   switch (op_) {
     default:
       LOG(DFATAL) << "Bad op in Prefilter::DebugString: " << op_;
-      return StringPrintf("op%d", op_);
+      return absl::StrFormat("op%d", op_);
     case NONE:
       return "*no-matches*";
     case ATOM:

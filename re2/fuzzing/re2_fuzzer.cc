@@ -15,8 +15,6 @@
 #include "re2/set.h"
 #include "re2/walker-inl.h"
 
-using re2::StringPiece;
-
 // NOT static, NOT signed.
 uint8_t dummy = 0;
 
@@ -97,8 +95,8 @@ class SubstringWalker : public re2::Regexp::Walker<int> {
   SubstringWalker& operator=(const SubstringWalker&) = delete;
 };
 
-void TestOneInput(StringPiece pattern, const RE2::Options& options,
-                  RE2::Anchor anchor, StringPiece text) {
+void TestOneInput(absl::string_view pattern, const RE2::Options& options,
+                  RE2::Anchor anchor, absl::string_view text) {
   // Crudely limit the use of ., \p, \P, \d, \D, \s, \S, \w and \W.
   // Otherwise, we will waste time on inputs that have long runs of various
   // character classes. The fuzzer has shown itself to be easily capable of
@@ -178,7 +176,7 @@ void TestOneInput(StringPiece pattern, const RE2::Options& options,
 
   if (re.NumberOfCapturingGroups() == 0) {
     // Avoid early return due to too many arguments.
-    StringPiece sp = text;
+    absl::string_view sp = text;
     RE2::FullMatch(sp, re);
     RE2::PartialMatch(sp, re);
     RE2::Consume(&sp, re);
@@ -187,7 +185,7 @@ void TestOneInput(StringPiece pattern, const RE2::Options& options,
   } else {
     // Okay, we have at least one capturing group...
     // Try conversion for variously typed arguments.
-    StringPiece sp = text;
+    absl::string_view sp = text;
     short s;
     RE2::FullMatch(sp, re, &s);
     long l;

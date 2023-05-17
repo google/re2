@@ -13,9 +13,8 @@
 #include <utility>
 #include <vector>
 
-#include "util/util.h"
+#include "absl/strings/str_format.h"
 #include "util/logging.h"
-#include "util/strutil.h"
 #include "re2/prefilter.h"
 #include "re2/re2.h"
 
@@ -80,14 +79,14 @@ Prefilter* PrefilterTree::CanonicalNode(NodeMap* nodes, Prefilter* node) {
 
 std::string PrefilterTree::NodeString(Prefilter* node) const {
   // Adding the operation disambiguates AND/OR/atom nodes.
-  std::string s = StringPrintf("%d", node->op()) + ":";
+  std::string s = absl::StrFormat("%d", node->op()) + ":";
   if (node->op() == Prefilter::ATOM) {
     s += node->atom();
   } else {
     for (size_t i = 0; i < node->subs()->size(); i++) {
       if (i > 0)
         s += ',';
-      s += StringPrintf("%d", (*node->subs())[i]->unique_id());
+      s += absl::StrFormat("%d", (*node->subs())[i]->unique_id());
     }
   }
   return s;
@@ -380,7 +379,7 @@ std::string PrefilterTree::DebugNodeString(Prefilter* node) const {
     for (size_t i = 0; i < node->subs()->size(); i++) {
       if (i > 0)
         node_string += ',';
-      node_string += StringPrintf("%d", (*node->subs())[i]->unique_id());
+      node_string += absl::StrFormat("%d", (*node->subs())[i]->unique_id());
       node_string += ":";
       node_string += DebugNodeString((*node->subs())[i]);
     }

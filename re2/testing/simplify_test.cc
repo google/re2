@@ -7,7 +7,8 @@
 #include <string.h>
 #include <string>
 
-#include "util/test.h"
+#include "absl/base/macros.h"
+#include "gtest/gtest.h"
 #include "util/logging.h"
 #include "re2/regexp.h"
 
@@ -245,7 +246,7 @@ static Test tests[] = {
 };
 
 TEST(TestSimplify, SimpleRegexps) {
-  for (size_t i = 0; i < arraysize(tests); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(tests); i++) {
     RegexpStatus status;
     VLOG(1) << "Testing " << tests[i].regexp;
     Regexp* re = Regexp::Parse(tests[i].regexp,
