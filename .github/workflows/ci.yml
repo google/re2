@@ -20,6 +20,10 @@ jobs:
       CXXFLAGS: -O3 -g -std=c++${{ matrix.ver }}
     steps:
       - uses: actions/checkout@v3
+      - name: Install dependencies (macOS)
+        run: |
+          brew install abseil googletest google-benchmark
+        shell: bash
       - run: make && make test
         shell: bash
   build-clang:
@@ -39,6 +43,10 @@ jobs:
           chmod +x ./llvm.sh
           sudo ./llvm.sh ${{ matrix.ver }}
         shell: bash
+      - name: Install dependencies (Ubuntu)
+        run: |
+          sudo apt install libabsl-dev libgtest-dev libbenchmark-dev
+        shell: bash
       - run: make && make test
         shell: bash
   build-gcc:
@@ -53,5 +61,9 @@ jobs:
       CXX: g++
     steps:
       - uses: actions/checkout@v3
+      - name: Install dependencies (Ubuntu)
+        run: |
+          sudo apt install libabsl-dev libgtest-dev libbenchmark-dev
+        shell: bash
       - run: make && make test
         shell: bash

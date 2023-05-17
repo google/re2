@@ -13,6 +13,8 @@ if(UNIX)
   find_dependency(Threads REQUIRED)
 endif()
 
+find_dependency(absl REQUIRED)
+
 if(@RE2_USE_ICU@)
   find_dependency(ICU REQUIRED COMPONENTS uc)
 endif()
