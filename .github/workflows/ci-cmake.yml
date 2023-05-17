@@ -14,17 +14,20 @@ jobs:
       - if: matrix.os == 'macos-latest'
         name: Install dependencies (macOS)
         run: |
+          brew update
           brew install abseil googletest google-benchmark
         shell: bash
       - if: matrix.os == 'ubuntu-latest'
         name: Install dependencies (Ubuntu)
         run: |
+          sudo apt update
           sudo apt install libabsl-dev libgtest-dev libbenchmark-dev
         shell: bash
       - if: matrix.os == 'windows-latest'
         name: Install dependencies (Windows)
         run: |
-          vcpkg install abseil gtest benchmark
+          vcpkg update
+          vcpkg --triplet x64-windows install abseil gtest benchmark
         shell: bash
       - run: .github/cmake.sh
         shell: bash

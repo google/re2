@@ -22,6 +22,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install dependencies (macOS)
         run: |
+          brew update
           brew install abseil googletest google-benchmark
         shell: bash
       - run: make && make test
@@ -45,6 +46,7 @@ jobs:
         shell: bash
       - name: Install dependencies (Ubuntu)
         run: |
+          sudo apt update
           sudo apt install libabsl-dev libgtest-dev libbenchmark-dev
         shell: bash
       - run: make && make test
@@ -63,6 +65,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install dependencies (Ubuntu)
         run: |
+          apt update
           apt install libabsl-dev libgtest-dev libbenchmark-dev
         shell: bash
       - run: make && make test
