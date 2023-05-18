@@ -3,31 +3,45 @@ on:
   push:
     branches: [main]
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  build-linux:
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
-      - if: matrix.os == 'macos-latest'
-        name: Install dependencies (macOS)
-        run: |
-          brew update
-          brew install abseil googletest google-benchmark
-        shell: bash
-      - if: matrix.os == 'ubuntu-latest'
-        name: Install dependencies (Ubuntu)
+      - name: Install Abseil, GoogleTest and Benchmark
         run: |
           sudo apt update -y
           sudo apt install -y libabsl-dev libgtest-dev libbenchmark-dev
         shell: bash
-      - if: matrix.os == 'windows-latest'
-        name: Install dependencies (Windows)
-        run: |
-          vcpkg update
-          vcpkg --triplet x64-windows install abseil gtest benchmark
-        shell: bash
       - run: .github/cmake.sh
+        shell: bash
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Abseil, GoogleTest and Benchmark
+        run: |
+          brew update
+          brew install abseil googletest google-benchmark
+        shell: bash
+      - run: .github/cmake.sh -D RE2_BUILD_FRAMEWORK=ON
+        shell: bash
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Abseil, GoogleTest and Benchmark
+        run: |
+          # TODO: Remove this in September 2023, which is when the default triplet for
+          # vcpkg libraries will change from x86-windows to the detected host triplet.
+          export VCPKG_DEFAULT_TRIPLET=x64-windows
+          vcpkg update
+          vcpkg install abseil gtest benchmark
+        shell: bash
+      - run: .github/cmake.sh -D CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
         shell: bash
