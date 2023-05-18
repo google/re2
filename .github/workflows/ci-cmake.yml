@@ -20,8 +20,8 @@ jobs:
       - if: matrix.os == 'ubuntu-latest'
         name: Install dependencies (Ubuntu)
         run: |
-          sudo apt update
-          sudo apt install libabsl-dev libgtest-dev libbenchmark-dev
+          sudo apt update -y
+          sudo apt install -y libabsl-dev libgtest-dev libbenchmark-dev
         shell: bash
       - if: matrix.os == 'windows-latest'
         name: Install dependencies (Windows)

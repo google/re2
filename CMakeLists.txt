@@ -24,7 +24,7 @@ option(RE2_BUILD_FRAMEWORK "build RE2 as a framework" OFF)
 
 # CMake seems to have no way to enable/disable testing per subproject,
 # so we provide an option similar to BUILD_TESTING, but just for RE2.
-option(RE2_BUILD_TESTING "enable testing for RE2" ON)
+option(RE2_BUILD_TESTING "enable testing for RE2" OFF)
 
 # The pkg-config Requires: field.
 set(REQUIRES)
@@ -38,10 +38,6 @@ set(EXTRA_TARGET_LINK_LIBRARIES)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   if(MSVC_VERSION LESS 1920)
     message(FATAL_ERROR "you need Visual Studio 2019 or later")
-  endif()
-  if(BUILD_SHARED_LIBS)
-    # See http://www.kitware.com/blog/home/post/939 for details.
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
   endif()
   # CMake defaults to /W3, but some users like /W4 (or /Wall) and /WX,
   # so we disable various warnings that aren't particularly helpful.
@@ -137,6 +133,11 @@ set_target_properties(re2 PROPERTIES PUBLIC_HEADER "${RE2_HEADERS}")
 set_target_properties(re2 PROPERTIES SOVERSION ${SONAME} VERSION ${SONAME}.0.0)
 add_library(re2::re2 ALIAS re2)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND BUILD_SHARED_LIBS)
+  set_target_properties(re2 PROPERTIES
+                        WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
 if(APPLE AND RE2_BUILD_FRAMEWORK)
   set_target_properties(re2 PROPERTIES
                         FRAMEWORK TRUE
@@ -207,14 +208,14 @@ if(RE2_BUILD_TESTING)
   foreach(target ${TEST_TARGETS})
     add_executable(${target} re2/testing/${target}.cc)
     target_compile_features(${target} PUBLIC cxx_std_14)
-    target_link_libraries(${target} testing GTest::gtest GTest::gtest_main ${EXTRA_TARGET_LINK_LIBRARIES})
+    target_link_libraries(${target} PUBLIC testing GTest::gtest GTest::gtest_main ${EXTRA_TARGET_LINK_LIBRARIES})
     add_test(NAME ${target} COMMAND ${target})
   endforeach()
 
   foreach(target ${BENCHMARK_TARGETS})
     add_executable(${target} re2/testing/${target}.cc)
     target_compile_features(${target} PUBLIC cxx_std_14)
-    target_link_libraries(${target} testing GTest::gtest benchmark::benchmark_main ${EXTRA_TARGET_LINK_LIBRARIES})
+    target_link_libraries(${target} PUBLIC testing GTest::gtest benchmark::benchmark benchmark::benchmark_main ${EXTRA_TARGET_LINK_LIBRARIES})
   endforeach()
 endif()
 

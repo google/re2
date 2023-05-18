@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eux
 
-cmake_vars=()
+cmake_vars=(-D RE2_BUILD_TESTING=ON)
 if [[ ${RUNNER_OS} == Windows ]]; then
   cmake_vars+=(-D CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake)
 fi
