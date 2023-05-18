@@ -46,8 +46,8 @@ jobs:
         shell: bash
       - name: Install dependencies (Ubuntu)
         run: |
-          sudo apt update
-          sudo apt install libabsl-dev libgtest-dev libbenchmark-dev
+          sudo apt update -y
+          sudo apt install -y libabsl-dev libgtest-dev libbenchmark-dev
         shell: bash
       - run: make && make test
         shell: bash
@@ -65,8 +65,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install dependencies (Ubuntu)
         run: |
-          apt update
-          apt install libabsl-dev libgtest-dev libbenchmark-dev
+          apt update -y
+          apt install -y libabsl-dev libgtest-dev libbenchmark-dev
         shell: bash
       - run: make && make test
         shell: bash
