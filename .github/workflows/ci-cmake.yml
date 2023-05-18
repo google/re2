@@ -27,7 +27,7 @@ jobs:
         name: Install dependencies (Windows)
         run: |
           vcpkg update
-          vcpkg --triplet x64-windows install abseil gtest benchmark
+          vcpkg --triplet x64-windows-static install abseil gtest benchmark
         shell: bash
       - run: .github/cmake.sh
         shell: bash
