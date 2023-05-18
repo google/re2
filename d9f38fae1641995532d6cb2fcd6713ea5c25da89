@@ -16,6 +16,24 @@
       "message": "Rubber stamping this one.",
       "revId": "d9f38fae1641995532d6cb2fcd6713ea5c25da89",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9c8ce70c_a66c5e8e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-05-18T08:12:53Z",
+      "side": 1,
+      "message": "Oh, I meant to follow up earlier to confirm that the branches are essentially aligned at this point:\n\n```\n$ git diff --name-status main abseil\nD       .github/cmake.sh\nM       .github/workflows/ci-bazel.yml\nD       .github/workflows/ci-cmake.yml\nD       .github/workflows/ci.yml\nM       .github/workflows/pr.yml\nR100    BUILD.bazel     BUILD\nD       CMakeLists.txt\nD       Makefile\nM       README\nR100    WORKSPACE.bazel WORKSPACE\nR100    app/BUILD.bazel app/BUILD\nD       benchlog/benchlog.c2\nD       benchlog/benchlog.mini\nD       benchlog/benchlog.r70\nD       benchlog/benchlog.wreck\nD       benchlog/benchplot.py\nD       benchlog/mktable\nD       libre2.symbols\nD       libre2.symbols.darwin\nD       re2.pc.in\nD       re2/fuzzing/compiler-rt/LICENSE\nD       re2/fuzzing/compiler-rt/include/fuzzer/FuzzedDataProvider.h\nD       re2Config.cmake.in\nD       runtests\nD       testinstall.cc\nD       ucs2.diff\n$ \n```",
+      "parentUuid": "e1e43164_2fd98d36",
+      "revId": "d9f38fae1641995532d6cb2fcd6713ea5c25da89",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ],
   "submitRequirementResults": [
