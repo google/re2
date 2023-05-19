@@ -173,9 +173,9 @@ if(RE2_BUILD_TESTING)
       util/pcre.cc
       )
 
-  add_library(testing STATIC ${TESTING_SOURCES})
+  add_library(testing ${TESTING_SOURCES})
   target_compile_features(testing PUBLIC cxx_std_14)
-  target_link_libraries(testing PUBLIC re2)
+  target_link_libraries(testing PUBLIC re2 GTest::gtest)
 
   set(TEST_TARGETS
       charclass_test
@@ -208,14 +208,20 @@ if(RE2_BUILD_TESTING)
   foreach(target ${TEST_TARGETS})
     add_executable(${target} re2/testing/${target}.cc)
     target_compile_features(${target} PUBLIC cxx_std_14)
-    target_link_libraries(${target} PUBLIC testing GTest::gtest GTest::gtest_main ${EXTRA_TARGET_LINK_LIBRARIES})
+    target_link_libraries(${target} PUBLIC testing GTest::gtest_main ${EXTRA_TARGET_LINK_LIBRARIES})
     add_test(NAME ${target} COMMAND ${target})
   endforeach()
 
   foreach(target ${BENCHMARK_TARGETS})
     add_executable(${target} re2/testing/${target}.cc)
     target_compile_features(${target} PUBLIC cxx_std_14)
-    target_link_libraries(${target} PUBLIC testing GTest::gtest benchmark::benchmark benchmark::benchmark_main ${EXTRA_TARGET_LINK_LIBRARIES})
+    target_link_libraries(${target} PUBLIC testing benchmark::benchmark_main ${EXTRA_TARGET_LINK_LIBRARIES})
+    # For GitHub Actions on Ubuntu 22.04 LTS, GCC gives "lto1: fatal error:
+    # bytecode stream in file ‘/usr/lib/x86_64-linux-gnu/libbenchmark_main.a’
+    # generated with LTO version 11.2 instead of the expected 11.3" errors,
+    # but it's unclear what the proper fix should be, so disable LTO for now.
+    set_target_properties(${target} PROPERTIES
+                          INTERPROCEDURAL_OPTIMIZATION FALSE)
   endforeach()
 endif()
 
