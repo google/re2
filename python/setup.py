@@ -54,11 +54,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     cmd = ['bazel', 'clean', '--expunge']
     self.spawn(cmd)
 
-    cmd = ['bazel', 'build', '--compilation_mode=opt']
+    cmd = ['bazel', 'build']
     cmd.append(f'--config={os.environ["RUNNER_OS"].lower()}')
     if 'BAZEL_CPU' in os.environ:
       cmd.append(f'--cpu={os.environ["BAZEL_CPU"].lower()}')
-    cmd += ['--', ':all']
+    cmd += ['--compilation_mode=opt', '--', ':all']
     self.spawn(cmd)
 
     # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'

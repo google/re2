@@ -18,8 +18,8 @@ ABSL_DEPS=\
 	absl_synchronization\
 
 CCABSL=$(shell pkg-config $(ABSL_DEPS) --cflags)
-# GCC barfs on `-Wl` whereas Clang doesn't mind, but it's unclear
-# what causes it to manifest on Ubuntu, so filter it out for now.
+# GCC barfs on `-Wl` whereas Clang doesn't mind, but it's unclear what
+# causes it to manifest on Ubuntu 22.04 LTS, so filter it out for now.
 LDABSL=$(shell pkg-config $(ABSL_DEPS) --libs | sed -e 's/-Wl / /g')
 
 # To build against ICU for full Unicode properties support,
