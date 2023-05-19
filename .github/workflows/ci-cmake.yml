@@ -13,6 +13,11 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
+      - name: Install CMake
+        run: |
+          apt update -y
+          apt install -y cmake
+        shell: bash
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
           apt update -y
