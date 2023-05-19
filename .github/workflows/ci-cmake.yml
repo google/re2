@@ -3,8 +3,12 @@ on:
   push:
     branches: [main]
 jobs:
+  # GitHub Actions doesn't provide GCC 13, so we use a Docker container instead.
+  # (Also, the Benchmark package on Ubuntu 22.04 LTS is problematic whereas this
+  # Docker container is based on Debian bookworm and so it has a newer version.)
   build-linux:
     runs-on: ubuntu-latest
+    container: gcc:13
     strategy:
       fail-fast: false
     steps:
