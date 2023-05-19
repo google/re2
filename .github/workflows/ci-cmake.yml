@@ -15,8 +15,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
-          sudo apt update -y
-          sudo apt install -y libabsl-dev libgtest-dev libbenchmark-dev
+          apt update -y
+          apt install -y libabsl-dev libgtest-dev libbenchmark-dev
         shell: bash
       - run: .github/cmake.sh
         shell: bash
