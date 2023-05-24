@@ -72,11 +72,18 @@ set(ABSL_DEPS
     absl_synchronization
     )
 
-find_package(absl REQUIRED)
+# If a top-level project has called add_directory(abseil-cpp) already (possibly
+# indirectly), let that take precedence over any copy of Abseil that might have
+# been installed on the system. And likewise for ICU, GoogleTest and Benchmark.
+if(NOT TARGET absl::base)
+  find_package(absl REQUIRED)
+endif()
 list(APPEND REQUIRES ${ABSL_DEPS})
 
 if(RE2_USE_ICU)
-  find_package(ICU REQUIRED COMPONENTS uc)
+  if(NOT TARGET ICU::uc)
+    find_package(ICU REQUIRED COMPONENTS uc)
+  endif()
   add_definitions(-DRE2_USE_ICU)
   list(APPEND REQUIRES icu-uc)
 endif()
@@ -159,8 +166,12 @@ if(RE2_USE_ICU)
 endif()
 
 if(RE2_BUILD_TESTING)
-  find_package(GTest REQUIRED)
-  find_package(benchmark REQUIRED)
+  if(NOT TARGET GTest::gtest)
+    find_package(GTest REQUIRED)
+  endif()
+  if(NOT TARGET benchmark::benchmark)
+    find_package(benchmark REQUIRED)
+  endif()
 
   set(TESTING_SOURCES
       re2/testing/backtrack.cc
