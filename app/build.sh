@@ -23,7 +23,7 @@ else
   # Emscripten doesn't support `-fstack-protector`.
   AR=emar CC=emcc \
     ${BAZEL} build --compilation_mode=opt \
-    --config=linux --copt=-fno-stack-protector \
+    --copt=-fno-stack-protector \
     -- :all
   # Bazel doesn't retain the `_re2.wasm` artifact;
   # we have to redo the link command to obtain it.
