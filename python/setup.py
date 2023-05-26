@@ -45,7 +45,7 @@ Known issues with regard to building the C++ extension:
 class BuildExt(setuptools.command.build_ext.build_ext):
 
   def build_extension(self, ext):
-    if 'RUNNER_OS' not in os.environ:
+    if 'GITHUB_ACTIONS' not in os.environ:
       return super().build_extension(ext)
 
     # For @pybind11_bazel's `python_configure()`.
@@ -55,7 +55,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     self.spawn(cmd)
 
     cmd = ['bazel', 'build']
-    cmd.append(f'--config={os.environ["RUNNER_OS"].lower()}')
     if 'BAZEL_CPU' in os.environ:
       cmd.append(f'--cpu={os.environ["BAZEL_CPU"].lower()}')
     cmd += ['--compilation_mode=opt', '--', ':all']
