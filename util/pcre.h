@@ -175,6 +175,16 @@ const bool UsingPCRE = false;
 }  // namespace re2
 #endif
 
+// To produce a DLL, CMake can automatically export code symbols,
+// but not data symbols, so we have to annotate those manually...
+#if defined(RE2_BUILD_TESTING_DLL)
+#define RE2_TESTING_DLL __declspec(dllexport)
+#elif defined(RE2_CONSUME_TESTING_DLL)
+#define RE2_TESTING_DLL __declspec(dllimport)
+#else
+#define RE2_TESTING_DLL
+#endif
+
 namespace re2 {
 
 class PCRE_Options;
@@ -190,7 +200,7 @@ class PCRE {
   // Marks end of arg list.
   // ONLY USE IN OPTIONAL ARG DEFAULTS.
   // DO NOT PASS EXPLICITLY.
-  static Arg no_more_args;
+  RE2_TESTING_DLL static Arg no_more_args;
 
   // Options are same value as those in pcre.  We provide them here
   // to avoid users needing to include pcre.h and also to isolate
@@ -285,7 +295,7 @@ class PCRE {
                      const Arg& ptr16 = no_more_args) const;
   };
 
-  static const FullMatchFunctor FullMatch;
+  RE2_TESTING_DLL static const FullMatchFunctor FullMatch;
 
   // Exactly like FullMatch(), except that "pattern" is allowed to match
   // a substring of "text".
@@ -309,7 +319,7 @@ class PCRE {
                      const Arg& ptr16 = no_more_args) const;
   };
 
-  static const PartialMatchFunctor PartialMatch;
+  RE2_TESTING_DLL static const PartialMatchFunctor PartialMatch;
 
   // Like FullMatch() and PartialMatch(), except that pattern has to
   // match a prefix of "text", and "input" is advanced past the matched
@@ -334,7 +344,7 @@ class PCRE {
                      const Arg& ptr16 = no_more_args) const;
   };
 
-  static const ConsumeFunctor Consume;
+  RE2_TESTING_DLL static const ConsumeFunctor Consume;
 
   // Like Consume(..), but does not anchor the match at the beginning of the
   // string.  That is, "pattern" need not start its match at the beginning of
@@ -360,7 +370,7 @@ class PCRE {
                      const Arg& ptr16 = no_more_args) const;
   };
 
-  static const FindAndConsumeFunctor FindAndConsume;
+  RE2_TESTING_DLL static const FindAndConsumeFunctor FindAndConsume;
 
   // Replace the first match of "pattern" in "str" with "rewrite".
   // Within "rewrite", backslash-escaped digits (\1 to \9) can be
