@@ -460,7 +460,7 @@ class PCRE {
   int TryMatch(absl::string_view text, size_t startpos, Anchor anchor,
                bool empty_ok, int* vec, int vecsize) const;
 
-  // Append the "rewrite" string, with backslash subsitutions from "text"
+  // Append the "rewrite" string, with backslash substitutions from "text"
   // and "vec", to string "out".
   bool Rewrite(std::string* out, absl::string_view rewrite,
                absl::string_view text, int* vec, int veclen) const;
