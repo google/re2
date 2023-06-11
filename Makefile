@@ -20,17 +20,18 @@ ABSL_DEPS=\
 CCABSL=$(shell pkg-config $(ABSL_DEPS) --cflags)
 # GCC barfs on `-Wl` whereas Clang doesn't mind, but it's unclear what
 # causes it to manifest on Ubuntu 22.04 LTS, so filter it out for now.
-LDABSL=$(shell pkg-config $(ABSL_DEPS) --libs | sed -e 's/-Wl / /g')
+ABSL_LIBS=$(shell pkg-config $(ABSL_DEPS) --libs | sed -e 's/-Wl / /g')
 
 # To build against ICU for full Unicode properties support,
 # uncomment the next two lines:
 # CCICU=$(shell pkg-config icu-uc --cflags) -DRE2_USE_ICU
-# LDICU=$(shell pkg-config icu-uc --libs)
+# ICU_LIBS=$(shell pkg-config icu-uc --libs)
 
 # To build against PCRE for testing and benchmarking,
 # uncomment the next two lines:
 # CCPCRE=-I/usr/local/include -DUSEPCRE
-# LDPCRE=-L/usr/local/lib -lpcre
+# LDPCRE=-L/usr/local/lib
+# PCRE_LIBS=-lpcre
 
 CXX?=g++
 # can override
@@ -38,7 +39,8 @@ CXXFLAGS?=-O3 -g
 LDFLAGS?=
 # required
 RE2_CXXFLAGS?=-pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCABSL) $(CCICU) $(CCPCRE)
-RE2_LDFLAGS?=-pthread $(LDABSL) $(LDICU) $(LDPCRE)
+RE2_LDFLAGS?=-pthread $(LDPCRE)
+RE2_LIBS=$(ABSL_LIBS) $(ICU_LIBS) $(PCRE_LIBS)
 AR?=ar
 ARFLAGS?=rsc
 NM?=nm
@@ -225,28 +227,28 @@ obj/dbg/libre2.a: $(DOFILES)
 .PRECIOUS: obj/so/libre2.$(SOEXT)
 obj/so/libre2.$(SOEXT): $(SOFILES) libre2.symbols libre2.symbols.darwin
 	@mkdir -p obj/so
-	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES)
+	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES) $(RE2_LIBS)
 	ln -sf libre2.$(SOEXTVER) $@
 
 .PRECIOUS: obj/dbg/test/%
 obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES)
 	@mkdir -p obj/dbg/test
-	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) -lgtest -lgtest_main obj/dbg/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) -lgtest -lgtest_main obj/dbg/libre2.a $(RE2_LDFLAGS) $(LDFLAGS) $(RE2_LIBS)
 
 .PRECIOUS: obj/test/%
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES)
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) -lgtest -lgtest_main obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) -lgtest -lgtest_main obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS) $(RE2_LIBS)
 
 # Test the shared lib, falling back to the static lib for private symbols
 .PRECIOUS: obj/so/test/%
 obj/so/test/%: obj/so/libre2.$(SOEXT) obj/libre2.a obj/re2/testing/%.o $(TESTOFILES)
 	@mkdir -p obj/so/test
-	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) -lgtest -lgtest_main -Lobj/so -lre2 obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) -lgtest -lgtest_main -Lobj/so -lre2 obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS) $(RE2_LIBS)
 
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES)
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) -lgtest -lbenchmark -lbenchmark_main obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(TESTOFILES) -lgtest -lbenchmark -lbenchmark_main obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS) $(RE2_LIBS)
 
 # re2_fuzzer is a target for fuzzers like libFuzzer and AFL. This fake fuzzing
 # is simply a way to check that the target builds and then to run it against a
@@ -255,7 +257,7 @@ obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TES
 obj/test/re2_fuzzer: CXXFLAGS:=-I./re2/fuzzing/compiler-rt/include $(CXXFLAGS)
 obj/test/re2_fuzzer: obj/libre2.a obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS) $(RE2_LIBS)
 
 ifdef REBUILD_TABLES
 .PRECIOUS: re2/perl_groups.cc
