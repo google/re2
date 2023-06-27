@@ -86,6 +86,24 @@
       "parentUuid": "8d0c88b7_17580a91",
       "revId": "28854cec80f5b76d1ba8f13b941b354c2543e225",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0591f6df_d325b069",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 5160
+      },
+      "writtenOn": "2023-06-27T13:45:52Z",
+      "side": 1,
+      "message": "Yes, the issue I observed is that the linker shared libraries (`-lXXX`) were being passed too early in `$(MAKE_SHARED_LIBRARY)`, they need to appear *after* `$(SOFILES)`",
+      "parentUuid": "bca14ad1_3fc6275b",
+      "revId": "28854cec80f5b76d1ba8f13b941b354c2543e225",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
