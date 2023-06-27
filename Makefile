@@ -81,17 +81,17 @@ ifeq ($(shell uname),Darwin)
 SOEXT=dylib
 SOEXTVER=$(SONAME).$(SOEXT)
 SOEXTVER00=$(SONAME).0.0.$(SOEXT)
-MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib -Wl,-compatibility_version,$(SONAME),-current_version,$(SONAME).0.0,-install_name,$(libdir)/libre2.$(SOEXTVER),-exported_symbols_list,libre2.symbols.darwin $(RE2_LDFLAGS) $(LDFLAGS)
+MAKE_SHARED_LIBRARY=$(CXX) -dynamiclib -Wl,-compatibility_version,$(SONAME),-current_version,$(SONAME).0.0,-install_name,$(libdir)/libre2.$(SOEXTVER),-exported_symbols_list,libre2.symbols.darwin
 else ifeq ($(shell uname),SunOS)
 SOEXT=so
 SOEXTVER=$(SOEXT).$(SONAME)
 SOEXTVER00=$(SOEXT).$(SONAME).0.0
-MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER) $(RE2_LDFLAGS) $(LDFLAGS)
+MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER)
 else
 SOEXT=so
 SOEXTVER=$(SOEXT).$(SONAME)
 SOEXTVER00=$(SOEXT).$(SONAME).0.0
-MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),--version-script,libre2.symbols $(RE2_LDFLAGS) $(LDFLAGS)
+MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),--version-script,libre2.symbols
 endif
 
 .PHONY: all
@@ -225,7 +225,7 @@ obj/dbg/libre2.a: $(DOFILES)
 .PRECIOUS: obj/so/libre2.$(SOEXT)
 obj/so/libre2.$(SOEXT): $(SOFILES) libre2.symbols libre2.symbols.darwin
 	@mkdir -p obj/so
-	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES)
+	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES) $(RE2_LDFLAGS) $(LDFLAGS)
 	ln -sf libre2.$(SOEXTVER) $@
 
 .PRECIOUS: obj/dbg/test/%
