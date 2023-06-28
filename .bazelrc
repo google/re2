@@ -12,5 +12,8 @@ build:linux --cxxopt=-std=c++14
 build:macos --cxxopt=-std=c++14
 build:windows --cxxopt=/std:c++14
 
+# Print command lines for build commands.
+build --subcommands=pretty_print
+
 # Print test logs for failed tests.
 test --test_output=errors
