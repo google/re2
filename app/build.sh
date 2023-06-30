@@ -25,13 +25,7 @@ else
     ${BAZEL} build --compilation_mode=opt \
     --copt=-fno-stack-protector \
     -- :all
-  # Bazel doesn't retain the `_re2.wasm` artifact;
-  # we have to redo the link command to obtain it.
-  pushd ..
-  emcc @bazel-bin/app/_re2.js-2.params
-  cd bazel-bin/app
-  cp _re2.js _re2.wasm ${DSTDIR}
-  popd
+  cp ../bazel-bin/app/_re2.js ${DSTDIR}
   # Clean up the sundry Bazel output directories.
   ${BAZEL} clean --expunge
   cp app.ts index.html _re2.d.ts ${DSTDIR}
