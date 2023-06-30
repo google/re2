@@ -51,9 +51,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     # For @pybind11_bazel's `python_configure()`.
     os.environ['PYTHON_BIN_PATH'] = sys.executable
 
-    cmd = ['bazel', 'clean', '--expunge']
-    self.spawn(cmd)
-
     cmd = ['bazel', 'build']
     if 'BAZEL_CPU' in os.environ:
       cmd.append(f'--cpu={os.environ["BAZEL_CPU"].lower()}')
@@ -64,6 +61,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     # is the filename in the destination directory, which is what's needed.
     shutil.copyfile('../bazel-bin/python/_re2.so',
                     self.get_ext_fullpath(ext.name))
+
+    cmd = ['bazel', 'clean', '--expunge']
+    self.spawn(cmd)
 
 
 def include_dirs():
