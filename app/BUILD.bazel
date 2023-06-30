@@ -10,6 +10,7 @@ cc_binary(
     linkopts = [
         "--bind",
         "-sENVIRONMENT=web",
+        "-sSINGLE_FILE=1",
         "-sMODULARIZE=1",
         "-sEXPORT_ES6=1",
         "-sEXPORT_NAME=loadModule",
