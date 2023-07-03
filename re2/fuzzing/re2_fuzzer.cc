@@ -209,6 +209,7 @@ void TestOneInput(absl::string_view pattern, const RE2::Options& options,
   dummy += re.NamedCapturingGroups().size();
   dummy += re.CapturingGroupNames().size();
   dummy += RE2::QuoteMeta(pattern).size();
+  dummy += re.Regexp()->ToString().size();
 
   RE2::Set set(options, anchor);
   int index = set.Add(pattern, /*error=*/NULL);  // -1 on error
