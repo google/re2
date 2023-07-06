@@ -59,6 +59,44 @@ class Prefilter {
   std::string DebugString() const;
 
  private:
+  template <typename H>
+  friend H AbslHashValue(H h, const Prefilter& a) {
+    h = H::combine(std::move(h), a.op_);
+    if (a.op_ == ATOM) {
+      h = H::combine(std::move(h), a.atom_);
+    } else if (a.op_ == AND || a.op_ == OR) {
+      h = H::combine(std::move(h), a.subs_->size());
+      for (size_t i = 0; i < a.subs_->size(); ++i) {
+        h = H::combine(std::move(h), (*a.subs_)[i]->unique_id_);
+      }
+    }
+    return h;
+  }
+
+  friend bool operator==(const Prefilter& a, const Prefilter& b) {
+    if (&a == &b) {
+      return true;
+    }
+    if (a.op_ != b.op_) {
+      return false;
+    }
+    if (a.op_ == ATOM) {
+      if (a.atom_ != b.atom_) {
+        return false;
+      }
+    } else if (a.op_ == AND || a.op_ == OR) {
+      if (a.subs_->size() != b.subs_->size()) {
+        return false;
+      }
+      for (size_t i = 0; i < a.subs_->size(); ++i) {
+        if ((*a.subs_)[i]->unique_id_ != (*b.subs_)[i]->unique_id_) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   // A comparator used to store exact strings. We compare by length,
   // then lexicographically. This ordering makes it easier to reduce the
   // set of strings in SimplifyStringSet.
