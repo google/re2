@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "374726ec_f93789c2",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2023-07-06T16:35:00Z",
+      "side": 1,
+      "message": "Should we leave a comment as to what 3.13 corresponds to? Or what the policy for bumping this is?",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 36
+      },
+      "revId": "22ba860caa3916ad71cad3912f3aa8cce0d9fe9b",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
