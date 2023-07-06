@@ -2,9 +2,8 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Old enough to support Ubuntu Bionic,
-# but just the MAJOR.MINOR components.
-cmake_minimum_required(VERSION 3.10)
+# https://github.com/google/oss-policies-info/blob/main/foundational-cxx-support-matrix.md
+cmake_minimum_required(VERSION 3.13)
 
 project(RE2 CXX)
 include(CMakePackageConfigHelpers)
@@ -96,11 +95,7 @@ if(USEPCRE)
   list(APPEND EXTRA_TARGET_LINK_LIBRARIES pcre)
 endif()
 
-# TODO(junyer): Use string(JOIN " " ...) whenever CMake 3.12 (or newer) becomes
-# the minimum required: that will make this hack slightly less filthy. For now,
-# CMake does the same thing as string(CONCAT ...), basically, if we don't quote
-# ${REQUIRES}, so quote it despite prevailing style.
-string(REPLACE ";" " " REQUIRES "${REQUIRES}")
+list(JOIN REQUIRES " " REQUIRES)
 
 set(RE2_SOURCES
     re2/bitmap256.cc
