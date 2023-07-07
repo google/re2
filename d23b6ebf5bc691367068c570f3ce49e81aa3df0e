@@ -24,6 +24,30 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "0b928f80_4cfeb7f1",
+        "filename": "re2/prefilter.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-07-07T13:11:16Z",
+      "side": 1,
+      "message": "There are five values, but only these three values need extra logic, so I figured that this way was a net win.",
+      "parentUuid": "d32d87c9_4184f656",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 5
+      },
+      "revId": "d23b6ebf5bc691367068c570f3ce49e81aa3df0e",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "16f76cd4_0cf8cafc",
@@ -37,6 +61,30 @@
       "writtenOn": "2023-07-07T12:58:28Z",
       "side": 1,
       "message": "While this form is permitted by the style guide, it explicitly calls single-line ifs \"historical\", so I\u0027d suggest avoiding them and always having the braces so we don\u0027t ever run the risk of gotofail.",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 30
+      },
+      "revId": "d23b6ebf5bc691367068c570f3ce49e81aa3df0e",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2550b6c2_d21116e0",
+        "filename": "re2/prefilter.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-07-07T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "16f76cd4_0cf8cafc",
       "range": {
         "startLine": 77,
         "startChar": 0,
@@ -70,6 +118,30 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "224318df_e7402db3",
+        "filename": "re2/prefilter_tree.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-07-07T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bccf1f62_b7f82b39",
+      "range": {
+        "startLine": 73,
+        "startChar": 1,
+        "endLine": 74,
+        "endChar": 17
+      },
+      "revId": "d23b6ebf5bc691367068c570f3ce49e81aa3df0e",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "a65387c8_1a406bbc",
@@ -93,6 +165,30 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "385201f1_02098f33",
+        "filename": "re2/prefilter_tree.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-07-07T13:11:16Z",
+      "side": 1,
+      "message": "The vast majority of the codebase uses `NULL` for historical reasons. I have mostly avoided introducing `nullptr` except where the compiler essentially insisted on it.",
+      "parentUuid": "a65387c8_1a406bbc",
+      "range": {
+        "startLine": 75,
+        "startChar": 9,
+        "endLine": 75,
+        "endChar": 13
+      },
+      "revId": "d23b6ebf5bc691367068c570f3ce49e81aa3df0e",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "efc12459_975d73e8",
@@ -106,6 +202,30 @@
       "writtenOn": "2023-07-07T12:58:28Z",
       "side": 1,
       "message": "Since we\u0027re already taking a C++14 dependency by way of Abseil, can we write this as\n\nusing NodeSet \u003d absl::flat_hash_set\u003cPrefilter*, PrefilterHash, PrefilterEqual\u003e;\n\nnow?",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 81
+      },
+      "revId": "d23b6ebf5bc691367068c570f3ce49e81aa3df0e",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9894a0cd_53329ac4",
+        "filename": "re2/prefilter_tree.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-07-07T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "efc12459_975d73e8",
       "range": {
         "startLine": 78,
         "startChar": 0,
