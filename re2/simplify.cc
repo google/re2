@@ -6,6 +6,7 @@
 // to use simple extended regular expression features.
 // Also sort and simplify character classes.
 
+#include <algorithm>
 #include <string>
 
 #include "util/logging.h"
@@ -579,6 +580,16 @@ Regexp* SimplifyWalker::Concat2(Regexp* re1, Regexp* re2,
   return re;
 }
 
+// Returns true if re is an empty-width op.
+static bool IsEmptyOp(Regexp* re) {
+  return (re->op() == kRegexpBeginLine ||
+          re->op() == kRegexpEndLine ||
+          re->op() == kRegexpWordBoundary ||
+          re->op() == kRegexpNoWordBoundary ||
+          re->op() == kRegexpBeginText ||
+          re->op() == kRegexpEndText);
+}
+
 // Simplifies the expression re{min,max} in terms of *, +, and ?.
 // Returns a new regexp.  Does not edit re.  Does not consume reference to re.
 // Caller must Decref return value when done with it.
@@ -587,6 +598,16 @@ Regexp* SimplifyWalker::Concat2(Regexp* re1, Regexp* re2,
 // but in the Regexp* representation, both (x) are marked as $1.
 Regexp* SimplifyWalker::SimplifyRepeat(Regexp* re, int min, int max,
                                        Regexp::ParseFlags f) {
+  // For an empty-width op OR a concatenation or alternation of empty-width
+  // ops, cap the repetition count at 1.
+  if (IsEmptyOp(re) ||
+      ((re->op() == kRegexpConcat ||
+        re->op() == kRegexpAlternate) &&
+       std::all_of(re->sub(), re->sub() + re->nsub(), IsEmptyOp))) {
+    min = std::min(min, 1);
+    max = std::min(max, 1);
+  }
+
   // x{n,} means at least n matches of x.
   if (max == -1) {
     // Special case: x{0,} is x*
