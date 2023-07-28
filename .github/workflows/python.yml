@@ -121,8 +121,8 @@ jobs:
       - uses: actions/checkout@v3
       # TODO(junyer): Use `v2` whenever a new release is tagged.
       - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
-      # Avoid the Chocolatey install of Bazel(isk) getting in the way.
-      - run: choco uninstall -y bazel bazelisk
+      # Avoid the Chocolatey install of Bazel getting in the way.
+      - run: choco uninstall -y bazel
         shell: bash
       - uses: actions/setup-python@v4
         with:
