@@ -109,10 +109,7 @@ jobs:
         arch:
           - { name: X86,   bazel-name: x64_x86, python-name: win32     }
           - { name: X64,   bazel-name: x64,     python-name: win_amd64 }
-          # FIXME: Compiling succeeds, but linking fails with an error like
-          # "LINK : fatal error LNK1104: cannot open file 'python311.lib'".
-          # Maybe we will need GitHub-hosted runners for Windows on ARM64?!
-          # - { name: ARM64, bazel-name: arm64,   python-name: win_arm64 }
+          - { name: ARM64, bazel-name: arm64,   python-name: win_arm64 }
         ver: ['3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -125,9 +122,15 @@ jobs:
           choco uninstall -y bazel
           choco install -y bazelisk
         shell: bash
+      # Lowercase the architecture name for `actions/setup-python`.
+      - run: |
+          ARCHITECTURE=${{ matrix.arch.name }}
+          echo "architecture=${ARCHITECTURE,,}" >> "${GITHUB_ENV}"
+        shell: bash
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.ver }}
+          architecture: ${{ env.architecture }}
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           python -m pip install --upgrade pip
@@ -138,7 +141,7 @@ jobs:
         run: |
           python setup.py bdist_wheel \
             --plat-name=${{ matrix.arch.python-name }}
-          python -m delvewheel --wheel-dir=. dist/*
+          python -m delvewheel repair --wheel-dir=. dist/*
         shell: bash
         working-directory: python
       - if: matrix.arch.name == runner.arch
@@ -182,7 +185,7 @@ jobs:
         run: |
           mkdir -p dist
           for WHL in */google_re2-*.whl; do
-            python -m wheel unpack ${WHL}
+            python -m wheel unpack "${WHL}"
             python -m wheel pack --dest-dir=dist --build-number=${{ inputs.build }} google_re2-*
             rm -rf google_re2-*
           done
