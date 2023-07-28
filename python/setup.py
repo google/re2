@@ -51,7 +51,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     # For @pybind11_bazel's `python_configure()`.
     os.environ['PYTHON_BIN_PATH'] = sys.executable
 
-    cmd = ['bazel', 'build']
+    cmd = ['bazelisk', 'build']
     if 'BAZEL_CPU' in os.environ:
       cmd.append(f'--cpu={os.environ["BAZEL_CPU"].lower()}')
     cmd += ['--compilation_mode=opt', '--', ':all']
@@ -62,7 +62,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     shutil.copyfile('../bazel-bin/python/_re2.so',
                     self.get_ext_fullpath(ext.name))
 
-    cmd = ['bazel', 'clean', '--expunge']
+    cmd = ['bazelisk', 'clean', '--expunge']
     self.spawn(cmd)
 
 
