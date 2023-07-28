@@ -107,9 +107,8 @@ jobs:
       fail-fast: false
       matrix:
         arch:
-          - { name: X86,   bazel-name: x64_x86, python-name: win32     }
-          - { name: X64,   bazel-name: x64,     python-name: win_amd64 }
-          - { name: ARM64, bazel-name: arm64,   python-name: win_arm64 }
+          - { name: X86, bazel-name: x64_x86, python-name: win32     }
+          - { name: X64, bazel-name: x64,     python-name: win_amd64 }
         ver: ['3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -144,8 +143,7 @@ jobs:
           python -m delvewheel repair --wheel-dir=. dist/*
         shell: bash
         working-directory: python
-      - if: matrix.arch.name == runner.arch
-        name: Test wheel
+      - name: Test wheel
         run: |
           python -m pip install google_re2-*.whl
           python re2_test.py
