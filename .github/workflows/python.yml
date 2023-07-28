@@ -19,7 +19,7 @@ jobs:
           - { name: X64,   python-name: x86_64,  runs-on: [ubuntu-latest]             }
           - { name: ARM64, python-name: aarch64, runs-on: [self-hosted, linux, arm64] }
         os: [manylinux2014, manylinux_2_28]
-        ver: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        ver: ['3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -60,8 +60,8 @@ jobs:
         arch:
           - { name: X64,   bazel-name: x86_64, python-name: x86_64 }
           - { name: ARM64, bazel-name: arm64,  python-name: arm64  }
-        os: [11, 12]
-        ver: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        os: [11, 12, 13]
+        ver: ['3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: darwin_${{ matrix.arch.bazel-name }}
@@ -105,12 +105,13 @@ jobs:
       fail-fast: false
       matrix:
         arch:
-          - { name: X64,   bazel-name: x64,   python-name: amd64 }
+          - { name: X86,   bazel-name: x64_x86, python-name: win32     }
+          - { name: X64,   bazel-name: x64,     python-name: win_amd64 }
           # FIXME: Compiling succeeds, but linking fails with an error like
           # "LINK : fatal error LNK1104: cannot open file 'python311.lib'".
           # Maybe we will need GitHub-hosted runners for Windows on ARM64?!
-          # - { name: ARM64, bazel-name: arm64, python-name: arm64 }
-        ver: ['3.7', '3.8', '3.9', '3.10', '3.11']
+          # - { name: ARM64, bazel-name: arm64,   python-name: win_arm64 }
+        ver: ['3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: ${{ matrix.arch.bazel-name }}_windows
@@ -122,14 +123,14 @@ jobs:
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade wheel
+          python -m pip install --upgrade wheel delvewheel
           python -m pip install --upgrade absl-py
         shell: bash
       - name: Build wheel
         run: |
           python setup.py bdist_wheel \
-            --plat-name=win_${{ matrix.arch.python-name }}
-          cp dist/* .
+            --plat-name=${{ matrix.arch.python-name }}
+          python -m delvewheel --wheel-dir=. dist/*
         shell: bash
         working-directory: python
       - if: matrix.arch.name == runner.arch
