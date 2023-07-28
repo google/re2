@@ -36,7 +36,7 @@ jobs:
         shell: bash
       - name: Build wheel
         run: |
-          BAZELISK="$(which bazelisk)" python setup.py bdist_wheel
+          python setup.py bdist_wheel
           python -m auditwheel repair --wheel-dir=. dist/*
         shell: bash
         working-directory: python
@@ -70,6 +70,8 @@ jobs:
       SYSTEM_VERSION_COMPAT: 0
     steps:
       - uses: actions/checkout@v3
+      # TODO(junyer): Use `v2` whenever a new release is tagged.
+      - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.ver }}
@@ -81,7 +83,7 @@ jobs:
         shell: bash
       - name: Build wheel
         run: |
-          BAZELISK="$(which bazelisk)" python setup.py bdist_wheel \
+          python setup.py bdist_wheel \
             --plat-name=macosx-${{ matrix.os }}.0-${{ matrix.arch.python-name }}
           python -m delocate.cmd.delocate_wheel --wheel-dir=. dist/*
         shell: bash
@@ -117,6 +119,8 @@ jobs:
       BAZEL_CPU: ${{ matrix.arch.bazel-name }}_windows
     steps:
       - uses: actions/checkout@v3
+      # TODO(junyer): Use `v2` whenever a new release is tagged.
+      - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.ver }}
@@ -128,7 +132,7 @@ jobs:
         shell: bash
       - name: Build wheel
         run: |
-          BAZELISK="$(which bazelisk)" python setup.py bdist_wheel \
+          python setup.py bdist_wheel \
             --plat-name=${{ matrix.arch.python-name }}
           python -m delvewheel --wheel-dir=. dist/*
         shell: bash
