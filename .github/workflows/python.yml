@@ -36,7 +36,7 @@ jobs:
         shell: bash
       - name: Build wheel
         run: |
-          python setup.py bdist_wheel
+          BAZELISK="$(which bazelisk)" python setup.py bdist_wheel
           python -m auditwheel repair --wheel-dir=. dist/*
         shell: bash
         working-directory: python
@@ -81,7 +81,7 @@ jobs:
         shell: bash
       - name: Build wheel
         run: |
-          python setup.py bdist_wheel \
+          BAZELISK="$(which bazelisk)" python setup.py bdist_wheel \
             --plat-name=macosx-${{ matrix.os }}.0-${{ matrix.arch.python-name }}
           python -m delocate.cmd.delocate_wheel --wheel-dir=. dist/*
         shell: bash
@@ -128,7 +128,7 @@ jobs:
         shell: bash
       - name: Build wheel
         run: |
-          python setup.py bdist_wheel \
+          BAZELISK="$(which bazelisk)" python setup.py bdist_wheel \
             --plat-name=${{ matrix.arch.python-name }}
           python -m delvewheel --wheel-dir=. dist/*
         shell: bash
