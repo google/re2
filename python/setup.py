@@ -84,7 +84,7 @@ ext_module = setuptools.Extension(
 
 setuptools.setup(
     name='google-re2',
-    version='1.0',
+    version='1.1',
     description='RE2 Python bindings',
     long_description=long_description,
     long_description_content_type='text/plain',
@@ -98,8 +98,8 @@ setuptools.setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: C++',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     cmdclass={'build_ext': BuildExt},
-    python_requires='~=3.7',
+    python_requires='~=3.8',
 )
