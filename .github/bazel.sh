@@ -1,9 +1,9 @@
 #!/bin/bash
 set -eux
 
-bazel clean
-bazel build --compilation_mode=dbg -- //:all
-bazel test  --compilation_mode=dbg -- //:all \
+bazelisk clean
+bazelisk build --compilation_mode=dbg -- //:all
+bazelisk test  --compilation_mode=dbg -- //:all \
   -//:dfa_test \
   -//:exhaustive1_test \
   -//:exhaustive2_test \
@@ -11,9 +11,9 @@ bazel test  --compilation_mode=dbg -- //:all \
   -//:exhaustive_test \
   -//:random_test
 
-bazel clean
-bazel build --compilation_mode=opt -- //:all
-bazel test  --compilation_mode=opt -- //:all \
+bazelisk clean
+bazelisk build --compilation_mode=opt -- //:all
+bazelisk test  --compilation_mode=opt -- //:all \
   -//:dfa_test \
   -//:exhaustive1_test \
   -//:exhaustive2_test \
