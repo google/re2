@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Bazel (http://bazel.io/) BUILD file for RE2 Python.
+# Bazel (http://bazel.build/) BUILD file for RE2 Python.
 
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
