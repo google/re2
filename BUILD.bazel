@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Bazel (http://bazel.io/) BUILD file for RE2.
+# Bazel (http://bazel.build/) BUILD file for RE2.
 
 licenses(["notice"])
 
