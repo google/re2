@@ -2,6 +2,9 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+# Enable Bzlmod. This will be the default eventually...
+build --enable_bzlmod
+
 # Abseil requires C++14 at minimum.
 # Previously, the flag was set via `BAZEL_CXXOPTS`. On macOS, we also had to set
 # `BAZEL_USE_CPP_ONLY_TOOLCHAIN` since Bazel wouldn't respect the former without
