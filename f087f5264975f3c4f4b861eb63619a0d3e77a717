@@ -22,6 +22,30 @@
       },
       "revId": "f087f5264975f3c4f4b861eb63619a0d3e77a717",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "aa00c0fe_97d8b973",
+        "filename": "re2/parse.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 2109,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-08-11T18:54:11Z",
+      "side": 1,
+      "message": "I would have to futz with line 2056 more than I would like right now. I suspect that using `absl::ConsumePrefix()` will simplify various things someday though.",
+      "parentUuid": "f3ae18a4_06c9b2fe",
+      "range": {
+        "startLine": 2109,
+        "startChar": 0,
+        "endLine": 2109,
+        "endChar": 30
+      },
+      "revId": "f087f5264975f3c4f4b861eb63619a0d3e77a717",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
