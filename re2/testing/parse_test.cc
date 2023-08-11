@@ -166,6 +166,8 @@ static Test tests[] = {
   // Test named captures
   { "(?P<name>a)", "cap{name:lit{a}}" },
   { "(?P<中文>a)", "cap{中文:lit{a}}" },
+  { "(?<name>a)", "cap{name:lit{a}}" },
+  { "(?<中文>a)", "cap{中文:lit{a}}" },
 
   // Case-folded literals
   { "[Aa]", "litfold{a}" },
@@ -396,6 +398,11 @@ const char* badtests[] = {
   "(?P<name",
   "(?P<x y>a)",
   "(?P<>a)",
+  "(?<name>a",
+  "(?<name>",
+  "(?<name",
+  "(?<x y>a)",
+  "(?<>a)",
   "[a-Z]",
   "(?i)[a-Z]",
   "a{100000}",
@@ -416,6 +423,7 @@ const char* only_perl[] = {
  "\\Q\\\\\\\\\\E",
  "(?:a)",
  "(?P<name>a)",
+ "(?<name>a)",
 };
 
 // Valid in POSIX, bad in Perl.
@@ -505,6 +513,16 @@ TEST(NamedCaptures, ErrorArgs) {
   EXPECT_TRUE(re == NULL);
   EXPECT_EQ(status.code(), kRegexpBadNamedCapture);
   EXPECT_EQ(status.error_arg(), "(?P<space bar>");
+
+  re = Regexp::Parse("test(?<name", Regexp::LikePerl, &status);
+  EXPECT_TRUE(re == NULL);
+  EXPECT_EQ(status.code(), kRegexpBadNamedCapture);
+  EXPECT_EQ(status.error_arg(), "(?<name");
+
+  re = Regexp::Parse("test(?<space bar>z)", Regexp::LikePerl, &status);
+  EXPECT_TRUE(re == NULL);
+  EXPECT_EQ(status.code(), kRegexpBadNamedCapture);
+  EXPECT_EQ(status.error_arg(), "(?<space bar>");
 }
 
 }  // namespace re2
