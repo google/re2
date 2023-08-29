@@ -20,6 +20,7 @@ ABSL_DEPS=\
 CCABSL=$(shell pkg-config $(ABSL_DEPS) --cflags)
 # GCC barfs on `-Wl` whereas Clang doesn't mind, but it's unclear what
 # causes it to manifest on Ubuntu 22.04 LTS, so filter it out for now.
+# Similar is needed for `static-testinstall` and `shared-testinstall`.
 LDABSL=$(shell pkg-config $(ABSL_DEPS) --libs | sed -e 's/-Wl / /g')
 
 # To build against ICU for full Unicode properties support,
@@ -358,7 +359,8 @@ else
 	@cp testinstall.cc obj/static-testinstall.cc
 	(cd obj && export PKG_CONFIG_PATH=$(DESTDIR)$(libdir)/pkgconfig; \
 	  $(CXX) static-testinstall.cc -o static-testinstall $(CXXFLAGS) $(LDFLAGS) \
-	  $$(pkg-config re2 --cflags --libs | sed -e 's/-lre2/-l:libre2.a/'))
+	  $$(pkg-config re2 --cflags) \
+	  $$(pkg-config re2 --libs | sed -e 's/-Wl / /g' | sed -e 's/-lre2/-l:libre2.a/'))
 	obj/static-testinstall
 endif
 
@@ -368,7 +370,8 @@ shared-testinstall:
 	@cp testinstall.cc obj/shared-testinstall.cc
 	(cd obj && export PKG_CONFIG_PATH=$(DESTDIR)$(libdir)/pkgconfig; \
 	  $(CXX) shared-testinstall.cc -o shared-testinstall $(CXXFLAGS) $(LDFLAGS) \
-	  $$(pkg-config re2 --cflags --libs))
+	  $$(pkg-config re2 --cflags) \
+	  $$(pkg-config re2 --libs | sed -e 's/-Wl / /g'))
 ifeq ($(shell uname),Darwin)
 	DYLD_LIBRARY_PATH="$(DESTDIR)$(libdir):$(DYLD_LIBRARY_PATH)" obj/shared-testinstall
 else
