@@ -36,7 +36,12 @@ jobs:
         shell: bash
       - name: Build wheel
         run: |
-          python setup.py bdist_wheel
+          # TODO(junyer): Get rid of this hack whenever @rules_python no longer
+          # fails due to Bazel running as root.
+          useradd "${GITHUB_ACTOR}"
+          chown -R "${GITHUB_ACTOR}" ..
+          su -c 'python setup.py bdist_wheel' "${GITHUB_ACTOR}"
+          chown -R "${USER}" ..
           python -m auditwheel repair --wheel-dir=. dist/*
         shell: bash
         working-directory: python
