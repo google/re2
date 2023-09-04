@@ -30,7 +30,7 @@ py_test(
     srcs = ["re2_test.py"],
     deps = [
         ":re2",
-        "@io_abseil_py//absl/testing:absltest",
-        "@io_abseil_py//absl/testing:parameterized",
+        "@abseil-py//absl/testing:absltest",
+        "@abseil-py//absl/testing:parameterized",
     ],
 )

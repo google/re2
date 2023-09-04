@@ -108,7 +108,7 @@ cc_library(
     deps = [
         ":re2",
         "@com_google_absl//absl/flags:flag",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -118,7 +118,7 @@ cc_library(
     srcs = [],
     deps = [
         ":testing",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -268,7 +268,7 @@ cc_library(
     srcs = [],
     deps = [
         ":testing",
-        "@com_github_google_benchmark//:benchmark_main",
+        "@google_benchmark//:benchmark_main",
     ],
 )
 
