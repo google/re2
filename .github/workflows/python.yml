@@ -6,7 +6,7 @@ on:
         required: true
         type: number
 jobs:
-  bdist_wheel-linux:
+  wheel-linux:
     name: Linux ${{ matrix.os }}, ${{ matrix.arch.name }}, Python ${{ matrix.ver }}
     runs-on: ${{ matrix.arch.runs-on }}
     container:
@@ -31,16 +31,17 @@ jobs:
           ln -sf /usr/local/bin/python${{ matrix.ver }} /usr/local/bin/python
           ln -sf /usr/local/bin/python${{ matrix.ver }} /usr/local/bin/python3
           python -m pip install --upgrade pip
-          python -m pip install --upgrade wheel auditwheel
+          python -m pip install --upgrade build wheel auditwheel
           python -m pip install --upgrade absl-py
         shell: bash
       - name: Build wheel
         run: |
           # TODO(junyer): Get rid of this hack whenever @rules_python no longer
-          # fails due to Bazel running as root.
+          # fails due to Bazel running as root. (It sounds more likely than the
+          # Docker container changing to be built with the `USER` instruction.)
           useradd "${GITHUB_ACTOR}"
           chown -R "${GITHUB_ACTOR}" ..
-          su -c 'python setup.py bdist_wheel' "${GITHUB_ACTOR}"
+          su -c 'python -m build --wheel' "${GITHUB_ACTOR}"
           chown -R "${USER}" ..
           python -m auditwheel repair --wheel-dir=. dist/*
         shell: bash
@@ -56,7 +57,7 @@ jobs:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
           retention-days: 1
-  bdist_wheel-macos:
+  wheel-macos:
     name: macOS ${{ matrix.os }}, ${{ matrix.arch.name }}, Python ${{ matrix.ver }}
     runs-on: macos-${{ matrix.os }}
     strategy:
@@ -83,13 +84,16 @@ jobs:
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade wheel delocate
+          python -m pip install --upgrade build wheel delocate
           python -m pip install --upgrade absl-py
         shell: bash
       - name: Build wheel
         run: |
-          python setup.py bdist_wheel \
-            --plat-name=macosx-${{ matrix.os }}.0-${{ matrix.arch.python-name }}
+          # TODO(junyer): Get rid of this hack whenever there's a better way
+          # to plumb the platform name all the way down to the wheel builder.
+          python -m build --wheel \
+            --config-setting=--build-option=--plat-name \
+            --config-setting=--build-option=macosx-${{ matrix.os }}.0-${{ matrix.arch.python-name }}
           python -m delocate.cmd.delocate_wheel --wheel-dir=. dist/*
         shell: bash
         working-directory: python
@@ -105,7 +109,7 @@ jobs:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
           retention-days: 1
-  bdist_wheel-windows:
+  wheel-windows:
     name: Windows, ${{ matrix.arch.name }}, Python ${{ matrix.ver }}
     runs-on: windows-latest
     strategy:
@@ -138,13 +142,16 @@ jobs:
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade wheel delvewheel
+          python -m pip install --upgrade build wheel delvewheel
           python -m pip install --upgrade absl-py
         shell: bash
       - name: Build wheel
         run: |
-          python setup.py bdist_wheel \
-            --plat-name=${{ matrix.arch.python-name }}
+          # TODO(junyer): Get rid of this hack whenever there's a better way
+          # to plumb the platform name all the way down to the wheel builder.
+          python -m build --wheel \
+            --config-setting=--build-option=--plat-name \
+            --config-setting=--build-option=${{ matrix.arch.python-name }}
           python -m delvewheel repair --wheel-dir=. dist/*
         shell: bash
         working-directory: python
@@ -161,9 +168,9 @@ jobs:
           retention-days: 1
   publish:
     needs:
-      - bdist_wheel-linux
-      - bdist_wheel-macos
-      - bdist_wheel-windows
+      - wheel-linux
+      - wheel-macos
+      - wheel-windows
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -173,12 +180,12 @@ jobs:
       - name: Prepare Python 3.x environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade wheel
+          python -m pip install --upgrade build wheel
         shell: bash
       - if: inputs.build == 1
         name: Build source
         run: |
-          python setup.py sdist
+          python -m build --sdist
         shell: bash
         working-directory: python
       - uses: actions/download-artifact@v3
