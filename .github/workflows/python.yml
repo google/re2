@@ -7,7 +7,7 @@ on:
         type: number
 jobs:
   wheel-linux:
-    name: Linux ${{ matrix.os }}, ${{ matrix.arch.name }}, Python ${{ matrix.ver }}
+    name: Linux ${{ matrix.os }}, ${{ matrix.arch.name }}
     runs-on: ${{ matrix.arch.runs-on }}
     container:
       image: quay.io/pypa/${{ matrix.os }}_${{ matrix.arch.python-name }}
@@ -19,17 +19,16 @@ jobs:
           - { name: X64,   python-name: x86_64,  runs-on: [ubuntu-latest]             }
           - { name: ARM64, python-name: aarch64, runs-on: [self-hosted, linux, arm64] }
         os: [manylinux2014, manylinux_2_28]
-        ver: ['3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
       # TODO(junyer): Use `v2` whenever a new release is tagged.
       - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
-      - name: Prepare Python ${{ matrix.ver }} environment
+      - name: Prepare Python environment
         run: |
-          ln -sf /usr/local/bin/python${{ matrix.ver }} /usr/local/bin/python
-          ln -sf /usr/local/bin/python${{ matrix.ver }} /usr/local/bin/python3
+          ln -sf /usr/local/bin/python3.8 /usr/local/bin/python
+          ln -sf /usr/local/bin/python3.8 /usr/local/bin/python3
           python -m pip install --upgrade pip
           python -m pip install --upgrade build wheel auditwheel
           python -m pip install --upgrade absl-py
@@ -58,7 +57,7 @@ jobs:
           path: python/google_re2-*.whl
           retention-days: 1
   wheel-macos:
-    name: macOS ${{ matrix.os }}, ${{ matrix.arch.name }}, Python ${{ matrix.ver }}
+    name: macOS ${{ matrix.os }}, ${{ matrix.arch.name }}
     runs-on: macos-${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -67,7 +66,6 @@ jobs:
           - { name: X64,   bazel-name: x86_64, python-name: x86_64 }
           - { name: ARM64, bazel-name: arm64,  python-name: arm64  }
         os: [11, 12, 13]
-        ver: ['3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: darwin_${{ matrix.arch.bazel-name }}
@@ -81,8 +79,8 @@ jobs:
       - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.ver }}
-      - name: Prepare Python ${{ matrix.ver }} environment
+          python-version: '3.8'
+      - name: Prepare Python environment
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade build wheel delocate
@@ -107,7 +105,7 @@ jobs:
           path: python/google_re2-*.whl
           retention-days: 1
   wheel-windows:
-    name: Windows, ${{ matrix.arch.name }}, Python ${{ matrix.ver }}
+    name: Windows, ${{ matrix.arch.name }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -115,7 +113,6 @@ jobs:
         arch:
           - { name: X86, bazel-name: x64_x86, python-name: win32     }
           - { name: X64, bazel-name: x64,     python-name: win_amd64 }
-        ver: ['3.8', '3.9', '3.10', '3.11']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: ${{ matrix.arch.bazel-name }}_windows
@@ -135,9 +132,9 @@ jobs:
         shell: bash
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.ver }}
+          python-version: '3.8'
           architecture: ${{ env.architecture }}
-      - name: Prepare Python ${{ matrix.ver }} environment
+      - name: Prepare Python environment
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade build wheel delvewheel
@@ -170,8 +167,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
-      - name: Prepare Python 3.x environment
+          python-version: '3.8'
+      - name: Prepare Python environment
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade build wheel
