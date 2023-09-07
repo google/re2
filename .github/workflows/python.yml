@@ -201,7 +201,8 @@ jobs:
           done
         shell: bash
         working-directory: python
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - if: inputs.build >= 1
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages_dir: python/dist
