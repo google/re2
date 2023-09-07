@@ -71,6 +71,7 @@ jobs:
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: darwin_${{ matrix.arch.bazel-name }}
+      PLAT_NAME: macosx-${{ matrix.os }}.0-${{ matrix.arch.python-name }}
       # Stop macOS from reporting the system version as 10.x.
       # Otherwise, Python refuses to install the built wheel!
       SYSTEM_VERSION_COMPAT: 0
@@ -89,11 +90,7 @@ jobs:
         shell: bash
       - name: Build wheel
         run: |
-          # TODO(junyer): Get rid of this hack whenever there's a better way
-          # to plumb the platform name all the way down to the wheel builder.
-          python -m build --wheel \
-            --config-setting=--build-option=--plat-name \
-            --config-setting=--build-option=macosx-${{ matrix.os }}.0-${{ matrix.arch.python-name }}
+          python -m build --wheel
           python -m delocate.cmd.delocate_wheel --wheel-dir=. dist/*
         shell: bash
         working-directory: python
@@ -122,6 +119,7 @@ jobs:
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: ${{ matrix.arch.bazel-name }}_windows
+      PLAT_NAME: ${{ matrix.arch.python-name }}
     steps:
       - uses: actions/checkout@v3
       # Avoid the Chocolatey install of Bazel getting in the way;
@@ -147,11 +145,7 @@ jobs:
         shell: bash
       - name: Build wheel
         run: |
-          # TODO(junyer): Get rid of this hack whenever there's a better way
-          # to plumb the platform name all the way down to the wheel builder.
-          python -m build --wheel \
-            --config-setting=--build-option=--plat-name \
-            --config-setting=--build-option=${{ matrix.arch.python-name }}
+          python -m build --wheel
           python -m delvewheel repair --wheel-dir=. dist/*
         shell: bash
         working-directory: python
