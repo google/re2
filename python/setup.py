@@ -52,8 +52,10 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     os.environ['PYTHON_BIN_PATH'] = sys.executable
 
     cmd = ['bazel', 'build']
-    if 'BAZEL_CPU' in os.environ:
+    try:
       cmd.append(f'--cpu={os.environ["BAZEL_CPU"].lower()}')
+    except KeyError:
+      pass
     cmd += ['--compilation_mode=opt', '--', ':all']
     self.spawn(cmd)
 
@@ -64,6 +66,15 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     cmd = ['bazel', 'clean', '--expunge']
     self.spawn(cmd)
+
+
+def options():
+  bdist_wheel = {}
+  try:
+    bdist_wheel['plat_name'] = os.environ['PLAT_NAME']
+  except KeyError:
+    pass
+  return {'bdist_wheel': bdist_wheel}
 
 
 def include_dirs():
@@ -100,6 +111,7 @@ setuptools.setup(
         'Programming Language :: C++',
         'Programming Language :: Python :: 3.8',
     ],
+    options=options(),
     cmdclass={'build_ext': BuildExt},
     python_requires='~=3.8',
 )
