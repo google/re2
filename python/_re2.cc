@@ -2,10 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The extension works for Python 3.8+.
-// See https://docs.python.org/3/c-api/stable.html for background.
-#define Py_LIMITED_API 0x03080000
-
 #include <memory>
 #include <string>
 #include <tuple>

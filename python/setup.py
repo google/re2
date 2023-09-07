@@ -74,9 +74,6 @@ def options():
     bdist_wheel['plat_name'] = os.environ['PLAT_NAME']
   except KeyError:
     pass
-  # The extension works for Python 3.8+.
-  # See https://docs.python.org/3/c-api/stable.html for background.
-  bdist_wheel['py_limited_api'] = 'cp38'
   return {'bdist_wheel': bdist_wheel}
 
 
