@@ -27,6 +27,7 @@
 
 #include "absl/base/macros.h"
 #include "absl/container/fixed_array.h"
+#include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
 #include "util/logging.h"
 #include "util/strutil.h"
@@ -975,7 +976,7 @@ bool RE2::CheckRewriteString(absl::string_view rewrite,
     if (c == '\\') {
       continue;
     }
-    if (!isdigit(c)) {
+    if (!absl::ascii_isdigit(c)) {
       *error = "Rewrite schema error: "
                "'\\' must be followed by a digit or '\\'.";
       return false;
@@ -1005,7 +1006,7 @@ int RE2::MaxSubmatch(absl::string_view rewrite) {
     if (*s == '\\') {
       s++;
       int c = (s < end) ? *s : -1;
-      if (isdigit(c)) {
+      if (absl::ascii_isdigit(c)) {
         int n = (c - '0');
         if (n > max)
           max = n;
@@ -1029,7 +1030,7 @@ bool RE2::Rewrite(std::string* out,
     }
     s++;
     int c = (s < end) ? *s : -1;
-    if (isdigit(c)) {
+    if (absl::ascii_isdigit(c)) {
       int n = (c - '0');
       if (n >= veclen) {
         if (options_.log_errors()) {
@@ -1110,13 +1111,13 @@ static const char* TerminateNumber(char* buf, size_t nbuf, const char* str,
                                    size_t* np, bool accept_spaces) {
   size_t n = *np;
   if (n == 0) return "";
-  if (n > 0 && isspace(*str)) {
+  if (n > 0 && absl::ascii_isspace(*str)) {
     // We are less forgiving than the strtoxxx() routines and do not
     // allow leading spaces. We do allow leading spaces for floats.
     if (!accept_spaces) {
       return "";
     }
-    while (n > 0 && isspace(*str)) {
+    while (n > 0 && absl::ascii_isspace(*str)) {
       n--;
       str++;
     }
