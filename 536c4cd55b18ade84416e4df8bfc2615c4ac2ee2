@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "becc912c_e1bbdcb1",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 45107
+      },
+      "writtenOn": "2023-10-05T23:21:01Z",
+      "side": 1,
+      "message": "This fixes ChromeOS/Gentoo breakages introduced in https://code-review.git.corp.google.com/c/re2/+/61270",
+      "revId": "536c4cd55b18ade84416e4df8bfc2615c4ac2ee2",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
