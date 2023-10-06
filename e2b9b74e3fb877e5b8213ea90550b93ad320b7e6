@@ -16,6 +16,24 @@
       "message": "Thanks. I can re-upload with your changes if it makes the review process easier.",
       "revId": "e2b9b74e3fb877e5b8213ea90550b93ad320b7e6",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d5177a93_012efb5d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-10-06T13:09:23Z",
+      "side": 1,
+      "message": "I\u0027m guessing that Gerrit is cranky because I edited the commit message? Oh well. achernya@ is going to stamp shortly. :)",
+      "parentUuid": "2628a153_a3107091",
+      "revId": "e2b9b74e3fb877e5b8213ea90550b93ad320b7e6",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
