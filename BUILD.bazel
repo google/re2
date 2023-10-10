@@ -104,21 +104,32 @@ cc_library(
         "re2/testing/tester.h",
         "util/malloc_counter.h",
         "util/pcre.h",
+
+        # Exposed for testing only.
+        "re2/bitmap256.h",
+        "re2/pod_array.h",
+        "re2/prefilter.h",
+        "re2/prefilter_tree.h",
+        "re2/prog.h",
+        "re2/regexp.h",
+        "re2/sparse_array.h",
+        "re2/sparse_set.h",
+        "re2/unicode_casefold.h",
+        "re2/unicode_groups.h",
+        "re2/walker-inl.h",
+        "util/logging.h",
+        "util/strutil.h",
+        "util/utf.h",
     ],
+    visibility = [":__subpackages__"],
     deps = [
         ":re2",
+        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
         "@googletest//:gtest",
-    ],
-)
-
-cc_library(
-    name = "test",
-    testonly = 1,
-    srcs = [],
-    deps = [
-        ":testing",
-        "@googletest//:gtest_main",
     ],
 )
 
@@ -126,149 +137,244 @@ cc_test(
     name = "charclass_test",
     size = "small",
     srcs = ["re2/testing/charclass_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/strings:str_format",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "compile_test",
     size = "small",
     srcs = ["re2/testing/compile_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "filtered_re2_test",
     size = "small",
     srcs = ["re2/testing/filtered_re2_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":re2",
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "mimics_pcre_test",
     size = "small",
     srcs = ["re2/testing/mimics_pcre_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "parse_test",
     size = "small",
     srcs = ["re2/testing/parse_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "possible_match_test",
     size = "small",
     srcs = ["re2/testing/possible_match_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":re2",
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/strings",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "re2_arg_test",
     size = "small",
     srcs = ["re2/testing/re2_arg_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":re2",
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "re2_test",
     size = "small",
     srcs = ["re2/testing/re2_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":re2",
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/strings:str_format",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "regexp_test",
     size = "small",
     srcs = ["re2/testing/regexp_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "required_prefix_test",
     size = "small",
     srcs = ["re2/testing/required_prefix_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "search_test",
     size = "small",
     srcs = ["re2/testing/search_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "set_test",
     size = "small",
     srcs = ["re2/testing/set_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":re2",
+        ":testing",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "simplify_test",
     size = "small",
     srcs = ["re2/testing/simplify_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "string_generator_test",
     size = "small",
     srcs = ["re2/testing/string_generator_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "dfa_test",
     size = "large",
     srcs = ["re2/testing/dfa_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":re2",
+        ":testing",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/strings:str_format",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "exhaustive1_test",
     size = "large",
     srcs = ["re2/testing/exhaustive1_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "exhaustive2_test",
     size = "large",
     srcs = ["re2/testing/exhaustive2_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "exhaustive3_test",
     size = "large",
     srcs = ["re2/testing/exhaustive3_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "exhaustive_test",
     size = "large",
     srcs = ["re2/testing/exhaustive_test.cc"],
-    deps = [":test"],
+    deps = [
+        ":testing",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "random_test",
     size = "large",
     srcs = ["re2/testing/random_test.cc"],
-    deps = [":test"],
-)
-
-cc_library(
-    name = "benchmark",
-    testonly = 1,
-    srcs = [],
     deps = [
         ":testing",
-        "@google_benchmark//:benchmark_main",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/strings:str_format",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -276,5 +382,13 @@ cc_binary(
     name = "regexp_benchmark",
     testonly = 1,
     srcs = ["re2/testing/regexp_benchmark.cc"],
-    deps = [":benchmark"],
+    deps = [
+        ":re2",
+        ":testing",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/synchronization",
+        "@google_benchmark//:benchmark_main",
+    ],
 )

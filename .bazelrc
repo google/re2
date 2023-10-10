@@ -4,6 +4,8 @@
 
 # Enable Bzlmod. This will be the default eventually...
 build --enable_bzlmod
+# Enable layering check features. Useful on Clang only.
+build --features=layering_check
 
 # Abseil requires C++14 at minimum.
 # Previously, the flag was set via `BAZEL_CXXOPTS`. On macOS, we also had to set
