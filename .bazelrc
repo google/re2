@@ -6,6 +6,8 @@
 build --enable_bzlmod
 # Enable layering check features. Useful on Clang only.
 build --features=layering_check
+# Enable parse headers features. Enforcing that headers are self-contained.
+build --features=parse_headers
 
 # Abseil requires C++14 at minimum.
 # Previously, the flag was set via `BAZEL_CXXOPTS`. On macOS, we also had to set
