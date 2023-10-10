@@ -6,6 +6,7 @@
 
 cc_binary(
     name = "_re2.js",
+    testonly = 1,
     srcs = ["_re2.cc"],
     linkopts = [
         "--bind",
@@ -16,5 +17,8 @@ cc_binary(
         "-sEXPORT_NAME=loadModule",
         "-sUSE_PTHREADS=0",
     ],
-    deps = ["//:re2"],
+    deps = [
+        "//:re2",
+        "//:testing",
+    ],
 )
