@@ -85,6 +85,11 @@
 //    std::string s;
 //    CHECK(RE2::FullMatch("ruby:1234", "(\\w+):(\\d+)", &s, &i));
 //
+// Example: extracts "ruby" into "s" and no value into "i"
+//    absl::optional<int> i;
+//    std::string s;
+//    CHECK(RE2::FullMatch("ruby", "(\\w+)(?::(\\d+))?", &s, &i));
+//
 // Example: fails because string cannot be stored in integer
 //    CHECK(!RE2::FullMatch("ruby", "(.*)", &i));
 //
@@ -378,6 +383,7 @@ class RE2 {
   // type, or one of:
   //    std::string        (matched piece is copied to string)
   //    absl::string_view  (string_view is mutated to point to matched piece)
+  //    absl::optional<T>  (T is a supported numeric or string type as above)
   //    T                  ("bool T::ParseFrom(const char*, size_t)" must exist)
   //    (void*)NULL        (the corresponding matched sub-pattern is not copied)
   //
@@ -391,11 +397,14 @@ class RE2 {
   //      ignored.
   //
   // CAVEAT: An optional sub-pattern that does not exist in the
-  // matched string is assigned the empty string.  Therefore, the
-  // following will return false (because the empty string is not a
-  // valid number):
+  // matched string is assigned the null string.  Therefore, the
+  // following returns false because the null string - absence of
+  // a string (not even the empty string) - is not a valid number:
+  //
   //    int number;
   //    RE2::FullMatch("abc", "[a-z]+(\\d+)?", &number);
+  //
+  // Use absl::optional<int> instead to handle this case correctly.
   template <typename... A>
   static bool FullMatch(absl::string_view text, const RE2& re, A&&... a) {
     return Apply(FullMatchN, text, re, Arg(std::forward<A>(a))...);
@@ -534,7 +543,7 @@ class RE2 {
     ANCHOR_BOTH         // Anchor at start and end
   };
 
-  // Return the number of capturing subpatterns, or -1 if the
+  // Return the number of capturing sub-patterns, or -1 if the
   // regexp wasn't valid on construction.  The overall match ($0)
   // does not count: if the regexp is "(a)(b)", returns 2.
   int NumberOfCapturingGroups() const { return num_captures_; }
