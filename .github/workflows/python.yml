@@ -24,6 +24,9 @@ jobs:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
+      # Stash the timestamp for the commit SHA that triggered the workflow.
+      - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
+        shell: bash
       # TODO(junyer): Use `v2` whenever a new release is tagged.
       - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
       - name: Prepare Python ${{ matrix.ver }} environment
@@ -35,6 +38,8 @@ jobs:
           python -m pip install --upgrade absl-py
         shell: bash
       - name: Build wheel
+        env:
+          SOURCE_DATE_EPOCH: ${{ env.timestamp }}
         run: |
           # TODO(junyer): Get rid of this hack whenever @rules_python no longer
           # fails due to Bazel running as root. (It sounds more likely than the
@@ -77,6 +82,9 @@ jobs:
       SYSTEM_VERSION_COMPAT: 0
     steps:
       - uses: actions/checkout@v3
+      # Stash the timestamp for the commit SHA that triggered the workflow.
+      - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
+        shell: bash
       # TODO(junyer): Use `v2` whenever a new release is tagged.
       - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
       - uses: actions/setup-python@v4
@@ -89,6 +97,8 @@ jobs:
           python -m pip install --upgrade absl-py
         shell: bash
       - name: Build wheel
+        env:
+          SOURCE_DATE_EPOCH: ${{ env.timestamp }}
         run: |
           python -m build --wheel
           python -m delocate.cmd.delocate_wheel --wheel-dir=. dist/*
@@ -122,6 +132,9 @@ jobs:
       PLAT_NAME: ${{ matrix.arch.python-name }}
     steps:
       - uses: actions/checkout@v3
+      # Stash the timestamp for the commit SHA that triggered the workflow.
+      - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
+        shell: bash
       # Avoid the Chocolatey install of Bazel getting in the way;
       # `bazelbuild/setup-bazelisk` doesn't work for some reason.
       - run: |
@@ -144,6 +157,8 @@ jobs:
           python -m pip install --upgrade absl-py
         shell: bash
       - name: Build wheel
+        env:
+          SOURCE_DATE_EPOCH: ${{ env.timestamp }}
         run: |
           python -m build --wheel
           python -m delvewheel repair --wheel-dir=. dist/*
@@ -168,6 +183,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      # Stash the timestamp for the commit SHA that triggered the workflow.
+      - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
+        shell: bash
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -178,6 +196,8 @@ jobs:
         shell: bash
       - if: inputs.build == 1
         name: Build source
+        env:
+          SOURCE_DATE_EPOCH: ${{ env.timestamp }}
         run: |
           python -m build --sdist
         shell: bash
@@ -186,6 +206,8 @@ jobs:
         with:
           path: python
       - name: Set build number to ${{ inputs.build }}
+        env:
+          SOURCE_DATE_EPOCH: ${{ env.timestamp }}
         run: |
           mkdir -p dist
           for WHL in */google_re2-*.whl; do
