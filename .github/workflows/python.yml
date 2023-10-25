@@ -19,7 +19,7 @@ jobs:
           - { name: X64,   python-name: x86_64,  runs-on: [ubuntu-latest]             }
           - { name: ARM64, python-name: aarch64, runs-on: [self-hosted, linux, arm64] }
         os: [manylinux2014, manylinux_2_28]
-        ver: ['3.8', '3.9', '3.10', '3.11']
+        ver: ['3.8', '3.9', '3.10', '3.11', '3.12']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -72,7 +72,7 @@ jobs:
           - { name: X64,   bazel-name: x86_64, python-name: x86_64 }
           - { name: ARM64, bazel-name: arm64,  python-name: arm64  }
         os: [11, 12, 13]
-        ver: ['3.8', '3.9', '3.10', '3.11']
+        ver: ['3.8', '3.9', '3.10', '3.11', '3.12']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: darwin_${{ matrix.arch.bazel-name }}
@@ -125,7 +125,7 @@ jobs:
         arch:
           - { name: X86, bazel-name: x64_x86, python-name: win32     }
           - { name: X64, bazel-name: x64,     python-name: win_amd64 }
-        ver: ['3.8', '3.9', '3.10', '3.11']
+        ver: ['3.8', '3.9', '3.10', '3.11', '3.12']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: ${{ matrix.arch.bazel-name }}_windows
