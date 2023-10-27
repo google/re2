@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ver: [11, 12]
+        ver: [11, 12, 13]
     env:
       CC: gcc-${{ matrix.ver }}
       CXX: g++-${{ matrix.ver }}
@@ -68,24 +68,6 @@ jobs:
         run: |
           sudo apt update -y
           sudo apt install -y libabsl-dev libgtest-dev libbenchmark-dev
-        shell: bash
-      - run: make && make test
-        shell: bash
-  # GitHub Actions doesn't provide GCC 13, so we use a Docker container instead.
-  build-gcc-13:
-    runs-on: ubuntu-latest
-    container: gcc:13
-    strategy:
-      fail-fast: false
-    env:
-      CC: gcc
-      CXX: g++
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Abseil, GoogleTest and Benchmark
-        run: |
-          apt update -y
-          apt install -y libabsl-dev libgtest-dev libbenchmark-dev
         shell: bash
       - run: make && make test
         shell: bash
