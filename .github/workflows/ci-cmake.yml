@@ -3,14 +3,15 @@ on:
   push:
     branches: [main]
 jobs:
-  # GitHub Actions doesn't provide GCC 13, so we use a Docker container instead.
-  # (Also, the Benchmark package on Ubuntu 22.04 LTS is problematic whereas this
-  # Docker container is based on Debian bookworm and so it has a newer version.)
   build-linux:
     runs-on: ubuntu-latest
+    # The Benchmark package on Ubuntu 22.04 LTS is problematic whereas this
+    # Docker container is based on Debian bookworm and has a newer version.
     container: gcc:13
     strategy:
       fail-fast: false
+      matrix:
+        build_shared_libs: [OFF, ON]
     steps:
       - uses: actions/checkout@v3
       - name: Install CMake
@@ -23,31 +24,14 @@ jobs:
           apt update -y
           apt install -y libabsl-dev libgtest-dev libbenchmark-dev
         shell: bash
-      - run: .github/cmake.sh
-        shell: bash
-  build-linux-shared:
-    runs-on: ubuntu-latest
-    container: gcc:13
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install CMake
-        run: |
-          apt update -y
-          apt install -y cmake
-        shell: bash
-      - name: Install Abseil, GoogleTest and Benchmark
-        run: |
-          apt update -y
-          apt install -y libabsl-dev libgtest-dev libbenchmark-dev
-        shell: bash
-      - run: .github/cmake.sh -D BUILD_SHARED_LIBS=ON
+      - run: .github/cmake.sh -D BUILD_SHARED_LIBS=${{ matrix.build_shared_libs }}
         shell: bash
   build-macos:
     runs-on: macos-latest
     strategy:
       fail-fast: false
+      matrix:
+        build_shared_libs: [OFF, ON]
     steps:
       - uses: actions/checkout@v3
       - name: Install Abseil, GoogleTest and Benchmark
@@ -55,54 +39,22 @@ jobs:
           brew update
           brew install abseil googletest google-benchmark
         shell: bash
-      - run: .github/cmake.sh
-        shell: bash
-  build-macos-shared:
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Abseil, GoogleTest and Benchmark
-        run: |
-          brew update
-          brew install abseil googletest google-benchmark
-        shell: bash
-      - run: .github/cmake.sh -D BUILD_SHARED_LIBS=ON
+      - run: .github/cmake.sh -D BUILD_SHARED_LIBS=${{ matrix.build_shared_libs }}
         shell: bash
   build-windows:
     runs-on: windows-latest
     strategy:
       fail-fast: false
+      matrix:
+        build_shared_libs: [OFF, ON]
     steps:
       - uses: actions/checkout@v3
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
-          # TODO: Remove this in September 2023, which is when the default triplet for
-          # vcpkg libraries will change from x86-windows to the detected host triplet.
-          export VCPKG_DEFAULT_TRIPLET=x64-windows
           vcpkg update
           vcpkg install abseil gtest benchmark
         shell: bash
       - run: |
-          .github/cmake.sh \
-            -D CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
-        shell: bash
-  build-windows-shared:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Abseil, GoogleTest and Benchmark
-        run: |
-          # TODO: Remove this in September 2023, which is when the default triplet for
-          # vcpkg libraries will change from x86-windows to the detected host triplet.
-          export VCPKG_DEFAULT_TRIPLET=x64-windows
-          vcpkg update
-          vcpkg install abseil gtest benchmark
-        shell: bash
-      - run: |
-          .github/cmake.sh -D BUILD_SHARED_LIBS=ON \
+          .github/cmake.sh -D BUILD_SHARED_LIBS=${{ matrix.build_shared_libs }} \
             -D CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
         shell: bash
