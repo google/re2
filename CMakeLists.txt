@@ -210,6 +210,7 @@ if(RE2_BUILD_TESTING)
 
   set(BENCHMARK_TARGETS
       regexp_benchmark
+      dfa_loop_opt_benchmark
       )
 
   foreach(target ${TEST_TARGETS})

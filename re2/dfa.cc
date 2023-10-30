@@ -53,6 +53,8 @@
 #pragma warning(disable: 4200)
 #endif
 
+#define _RE2_NEW_DFA_LOOP 1
+
 namespace re2 {
 
 // Controls whether the DFA should bail out early if the NFA would be faster.
@@ -278,6 +280,38 @@ class DFA {
   bool AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
                            uint32_t flags);
 
+#if (_RE2_NEW_DFA_LOOP)
+  // The generic search loop, inlined to create specialized versions.
+  // cache_mutex_.r <= L < mutex_
+  // Might unlock and relock cache_mutex_ via params->cache_lock.
+  template <bool fill_matches,
+            bool can_prefix_accel,
+            bool want_earliest_match,
+            bool run_forward>
+  inline bool InlinedSearchLoop(SearchParams* params);
+
+  // The specialized versions of InlinedSearchLoop.  The three letters
+  // at the ends of the name denote the true/false values used as the
+  // last three parameters of InlinedSearchLoop.
+  // cache_mutex_.r <= L < mutex_
+  // Might unlock and relock cache_mutex_ via params->cache_lock.
+  bool SearchFFFF(SearchParams* params);
+  bool SearchFFFT(SearchParams* params);
+  bool SearchFFTF(SearchParams* params);
+  bool SearchFFTT(SearchParams* params);
+  bool SearchFTFF(SearchParams* params);
+  bool SearchFTFT(SearchParams* params);
+  bool SearchFTTF(SearchParams* params);
+  bool SearchFTTT(SearchParams* params);
+  bool SearchTFFF(SearchParams* params);
+  bool SearchTFFT(SearchParams* params);
+  bool SearchTFTF(SearchParams* params);
+  bool SearchTFTT(SearchParams* params);
+  bool SearchTTFF(SearchParams* params);
+  bool SearchTTFT(SearchParams* params);
+  bool SearchTTTF(SearchParams* params);
+  bool SearchTTTT(SearchParams* params);
+#else
   // The generic search loop, inlined to create specialized versions.
   // cache_mutex_.r <= L < mutex_
   // Might unlock and relock cache_mutex_ via params->cache_lock.
@@ -299,6 +333,7 @@ class DFA {
   bool SearchTFT(SearchParams* params);
   bool SearchTTF(SearchParams* params);
   bool SearchTTT(SearchParams* params);
+#endif
 
   // The main search loop: calls an appropriate specialized version of
   // InlinedSearchLoop.
@@ -1339,6 +1374,315 @@ DFA::State* DFA::StateSaver::Restore() {
 // The bools are equal to the same-named variables in params, but
 // making them function arguments lets the inliner specialize
 // this function to each combination (see two paragraphs above).
+
+#if (_RE2_NEW_DFA_LOOP)
+
+template <bool fill_matches,
+          bool can_prefix_accel,
+          bool want_earliest_match,
+          bool run_forward>
+inline bool DFA::InlinedSearchLoop(SearchParams* params) {
+  State* start = params->start;
+  const uint8_t* bp = BytePtr(params->text.data());  // start of text
+  const uint8_t* p = bp;                             // text scanning point
+  const uint8_t* ep = BytePtr(params->text.data() +
+                              params->text.size());  // end of text
+  const uint8_t* resetp = NULL;                      // p at last cache reset
+  if (!run_forward) {
+    using std::swap;
+    swap(p, ep);
+  }
+
+  const uint8_t* bytemap = prog_->bytemap();
+  const uint8_t* lastmatch = NULL;   // most recent matching position in text
+
+  State* s = start;
+  State* ns;
+
+  if (ExtraDebug)
+    absl::FPrintF(stderr, "@stx: %s\n", DumpState(s));
+
+  if (s->IsMatch()) {
+    lastmatch = run_forward ? p + 1 : p - 1; // compensate so that we can avoid adjusting it in-loop
+    if (ExtraDebug)
+      absl::FPrintF(stderr, "match @stx! [%s]\n", DumpState(s));
+    if (fill_matches) {
+      for (int i = s->ninst_ - 1; i >= 0; i--) {
+        int id = s->inst_[i];
+        if (id == MatchSep)
+          break;
+        params->matches->insert(id);
+      }
+    }
+    if (want_earliest_match) {
+      params->ep = reinterpret_cast<const char*>(p);
+      return true;
+    }
+  }
+
+  while (p != ep) {
+    if (ExtraDebug)
+      absl::FPrintF(stderr, "@%d: %s\n", p - bp, DumpState(s));
+
+    if (can_prefix_accel && s == start) {
+      // In start state, only way out is to find the prefix,
+      // so we use prefix accel (e.g. memchr) to skip ahead.
+      // If not found, we can skip to the end of the string.
+      p = BytePtr(prog_->PrefixAccel(p, ep - p));
+      if (p == NULL) {
+        p = ep;
+        break;
+      }
+    }
+
+    int c;
+    if (run_forward)
+      c = *p++;
+    else
+      c = *--p;
+
+    // Note that multiple threads might be consulting
+    // s->next_[bytemap[c]] simultaneously.
+    // RunStateOnByte takes care of the appropriate locking,
+    // including a memory barrier so that the unlocked access
+    // (sometimes known as "double-checked locking") is safe.
+    // The alternative would be either one DFA per thread
+    // or one mutex operation per input byte.
+    //
+    // ns == DeadState means the state is known to be dead
+    // (no more matches are possible).
+    // ns == NULL means the state has not yet been computed
+    // (need to call RunStateOnByteUnlocked).
+    // RunStateOnByte returns ns == NULL if it is out of memory.
+    // ns == FullMatchState means the rest of the string matches.
+    //
+    // Okay to use bytemap[] not ByteMap() here, because
+    // c is known to be an actual byte and not kByteEndText.
+
+    ns = s->next_[bytemap[c]].load(std::memory_order_acquire);
+    if (ns == NULL) {
+      ns = RunStateOnByteUnlocked(s, c);
+      if (ns == NULL) {
+        // After we reset the cache, we hold cache_mutex exclusively,
+        // so if resetp != NULL, it means we filled the DFA state
+        // cache with this search alone (without any other threads).
+        // Benchmarks show that doing a state computation on every
+        // byte runs at about 0.2 MB/s, while the NFA (nfa.cc) can do the
+        // same at about 2 MB/s.  Unless we're processing an average
+        // of 10 bytes per state computation, fail so that RE2 can
+        // fall back to the NFA.  However, RE2::Set cannot fall back,
+        // so we just have to keep on keeping on in that case.
+        if (dfa_should_bail_when_slow && resetp != NULL &&
+            static_cast<size_t>(p - resetp) < 10*state_cache_.size() &&
+            kind_ != Prog::kManyMatch) {
+          params->failed = true;
+          return false;
+        }
+        resetp = p;
+
+        // Prepare to save start and s across the reset.
+        StateSaver save_start(this, start);
+        StateSaver save_s(this, s);
+
+        // Discard all the States in the cache.
+        ResetCache(params->cache_lock);
+
+        // Restore start and s so we can continue.
+        if ((start = save_start.Restore()) == NULL ||
+            (s = save_s.Restore()) == NULL) {
+          // Restore already did LOG(DFATAL).
+          params->failed = true;
+          return false;
+        }
+        ns = RunStateOnByteUnlocked(s, c);
+        if (ns == NULL) {
+          LOG(DFATAL) << "RunStateOnByteUnlocked failed after ResetCache";
+          params->failed = true;
+          return false;
+        }
+      }
+    }
+    if (ns <= SpecialStateMax) {
+      if (ns == DeadState)
+        goto exit;
+      // FullMatchState
+      params->ep = reinterpret_cast<const char*>(ep);
+      return true;
+    }
+
+    s = ns;
+    if (s->IsMatch()) {
+      lastmatch = p; // we'll adjust out of the loop
+      if (ExtraDebug)
+        absl::FPrintF(stderr, "match @%d! [%s]\n", (run_forward ? p - 1 : p + 1) - bp, DumpState(s));
+      if (fill_matches) {
+        for (int i = s->ninst_ - 1; i >= 0; i--) {
+          int id = s->inst_[i];
+          if (id == MatchSep)
+            break;
+          params->matches->insert(id);
+        }
+      }
+      if (want_earliest_match)
+        goto matched;
+    }
+  }
+
+  // Process one more byte to see if it triggers a match.
+  // (Remember, matches are delayed one byte.)
+  if (ExtraDebug)
+    absl::FPrintF(stderr, "@etx: %s\n", DumpState(s));
+
+  int lastbyte;
+  if (run_forward) {
+    if (EndPtr(params->text) == EndPtr(params->context))
+      lastbyte = kByteEndText;
+    else
+      lastbyte = EndPtr(params->text)[0] & 0xFF;
+  } else {
+    if (BeginPtr(params->text) == BeginPtr(params->context))
+      lastbyte = kByteEndText;
+    else
+      lastbyte = BeginPtr(params->text)[-1] & 0xFF;
+  }
+
+  ns = s->next_[ByteMap(lastbyte)].load(std::memory_order_acquire);
+  if (ns == NULL) {
+    ns = RunStateOnByteUnlocked(s, lastbyte);
+    if (ns == NULL) {
+      StateSaver save_s(this, s);
+      ResetCache(params->cache_lock);
+      if ((s = save_s.Restore()) == NULL) {
+        params->failed = true;
+        return false;
+      }
+      ns = RunStateOnByteUnlocked(s, lastbyte);
+      if (ns == NULL) {
+        LOG(DFATAL) << "RunStateOnByteUnlocked failed after Reset";
+        params->failed = true;
+        return false;
+      }
+    }
+  }
+  if (ns <= SpecialStateMax) {
+    if (ns == DeadState)
+      goto exit;
+    // FullMatchState
+    params->ep = reinterpret_cast<const char*>(ep);
+    return true;
+  }
+
+  s = ns;
+  if (s->IsMatch()) {
+    params->ep = reinterpret_cast<const char*>(ep);
+    if (ExtraDebug)
+      absl::FPrintF(stderr, "match @etx! [%s]\n", DumpState(s));
+    if (fill_matches) {
+      for (int i = s->ninst_ - 1; i >= 0; i--) {
+        int id = s->inst_[i];
+        if (id == MatchSep)
+          break;
+        params->matches->insert(id);
+      }
+    }
+    return true;
+  }
+
+exit:
+  if (!lastmatch) {
+    params->ep = NULL;
+    return false;
+  }
+
+matched:
+  // DFA notices a match one byte late; adjust it accordingly
+  params->ep = reinterpret_cast<const char*>(run_forward ? lastmatch - 1 : lastmatch + 1);
+  return true;
+}
+
+// Inline specializations of the general loop.
+bool DFA::SearchFFFF(SearchParams* params) {
+  return InlinedSearchLoop<false, false, false, false>(params);
+}
+bool DFA::SearchFFFT(SearchParams* params) {
+  return InlinedSearchLoop<false, false, false, true>(params);
+}
+bool DFA::SearchFFTF(SearchParams* params) {
+  return InlinedSearchLoop<false, false, true, false>(params);
+}
+bool DFA::SearchFFTT(SearchParams* params) {
+  return InlinedSearchLoop<false, false, true, true>(params);
+}
+bool DFA::SearchFTFF(SearchParams* params) {
+  return InlinedSearchLoop<false, true, false, false>(params);
+}
+bool DFA::SearchFTFT(SearchParams* params) {
+  return InlinedSearchLoop<false, true, false, true>(params);
+}
+bool DFA::SearchFTTF(SearchParams* params) {
+  return InlinedSearchLoop<false, true, true, false>(params);
+}
+bool DFA::SearchFTTT(SearchParams* params) {
+  return InlinedSearchLoop<false, true, true, true>(params);
+}
+bool DFA::SearchTFFF(SearchParams* params) {
+  return InlinedSearchLoop<true, false, false, false>(params);
+}
+bool DFA::SearchTFFT(SearchParams* params) {
+  return InlinedSearchLoop<true, false, false, true>(params);
+}
+bool DFA::SearchTFTF(SearchParams* params) {
+  return InlinedSearchLoop<true, false, true, false>(params);
+}
+bool DFA::SearchTFTT(SearchParams* params) {
+  return InlinedSearchLoop<true, false, true, true>(params);
+}
+bool DFA::SearchTTFF(SearchParams* params) {
+  return InlinedSearchLoop<true, true, false, false>(params);
+}
+bool DFA::SearchTTFT(SearchParams* params) {
+  return InlinedSearchLoop<true, true, false, true>(params);
+}
+bool DFA::SearchTTTF(SearchParams* params) {
+  return InlinedSearchLoop<true, true, true, false>(params);
+}
+bool DFA::SearchTTTT(SearchParams* params) {
+  return InlinedSearchLoop<true, true, true, true>(params);
+}
+
+// For performance, calls the appropriate specialized version
+// of InlinedSearchLoop.
+bool DFA::FastSearchLoop(SearchParams* params) {
+  // Because the methods are private, the Searches array
+  // cannot be declared at top level.
+  static bool (DFA::*Searches[])(SearchParams*) = {
+    &DFA::SearchFFFF,
+    &DFA::SearchFFFT,
+    &DFA::SearchFFTF,
+    &DFA::SearchFFTT,
+    &DFA::SearchFTFF,
+    &DFA::SearchFTFT,
+    &DFA::SearchFTTF,
+    &DFA::SearchFTTT,
+    &DFA::SearchTFFF,
+    &DFA::SearchTFFT,
+    &DFA::SearchTFTF,
+    &DFA::SearchTFTT,
+    &DFA::SearchTTFF,
+    &DFA::SearchTTFT,
+    &DFA::SearchTTTF,
+    &DFA::SearchTTTT,
+  };
+
+  int index = 8 * (params->matches != NULL && kind_ == Prog::kManyMatch) +
+              4 * params->can_prefix_accel +
+              2 * params->want_earliest_match +
+              1 * params->run_forward;
+  return (this->*Searches[index])(params);
+}
+
+#else // _RE2_NEW_DFA_LOOP
+
 template <bool can_prefix_accel,
           bool want_earliest_match,
           bool run_forward>
@@ -1613,6 +1957,7 @@ bool DFA::FastSearchLoop(SearchParams* params) {
   return (this->*Searches[index])(params);
 }
 
+#endif // _RE2_NEW_DFA_LOOP
 
 // The discussion of DFA execution above ignored the question of how
 // to determine the initial state for the search loop.  There are two
