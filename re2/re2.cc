@@ -9,7 +9,6 @@
 
 #include "re2/re2.h"
 
-#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #ifdef _MSC_VER
@@ -454,8 +453,8 @@ bool RE2::Replace(std::string* str,
   if (!re.Rewrite(&s, rewrite, vec, nvec))
     return false;
 
-  assert(vec[0].data() >= str->data());
-  assert(vec[0].data() + vec[0].size() <= str->data() + str->size());
+  DCHECK_GE(vec[0].data(), str->data());
+  DCHECK_LE(vec[0].data() + vec[0].size(), str->data() + str->size());
   str->replace(vec[0].data() - str->data(), vec[0].size(), s);
   return true;
 }
