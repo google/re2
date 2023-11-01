@@ -1367,7 +1367,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params) {
     lastmatch = p;
     if (ExtraDebug)
       absl::FPrintF(stderr, "match @stx! [%s]\n", DumpState(s));
-    if (params->matches != NULL && kind_ == Prog::kManyMatch) {
+    if (params->matches != NULL) {
       for (int i = s->ninst_ - 1; i >= 0; i--) {
         int id = s->inst_[i];
         if (id == MatchSep)
@@ -1484,7 +1484,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params) {
         lastmatch = p + 1;
       if (ExtraDebug)
         absl::FPrintF(stderr, "match @%d! [%s]\n", lastmatch - bp, DumpState(s));
-      if (params->matches != NULL && kind_ == Prog::kManyMatch) {
+      if (params->matches != NULL) {
         for (int i = s->ninst_ - 1; i >= 0; i--) {
           int id = s->inst_[i];
           if (id == MatchSep)
@@ -1551,7 +1551,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params) {
     lastmatch = p;
     if (ExtraDebug)
       absl::FPrintF(stderr, "match @etx! [%s]\n", DumpState(s));
-    if (params->matches != NULL && kind_ == Prog::kManyMatch) {
+    if (params->matches != NULL) {
       for (int i = s->ninst_ - 1; i >= 0; i--) {
         int id = s->inst_[i];
         if (id == MatchSep)
@@ -1767,6 +1767,8 @@ bool DFA::Search(absl::string_view text, absl::string_view context,
   params.anchored = anchored;
   params.want_earliest_match = want_earliest_match;
   params.run_forward = run_forward;
+  // matches should be null except when using RE2::Set.
+  DCHECK(matches == NULL || kind_ == Prog::kManyMatch);
   params.matches = matches;
 
   if (!AnalyzeSearch(&params)) {
