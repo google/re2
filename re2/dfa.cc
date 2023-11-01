@@ -1367,7 +1367,8 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params) {
     lastmatch = p;
     if (ExtraDebug)
       absl::FPrintF(stderr, "match @stx! [%s]\n", DumpState(s));
-    if (params->matches != NULL && kind_ == Prog::kManyMatch) {
+    if (params->matches != NULL) {
+      assert(kind_ == Prog::kManyMatch);
       for (int i = s->ninst_ - 1; i >= 0; i--) {
         int id = s->inst_[i];
         if (id == MatchSep)
@@ -1484,7 +1485,8 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params) {
         lastmatch = p + 1;
       if (ExtraDebug)
         absl::FPrintF(stderr, "match @%d! [%s]\n", lastmatch - bp, DumpState(s));
-      if (params->matches != NULL && kind_ == Prog::kManyMatch) {
+      if (params->matches != NULL) {
+        assert(kind_ == Prog::kManyMatch);
         for (int i = s->ninst_ - 1; i >= 0; i--) {
           int id = s->inst_[i];
           if (id == MatchSep)
@@ -1551,7 +1553,8 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params) {
     lastmatch = p;
     if (ExtraDebug)
       absl::FPrintF(stderr, "match @etx! [%s]\n", DumpState(s));
-    if (params->matches != NULL && kind_ == Prog::kManyMatch) {
+    if (params->matches != NULL) {
+      assert(kind_ == Prog::kManyMatch);
       for (int i = s->ninst_ - 1; i >= 0; i--) {
         int id = s->inst_[i];
         if (id == MatchSep)
