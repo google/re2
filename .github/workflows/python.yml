@@ -11,7 +11,9 @@ jobs:
     runs-on: ${{ matrix.arch.runs-on }}
     container:
       image: quay.io/pypa/${{ matrix.os }}_${{ matrix.arch.python-name }}
-      options: --init
+      # Don't run as root within the container.
+      # Neither Git nor Bazel appreciates that.
+      options: --init --user runner:docker
     strategy:
       fail-fast: false
       matrix:
@@ -41,13 +43,7 @@ jobs:
         env:
           SOURCE_DATE_EPOCH: ${{ env.timestamp }}
         run: |
-          # TODO(junyer): Get rid of this hack whenever @rules_python no longer
-          # fails due to Bazel running as root. (It sounds more likely than the
-          # Docker container changing to be built with the `USER` instruction.)
-          useradd "${GITHUB_ACTOR}"
-          chown -R "${GITHUB_ACTOR}" ..
-          su -c 'python -m build --wheel' "${GITHUB_ACTOR}"
-          chown -R "${USER}" ..
+          python -m build --wheel
           python -m auditwheel repair --wheel-dir=. dist/*
         shell: bash
         working-directory: python
