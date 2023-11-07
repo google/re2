@@ -13,7 +13,8 @@ jobs:
       image: quay.io/pypa/${{ matrix.os }}_${{ matrix.arch.python-name }}
       # Don't run as root within the container.
       # Neither Git nor Bazel appreciates that.
-      options: --init --user runner:docker
+      # 1001 is the GitHub Actions runner user.
+      options: --init --user 1001
     strategy:
       fail-fast: false
       matrix:
