@@ -26,6 +26,8 @@ jobs:
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PYTHON: /usr/local/bin/python${{ matrix.ver }}
+      # Bazel fails if the username is unknown.
+      USER: runner
     steps:
       - uses: actions/checkout@v3
       # Stash the timestamp for the commit SHA that triggered the workflow.
