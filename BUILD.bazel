@@ -55,6 +55,9 @@ cc_library(
         "re2/stringpiece.h",
     ],
     copts = select({
+        # WebAssembly support for threads is... fraught at every level.
+        "@platforms//cpu:wasm32": [],
+        "@platforms//cpu:wasm64": [],
         "@platforms//os:wasi": [],
         "@platforms//os:windows": [],
         "//conditions:default": ["-pthread"],
@@ -64,6 +67,9 @@ cc_library(
         # older versions of Clang will warn about the unused command line
         # argument, so just don't pass it.
         "@platforms//os:macos": [],
+        # WebAssembly support for threads is... fraught at every level.
+        "@platforms//cpu:wasm32": [],
+        "@platforms//cpu:wasm64": [],
         "@platforms//os:wasi": [],
         "@platforms//os:windows": [],
         "//conditions:default": ["-pthread"],
