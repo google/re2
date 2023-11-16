@@ -55,7 +55,7 @@ cc_library(
         "re2/stringpiece.h",
     ],
     copts = select({
-        "@platforms//os:wasi": [],
+        "@platforms//cpu:wasm32": [],
         "@platforms//os:windows": [],
         "//conditions:default": ["-pthread"],
     }),
@@ -64,7 +64,7 @@ cc_library(
         # older versions of Clang will warn about the unused command line
         # argument, so just don't pass it.
         "@platforms//os:macos": [],
-        "@platforms//os:wasi": [],
+        "@platforms//cpu:wasm32": [],
         "@platforms//os:windows": [],
         "//conditions:default": ["-pthread"],
     }),
