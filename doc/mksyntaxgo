@@ -24,16 +24,16 @@ sam -d $out <<'!'
 /*
 Package syntax parses regular expressions into parse trees and compiles
 parse trees into programs. Most clients of regular expressions will use the
-facilities of package regexp (such as Compile and Match) instead of this package.
+facilities of package [regexp] (such as [regexp.Compile] and [regexp.Match]) instead of this package.
 
-Syntax
+# Syntax
 
-The regular expression syntax understood by this package when parsing with the Perl flag is as follows.
-Parts of the syntax can be disabled by passing alternate flags to Parse.
+The regular expression syntax understood by this package when parsing with the [Perl] flag is as follows.
+Parts of the syntax can be disabled by passing alternate flags to [Parse].
 
 .
 $a
-Unicode character classes are those in unicode.Categories and unicode.Scripts.
+Unicode character classes are those in [unicode.Categories] and [unicode.Scripts].
 */
 package syntax
 .
