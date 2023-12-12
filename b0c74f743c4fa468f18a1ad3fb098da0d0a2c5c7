@@ -22,6 +22,30 @@
       },
       "revId": "b0c74f743c4fa468f18a1ad3fb098da0d0a2c5c7",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3c0fcf5d_8a5a470a",
+        "filename": "re2/parse.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1187,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-12-12T17:24:00Z",
+      "side": 1,
+      "message": "\u003e _[…]_ hence avoiding the non-inclusion of the characters we wanted to include?\n\nRight. :)\n\n\u003e Assuming that is correct, are there any remaining cases where the desired behavior of `AddFoldedRange` terminating prematurely is desired? I ask because best I can tell there are only 2 call-sites for `AddFoldedRange`: in `AddRangeFlags` and in `AddFoldedRange` recursively, and this change eliminates the behavior for the former -- do we need it in the latter?\n\nThe \"we\u0027re done\" `return` in `AddFoldedRange()` prevents infinite recursion when case folding (the `unicode_casefold` table specifies cyclic paths) and, I think, doesn\u0027t terminate ***prematurely*** in other cases (i.e. other `AddRangeFlags()` callers) because the parse flags in other cases don\u0027t differ. In this case, what causes problems is factoring subexpressions with different parse flags. In other cases, \"we\u0027re done\" says that the cyclic path (if any) was traversed completely; even if recursion was handled some other way, we can still avoid redundant work.",
+      "parentUuid": "54db2b93_7b3eabe0",
+      "range": {
+        "startLine": 1185,
+        "startChar": 11,
+        "endLine": 1187,
+        "endChar": 35
+      },
+      "revId": "b0c74f743c4fa468f18a1ad3fb098da0d0a2c5c7",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
