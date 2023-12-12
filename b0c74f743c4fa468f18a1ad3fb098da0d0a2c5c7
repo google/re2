@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "54db2b93_7b3eabe0",
+        "filename": "re2/parse.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1187,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2023-12-12T13:45:35Z",
+      "side": 1,
+      "message": "Correct me if I\u0027m wrong, but the way this works is that `AddRangeFlags` will call `AddFoldedRange`, and `AddFoldedRange` has the terminate-prematurely behavior in case something is already present.\n\nTherefore, this fix works around this problem by making an entirely new `CharClassBuilder`, which has no pre-existing ranges in it, and therefore prevents `AddFoldedRange` from terminating prematurely. This entire `CharClassBuilder` is then added to the one we\u0027re trying to build up on line 1172, hence avoiding the non-inclusion of the characters we wanted to include?\n\nAssuming that is correct, are there any remaining cases where the desired behavior of `AddFoldedRange` terminating prematurely is desired? I ask because best I can tell there are only 2 call-sites for `AddFoldedRange`: in `AddRangeFlags` and in `AddFoldedRange` recursively, and this change eliminates the behavior for the former -- do we need it in the latter?",
+      "range": {
+        "startLine": 1185,
+        "startChar": 11,
+        "endLine": 1187,
+        "endChar": 35
+      },
+      "revId": "b0c74f743c4fa468f18a1ad3fb098da0d0a2c5c7",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
