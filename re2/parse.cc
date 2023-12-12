@@ -1177,7 +1177,17 @@ void FactorAlternationImpl::Round3(Regexp** sub, int nsub,
           for (CharClass::iterator it = cc->begin(); it != cc->end(); ++it)
             ccb.AddRange(it->lo, it->hi);
         } else if (re->op() == kRegexpLiteral) {
-          ccb.AddRangeFlags(re->rune(), re->rune(), re->parse_flags());
+          if (re->parse_flags() & Regexp::FoldCase) {
+            // AddFoldedRange() can terminate prematurely if the character class
+            // already contains the rune. For example, if it contains 'a' and we
+            // want to add folded 'a', it sees 'a' and stops without adding 'A'.
+            // To avoid that, we use an empty character class and then merge it.
+            CharClassBuilder tmp;
+            tmp.AddRangeFlags(re->rune(), re->rune(), re->parse_flags());
+            ccb.AddCharClass(&tmp);
+          } else {
+            ccb.AddRangeFlags(re->rune(), re->rune(), re->parse_flags());
+          }
         } else {
           LOG(DFATAL) << "RE2: unexpected op: " << re->op() << " "
                       << re->ToString();
