@@ -356,6 +356,13 @@ Test prefix_tests[] = {
     "cat{lit{a}alt{emp{}cat{str{ardvark}alt{emp{}lit{s}}}"
     "cat{str{ba}alt{cat{lit{c}alt{cc{0x69 0x6b}cat{str{us}alt{emp{}str{es}}}}}"
     "str{ft}cat{str{lone}alt{emp{}lit{s}}}}}}}" },
+  // As per https://github.com/google/re2/issues/467,
+  // these should factor identically, but they didn't
+  // because AddFoldedRange() terminated prematurely.
+  { "0A|0[aA]", "cat{lit{0}cc{0x41 0x61}}" },
+  { "0a|0[aA]", "cat{lit{0}cc{0x41 0x61}}" },
+  { "0[aA]|0A", "cat{lit{0}cc{0x41 0x61}}" },
+  { "0[aA]|0a", "cat{lit{0}cc{0x41 0x61}}" },
 };
 
 // Test that prefix factoring works.
