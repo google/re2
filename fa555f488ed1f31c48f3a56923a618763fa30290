@@ -16,6 +16,24 @@
       "message": "If you\u0027re going to do this, can you include a .bazelversion for bazelisk+documentation?",
       "revId": "fa555f488ed1f31c48f3a56923a618763fa30290",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "45925d99_304626a3",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2023-12-14T18:04:37Z",
+      "side": 1,
+      "message": "I checked GitHub Actions from a couple of days ago (i.e. [this](https://github.com/google/re2/actions/runs/7186092968)) and it was indeed downloading Bazel 7 already. :)",
+      "parentUuid": "321b2e63_f75ecfc2",
+      "revId": "fa555f488ed1f31c48f3a56923a618763fa30290",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
