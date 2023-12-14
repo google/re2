@@ -2,8 +2,6 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Enable Bzlmod. This will be the default eventually...
-build --enable_bzlmod
 # Enable layering check features. Useful on Clang only.
 build --features=layering_check
 # Enable parse headers features. Enforcing that headers are self-contained.
