@@ -532,4 +532,30 @@ TEST(NamedCaptures, ErrorArgs) {
   EXPECT_EQ(status.error_arg(), "(?<space bar>");
 }
 
+// Test that look-around error args are correct.
+TEST(LookAround, ErrorArgs) {
+  RegexpStatus status;
+  Regexp* re;
+
+  re = Regexp::Parse("(?=foo).*", Regexp::LikePerl, &status);
+  EXPECT_TRUE(re == NULL);
+  EXPECT_EQ(status.code(), kRegexpBadPerlOp);
+  EXPECT_EQ(status.error_arg(), "(?=");
+
+  re = Regexp::Parse("(?!foo).*", Regexp::LikePerl, &status);
+  EXPECT_TRUE(re == NULL);
+  EXPECT_EQ(status.code(), kRegexpBadPerlOp);
+  EXPECT_EQ(status.error_arg(), "(?!");
+
+  re = Regexp::Parse("(?<=foo).*", Regexp::LikePerl, &status);
+  EXPECT_TRUE(re == NULL);
+  EXPECT_EQ(status.code(), kRegexpBadPerlOp);
+  EXPECT_EQ(status.error_arg(), "(?<=");
+
+  re = Regexp::Parse("(?<!foo).*", Regexp::LikePerl, &status);
+  EXPECT_TRUE(re == NULL);
+  EXPECT_EQ(status.code(), kRegexpBadPerlOp);
+  EXPECT_EQ(status.error_arg(), "(?<!");
+}
+
 }  // namespace re2

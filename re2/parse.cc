@@ -2070,6 +2070,17 @@ bool Regexp::ParseState::ParsePerlFlags(absl::string_view* s) {
     return false;
   }
 
+  // Check for look-around assertions. This is NOT because we support them! ;)
+  // As per https://github.com/google/re2/issues/468, we really want to report
+  // kRegexpBadPerlOp (not kRegexpBadNamedCapture) for look-behind assertions.
+  // Additionally, it would be nice to report not "(?<", but "(?<=" or "(?<!".
+  if ((t.size() > 3 && (t[2] == '=' || t[2] == '!')) ||
+      (t.size() > 4 && t[2] == '<' && (t[3] == '=' || t[3] == '!'))) {
+    status_->set_code(kRegexpBadPerlOp);
+    status_->set_error_arg(absl::string_view(t.data(), t[2] == '<' ? 4 : 3));
+    return false;
+  }
+
   // Check for named captures, first introduced in Python's regexp library.
   // As usual, there are three slightly different syntaxes:
   //
