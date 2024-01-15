@@ -2,6 +2,8 @@ name: CI
 on:
   push:
     branches: [main]
+permissions:
+  contents: read
 jobs:
   build-appleclang:
     runs-on: macos-latest

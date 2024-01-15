@@ -5,6 +5,8 @@ on:
       build:
         required: true
         type: number
+permissions:
+  contents: read
 jobs:
   wheel-linux:
     name: Linux ${{ matrix.os }}, ${{ matrix.arch.name }}, Python ${{ matrix.ver }}

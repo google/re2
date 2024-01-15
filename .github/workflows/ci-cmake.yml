@@ -2,6 +2,8 @@ name: CI (CMake)
 on:
   push:
     branches: [main]
+permissions:
+  contents: read
 jobs:
   build-linux:
     runs-on: ubuntu-latest

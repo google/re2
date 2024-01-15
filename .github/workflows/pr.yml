@@ -3,8 +3,16 @@ on:
   pull_request_target:
     branches: [main]
     types: [opened]
+permissions:
+  contents: read
 jobs:
   close:
+    permissions:
+      contents: read
+      # We have to use two different APIs below,
+      # so just grant two different permissions.
+      issues: write
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
