@@ -59,6 +59,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
       pass
     # Register the local Python toolchain with highest priority.
     cmd.append('--extra_toolchains=@local_config_python//:py_toolchain')
+    # Print debug information during toolchain resolution.
+    cmd.append('--toolchain_resolution_debug=.*')
     cmd += ['--compilation_mode=opt', '--', ':all']
     self.spawn(cmd)
 
