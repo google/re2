@@ -54,6 +54,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     cmd = ['bazel', 'build']
     try:
       cmd.append(f'--cpu={os.environ["BAZEL_CPU"].lower()}')
+      cmd.append(f'--platforms=//python:{os.environ["BAZEL_CPU"].lower()}')
     except KeyError:
       pass
     cmd += ['--compilation_mode=opt', '--', ':all']
