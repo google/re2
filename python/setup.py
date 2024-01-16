@@ -57,6 +57,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
       cmd.append(f'--platforms=//python:{os.environ["BAZEL_CPU"].lower()}')
     except KeyError:
       pass
+    # Register the local Python toolchain with highest priority.
+    cmd.append('--extra_toolchains=@local_config_python//:py_toolchain')
     cmd += ['--compilation_mode=opt', '--', ':all']
     self.spawn(cmd)
 
