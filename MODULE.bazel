@@ -17,6 +17,11 @@ bazel_dep(name = "abseil-cpp", version = "20230802.1", repo_name = "com_google_a
 bazel_dep(name = "rules_python", version = "0.28.0")
 bazel_dep(name = "pybind11_bazel", version = "2.11.1.bzl.1")
 
+# This is a temporary hack for `x64_x86_windows`.
+# TODO(junyer): Remove whenever no longer needed.
+cc_configure = use_extension("@bazel_tools//tools/cpp:cc_configure.bzl", "cc_configure_extension")
+use_repo(cc_configure, "local_config_cc")
+
 python_configure = use_extension("@pybind11_bazel//:python_configure.bzl", "extension")
 python_configure.toolchain(python_version = "3")  # ignored when non-root module
 use_repo(python_configure, "local_config_python", "pybind11")
