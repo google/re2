@@ -53,8 +53,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     cmd = ['bazel', 'build']
     try:
-      cmd.append(f'--cpu={os.environ["BAZEL_CPU"].lower()}')
-      cmd.append(f'--platforms=//python:{os.environ["BAZEL_CPU"].lower()}')
+      cpu = os.environ['BAZEL_CPU']
+      cmd.append(f'--cpu={cpu}')
+      cmd.append(f'--platforms=//python:{cpu}')
+      if cpu == 'x64_x86_windows':
+        # Attempt to convince Bazel 7 that X64 can build for X86.
+        cmd.append('--extra_execution_platforms=//python:x64_windows')
     except KeyError:
       pass
     # Register the local Python toolchain with highest priority.
