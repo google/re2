@@ -15,7 +15,7 @@ jobs:
       matrix:
         build_shared_libs: [OFF, ON]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install CMake
         run: |
           apt update -y
@@ -35,7 +35,7 @@ jobs:
       matrix:
         build_shared_libs: [OFF, ON]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
           brew update
@@ -50,7 +50,7 @@ jobs:
       matrix:
         build_shared_libs: [OFF, ON]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
           vcpkg update
