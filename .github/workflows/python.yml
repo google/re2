@@ -64,7 +64,7 @@ jobs:
           retention-days: 1
   wheel-macos:
     name: macOS ${{ matrix.os }}, ${{ matrix.arch.name }}, Python ${{ matrix.ver }}
-    runs-on: macos-${{ matrix.os }}
+    runs-on: macos-${{ matrix.os }}-large
     strategy:
       fail-fast: false
       matrix:
