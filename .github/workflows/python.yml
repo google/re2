@@ -71,7 +71,7 @@ jobs:
         arch:
           - { name: X64,   bazel-name: x86_64, python-name: x86_64 }
           - { name: ARM64, bazel-name: arm64,  python-name: arm64  }
-        os: [11, 12, 13]
+        os: [11, 12, 13, 14]
         ver: ['3.8', '3.9', '3.10', '3.11', '3.12']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
