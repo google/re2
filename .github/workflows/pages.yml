@@ -1,0 +1,40 @@
+name: Pages
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: emscripten/emsdk
+      # Don't run as root within the container.
+      # Neither Git nor Bazel appreciates that.
+      # 1001 is the GitHub Actions runner user.
+      options: --init --user 1001
+    env:
+      BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Bazel fails if the username is unknown.
+      USER: runner
+    steps:
+      - uses: actions/checkout@v4
+      # TODO(junyer): Use `v2` whenever a new release is tagged.
+      - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
+      - run: app/build.sh
+        shell: bash
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/deploy
+  deploy:
+    needs:
+      - build
+    permissions:
+      contents: read
+      # Needed for Pages deployment.
+      id-token: write
+      pages: write
+    environment: github-pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/deploy-pages@v4
