@@ -35,8 +35,7 @@ jobs:
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      # TODO(junyer): Use `v2` whenever a new release is tagged.
-      - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
+      - uses: bazelbuild/setup-bazelisk@v3
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           "${PYTHON}" -m pip install --upgrade pip
@@ -87,8 +86,7 @@ jobs:
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      # TODO(junyer): Use `v2` whenever a new release is tagged.
-      - uses: bazelbuild/setup-bazelisk@6244971d4f7ba9aca943c2f3ede2bbd813fcca51
+      - uses: bazelbuild/setup-bazelisk@v3
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.ver }}
