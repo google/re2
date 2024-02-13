@@ -35,7 +35,9 @@ jobs:
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazelbuild/setup-bazelisk@v3
+      - uses: p0deje/setup-bazel@0.5.0
+        with:
+          bazelisk-version: '1.x'
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           "${PYTHON}" -m pip install --upgrade pip
@@ -86,7 +88,9 @@ jobs:
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazelbuild/setup-bazelisk@v3
+      - uses: p0deje/setup-bazel@0.5.0
+        with:
+          bazelisk-version: '1.x'
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.ver }}
@@ -135,12 +139,9 @@ jobs:
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      # Avoid the Chocolatey install of Bazel getting in the way;
-      # `bazelbuild/setup-bazelisk` doesn't work for some reason.
-      - run: |
-          choco uninstall -y bazel
-          choco install -y bazelisk
-        shell: bash
+      - uses: p0deje/setup-bazel@0.5.0
+        with:
+          bazelisk-version: '1.x'
       # Lowercase the architecture name for `actions/setup-python`.
       - run: |
           ARCHITECTURE=${{ matrix.arch.name }}

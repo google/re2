@@ -18,7 +18,9 @@ jobs:
       USER: runner
     steps:
       - uses: actions/checkout@v4
-      - uses: bazelbuild/setup-bazelisk@v3
+      - uses: p0deje/setup-bazel@0.5.0
+        with:
+          bazelisk-version: '1.x'
       - run: app/build.sh
         shell: bash
       - uses: actions/upload-pages-artifact@v3
