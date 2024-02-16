@@ -155,7 +155,7 @@ cc_import(
 cc_library(
     name = "libraries",
 )
-""".format(interpreter_path=sys.executable,
+""".format(interpreter_path=sys.executable.replace('\\', '/'),
            major=sys.version_info.major,
            minor=sys.version_info.minor))
 
