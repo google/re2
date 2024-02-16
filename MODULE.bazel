@@ -14,17 +14,13 @@ bazel_dep(name = "platforms", version = "0.0.8")
 bazel_dep(name = "apple_support", version = "1.12.0", repo_name = "build_bazel_apple_support")
 bazel_dep(name = "rules_cc", version = "0.0.9")
 bazel_dep(name = "abseil-cpp", version = "20240116.0", repo_name = "com_google_absl")
-bazel_dep(name = "rules_python", version = "0.29.0")
-bazel_dep(name = "pybind11_bazel", version = "2.11.1.bzl.1")
+bazel_dep(name = "rules_python", version = "0.31.0")
+bazel_dep(name = "pybind11_bazel", version = "2.11.1.bzl.2")
 
 # This is a temporary hack for `x64_x86_windows`.
 # TODO(junyer): Remove whenever no longer needed.
 cc_configure = use_extension("@bazel_tools//tools/cpp:cc_configure.bzl", "cc_configure_extension")
 use_repo(cc_configure, "local_config_cc")
-
-python_configure = use_extension("@pybind11_bazel//:python_configure.bzl", "extension")
-python_configure.toolchain(python_version = "3")  # ignored when non-root module
-use_repo(python_configure, "local_config_python", "pybind11")
 
 # These dependencies will be ignored when the `re2` module is not
 # the root module (or when `--ignore_dev_dependency` is enabled).
