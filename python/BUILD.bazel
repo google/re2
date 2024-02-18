@@ -12,7 +12,7 @@ pybind_extension(
     srcs = ["_re2.cc"],
     deps = [
         "//:re2",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
