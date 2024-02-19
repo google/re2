@@ -776,7 +776,8 @@ Rune* Regexp::LeadingString(Regexp* re, int* nrune,
   while (re->op() == kRegexpConcat && re->nsub() > 0)
     re = re->sub()[0];
 
-  *flags = static_cast<Regexp::ParseFlags>(re->parse_flags_ & Regexp::FoldCase);
+  *flags = static_cast<Regexp::ParseFlags>(re->parse_flags_ &
+                                           (Regexp::FoldCase | Regexp::Latin1));
 
   if (re->op() == kRegexpLiteral) {
     *nrune = 1;
