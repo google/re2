@@ -225,6 +225,29 @@ static Test tests[] = {
   // Bug in Regexp::ToString() that emitted [^], which
   // would (obviously) fail to parse when fed back in.
   { "[\\s\\S]", "cc{0-0x10ffff}" },
+
+  // As per https://github.com/google/re2/issues/477,
+  // there were long-standing bugs involving Latin-1.
+  // Here, we exercise it WITHOUT case folding...
+  { "\xa5\x64\xd1", "str{\xa5""d\xd1}", Regexp::Latin1 },
+  { "\xa5\xd1\x64", "str{\xa5\xd1""d}", Regexp::Latin1 },
+  { "\xa5\x64[\xd1\xd2]", "cat{str{\xa5""d}cc{0xd1-0xd2}}", Regexp::Latin1 },
+  { "\xa5[\xd1\xd2]\x64", "cat{lit{\xa5}cc{0xd1-0xd2}lit{d}}", Regexp::Latin1 },
+  { "\xa5\x64|\xa5\xd1", "cat{lit{\xa5}cc{0x64 0xd1}}", Regexp::Latin1 },
+  { "\xa5\xd1|\xa5\x64", "cat{lit{\xa5}cc{0x64 0xd1}}", Regexp::Latin1 },
+  { "\xa5\x64|\xa5[\xd1\xd2]", "cat{lit{\xa5}cc{0x64 0xd1-0xd2}}", Regexp::Latin1 },
+  { "\xa5[\xd1\xd2]|\xa5\x64", "cat{lit{\xa5}cc{0x64 0xd1-0xd2}}", Regexp::Latin1 },
+  // Here, we exercise it WITH case folding...
+  // 0x64 should fold to 0x44, but neither 0xD1 nor 0xD2
+  // should fold to 0xF1 and 0xF2, respectively.
+  { "\xa5\x64\xd1", "strfold{\xa5""d\xd1}", Regexp::Latin1 | Regexp::FoldCase },
+  { "\xa5\xd1\x64", "strfold{\xa5\xd1""d}", Regexp::Latin1 | Regexp::FoldCase },
+  { "\xa5\x64[\xd1\xd2]", "cat{strfold{\xa5""d}cc{0xd1-0xd2}}", Regexp::Latin1 | Regexp::FoldCase },
+  { "\xa5[\xd1\xd2]\x64", "cat{lit{\xa5}cc{0xd1-0xd2}litfold{d}}", Regexp::Latin1 | Regexp::FoldCase },
+  { "\xa5\x64|\xa5\xd1", "cat{lit{\xa5}cc{0x44 0x64 0xd1}}", Regexp::Latin1 | Regexp::FoldCase },
+  { "\xa5\xd1|\xa5\x64", "cat{lit{\xa5}cc{0x44 0x64 0xd1}}", Regexp::Latin1 | Regexp::FoldCase },
+  { "\xa5\x64|\xa5[\xd1\xd2]", "cat{lit{\xa5}cc{0x44 0x64 0xd1-0xd2}}", Regexp::Latin1 | Regexp::FoldCase },
+  { "\xa5[\xd1\xd2]|\xa5\x64", "cat{lit{\xa5}cc{0x44 0x64 0xd1-0xd2}}", Regexp::Latin1 | Regexp::FoldCase },
 };
 
 bool RegexpEqualTestingOnly(Regexp* a, Regexp* b) {
@@ -492,7 +515,7 @@ TEST(TestToString, EquivalentParse) {
       //     << " t=" << t << " regexp=" << tests[i].regexp;
 
       // Test that if we parse the new regexp we get the same structure.
-      Regexp* nre = Regexp::Parse(t, Regexp::MatchNL | Regexp::PerlX, &status);
+      Regexp* nre = Regexp::Parse(t, f, &status);
       ASSERT_TRUE(nre != NULL) << " reparse " << t << " " << status.Text();
       std::string ss = nre->Dump();
       std::string tt = nre->ToString();
