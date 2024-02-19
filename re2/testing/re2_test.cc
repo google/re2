@@ -20,6 +20,7 @@
 
 #include "absl/base/macros.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "gtest/gtest.h"
 #include "util/logging.h"
 #include "re2/re2.h"
@@ -1656,6 +1657,25 @@ TEST(RE2, Issue310) {
   RE2 plus("(?:|a)+");
   ASSERT_TRUE(plus.Match(s, 0, s.size(), RE2::UNANCHORED, &m, 1));
   ASSERT_EQ(m, "") << " got m='" << m << "', want ''";
+}
+
+TEST(RE2, Issue477) {
+  // Regexp::LeadingString didn't output Latin1 into flags.
+  // In the given pattern, 0xA5 should be factored out, but
+  // shouldn't lose its Latin1-ness in the process. Because
+  // that was happening, the prefix for accel was 0xC2 0xA5
+  // instead of 0xA5. Note that the former doesn't occur in
+  // the given input and so replacements weren't occurring.
+
+  const char bytes[] = {
+      (char)0xa5, (char)0xd1, (char)0xa5, (char)0xd1,
+      (char)0x61, (char)0x63, (char)0xa5, (char)0x64,
+  };
+  std::string s(bytes, ABSL_ARRAYSIZE(bytes));
+  RE2 re("\xa5\xd1|\xa5\x64", RE2::Latin1);
+  int n = RE2::GlobalReplace(&s, re, "");
+  ASSERT_EQ(n, 3);
+  ASSERT_EQ(s, "\x61\x63");
 }
 
 }  // namespace re2
