@@ -96,17 +96,25 @@ static void DumpRegexpAppending(Regexp* re, std::string* s) {
       break;
     case kRegexpLiteral: {
       Rune r = re->rune();
-      char buf[UTFmax+1];
-      buf[runetochar(buf, &r)] = 0;
-      s->append(buf);
+      if (re->parse_flags() & Regexp::Latin1) {
+        s->push_back(r);
+      } else {
+        char buf[UTFmax+1];
+        buf[runetochar(buf, &r)] = 0;
+        s->append(buf);
+      }
       break;
     }
     case kRegexpLiteralString:
       for (int i = 0; i < re->nrunes(); i++) {
         Rune r = re->runes()[i];
-        char buf[UTFmax+1];
-        buf[runetochar(buf, &r)] = 0;
-        s->append(buf);
+        if (re->parse_flags() & Regexp::Latin1) {
+          s->push_back(r);
+        } else {
+          char buf[UTFmax+1];
+          buf[runetochar(buf, &r)] = 0;
+          s->append(buf);
+        }
       }
       break;
     case kRegexpConcat:

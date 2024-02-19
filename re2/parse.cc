@@ -338,6 +338,20 @@ Rune CycleFoldRune(Rune r) {
 }
 
 // Add lo-hi to the class, along with their fold-equivalent characters.
+static void AddFoldedRangeLatin1(CharClassBuilder* cc, Rune lo, Rune hi) {
+  while (lo <= hi) {
+    cc->AddRange(lo, lo);
+    if ('A' <= lo && lo <= 'Z') {
+      cc->AddRange(lo - 'A' + 'a', lo - 'A' + 'a');
+    }
+    if ('a' <= lo && lo <= 'z') {
+      cc->AddRange(lo - 'a' + 'A', lo - 'a' + 'A');
+    }
+    lo++;
+  }
+}
+
+// Add lo-hi to the class, along with their fold-equivalent characters.
 // If lo-hi is already in the class, assume that the fold-equivalent
 // chars are there too, so there's no work to do.
 static void AddFoldedRange(CharClassBuilder* cc, Rune lo, Rune hi, int depth) {
@@ -394,17 +408,26 @@ static void AddFoldedRange(CharClassBuilder* cc, Rune lo, Rune hi, int depth) {
 // Pushes the literal rune r onto the stack.
 bool Regexp::ParseState::PushLiteral(Rune r) {
   // Do case folding if needed.
-  if ((flags_ & FoldCase) && CycleFoldRune(r) != r) {
-    Regexp* re = new Regexp(kRegexpCharClass, flags_ & ~FoldCase);
-    re->ccb_ = new CharClassBuilder;
-    Rune r1 = r;
-    do {
-      if (!(flags_ & NeverNL) || r != '\n') {
-        re->ccb_->AddRange(r, r);
-      }
-      r = CycleFoldRune(r);
-    } while (r != r1);
-    return PushRegexp(re);
+  if (flags_ & FoldCase) {
+    if (flags_ & Latin1 && (('A' <= r && r <= 'Z') ||
+                            ('a' <= r && r <= 'z'))) {
+      Regexp* re = new Regexp(kRegexpCharClass, flags_ & ~FoldCase);
+      re->ccb_ = new CharClassBuilder;
+      AddFoldedRangeLatin1(re->ccb_, r, r);
+      return PushRegexp(re);
+    }
+    if (!(flags_ & Latin1) && CycleFoldRune(r) != r) {
+      Regexp* re = new Regexp(kRegexpCharClass, flags_ & ~FoldCase);
+      re->ccb_ = new CharClassBuilder;
+      Rune r1 = r;
+      do {
+        if (!(flags_ & NeverNL) || r != '\n') {
+          re->ccb_->AddRange(r, r);
+        }
+        r = CycleFoldRune(r);
+      } while (r != r1);
+      return PushRegexp(re);
+    }
   }
 
   // Exclude newline if applicable.
@@ -1176,7 +1199,7 @@ void FactorAlternationImpl::Round3(Regexp** sub, int nsub,
         if (re->op() == kRegexpCharClass) {
           CharClass* cc = re->cc();
           for (CharClass::iterator it = cc->begin(); it != cc->end(); ++it)
-            ccb.AddRange(it->lo, it->hi);
+            ccb.AddRangeFlags(it->lo, it->hi, re->parse_flags());
         } else if (re->op() == kRegexpLiteral) {
           if (re->parse_flags() & Regexp::FoldCase) {
             // AddFoldedRange() can terminate prematurely if the character class
@@ -1195,7 +1218,7 @@ void FactorAlternationImpl::Round3(Regexp** sub, int nsub,
         }
         re->Decref();
       }
-      Regexp* re = Regexp::NewCharClass(ccb.GetCharClass(), flags);
+      Regexp* re = Regexp::NewCharClass(ccb.GetCharClass(), flags & ~Regexp::FoldCase);
       splices->emplace_back(re, sub + start, i - start);
     }
 
@@ -1623,10 +1646,15 @@ void CharClassBuilder::AddRangeFlags(
   }
 
   // If folding case, add fold-equivalent characters too.
-  if (parse_flags & Regexp::FoldCase)
-    AddFoldedRange(this, lo, hi, 0);
-  else
+  if (parse_flags & Regexp::FoldCase) {
+    if (parse_flags & Regexp::Latin1) {
+      AddFoldedRangeLatin1(this, lo, hi);
+    } else {
+      AddFoldedRange(this, lo, hi, 0);
+    }
+  } else {
     AddRange(lo, hi);
+  }
 }
 
 // Look for a group with the given name.
