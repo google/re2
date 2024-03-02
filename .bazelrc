@@ -19,3 +19,6 @@ build:windows --cxxopt=/std:c++14
 
 # Print test logs for failed tests.
 test --test_output=errors
+
+# User-specific .bazelrc
+try-import %workspace%/user.bazelrc
