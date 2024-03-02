@@ -19,3 +19,6 @@ build:windows --cxxopt=/std:c++14
 
 # Print test logs for failed tests.
 test --test_output=errors
+
+# https://bazel.build/configure/best-practices#bazelrc-file
+try-import %workspace%/user.bazelrc
