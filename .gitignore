@@ -3,3 +3,4 @@
 core
 obj/
 benchlog.*
+user.bazelrc
