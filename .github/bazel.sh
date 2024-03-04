@@ -1,6 +1,10 @@
 #!/bin/bash
 set -eux
 
+# Disable MSYS/MSYS2 path conversion, which interferes with Bazel.
+export MSYS_NO_PATHCONV='1'
+export MSYS2_ARG_CONV_EXCL='*'
+
 for compilation_mode in dbg opt
 do
   bazel clean
