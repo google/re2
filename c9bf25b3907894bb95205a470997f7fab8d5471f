@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "389cd751_56d00064",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-03-04T13:53:55Z",
+      "side": 1,
+      "message": "LG, except for the part where I don\u0027t understand why this isn\u0027t built-in to bazel...",
+      "revId": "c9bf25b3907894bb95205a470997f7fab8d5471f",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
