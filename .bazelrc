@@ -8,10 +8,6 @@ build --features=layering_check
 build --features=parse_headers
 
 # Abseil requires C++14 at minimum.
-# Previously, the flag was set via `BAZEL_CXXOPTS`. On macOS, we also had to set
-# `BAZEL_USE_CPP_ONLY_TOOLCHAIN` since Bazel wouldn't respect the former without
-# the latter. However, the latter stopped Bazel from using Xcode and `-framework
-# Foundation`, which CCTZ (vendored into Abseil) requires.
 build --enable_platform_specific_config
 build:linux --cxxopt=-std=c++14
 build:macos --cxxopt=-std=c++14
