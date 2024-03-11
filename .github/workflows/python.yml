@@ -35,7 +35,7 @@ jobs:
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: p0deje/setup-bazel@0.6.0
+      - uses: bazel-contrib/setup-bazel@0.8.0
         with:
           bazelisk-version: '1.x'
       - name: Prepare Python ${{ matrix.ver }} environment
@@ -88,7 +88,7 @@ jobs:
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: p0deje/setup-bazel@0.6.0
+      - uses: bazel-contrib/setup-bazel@0.8.0
         with:
           bazelisk-version: '1.x'
       - uses: actions/setup-python@v5
@@ -139,7 +139,7 @@ jobs:
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: p0deje/setup-bazel@0.6.0
+      - uses: bazel-contrib/setup-bazel@0.8.0
         with:
           bazelisk-version: '1.x'
       # Lowercase the architecture name for `actions/setup-python`.
