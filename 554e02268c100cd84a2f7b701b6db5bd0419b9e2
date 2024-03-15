@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "405a554a_18cc71dc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-03-15T22:38:26Z",
+      "side": 1,
+      "message": "Can you please clarify what this change hopes to accomplish? From the change description I cannot tell why we are changing the comment? It looks like a partial sentence to me, did something get cut off?\n\nAre you trying to say that per the documentation, the header should match the regex\n\n```\n^// Code generated .* DO NOT EDIT\\.$\n```\n\nwhich is published at that URL?\n\nAlso, this documentation says \"should\" not \"must\". What are the consequences for not merging this?",
+      "revId": "554e02268c100cd84a2f7b701b6db5bd0419b9e2",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
