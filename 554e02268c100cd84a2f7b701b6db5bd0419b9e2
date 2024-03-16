@@ -16,6 +16,24 @@
       "message": "Can you please clarify what this change hopes to accomplish? From the change description I cannot tell why we are changing the comment? It looks like a partial sentence to me, did something get cut off?\n\nAre you trying to say that per the documentation, the header should match the regex\n\n```\n^// Code generated .* DO NOT EDIT\\.$\n```\n\nwhich is published at that URL?\n\nAlso, this documentation says \"should\" not \"must\". What are the consequences for not merging this?",
       "revId": "554e02268c100cd84a2f7b701b6db5bd0419b9e2",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ac47bd29_0e680871",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3335628
+      },
+      "writtenOn": "2024-03-16T16:10:13Z",
+      "side": 1,
+      "message": "Yes, you are correct. I updated the CL message to make it more clear.\n\nThis change implements the convention for the generated code header agreed upon https://go.dev/s/generatedcode. The convention was reached in 2018 through the proposal https://go.dev/issues/13560. By now, most of the generated Go code uses a comment that matches the regexp `^// Code generated .* DO NOT EDIT\\.$`.\n\nMost of the source files in the Go language repo adhere to this convention for consistency. E.g., see these CLs: [runtime/internal/sys: use standard generated code header](https://go-review.googlesource.com/c/go/+/60250), [cmd/dist: use standard generated code header](https://go-review.googlesource.com/c/go/+/61010), [cmd/cgo: use standard generated code comment](https://go-review.googlesource.com/c/go/+/115035).\n\n`mksyntaxgo` is used to generate the file https://go.googlesource.com/go/+/refs/tags/go1.22.1/src/regexp/syntax/doc.go and should follow comment rules for generated files. Because a lot of tools rely on this fact.\n\nNot merging this CL won\u0027t break the code. It is more about maintaining standards, ensuring consistency, and improving developer experience.",
+      "parentUuid": "405a554a_18cc71dc",
+      "revId": "554e02268c100cd84a2f7b701b6db5bd0419b9e2",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
