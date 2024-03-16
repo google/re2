@@ -70,6 +70,24 @@
       "parentUuid": "5f07f19e_1b850903",
       "revId": "554e02268c100cd84a2f7b701b6db5bd0419b9e2",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9bd89d2d_5871dd72",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-03-16T20:56:28Z",
+      "side": 1,
+      "message": "codehealth is not one dimensional, and I don\u0027t believe re2 uses most of these tools, so I do not believe any of the concerns you are raising here, or the benefits to codehealth are actually the case. But as I said before, I do not object to this change, but I definitely (highly) question the level of effort compared to the benefit of doing so.\n\nIn the future I recommend\na) Make the change descriptions (a lot) more informative, so we don\u0027t have to have a back-and-forth on the code review\nb) Focus on what problems are being solved. Pure codehealth changes, even ones that are just comments/documentation/etc need to have a clear benefit and the project team should be on board with these changes, preferably enthusiastically. See also the point in (a)\nc) Checking to see if your changes apply more broadly in the repository. From looking at https://github.com/search?q\u003drepo%3Agoogle%2Fre2%20%22generated%20by%22\u0026type\u003dcode there is no consistent generated-by header, but a few different generators. Consistency between them would probably be much more valuable than per-language best-practices.",
+      "parentUuid": "2531ddec_039d69d2",
+      "revId": "554e02268c100cd84a2f7b701b6db5bd0419b9e2",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
