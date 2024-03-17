@@ -32,7 +32,7 @@ under the BSD-style license found in the LICENSE file.
 
 RE2's native language is C++.
 
-The Python wrapper is at https://github.com/google/re2/tree/abseil/python
+The Python wrapper is at https://github.com/google/re2/tree/main/python
 and on PyPI (https://pypi.org/project/google-re2/).
 
 A C wrapper is at https://github.com/marcomaggi/cre2/.
