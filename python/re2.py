@@ -33,8 +33,9 @@ import itertools
 import _re2
 
 
-class error(Exception):
-  pass
+# pybind11 translates C++ exceptions to Python exceptions.
+# We use that same Python exception class for consistency.
+error = _re2.Error
 
 
 class Options(_re2.RE2.Options):

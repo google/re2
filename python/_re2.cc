@@ -219,6 +219,10 @@ class Filter {
   }
 
   std::vector<int> Match(py::buffer buffer, bool potential) const {
+    if (set_ == nullptr) {
+      py::pybind11_fail("Match() called before compiling");
+    }
+
     auto bytes = buffer.request();
     auto text = FromBytes(bytes);
     std::vector<int> atoms;
@@ -243,6 +247,9 @@ class Filter {
 };
 
 PYBIND11_MODULE(_re2, module) {
+  // Translate exceptions thrown by py::pybind11_fail() into Python.
+  py::register_local_exception<std::runtime_error>(module, "Error");
+
   module.def("CharLenToBytes", &CharLenToBytes);
   module.def("BytesToCharLen", &BytesToCharLen);
 

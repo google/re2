@@ -477,6 +477,13 @@ class FilterTest(absltest.TestCase):
     # Verify whether the underlying RE2 object is usable.
     self.assertEqual(0, f.re(2).groups)
 
+  def test_issue_484(self):
+    # Previously, the shim would dereference a null pointer and crash.
+    f = re2.Filter()
+    with self.assertRaisesRegex(re2.error,
+                                r'Match\(\) called before compiling'):
+      f.Match('')
+
 
 if __name__ == '__main__':
   absltest.main()
