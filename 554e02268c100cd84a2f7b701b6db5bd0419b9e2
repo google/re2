@@ -88,6 +88,24 @@
       "parentUuid": "2531ddec_039d69d2",
       "revId": "554e02268c100cd84a2f7b701b6db5bd0419b9e2",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "43f27382_178c6543",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-03-17T08:58:26Z",
+      "side": 1,
+      "message": "I wonder whether it might be worth moving `mksyntaxgo` out of RE2 mostly so that Go folks can own it, but that\u0027s a separate discussion for a separate forum. Thanks for the questions, Alex, and thanks for the answers, Oleksandr.",
+      "parentUuid": "9bd89d2d_5871dd72",
+      "revId": "554e02268c100cd84a2f7b701b6db5bd0419b9e2",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
