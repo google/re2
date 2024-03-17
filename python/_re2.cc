@@ -219,6 +219,10 @@ class Filter {
   }
 
   std::vector<int> Match(py::buffer buffer, bool potential) const {
+    if (set_ == nullptr) {
+      throw py::value_error("Match() called before compiling");
+    }
+
     auto bytes = buffer.request();
     auto text = FromBytes(bytes);
     std::vector<int> atoms;
