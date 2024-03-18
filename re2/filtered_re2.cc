@@ -70,8 +70,9 @@ void FilteredRE2::Compile(std::vector<std::string>* atoms) {
     return;
   }
 
+  // Similarly to PrefilterTree::Compile(), make compiling
+  // a no-op if it's attempted before adding any patterns.
   if (re2_vec_.empty()) {
-    LOG(ERROR) << "Compile called before Add.";
     return;
   }
 
