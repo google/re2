@@ -57,8 +57,9 @@ void PrefilterTree::Compile(std::vector<std::string>* atom_vec) {
 
   // Some legacy users of PrefilterTree call Compile() before
   // adding any regexps and expect Compile() to have no effect.
-  if (prefilter_vec_.empty())
+  if (prefilter_vec_.empty()) {
     return;
+  }
 
   compiled_ = true;
 
@@ -272,8 +273,9 @@ void PrefilterTree::RegexpsGivenStrings(
     // Some legacy users of PrefilterTree call Compile() before
     // adding any regexps and expect Compile() to have no effect.
     // This kludge is a counterpart to that kludge.
-    if (prefilter_vec_.empty())
+    if (prefilter_vec_.empty()) {
       return;
+    }
 
     LOG(ERROR) << "RegexpsGivenStrings called before Compile.";
     for (size_t i = 0; i < prefilter_vec_.size(); i++)
