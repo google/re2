@@ -91,7 +91,7 @@ jobs:
       - uses: bazel-contrib/setup-bazel@0.8.1
         with:
           bazelisk-version: '1.x'
-      - uses: actions/setup-python@v5.0.0
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ matrix.ver }}
       - name: Prepare Python ${{ matrix.ver }} environment
@@ -147,7 +147,7 @@ jobs:
           ARCHITECTURE=${{ matrix.arch.name }}
           echo "architecture=${ARCHITECTURE,,}" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: actions/setup-python@v5.0.0
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ matrix.ver }}
           architecture: ${{ env.architecture }}
@@ -187,7 +187,7 @@ jobs:
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: actions/setup-python@v5.0.0
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.x'
       - name: Prepare Python 3.x environment
