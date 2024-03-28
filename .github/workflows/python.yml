@@ -80,6 +80,9 @@ jobs:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: darwin_${{ matrix.arch.bazel-name }}
       PLAT_NAME: macosx-${{ matrix.os }}.0-${{ matrix.arch.python-name }}
+      # Force a specific target version of macOS.
+      # Otherwise, `delocate` renames the wheels!
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.os }}.0
       # Stop macOS from reporting the system version as 10.x.
       # Otherwise, Python refuses to install the built wheel!
       SYSTEM_VERSION_COMPAT: 0
