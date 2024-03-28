@@ -38,4 +38,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.1
-      - uses: actions/deploy-pages@v4.0.4
+      - uses: actions/deploy-pages@v4.0.5
