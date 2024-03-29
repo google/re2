@@ -58,6 +58,7 @@ cc_library(
         # WebAssembly support for threads is... fraught at every level.
         "@platforms//cpu:wasm32": [],
         "@platforms//cpu:wasm64": [],
+        "@platforms//os:emscripten": [],
         "@platforms//os:wasi": [],
         "@platforms//os:windows": [],
         "//conditions:default": ["-pthread"],
@@ -70,6 +71,7 @@ cc_library(
         # WebAssembly support for threads is... fraught at every level.
         "@platforms//cpu:wasm32": [],
         "@platforms//cpu:wasm64": [],
+        "@platforms//os:emscripten": [],
         "@platforms//os:wasi": [],
         "@platforms//os:windows": [],
         "//conditions:default": ["-pthread"],
