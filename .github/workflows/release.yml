@@ -1,0 +1,38 @@
+name: Release
+on:
+  push:
+    tags: ['**']
+permissions:
+  contents: read
+jobs:
+  create:
+    permissions:
+      # Required to create the release
+      # and upload the release assets.
+      contents: write
+      # Required for Sigstore signing.
+      id-token: write
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --generate-notes --latest --verify-tag \
+            --repo "${GITHUB_REPOSITORY}"
+          gh release download "${GITHUB_REF_NAME}" \
+            --archive tar.gz \
+            --repo "${GITHUB_REPOSITORY}"
+          gh release download "${GITHUB_REF_NAME}" \
+            --archive zip \
+            --repo "${GITHUB_REPOSITORY}"
+        shell: bash
+      - uses: sigstore/gh-action-sigstore-python@v2.1.1
+        with:
+          inputs: *.tar.gz *.zip
+      - run: |
+          gh release upload "${GITHUB_REF_NAME}" \
+            *.tar.gz *.zip *.sigstore \
+            --repo "${GITHUB_REPOSITORY}"
+        shell: bash
