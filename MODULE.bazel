@@ -11,11 +11,11 @@ module(
 )
 
 bazel_dep(name = "platforms", version = "0.0.9")
-bazel_dep(name = "apple_support", version = "1.14.0")
+bazel_dep(name = "apple_support", version = "1.15.1")
 bazel_dep(name = "rules_cc", version = "0.0.9")
 bazel_dep(name = "abseil-cpp", version = "20240116.1")
 bazel_dep(name = "rules_python", version = "0.31.0")
-bazel_dep(name = "pybind11_bazel", version = "2.11.1.bzl.3")
+bazel_dep(name = "pybind11_bazel", version = "2.12.0")
 
 # This is a temporary hack for `x64_x86_windows`.
 # TODO(junyer): Remove whenever no longer needed.
