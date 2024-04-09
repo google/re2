@@ -184,6 +184,10 @@ jobs:
       - wheel-linux
       - wheel-macos
       - wheel-windows
+    permissions:
+      contents: read
+      # Required for PyPI publishing.
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.1
@@ -224,5 +228,4 @@ jobs:
       - if: inputs.build >= 1
         uses: pypa/gh-action-pypi-publish@v1.8.14
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
           packages-dir: python/dist
