@@ -31,11 +31,11 @@ jobs:
       # Bazel fails if the username is unknown.
       USER: runner
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.1.4
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazel-contrib/setup-bazel@0.8.1
+      - uses: bazel-contrib/setup-bazel@0.8.2
         with:
           bazelisk-version: '1.x'
       - name: Prepare Python ${{ matrix.ver }} environment
@@ -58,7 +58,7 @@ jobs:
           "${PYTHON}" re2_test.py
         shell: bash
         working-directory: python
-      - uses: actions/upload-artifact@v4.3.1
+      - uses: actions/upload-artifact@v4.3.3
         with:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
@@ -87,11 +87,11 @@ jobs:
       # Otherwise, Python refuses to install the built wheel!
       SYSTEM_VERSION_COMPAT: 0
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.1.4
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazel-contrib/setup-bazel@0.8.1
+      - uses: bazel-contrib/setup-bazel@0.8.2
         with:
           bazelisk-version: '1.x'
       - uses: actions/setup-python@v5.1.0
@@ -118,7 +118,7 @@ jobs:
           python re2_test.py
         shell: bash
         working-directory: python
-      - uses: actions/upload-artifact@v4.3.1
+      - uses: actions/upload-artifact@v4.3.3
         with:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
@@ -138,11 +138,11 @@ jobs:
       BAZEL_CPU: ${{ matrix.arch.bazel-name }}_windows
       PLAT_NAME: ${{ matrix.arch.python-name }}
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.1.4
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazel-contrib/setup-bazel@0.8.1
+      - uses: bazel-contrib/setup-bazel@0.8.2
         with:
           bazelisk-version: '1.x'
       # Lowercase the architecture name for `actions/setup-python`.
@@ -174,7 +174,7 @@ jobs:
           python re2_test.py
         shell: bash
         working-directory: python
-      - uses: actions/upload-artifact@v4.3.1
+      - uses: actions/upload-artifact@v4.3.3
         with:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
@@ -190,7 +190,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.1.4
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
@@ -210,7 +210,7 @@ jobs:
           python -m build --sdist
         shell: bash
         working-directory: python
-      - uses: actions/download-artifact@v4.1.4
+      - uses: actions/download-artifact@v4.1.7
         with:
           path: python
       - name: Set build number to ${{ inputs.build }}

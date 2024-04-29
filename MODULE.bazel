@@ -6,11 +6,11 @@
 
 module(
     name = "re2",
-    version = "2024-04-01",
+    version = "2024-05-01",
     compatibility_level = 1,
 )
 
-bazel_dep(name = "platforms", version = "0.0.9")
+bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "apple_support", version = "1.15.1")
 bazel_dep(name = "rules_cc", version = "0.0.9")
 bazel_dep(name = "abseil-cpp", version = "20240116.2")
