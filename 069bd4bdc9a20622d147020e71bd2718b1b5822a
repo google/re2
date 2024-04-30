@@ -24,6 +24,30 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "0172caf5_f41511e7",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-04-30T11:18:50Z",
+      "side": 1,
+      "message": "I\u0027m not exactly enamoured with the existing naming style, FWIW, but I\u0027m not going to rename everything right now. :)",
+      "parentUuid": "ce9da638_b3a8038d",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 7
+      },
+      "revId": "069bd4bdc9a20622d147020e71bd2718b1b5822a",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "db02ae1a_b23457f1",
@@ -37,6 +61,30 @@
       "writtenOn": "2024-04-30T11:00:16Z",
       "side": 1,
       "message": "Shouldn\u0027t this be coming from PKG_CONFIG as well? I would have expected --libs to be used somewhere. Is this so you can specify gtest_main as-needed?",
+      "range": {
+        "startLine": 243,
+        "startChar": 96,
+        "endLine": 243,
+        "endChar": 117
+      },
+      "revId": "069bd4bdc9a20622d147020e71bd2718b1b5822a",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1d7e4bfc_2015de1b",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-04-30T11:18:50Z",
+      "side": 1,
+      "message": "We can specify `-lgtest`/`-lgtest_main`/`-lbenchmark`/`-lbenchmark_main` as needed, I think, due to the use of `--libs-only-L`. For these particular libraries, I don\u0027t think `--libs` is required in order to pick up flags that aren\u0027t `-L`/`-l` because, well, there aren\u0027t any. `benchmark` does set `Libs.private: -lpthread`, but then we already set `-pthread`.",
+      "parentUuid": "db02ae1a_b23457f1",
       "range": {
         "startLine": 243,
         "startChar": 96,
