@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ce9da638_b3a8038d",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-04-30T11:00:16Z",
+      "side": 1,
+      "message": "optional, nit: I probably would have done GTEST_CC, GTEST_LD for readability. But fine to leave as-is.",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 7
+      },
+      "revId": "069bd4bdc9a20622d147020e71bd2718b1b5822a",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "db02ae1a_b23457f1",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-04-30T11:00:16Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be coming from PKG_CONFIG as well? I would have expected --libs to be used somewhere. Is this so you can specify gtest_main as-needed?",
+      "range": {
+        "startLine": 243,
+        "startChar": 96,
+        "endLine": 243,
+        "endChar": 117
+      },
+      "revId": "069bd4bdc9a20622d147020e71bd2718b1b5822a",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
