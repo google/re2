@@ -38,6 +38,7 @@ jobs:
     env:
       CC: clang-${{ matrix.ver }}
       CXX: clang++-${{ matrix.ver }}
+      PKG_CONFIG_PATH: /usr/local/share/vcpkg/installed/x64-linux/lib/pkgconfig
     steps:
       - uses: actions/checkout@v4.1.4
       - name: Install Clang ${{ matrix.ver }}
@@ -50,26 +51,28 @@ jobs:
         shell: bash
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
-          sudo apt update -y
-          sudo apt install -y libabsl-dev libgtest-dev libbenchmark-dev
+          vcpkg update
+          vcpkg install abseil gtest benchmark
         shell: bash
       - run: make && make test
         shell: bash
   build-gcc:
-    runs-on: ubuntu-latest
+    # TODO(junyer): Switch back to `ubuntu-latest` when this becomes that.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        ver: [11, 12, 13]
+        ver: [12, 13, 14]
     env:
       CC: gcc-${{ matrix.ver }}
       CXX: g++-${{ matrix.ver }}
+      PKG_CONFIG_PATH: /usr/local/share/vcpkg/installed/x64-linux/lib/pkgconfig
     steps:
       - uses: actions/checkout@v4.1.4
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
-          sudo apt update -y
-          sudo apt install -y libabsl-dev libgtest-dev libbenchmark-dev
+          vcpkg update
+          vcpkg install abseil gtest benchmark
         shell: bash
       - run: make && make test
         shell: bash
