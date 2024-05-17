@@ -8,7 +8,8 @@
 #include <string>
 #include <utility>
 
-#include "util/logging.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "re2/prefilter.h"
 #include "re2/prefilter_tree.h"
 

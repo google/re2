@@ -11,8 +11,9 @@
 #include <string.h>
 
 #include "absl/base/macros.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "gtest/gtest.h"
-#include "util/logging.h"
 #include "re2/re2.h"
 
 namespace re2 {

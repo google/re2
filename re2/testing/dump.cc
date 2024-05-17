@@ -19,9 +19,10 @@
 #include <string>
 
 #include "absl/base/macros.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
-#include "util/logging.h"
 #include "util/utf.h"
 #include "re2/regexp.h"
 

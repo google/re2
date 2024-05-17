@@ -9,8 +9,9 @@
 #include <string>
 #include <vector>
 
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "gtest/gtest.h"
-#include "util/logging.h"
 #include "re2/regexp.h"
 
 namespace re2 {

@@ -16,8 +16,9 @@
 #include <type_traits>
 
 #include "absl/base/call_once.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/strings/string_view.h"
-#include "util/logging.h"
 #include "re2/pod_array.h"
 #include "re2/re2.h"
 #include "re2/sparse_array.h"
