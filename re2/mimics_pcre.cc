@@ -22,7 +22,8 @@
 //
 // Regexp::MimicsPCRE checks for any of these conditions.
 
-#include "util/logging.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "re2/regexp.h"
 #include "re2/walker-inl.h"
 

@@ -13,10 +13,11 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/flags/flag.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
 #include "benchmark/benchmark.h"
-#include "util/logging.h"
 #include "util/malloc_counter.h"
 #include "re2/prog.h"
 #include "re2/re2.h"

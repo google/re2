@@ -16,7 +16,8 @@
 #include <stack>
 
 #include "absl/base/macros.h"
-#include "util/logging.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "re2/regexp.h"
 
 namespace re2 {

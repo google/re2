@@ -9,7 +9,8 @@
 #include <algorithm>
 #include <string>
 
-#include "util/logging.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "util/utf.h"
 #include "re2/pod_array.h"
 #include "re2/regexp.h"

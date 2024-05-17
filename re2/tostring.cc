@@ -8,8 +8,9 @@
 #include <string.h>
 #include <string>
 
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/strings/str_format.h"
-#include "util/logging.h"
 #include "util/utf.h"
 #include "re2/regexp.h"
 #include "re2/walker-inl.h"

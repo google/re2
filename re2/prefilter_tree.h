@@ -20,9 +20,10 @@
 #include <vector>
 
 #include "absl/container/flat_hash_set.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "re2/prefilter.h"
 #include "re2/sparse_array.h"
-#include "util/logging.h"
 
 namespace re2 {
 

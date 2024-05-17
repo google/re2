@@ -5,12 +5,14 @@
 # Build against Abseil.
 ABSL_DEPS=\
 	absl_base\
+	absl_check\
 	absl_core_headers\
 	absl_fixed_array\
 	absl_flags\
 	absl_flat_hash_map\
 	absl_flat_hash_set\
 	absl_inlined_vector\
+	absl_log\
 	absl_optional\
 	absl_span\
 	absl_str_format\
@@ -113,7 +115,6 @@ INSTALL_HFILES=\
 	re2/stringpiece.h\
 
 HFILES=\
-	util/logging.h\
 	util/malloc_counter.h\
 	util/pcre.h\
 	util/strutil.h\

@@ -20,8 +20,9 @@
 #include <utility>
 
 #include "absl/base/macros.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/strings/str_format.h"
-#include "util/logging.h"
 #include "re2/bitmap256.h"
 
 namespace re2 {
