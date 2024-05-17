@@ -28,7 +28,8 @@
 #include <string.h>
 
 #include "absl/base/macros.h"
-#include "util/logging.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"

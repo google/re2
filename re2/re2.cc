@@ -26,9 +26,10 @@
 
 #include "absl/base/macros.h"
 #include "absl/container/fixed_array.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
-#include "util/logging.h"
 #include "util/strutil.h"
 #include "util/utf.h"
 #include "re2/prog.h"

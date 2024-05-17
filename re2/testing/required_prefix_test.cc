@@ -5,8 +5,9 @@
 #include <string>
 
 #include "absl/base/macros.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "gtest/gtest.h"
-#include "util/logging.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"
 

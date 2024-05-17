@@ -13,7 +13,8 @@
 #include <string>
 #include <vector>
 
-#include "util/logging.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 
 namespace re2 {
 

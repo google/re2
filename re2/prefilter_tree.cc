@@ -12,8 +12,9 @@
 #include <utility>
 #include <vector>
 
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/strings/str_format.h"
-#include "util/logging.h"
 #include "re2/prefilter.h"
 #include "re2/re2.h"
 

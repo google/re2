@@ -61,12 +61,14 @@ endif()
 
 set(ABSL_DEPS
     absl_base
+    absl_check
     absl_core_headers
     absl_fixed_array
     absl_flags
     absl_flat_hash_map
     absl_flat_hash_set
     absl_inlined_vector
+    absl_log
     absl_optional
     absl_span
     absl_str_format
