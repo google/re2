@@ -7,8 +7,8 @@
 #include <string>
 
 #include "absl/base/macros.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "gtest/gtest.h"
 #include "re2/regexp.h"
 
@@ -521,7 +521,7 @@ TEST(TestToString, EquivalentParse) {
       std::string ss = nre->Dump();
       std::string tt = nre->ToString();
       if (s != ss || t != tt)
-        LOG(INFO) << "ToString(" << tests[i].regexp << ") = " << t;
+        ABSL_LOG(INFO) << "ToString(" << tests[i].regexp << ") = " << t;
       EXPECT_EQ(s, ss);
       EXPECT_EQ(t, tt);
       nre->Decref();

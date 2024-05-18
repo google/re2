@@ -92,8 +92,8 @@
 #include <set>
 #include <string>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/string_view.h"
 #include "util/utf.h"
 
@@ -333,15 +333,15 @@ class Regexp {
       return submany_;
   }
 
-  int min() { DCHECK_EQ(op_, kRegexpRepeat); return min_; }
-  int max() { DCHECK_EQ(op_, kRegexpRepeat); return max_; }
-  Rune rune() { DCHECK_EQ(op_, kRegexpLiteral); return rune_; }
-  CharClass* cc() { DCHECK_EQ(op_, kRegexpCharClass); return cc_; }
-  int cap() { DCHECK_EQ(op_, kRegexpCapture); return cap_; }
-  const std::string* name() { DCHECK_EQ(op_, kRegexpCapture); return name_; }
-  Rune* runes() { DCHECK_EQ(op_, kRegexpLiteralString); return runes_; }
-  int nrunes() { DCHECK_EQ(op_, kRegexpLiteralString); return nrunes_; }
-  int match_id() { DCHECK_EQ(op_, kRegexpHaveMatch); return match_id_; }
+  int min() { ABSL_DCHECK_EQ(op_, kRegexpRepeat); return min_; }
+  int max() { ABSL_DCHECK_EQ(op_, kRegexpRepeat); return max_; }
+  Rune rune() { ABSL_DCHECK_EQ(op_, kRegexpLiteral); return rune_; }
+  CharClass* cc() { ABSL_DCHECK_EQ(op_, kRegexpCharClass); return cc_; }
+  int cap() { ABSL_DCHECK_EQ(op_, kRegexpCapture); return cap_; }
+  const std::string* name() { ABSL_DCHECK_EQ(op_, kRegexpCapture); return name_; }
+  Rune* runes() { ABSL_DCHECK_EQ(op_, kRegexpLiteralString); return runes_; }
+  int nrunes() { ABSL_DCHECK_EQ(op_, kRegexpLiteralString); return nrunes_; }
+  int match_id() { ABSL_DCHECK_EQ(op_, kRegexpHaveMatch); return match_id_; }
 
   // Increments reference count, returns object as convenience.
   Regexp* Incref();
@@ -516,7 +516,7 @@ class Regexp {
 
   // Allocate space for n sub-regexps.
   void AllocSub(int n) {
-    DCHECK(n >= 0 && static_cast<uint16_t>(n) == n);
+    ABSL_DCHECK(n >= 0 && static_cast<uint16_t>(n) == n);
     if (n > 1)
       submany_ = new Regexp*[n];
     nsub_ = static_cast<uint16_t>(n);

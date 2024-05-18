@@ -26,8 +26,8 @@
 
 #include "absl/base/macros.h"
 #include "absl/container/fixed_array.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
 #include "util/strutil.h"
@@ -159,7 +159,7 @@ int RE2::Options::ParseFlags() const {
   switch (encoding()) {
     default:
       if (log_errors())
-        LOG(ERROR) << "Unknown encoding " << encoding();
+        ABSL_LOG(ERROR) << "Unknown encoding " << encoding();
       break;
     case RE2::Options::EncodingUTF8:
       break;
@@ -230,8 +230,8 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
     &status);
   if (entire_regexp_ == NULL) {
     if (options_.log_errors()) {
-      LOG(ERROR) << "Error parsing '" << trunc(*pattern_) << "': "
-                 << status.Text();
+      ABSL_LOG(ERROR) << "Error parsing '" << trunc(*pattern_) << "': "
+                      << status.Text();
     }
     error_ = new std::string(status.Text());
     error_code_ = RegexpErrorToRE2(status.code());
@@ -255,7 +255,7 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
   prog_ = suffix_regexp_->CompileToProg(options_.max_mem()*2/3);
   if (prog_ == NULL) {
     if (options_.log_errors())
-      LOG(ERROR) << "Error compiling '" << trunc(*pattern_) << "'";
+      ABSL_LOG(ERROR) << "Error compiling '" << trunc(*pattern_) << "'";
     error_ = new std::string("pattern too large - compile failed");
     error_code_ = RE2::ErrorPatternTooLarge;
     return;
@@ -281,8 +281,8 @@ re2::Prog* RE2::ReverseProg() const {
         re->suffix_regexp_->CompileToReverseProg(re->options_.max_mem() / 3);
     if (re->rprog_ == NULL) {
       if (re->options_.log_errors())
-        LOG(ERROR) << "Error reverse compiling '" << trunc(*re->pattern_)
-                   << "'";
+        ABSL_LOG(ERROR) << "Error reverse compiling '" << trunc(*re->pattern_)
+                        << "'";
       // We no longer touch error_ and error_code_ because failing to compile
       // the reverse Prog is not a showstopper: falling back to NFA execution
       // is fine. More importantly, an RE2 object is supposed to be logically
@@ -328,7 +328,7 @@ int RE2::ReverseProgramSize() const {
 
 // Finds the most significant non-zero bit in n.
 static int FindMSBSet(uint32_t n) {
-  DCHECK_NE(n, 0);
+  ABSL_DCHECK_NE(n, 0);
 #if defined(__GNUC__)
   return 31 ^ __builtin_clz(n);
 #elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
@@ -454,8 +454,8 @@ bool RE2::Replace(std::string* str,
   if (!re.Rewrite(&s, rewrite, vec, nvec))
     return false;
 
-  DCHECK_GE(vec[0].data(), str->data());
-  DCHECK_LE(vec[0].data() + vec[0].size(), str->data() + str->size());
+  ABSL_DCHECK_GE(vec[0].data(), str->data());
+  ABSL_DCHECK_LE(vec[0].data() + vec[0].size(), str->data() + str->size());
   str->replace(vec[0].data() - str->data(), vec[0].size(), s);
   return true;
 }
@@ -654,16 +654,16 @@ bool RE2::Match(absl::string_view text,
                 int nsubmatch) const {
   if (!ok()) {
     if (options_.log_errors())
-      LOG(ERROR) << "Invalid RE2: " << *error_;
+      ABSL_LOG(ERROR) << "Invalid RE2: " << *error_;
     return false;
   }
 
   if (startpos > endpos || endpos > text.size()) {
     if (options_.log_errors())
-      LOG(ERROR) << "RE2: invalid startpos, endpos pair. ["
-                 << "startpos: " << startpos << ", "
-                 << "endpos: " << endpos << ", "
-                 << "text size: " << text.size() << "]";
+      ABSL_LOG(ERROR) << "RE2: invalid startpos, endpos pair. ["
+                      << "startpos: " << startpos << ", "
+                      << "endpos: " << endpos << ", "
+                      << "text size: " << text.size() << "]";
     return false;
   }
 
@@ -733,7 +733,7 @@ bool RE2::Match(absl::string_view text,
   bool skipped_test = false;
   switch (re_anchor) {
     default:
-      LOG(DFATAL) << "Unexpected re_anchor value: " << re_anchor;
+      ABSL_LOG(DFATAL) << "Unexpected re_anchor value: " << re_anchor;
       return false;
 
     case UNANCHORED: {
@@ -751,11 +751,11 @@ bool RE2::Match(absl::string_view text,
                              Prog::kLongestMatch, matchp, &dfa_failed, NULL)) {
           if (dfa_failed) {
             if (options_.log_errors())
-              LOG(ERROR) << "DFA out of memory: "
-                         << "pattern length " << pattern_->size() << ", "
-                         << "program size " << prog->size() << ", "
-                         << "list count " << prog->list_count() << ", "
-                         << "bytemap range " << prog->bytemap_range();
+              ABSL_LOG(ERROR) << "DFA out of memory: "
+                              << "pattern length " << pattern_->size() << ", "
+                              << "program size " << prog->size() << ", "
+                              << "list count " << prog->list_count() << ", "
+                              << "bytemap range " << prog->bytemap_range();
             // Fall back to NFA below.
             skipped_test = true;
             break;
@@ -771,11 +771,11 @@ bool RE2::Match(absl::string_view text,
                             matchp, &dfa_failed, NULL)) {
         if (dfa_failed) {
           if (options_.log_errors())
-            LOG(ERROR) << "DFA out of memory: "
-                       << "pattern length " << pattern_->size() << ", "
-                       << "program size " << prog_->size() << ", "
-                       << "list count " << prog_->list_count() << ", "
-                       << "bytemap range " << prog_->bytemap_range();
+            ABSL_LOG(ERROR) << "DFA out of memory: "
+                            << "pattern length " << pattern_->size() << ", "
+                            << "program size " << prog_->size() << ", "
+                            << "list count " << prog_->list_count() << ", "
+                            << "bytemap range " << prog_->bytemap_range();
           // Fall back to NFA below.
           skipped_test = true;
           break;
@@ -797,17 +797,17 @@ bool RE2::Match(absl::string_view text,
                            Prog::kLongestMatch, &match, &dfa_failed, NULL)) {
         if (dfa_failed) {
           if (options_.log_errors())
-            LOG(ERROR) << "DFA out of memory: "
-                       << "pattern length " << pattern_->size() << ", "
-                       << "program size " << prog->size() << ", "
-                       << "list count " << prog->list_count() << ", "
-                       << "bytemap range " << prog->bytemap_range();
+            ABSL_LOG(ERROR) << "DFA out of memory: "
+                            << "pattern length " << pattern_->size() << ", "
+                            << "program size " << prog->size() << ", "
+                            << "list count " << prog->list_count() << ", "
+                            << "bytemap range " << prog->bytemap_range();
           // Fall back to NFA below.
           skipped_test = true;
           break;
         }
         if (options_.log_errors())
-          LOG(ERROR) << "SearchDFA inconsistency";
+          ABSL_LOG(ERROR) << "SearchDFA inconsistency";
         return false;
       }
       break;
@@ -840,11 +840,11 @@ bool RE2::Match(absl::string_view text,
                             &match, &dfa_failed, NULL)) {
         if (dfa_failed) {
           if (options_.log_errors())
-            LOG(ERROR) << "DFA out of memory: "
-                       << "pattern length " << pattern_->size() << ", "
-                       << "program size " << prog_->size() << ", "
-                       << "list count " << prog_->list_count() << ", "
-                       << "bytemap range " << prog_->bytemap_range();
+            ABSL_LOG(ERROR) << "DFA out of memory: "
+                            << "pattern length " << pattern_->size() << ", "
+                            << "program size " << prog_->size() << ", "
+                            << "list count " << prog_->list_count() << ", "
+                            << "bytemap range " << prog_->bytemap_range();
           // Fall back to NFA below.
           skipped_test = true;
           break;
@@ -876,20 +876,20 @@ bool RE2::Match(absl::string_view text,
     if (can_one_pass && anchor != Prog::kUnanchored) {
       if (!prog_->SearchOnePass(subtext1, text, anchor, kind, submatch, ncap)) {
         if (!skipped_test && options_.log_errors())
-          LOG(ERROR) << "SearchOnePass inconsistency";
+          ABSL_LOG(ERROR) << "SearchOnePass inconsistency";
         return false;
       }
     } else if (can_bit_state && subtext1.size() <= bit_state_text_max_size) {
       if (!prog_->SearchBitState(subtext1, text, anchor,
                                  kind, submatch, ncap)) {
         if (!skipped_test && options_.log_errors())
-          LOG(ERROR) << "SearchBitState inconsistency";
+          ABSL_LOG(ERROR) << "SearchBitState inconsistency";
         return false;
       }
     } else {
       if (!prog_->SearchNFA(subtext1, text, anchor, kind, submatch, ncap)) {
         if (!skipped_test && options_.log_errors())
-          LOG(ERROR) << "SearchNFA inconsistency";
+          ABSL_LOG(ERROR) << "SearchNFA inconsistency";
         return false;
       }
     }
@@ -914,7 +914,7 @@ bool RE2::DoMatch(absl::string_view text,
                   int n) const {
   if (!ok()) {
     if (options_.log_errors())
-      LOG(ERROR) << "Invalid RE2: " << *error_;
+      ABSL_LOG(ERROR) << "Invalid RE2: " << *error_;
     return false;
   }
 
@@ -1034,8 +1034,8 @@ bool RE2::Rewrite(std::string* out,
       int n = (c - '0');
       if (n >= veclen) {
         if (options_.log_errors()) {
-          LOG(ERROR) << "invalid substitution \\" << n
-                     << " from " << veclen << " groups";
+          ABSL_LOG(ERROR) << "invalid substitution \\" << n
+                          << " from " << veclen << " groups";
         }
         return false;
       }
@@ -1046,7 +1046,7 @@ bool RE2::Rewrite(std::string* out,
       out->push_back('\\');
     } else {
       if (options_.log_errors())
-        LOG(ERROR) << "invalid rewrite pattern: " << rewrite.data();
+        ABSL_LOG(ERROR) << "invalid rewrite pattern: " << rewrite.data();
       return false;
     }
   }

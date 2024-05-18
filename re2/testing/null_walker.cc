@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "gtest/gtest.h"
 #include "re2/regexp.h"
 #include "re2/walker-inl.h"
@@ -22,7 +22,7 @@ class NullWalker : public Regexp::Walker<bool> {
   virtual bool ShortVisit(Regexp* re, bool a) {
     // Should never be called: we use Walk(), not WalkExponential().
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    LOG(DFATAL) << "NullWalker::ShortVisit called";
+    ABSL_LOG(DFATAL) << "NullWalker::ShortVisit called";
 #endif
     return a;
   }
