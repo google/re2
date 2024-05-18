@@ -9,8 +9,8 @@
 
 #include "absl/base/macros.h"
 #include "absl/flags/flag.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
 #include "util/malloc_counter.h"
@@ -112,10 +112,10 @@ TEST(SingleThreaded, BuildEntireDFA) {
       delete prog;
     }
     if (UsingMallocCounter) {
-      //LOG(INFO) << "limit " << limit << ", "
-      //          << "prog usage " << progusage << ", "
-      //          << "DFA budget " << dfamem << ", "
-      //          << "total " << usage;
+      //ABSL_LOG(INFO) << "limit " << limit << ", "
+      //               << "prog usage " << progusage << ", "
+      //               << "DFA budget " << dfamem << ", "
+      //               << "total " << usage;
       // Tolerate +/- 10%.
       ASSERT_GT(usage, limit*9/10);
       ASSERT_LT(usage, limit*11/10);
@@ -190,8 +190,8 @@ TEST(SingleThreaded, SearchDFA) {
     delete prog;
   }
   if (UsingMallocCounter) {
-    //LOG(INFO) << "usage " << usage << ", "
-    //          << "peak usage " << peak_usage;
+    //ABSL_LOG(INFO) << "usage " << usage << ", "
+    //               << "peak usage " << peak_usage;
     ASSERT_LT(usage, 1<<n);
     ASSERT_LT(peak_usage, 1<<n);
   }
@@ -298,7 +298,7 @@ TEST(DFA, ReverseMatch) {
         prog->SearchDFA(t.text, absl::string_view(), Prog::kUnanchored,
                         Prog::kFirstMatch, NULL, &failed, NULL);
     if (matched != t.match) {
-      LOG(ERROR) << t.regexp << " on " << t.text << ": want " << t.match;
+      ABSL_LOG(ERROR) << t.regexp << " on " << t.text << ": want " << t.match;
       nfail++;
     }
     delete prog;
@@ -361,8 +361,9 @@ TEST(DFA, Callback) {
       dump += match ? "]]" : "]";
     });
     if (dump != t.dump) {
-      LOG(ERROR) << t.regexp << " bytemap:\n" << prog->DumpByteMap();
-      LOG(ERROR) << t.regexp << " dump:\ngot " << dump << "\nwant " << t.dump;
+      ABSL_LOG(ERROR) << t.regexp << " bytemap:\n" << prog->DumpByteMap();
+      ABSL_LOG(ERROR) << t.regexp << " dump:\n" << "got " << dump << "\n"
+                      << "want " << t.dump;
       nfail++;
     }
     delete prog;

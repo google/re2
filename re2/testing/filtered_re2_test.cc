@@ -10,8 +10,8 @@
 #include <utility>
 
 #include "absl/base/macros.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "gtest/gtest.h"
 #include "re2/filtered_re2.h"
 #include "re2/re2.h"
@@ -173,13 +173,13 @@ bool CheckExpectedAtoms(const char* atoms[],
       pass = pass && expected[i] == v->atoms[i];
 
   if (!pass) {
-    LOG(ERROR) << "Failed " << testname;
-    LOG(ERROR) << "Expected #atoms = " << expected.size();
+    ABSL_LOG(ERROR) << "Failed " << testname;
+    ABSL_LOG(ERROR) << "Expected #atoms = " << expected.size();
     for (size_t i = 0; i < expected.size(); i++)
-      LOG(ERROR) << expected[i];
-    LOG(ERROR) << "Found #atoms = " << v->atoms.size();
+      ABSL_LOG(ERROR) << expected[i];
+    ABSL_LOG(ERROR) << "Found #atoms = " << v->atoms.size();
     for (size_t i = 0; i < v->atoms.size(); i++)
-      LOG(ERROR) << v->atoms[i];
+      ABSL_LOG(ERROR) << v->atoms[i];
   }
 
   return pass;
@@ -274,9 +274,9 @@ TEST(FilteredRE2Test, MatchTests) {
   atoms.push_back("yyy");
   atoms.push_back("yyyzzz");
   FindAtomIndices(v.atoms, atoms, &atom_ids);
-  LOG(INFO) << "S: " << atom_ids.size();
+  ABSL_LOG(INFO) << "S: " << atom_ids.size();
   for (size_t i = 0; i < atom_ids.size(); i++)
-    LOG(INFO) << "i: " << i << " : " << atom_ids[i];
+    ABSL_LOG(INFO) << "i: " << i << " : " << atom_ids[i];
   v.f.AllMatches(text, atom_ids, &matching_regexps);
   EXPECT_EQ(2, matching_regexps.size());
 }

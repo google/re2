@@ -14,8 +14,8 @@
 
 #include "absl/base/macros.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "util/utf.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
@@ -523,8 +523,8 @@ void Compiler::AddSuffix(int id) {
 }
 
 int Compiler::AddSuffixRecursive(int root, int id) {
-  DCHECK(inst_[root].opcode() == kInstAlt ||
-         inst_[root].opcode() == kInstByteRange);
+  ABSL_DCHECK(inst_[root].opcode() == kInstAlt ||
+              inst_[root].opcode() == kInstByteRange);
 
   Frag f = FindByteRange(root, id);
   if (IsNoMatch(f)) {
@@ -566,7 +566,7 @@ int Compiler::AddSuffixRecursive(int root, int id) {
   if (!IsCachedRuneByteSuffix(id)) {
     // The head should be the instruction most recently allocated, so free it
     // instead of leaving it unreachable.
-    DCHECK_EQ(id, ninst_-1);
+    ABSL_DCHECK_EQ(id, ninst_-1);
     inst_[id].out_opcode_ = 0;
     inst_[id].out1_ = 0;
     ninst_--;
@@ -614,7 +614,7 @@ Frag Compiler::FindByteRange(int root, int id) {
       return NoMatch();
   }
 
-  LOG(DFATAL) << "should never happen";
+  ABSL_LOG(DFATAL) << "should never happen";
   return NoMatch();
 }
 
@@ -739,7 +739,7 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
   int n = runetochar(reinterpret_cast<char*>(ulo), &lo);
   int m = runetochar(reinterpret_cast<char*>(uhi), &hi);
   (void)m;  // USED(m)
-  DCHECK_EQ(n, m);
+  ABSL_DCHECK_EQ(n, m);
 
   // The logic below encodes this thinking:
   //
@@ -792,7 +792,7 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
 Frag Compiler::Copy(Frag arg) {
   // We're using WalkExponential; there should be no copying.
   failed_ = true;
-  LOG(DFATAL) << "Compiler::Copy called!";
+  ABSL_LOG(DFATAL) << "Compiler::Copy called!";
   return NoMatch();
 }
 
@@ -919,7 +919,7 @@ Frag Compiler::PostVisit(Regexp* re, Frag, Frag, Frag* child_frags,
       if (cc->empty()) {
         // This can't happen.
         failed_ = true;
-        LOG(DFATAL) << "No ranges in char class";
+        ABSL_LOG(DFATAL) << "No ranges in char class";
         return NoMatch();
       }
 
@@ -977,7 +977,7 @@ Frag Compiler::PostVisit(Regexp* re, Frag, Frag, Frag* child_frags,
       return EmptyWidth(kEmptyNonWordBoundary);
   }
   failed_ = true;
-  LOG(DFATAL) << "Missing case in Compiler: " << re->op();
+  ABSL_LOG(DFATAL) << "Missing case in Compiler: " << re->op();
   return NoMatch();
 }
 
