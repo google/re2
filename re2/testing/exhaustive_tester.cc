@@ -15,8 +15,8 @@
 
 #include "absl/base/macros.h"
 #include "absl/flags/flag.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
 #include "re2/testing/exhaustive_tester.h"
@@ -41,7 +41,7 @@ static char* escape(absl::string_view sp) {
   *p++ = '\"';
   for (size_t i = 0; i < sp.size(); i++) {
     if(p+5 >= buf+sizeof buf)
-      LOG(FATAL) << "ExhaustiveTester escape: too long";
+      ABSL_LOG(FATAL) << "ExhaustiveTester escape: too long";
     if(sp[i] == '\\' || sp[i] == '\"') {
       *p++ = '\\';
       *p++ = sp[i];
@@ -83,7 +83,7 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
   std::string regexp = const_regexp;
   if (!topwrapper_.empty()) {
     auto fmt = absl::ParsedFormat<'s'>::New(topwrapper_);
-    CHECK(fmt != nullptr);
+    ABSL_CHECK(fmt != nullptr);
     regexp = absl::StrFormat(*fmt, regexp);
   }
 
@@ -96,7 +96,7 @@ void ExhaustiveTester::HandleRegexp(const std::string& const_regexp) {
     // Write out test cases and answers for use in testing
     // other implementations, such as Go's regexp package.
     if (randomstrings_)
-      LOG(ERROR) << "Cannot log with random strings.";
+      ABSL_LOG(ERROR) << "Cannot log with random strings.";
     if (regexps_ == 1) {  // first
       absl::PrintF("strings\n");
       strgen_.Reset();

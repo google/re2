@@ -7,14 +7,14 @@
 #include <stdint.h>
 
 #include "absl/base/macros.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 
 namespace re2 {
 
 int Bitmap256::FindNextSetBit(int c) const {
-  DCHECK_GE(c, 0);
-  DCHECK_LE(c, 255);
+  ABSL_DCHECK_GE(c, 0);
+  ABSL_DCHECK_LE(c, 255);
 
   // Check the word that contains the bit. Mask out any lower bits.
   int i = c / 64;

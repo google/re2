@@ -19,8 +19,8 @@
 #endif
 
 #include "absl/base/macros.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
 #include "re2/re2.h"
@@ -774,7 +774,7 @@ TEST(RE2, NULTerminated) {
   v = static_cast<char*>(mmap(NULL, 2*pagesize, PROT_READ|PROT_WRITE,
                               MAP_ANONYMOUS|MAP_PRIVATE, -1, 0));
   ASSERT_TRUE(v != reinterpret_cast<char*>(-1));
-  LOG(INFO) << "Memory at " << (void*)v;
+  ABSL_LOG(INFO) << "Memory at " << (void*)v;
   ASSERT_EQ(munmap(v + pagesize, pagesize), 0) << " error " << errno;
   v[pagesize - 1] = '1';
 
@@ -1563,7 +1563,7 @@ TEST(RE2, Bug18391750) {
 
 TEST(RE2, Bug18458852) {
   // Bug in parser accepting invalid (too large) rune,
-  // causing compiler to fail in DCHECK in UTF-8
+  // causing compiler to fail in ABSL_DCHECK() in UTF-8
   // character class code.
   const char b[] = {
       (char)0x28, (char)0x05, (char)0x05, (char)0x41, (char)0x41, (char)0x28,
@@ -1599,7 +1599,7 @@ TEST(RE2, Bug18523943) {
 
 TEST(RE2, Bug21371806) {
   // Bug in parser accepting Unicode groups in Latin-1 mode,
-  // causing compiler to fail in DCHECK in prog.cc.
+  // causing compiler to fail in ABSL_DCHECK() in prog.cc.
 
   RE2::Options opt;
   opt.set_encoding(RE2::Options::EncodingLatin1);
