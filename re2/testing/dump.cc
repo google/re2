@@ -19,8 +19,8 @@
 #include <string>
 
 #include "absl/base/macros.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
 #include "util/utf.h"
@@ -130,7 +130,7 @@ static void DumpRegexpAppending(Regexp* re, std::string* s) {
       break;
     case kRegexpCapture:
       if (re->cap() == 0)
-        LOG(DFATAL) << "kRegexpCapture cap() == 0";
+        ABSL_LOG(DFATAL) << "kRegexpCapture cap() == 0";
       if (re->name()) {
         s->append(*re->name());
         s->append(":");
@@ -162,7 +162,7 @@ static void DumpRegexpAppending(Regexp* re, std::string* s) {
 std::string Regexp::Dump() {
   // Make sure that we are being called from a unit test.
   // Should cause a link error if used outside of testing.
-  CHECK(!::testing::TempDir().empty());
+  ABSL_CHECK(!::testing::TempDir().empty());
 
   std::string s;
   DumpRegexpAppending(this, &s);

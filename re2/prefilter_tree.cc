@@ -12,8 +12,8 @@
 #include <utility>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "re2/prefilter.h"
 #include "re2/re2.h"
@@ -39,7 +39,7 @@ PrefilterTree::~PrefilterTree() {
 
 void PrefilterTree::Add(Prefilter* prefilter) {
   if (compiled_) {
-    LOG(DFATAL) << "Add called after Compile.";
+    ABSL_LOG(DFATAL) << "Add called after Compile.";
     return;
   }
   if (prefilter != NULL && !KeepNode(prefilter)) {
@@ -52,7 +52,7 @@ void PrefilterTree::Add(Prefilter* prefilter) {
 
 void PrefilterTree::Compile(std::vector<std::string>* atom_vec) {
   if (compiled_) {
-    LOG(DFATAL) << "Compile called already.";
+    ABSL_LOG(DFATAL) << "Compile called already.";
     return;
   }
 
@@ -84,7 +84,7 @@ bool PrefilterTree::KeepNode(Prefilter* node) const {
 
   switch (node->op()) {
     default:
-      LOG(DFATAL) << "Unexpected op in KeepNode: " << node->op();
+      ABSL_LOG(DFATAL) << "Unexpected op in KeepNode: " << node->op();
       return false;
 
     case Prefilter::ALL:
@@ -179,7 +179,7 @@ void PrefilterTree::AssignUniqueIds(NodeSet* nodes,
     int id = prefilter->unique_id();
     switch (prefilter->op()) {
       default:
-        LOG(DFATAL) << "Unexpected op: " << prefilter->op();
+        ABSL_LOG(DFATAL) << "Unexpected op: " << prefilter->op();
         return;
 
       case Prefilter::ATOM:
@@ -213,7 +213,7 @@ void PrefilterTree::AssignUniqueIds(NodeSet* nodes,
     if (prefilter_vec_[i] == NULL)
       continue;
     int id = CanonicalNode(nodes, prefilter_vec_[i])->unique_id();
-    DCHECK_LE(0, id);
+    ABSL_DCHECK_LE(0, id);
     Entry* entry = &entries_[id];
     entry->regexps.push_back(static_cast<int>(i));
   }
@@ -278,7 +278,7 @@ void PrefilterTree::RegexpsGivenStrings(
       return;
     }
 
-    LOG(ERROR) << "RegexpsGivenStrings called before Compile.";
+    ABSL_LOG(ERROR) << "RegexpsGivenStrings called before Compile.";
     for (size_t i = 0; i < prefilter_vec_.size(); i++)
       regexps->push_back(static_cast<int>(i));
   } else {
@@ -332,31 +332,31 @@ void PrefilterTree::PropagateMatch(const std::vector<int>& atom_ids,
 
 // Debugging help.
 void PrefilterTree::PrintPrefilter(int regexpid) {
-  LOG(ERROR) << DebugNodeString(prefilter_vec_[regexpid]);
+  ABSL_LOG(ERROR) << DebugNodeString(prefilter_vec_[regexpid]);
 }
 
 void PrefilterTree::PrintDebugInfo(NodeSet* nodes) {
-  LOG(ERROR) << "#Unique Atoms: " << atom_index_to_id_.size();
-  LOG(ERROR) << "#Unique Nodes: " << entries_.size();
+  ABSL_LOG(ERROR) << "#Unique Atoms: " << atom_index_to_id_.size();
+  ABSL_LOG(ERROR) << "#Unique Nodes: " << entries_.size();
 
   for (size_t i = 0; i < entries_.size(); i++) {
     const std::vector<int>& parents = entries_[i].parents;
     const std::vector<int>& regexps = entries_[i].regexps;
-    LOG(ERROR) << "EntryId: " << i
-               << " N: " << parents.size() << " R: " << regexps.size();
+    ABSL_LOG(ERROR) << "EntryId: " << i
+                    << " N: " << parents.size() << " R: " << regexps.size();
     for (int parent : parents)
-      LOG(ERROR) << parent;
+      ABSL_LOG(ERROR) << parent;
   }
-  LOG(ERROR) << "Set:";
+  ABSL_LOG(ERROR) << "Set:";
   for (NodeSet::const_iterator iter = nodes->begin();
        iter != nodes->end(); ++iter)
-    LOG(ERROR) << "NodeId: " << (*iter)->unique_id();
+    ABSL_LOG(ERROR) << "NodeId: " << (*iter)->unique_id();
 }
 
 std::string PrefilterTree::DebugNodeString(Prefilter* node) const {
   std::string node_string = "";
   if (node->op() == Prefilter::ATOM) {
-    DCHECK(!node->atom().empty());
+    ABSL_DCHECK(!node->atom().empty());
     node_string += node->atom();
   } else {
     // Adding the operation disambiguates AND and OR nodes.

@@ -59,8 +59,8 @@
 
 #include "absl/container/fixed_array.h"
 #include "absl/container/inlined_vector.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "util/utf.h"
 #include "re2/pod_array.h"
@@ -216,7 +216,7 @@ bool Prog::SearchOnePass(absl::string_view text, absl::string_view context,
                          Anchor anchor, MatchKind kind,
                          absl::string_view* match, int nmatch) {
   if (anchor != kAnchored && kind != kFullMatch) {
-    LOG(DFATAL) << "Cannot use SearchOnePass for unanchored matches.";
+    ABSL_LOG(DFATAL) << "Cannot use SearchOnePass for unanchored matches.";
     return false;
   }
 
@@ -443,13 +443,13 @@ bool Prog::IsOnePass() {
       Prog::Inst* ip = inst(id);
       switch (ip->opcode()) {
         default:
-          LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+          ABSL_LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
           break;
 
         case kInstAltMatch:
           // TODO(rsc): Ignoring kInstAltMatch optimization.
           // Should implement it in this engine, but it's subtle.
-          DCHECK(!ip->last());
+          ABSL_DCHECK(!ip->last());
           // If already on work queue, (1) is violated: bail out.
           if (!AddQ(&workq, id+1))
             goto fail;
@@ -461,7 +461,7 @@ bool Prog::IsOnePass() {
           if (nextindex == -1) {
             if (nalloc >= maxnodes) {
               if (ExtraDebug)
-                LOG(ERROR) << absl::StrFormat(
+                ABSL_LOG(ERROR) << absl::StrFormat(
                     "Not OnePass: hit node limit %d >= %d", nalloc, maxnodes);
               goto fail;
             }
@@ -486,7 +486,7 @@ bool Prog::IsOnePass() {
               node->action[b] = newact;
             } else if (act != newact) {
               if (ExtraDebug)
-                LOG(ERROR) << absl::StrFormat(
+                ABSL_LOG(ERROR) << absl::StrFormat(
                     "Not OnePass: conflict on byte %#x at state %d", c, *it);
               goto fail;
             }
@@ -507,7 +507,7 @@ bool Prog::IsOnePass() {
                 node->action[b] = newact;
               } else if (act != newact) {
                 if (ExtraDebug)
-                  LOG(ERROR) << absl::StrFormat(
+                  ABSL_LOG(ERROR) << absl::StrFormat(
                       "Not OnePass: conflict on byte %#x at state %d", c, *it);
                 goto fail;
               }
@@ -548,7 +548,7 @@ bool Prog::IsOnePass() {
           // If already on work queue, (1) is violated: bail out.
           if (!AddQ(&workq, ip->out())) {
             if (ExtraDebug)
-              LOG(ERROR) << absl::StrFormat(
+              ABSL_LOG(ERROR) << absl::StrFormat(
                   "Not OnePass: multiple paths %d -> %d", *it, ip->out());
             goto fail;
           }
@@ -559,7 +559,7 @@ bool Prog::IsOnePass() {
           if (matched) {
             // (3) is violated
             if (ExtraDebug)
-              LOG(ERROR) << absl::StrFormat(
+              ABSL_LOG(ERROR) << absl::StrFormat(
                   "Not OnePass: multiple matches from %d", *it);
             goto fail;
           }
@@ -580,9 +580,9 @@ bool Prog::IsOnePass() {
     }
   }
 
-  if (ExtraDebug) {  // For debugging, dump one-pass NFA to LOG(ERROR).
-    LOG(ERROR) << "bytemap:\n" << DumpByteMap();
-    LOG(ERROR) << "prog:\n" << Dump();
+  if (ExtraDebug) {  // For debugging, dump one-pass NFA to ABSL_LOG(ERROR).
+    ABSL_LOG(ERROR) << "bytemap:\n" << DumpByteMap();
+    ABSL_LOG(ERROR) << "prog:\n" << Dump();
 
     std::map<int, int> idmap;
     for (int i = 0; i < size; i++)
@@ -607,7 +607,7 @@ bool Prog::IsOnePass() {
                                 idmap[node->action[i] >> kIndexShift]);
       }
     }
-    LOG(ERROR) << "nodes:\n" << dump;
+    ABSL_LOG(ERROR) << "nodes:\n" << dump;
   }
 
   dfa_mem_ -= nalloc*statesize;

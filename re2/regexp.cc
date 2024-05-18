@@ -18,8 +18,8 @@
 #include "absl/base/call_once.h"
 #include "absl/base/macros.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/synchronization/mutex.h"
 #include "util/utf.h"
 #include "re2/pod_array.h"
@@ -46,7 +46,7 @@ Regexp::Regexp(RegexpOp op, ParseFlags parse_flags)
 // required Decref() to have handled them for us.
 Regexp::~Regexp() {
   if (nsub_ > 0)
-    LOG(DFATAL) << "Regexp not destroyed.";
+    ABSL_LOG(DFATAL) << "Regexp not destroyed.";
 
   switch (op_) {
     default:
@@ -155,7 +155,7 @@ void Regexp::Destroy() {
     Regexp* re = stack;
     stack = re->down_;
     if (re->ref_ != 0)
-      LOG(DFATAL) << "Bad reference count " << re->ref_;
+      ABSL_LOG(DFATAL) << "Bad reference count " << re->ref_;
     if (re->nsub_ > 0) {
       Regexp** subs = re->sub();
       for (int i = 0; i < re->nsub_; i++) {
@@ -180,7 +180,7 @@ void Regexp::Destroy() {
 }
 
 void Regexp::AddRuneToString(Rune r) {
-  DCHECK(op_ == kRegexpLiteralString);
+  ABSL_DCHECK(op_ == kRegexpLiteralString);
   if (nrunes_ == 0) {
     // start with 8
     runes_ = new Rune[8];
@@ -422,7 +422,7 @@ static bool TopEqual(Regexp* a, Regexp* b) {
     }
   }
 
-  LOG(DFATAL) << "Unexpected op in Regexp::Equal: " << a->op();
+  ABSL_LOG(DFATAL) << "Unexpected op in Regexp::Equal: " << a->op();
   return 0;
 }
 
@@ -497,7 +497,7 @@ bool Regexp::Equal(Regexp* a, Regexp* b) {
     if (n == 0)
       break;
 
-    DCHECK_GE(n, 2);
+    ABSL_DCHECK_GE(n, 2);
     a = stk[n-2];
     b = stk[n-1];
     stk.resize(n-2);
@@ -563,7 +563,7 @@ class NumCapturesWalker : public Regexp::Walker<Ignored> {
   virtual Ignored ShortVisit(Regexp* re, Ignored ignored) {
     // Should never be called: we use Walk(), not WalkExponential().
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    LOG(DFATAL) << "NumCapturesWalker::ShortVisit called";
+    ABSL_LOG(DFATAL) << "NumCapturesWalker::ShortVisit called";
 #endif
     return ignored;
   }
@@ -610,7 +610,7 @@ class NamedCapturesWalker : public Regexp::Walker<Ignored> {
   virtual Ignored ShortVisit(Regexp* re, Ignored ignored) {
     // Should never be called: we use Walk(), not WalkExponential().
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    LOG(DFATAL) << "NamedCapturesWalker::ShortVisit called";
+    ABSL_LOG(DFATAL) << "NamedCapturesWalker::ShortVisit called";
 #endif
     return ignored;
   }
@@ -654,7 +654,7 @@ class CaptureNamesWalker : public Regexp::Walker<Ignored> {
   virtual Ignored ShortVisit(Regexp* re, Ignored ignored) {
     // Should never be called: we use Walk(), not WalkExponential().
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    LOG(DFATAL) << "CaptureNamesWalker::ShortVisit called";
+    ABSL_LOG(DFATAL) << "CaptureNamesWalker::ShortVisit called";
 #endif
     return ignored;
   }
@@ -994,7 +994,7 @@ CharClass* CharClassBuilder::GetCharClass() {
   for (iterator it = begin(); it != end(); ++it)
     cc->ranges_[n++] = *it;
   cc->nranges_ = n;
-  DCHECK_LE(n, static_cast<int>(ranges_.size()));
+  ABSL_DCHECK_LE(n, static_cast<int>(ranges_.size()));
   cc->nrunes_ = nrunes_;
   cc->folds_ascii_ = FoldsASCII();
   return cc;

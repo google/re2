@@ -20,8 +20,8 @@
 #include <utility>
 
 #include "absl/base/macros.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "re2/bitmap256.h"
 
@@ -30,13 +30,13 @@ namespace re2 {
 // Constructors per Inst opcode
 
 void Prog::Inst::InitAlt(uint32_t out, uint32_t out1) {
-  DCHECK_EQ(out_opcode_, 0);
+  ABSL_DCHECK_EQ(out_opcode_, 0);
   set_out_opcode(out, kInstAlt);
   out1_ = out1;
 }
 
 void Prog::Inst::InitByteRange(int lo, int hi, int foldcase, uint32_t out) {
-  DCHECK_EQ(out_opcode_, 0);
+  ABSL_DCHECK_EQ(out_opcode_, 0);
   set_out_opcode(out, kInstByteRange);
   lo_ = lo & 0xFF;
   hi_ = hi & 0xFF;
@@ -44,30 +44,30 @@ void Prog::Inst::InitByteRange(int lo, int hi, int foldcase, uint32_t out) {
 }
 
 void Prog::Inst::InitCapture(int cap, uint32_t out) {
-  DCHECK_EQ(out_opcode_, 0);
+  ABSL_DCHECK_EQ(out_opcode_, 0);
   set_out_opcode(out, kInstCapture);
   cap_ = cap;
 }
 
 void Prog::Inst::InitEmptyWidth(EmptyOp empty, uint32_t out) {
-  DCHECK_EQ(out_opcode_, 0);
+  ABSL_DCHECK_EQ(out_opcode_, 0);
   set_out_opcode(out, kInstEmptyWidth);
   empty_ = empty;
 }
 
 void Prog::Inst::InitMatch(int32_t id) {
-  DCHECK_EQ(out_opcode_, 0);
+  ABSL_DCHECK_EQ(out_opcode_, 0);
   set_opcode(kInstMatch);
   match_id_ = id;
 }
 
 void Prog::Inst::InitNop(uint32_t out) {
-  DCHECK_EQ(out_opcode_, 0);
+  ABSL_DCHECK_EQ(out_opcode_, 0);
   set_opcode(kInstNop);
 }
 
 void Prog::Inst::InitFail() {
-  DCHECK_EQ(out_opcode_, 0);
+  ABSL_DCHECK_EQ(out_opcode_, 0);
   set_opcode(kInstFail);
 }
 
@@ -199,7 +199,7 @@ static bool IsMatch(Prog* prog, Prog::Inst* ip) {
   for (;;) {
     switch (ip->opcode()) {
       default:
-        LOG(DFATAL) << "Unexpected opcode in IsMatch: " << ip->opcode();
+        ABSL_LOG(DFATAL) << "Unexpected opcode in IsMatch: " << ip->opcode();
         return false;
 
       case kInstAlt:
@@ -363,11 +363,11 @@ class ByteMapBuilder {
 };
 
 void ByteMapBuilder::Mark(int lo, int hi) {
-  DCHECK_GE(lo, 0);
-  DCHECK_GE(hi, 0);
-  DCHECK_LE(lo, 255);
-  DCHECK_LE(hi, 255);
-  DCHECK_LE(lo, hi);
+  ABSL_DCHECK_GE(lo, 0);
+  ABSL_DCHECK_GE(hi, 0);
+  ABSL_DCHECK_LE(lo, 255);
+  ABSL_DCHECK_LE(hi, 255);
+  ABSL_DCHECK_LE(lo, hi);
 
   // Ignore any [0-255] ranges. They cause us to recolor every range, which
   // has no effect on the eventual result and is therefore a waste of time.
@@ -512,7 +512,7 @@ void Prog::ComputeByteMap() {
   builder.Build(bytemap_, &bytemap_range_);
 
   if ((0)) {  // For debugging, use trivial bytemap.
-    LOG(ERROR) << "Using trivial bytemap.";
+    ABSL_LOG(ERROR) << "Using trivial bytemap.";
     for (int i = 0; i < 256; i++)
       bytemap_[i] = static_cast<uint8_t>(i);
     bytemap_range_ = 256;
@@ -616,12 +616,12 @@ void Prog::Flatten() {
   size_t total = 0;
   for (int i = 0; i < kNumInst; i++)
     total += inst_count_[i];
-  CHECK_EQ(total, flat.size());
+  ABSL_CHECK_EQ(total, flat.size());
 #endif
 
   // Remap start_unanchored and start.
   if (start_unanchored() == 0) {
-    DCHECK_EQ(start(), 0);
+    ABSL_DCHECK_EQ(start(), 0);
   } else if (start_unanchored() == start()) {
     set_start_unanchored(flatmap[1]);
     set_start(flatmap[1]);
@@ -678,7 +678,7 @@ void Prog::MarkSuccessors(SparseArray<int>* rootmap,
     Inst* ip = inst(id);
     switch (ip->opcode()) {
       default:
-        LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+        ABSL_LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
         break;
 
       case kInstAltMatch:
@@ -738,7 +738,7 @@ void Prog::MarkDominator(int root, SparseArray<int>* rootmap,
     Inst* ip = inst(id);
     switch (ip->opcode()) {
       default:
-        LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+        ABSL_LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
         break;
 
       case kInstAltMatch:
@@ -805,7 +805,7 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap,
     Inst* ip = inst(id);
     switch (ip->opcode()) {
       default:
-        LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+        ABSL_LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
         break;
 
       case kInstAltMatch:
@@ -1106,7 +1106,7 @@ const void* Prog::PrefixAccel_ShiftDFA(const void* data, size_t size) {
 #if defined(__AVX2__)
 // Finds the least significant non-zero bit in n.
 static int FindLSBSet(uint32_t n) {
-  DCHECK_NE(n, 0);
+  ABSL_DCHECK_NE(n, 0);
 #if defined(__GNUC__)
   return __builtin_ctz(n);
 #elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
@@ -1128,7 +1128,7 @@ static int FindLSBSet(uint32_t n) {
 #endif
 
 const void* Prog::PrefixAccel_FrontAndBack(const void* data, size_t size) {
-  DCHECK_GE(prefix_size_, 2);
+  ABSL_DCHECK_GE(prefix_size_, 2);
   if (size < prefix_size_)
     return NULL;
   // Don't bother searching the last prefix_size_-1 bytes for prefix_front_.
@@ -1165,7 +1165,7 @@ const void* Prog::PrefixAccel_FrontAndBack(const void* data, size_t size) {
 
   const char* p0 = reinterpret_cast<const char*>(data);
   for (const char* p = p0;; p++) {
-    DCHECK_GE(size, static_cast<size_t>(p-p0));
+    ABSL_DCHECK_GE(size, static_cast<size_t>(p-p0));
     p = reinterpret_cast<const char*>(memchr(p, prefix_front_, size - (p-p0)));
     if (p == NULL || p[prefix_size_-1] == prefix_back_)
       return p;

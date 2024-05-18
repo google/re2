@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "absl/container/flat_hash_set.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "re2/prefilter.h"
 #include "re2/sparse_array.h"
 
@@ -63,15 +63,15 @@ class PrefilterTree {
 
   struct PrefilterHash {
     size_t operator()(const Prefilter* a) const {
-      DCHECK(a != NULL);
+      ABSL_DCHECK(a != NULL);
       return absl::Hash<Prefilter>()(*a);
     }
   };
 
   struct PrefilterEqual {
     bool operator()(const Prefilter* a, const Prefilter* b) const {
-      DCHECK(a != NULL);
-      DCHECK(b != NULL);
+      ABSL_DCHECK(a != NULL);
+      ABSL_DCHECK(b != NULL);
       return *a == *b;
     }
   };

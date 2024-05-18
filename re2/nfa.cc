@@ -32,8 +32,8 @@
 #include <utility>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
@@ -173,17 +173,17 @@ NFA::Thread* NFA::AllocThread() {
 }
 
 NFA::Thread* NFA::Incref(Thread* t) {
-  DCHECK(t != NULL);
+  ABSL_DCHECK(t != NULL);
   t->ref++;
   return t;
 }
 
 void NFA::Decref(Thread* t) {
-  DCHECK(t != NULL);
+  ABSL_DCHECK(t != NULL);
   t->ref--;
   if (t->ref > 0)
     return;
-  DCHECK_EQ(t->ref, 0);
+  ABSL_DCHECK_EQ(t->ref, 0);
   t->next = freelist_;
   freelist_ = t;
 }
@@ -209,7 +209,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, absl::string_view context,
 
   stk[nstk++] = {id0, NULL};
   while (nstk > 0) {
-    DCHECK_LE(nstk, stack_.size());
+    ABSL_DCHECK_LE(nstk, stack_.size());
     AddState a = stk[--nstk];
 
   Loop:
@@ -239,7 +239,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, absl::string_view context,
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
     default:
-      LOG(DFATAL) << "unhandled " << ip->opcode() << " in AddToThreadq";
+      ABSL_LOG(DFATAL) << "unhandled " << ip->opcode() << " in AddToThreadq";
       break;
 
     case kInstFail:
@@ -250,7 +250,7 @@ void NFA::AddToThreadq(Threadq* q, int id0, int c, absl::string_view context,
       t = Incref(t0);
       *tp = t;
 
-      DCHECK(!ip->last());
+      ABSL_DCHECK(!ip->last());
       a = {id+1, NULL};
       goto Loop;
 
@@ -351,7 +351,7 @@ int NFA::Step(Threadq* runq, Threadq* nextq, int c, absl::string_view context,
     switch (ip->opcode()) {
       default:
         // Should only see the values handled below.
-        LOG(DFATAL) << "Unhandled " << ip->opcode() << " in step";
+        ABSL_LOG(DFATAL) << "Unhandled " << ip->opcode() << " in step";
         break;
 
       case kInstByteRange:
@@ -456,7 +456,7 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
 
   // Sanity check: make sure that text lies within context.
   if (BeginPtr(text) < BeginPtr(context) || EndPtr(text) > EndPtr(context)) {
-    LOG(DFATAL) << "context does not contain text";
+    ABSL_LOG(DFATAL) << "context does not contain text";
     return false;
   }
 
@@ -471,7 +471,7 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
   }
 
   if (nsubmatch < 0) {
-    LOG(DFATAL) << "Bad args: nsubmatch=" << nsubmatch;
+    ABSL_LOG(DFATAL) << "Bad args: nsubmatch=" << nsubmatch;
     return false;
   }
 
@@ -528,7 +528,7 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
 
     // This is a no-op the first time around the loop because runq is empty.
     int id = Step(runq, nextq, p < etext_ ? p[0] & 0xFF : -1, context, p);
-    DCHECK_EQ(runq->size(), 0);
+    ABSL_DCHECK_EQ(runq->size(), 0);
     using std::swap;
     swap(nextq, runq);
     nextq->clear();
@@ -539,7 +539,8 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
         Prog::Inst* ip = prog_->inst(id);
         switch (ip->opcode()) {
           default:
-            LOG(DFATAL) << "Unexpected opcode in short circuit: " << ip->opcode();
+            ABSL_LOG(DFATAL) << "Unexpected opcode in short circuit: "
+                             << ip->opcode();
             break;
 
           case kInstCapture:
@@ -600,7 +601,7 @@ bool NFA::Search(absl::string_view text, absl::string_view context,
     // This complements the special case in NFA::Step().
     if (p == NULL) {
       (void) Step(runq, nextq, -1, context, p);
-      DCHECK_EQ(runq->size(), 0);
+      ABSL_DCHECK_EQ(runq->size(), 0);
       using std::swap;
       swap(nextq, runq);
       nextq->clear();
@@ -656,7 +657,7 @@ bool Prog::SearchNFA(absl::string_view text, absl::string_view context,
 // fanout holds the results and is also the work queue for the outer iteration.
 // reachable holds the reached nodes for the inner iteration.
 void Prog::Fanout(SparseArray<int>* fanout) {
-  DCHECK_EQ(fanout->max_size(), size());
+  ABSL_DCHECK_EQ(fanout->max_size(), size());
   SparseSet reachable(size());
   fanout->clear();
   fanout->set_new(start(), 0);
@@ -669,7 +670,8 @@ void Prog::Fanout(SparseArray<int>* fanout) {
       Prog::Inst* ip = inst(id);
       switch (ip->opcode()) {
         default:
-          LOG(DFATAL) << "unhandled " << ip->opcode() << " in Prog::Fanout()";
+          ABSL_LOG(DFATAL) << "unhandled " << ip->opcode()
+                           << " in Prog::Fanout()";
           break;
 
         case kInstByteRange:
@@ -683,7 +685,7 @@ void Prog::Fanout(SparseArray<int>* fanout) {
           break;
 
         case kInstAltMatch:
-          DCHECK(!ip->last());
+          ABSL_DCHECK(!ip->last());
           reachable.insert(id+1);
           break;
 
