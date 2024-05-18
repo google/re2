@@ -8,8 +8,8 @@
 #include <string>
 #include <utility>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "re2/prefilter.h"
 #include "re2/prefilter_tree.h"
 
@@ -53,8 +53,8 @@ RE2::ErrorCode FilteredRE2::Add(absl::string_view pattern,
 
   if (!re->ok()) {
     if (options.log_errors()) {
-      LOG(ERROR) << "Couldn't compile regular expression, skipping: "
-                 << pattern << " due to error " << re->error();
+      ABSL_LOG(ERROR) << "Couldn't compile regular expression, skipping: "
+                      << pattern << " due to error " << re->error();
     }
     delete re;
   } else {
@@ -67,7 +67,7 @@ RE2::ErrorCode FilteredRE2::Add(absl::string_view pattern,
 
 void FilteredRE2::Compile(std::vector<std::string>* atoms) {
   if (compiled_) {
-    LOG(ERROR) << "Compile called already.";
+    ABSL_LOG(ERROR) << "Compile called already.";
     return;
   }
 
@@ -96,7 +96,7 @@ int FilteredRE2::SlowFirstMatch(absl::string_view text) const {
 int FilteredRE2::FirstMatch(absl::string_view text,
                             const std::vector<int>& atoms) const {
   if (!compiled_) {
-    LOG(DFATAL) << "FirstMatch called before Compile.";
+    ABSL_LOG(DFATAL) << "FirstMatch called before Compile.";
     return -1;
   }
   std::vector<int> regexps;

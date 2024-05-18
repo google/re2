@@ -38,8 +38,8 @@
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/types/span.h"
@@ -150,15 +150,15 @@ class DFA {
 
   struct StateHash {
     size_t operator()(const State* a) const {
-      DCHECK(a != NULL);
+      ABSL_DCHECK(a != NULL);
       return absl::Hash<State>()(*a);
     }
   };
 
   struct StateEqual {
     bool operator()(const State* a, const State* b) const {
-      DCHECK(a != NULL);
-      DCHECK(b != NULL);
+      ABSL_DCHECK(a != NULL);
+      ABSL_DCHECK(b != NULL);
       return *a == *b;
     }
   };
@@ -660,7 +660,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
         break;
     }
   }
-  DCHECK_LE(n, q->size());
+  ABSL_DCHECK_LE(n, q->size());
   if (n > 0 && inst[n-1] == Mark)
     n--;
 
@@ -848,7 +848,7 @@ void DFA::AddToQueue(Workq* q, int id, uint32_t flag) {
 
   stk[nstk++] = id;
   while (nstk > 0) {
-    DCHECK_LE(nstk, stack_.size());
+    ABSL_DCHECK_LE(nstk, stack_.size());
     id = stk[--nstk];
 
   Loop:
@@ -873,7 +873,7 @@ void DFA::AddToQueue(Workq* q, int id, uint32_t flag) {
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       default:
-        LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+        ABSL_LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
         break;
 
       case kInstByteRange:  // just save these on the queue
@@ -899,7 +899,7 @@ void DFA::AddToQueue(Workq* q, int id, uint32_t flag) {
         goto Loop;
 
       case kInstAltMatch:
-        DCHECK(!ip->last());
+        ABSL_DCHECK(!ip->last());
         id = id+1;
         goto Loop;
 
@@ -962,7 +962,7 @@ void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
     Prog::Inst* ip = prog_->inst(id);
     switch (ip->opcode()) {
       default:
-        LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+        ABSL_LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
         break;
 
       case kInstFail:        // never succeeds
@@ -1030,14 +1030,14 @@ DFA::State* DFA::RunStateOnByte(State* state, int c) {
       return FullMatchState;
     }
     if (state == DeadState) {
-      LOG(DFATAL) << "DeadState in RunStateOnByte";
+      ABSL_LOG(DFATAL) << "DeadState in RunStateOnByte";
       return NULL;
     }
     if (state == NULL) {
-      LOG(DFATAL) << "NULL state in RunStateOnByte";
+      ABSL_LOG(DFATAL) << "NULL state in RunStateOnByte";
       return NULL;
     }
-    LOG(DFATAL) << "Unexpected special state in RunStateOnByte";
+    ABSL_LOG(DFATAL) << "Unexpected special state in RunStateOnByte";
     return NULL;
   }
 
@@ -1268,7 +1268,7 @@ DFA::State* DFA::StateSaver::Restore() {
   absl::MutexLock l(&dfa_->mutex_);
   State* s = dfa_->CachedState(inst_, ninst_, flag_);
   if (s == NULL)
-    LOG(DFATAL) << "StateSaver failed to restore state.";
+    ABSL_LOG(DFATAL) << "StateSaver failed to restore state.";
   return s;
 }
 
@@ -1452,13 +1452,13 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params) {
         // Restore start and s so we can continue.
         if ((start = save_start.Restore()) == NULL ||
             (s = save_s.Restore()) == NULL) {
-          // Restore already did LOG(DFATAL).
+          // Restore already did ABSL_LOG(DFATAL).
           params->failed = true;
           return false;
         }
         ns = RunStateOnByteUnlocked(s, c);
         if (ns == NULL) {
-          LOG(DFATAL) << "RunStateOnByteUnlocked failed after ResetCache";
+          ABSL_LOG(DFATAL) << "RunStateOnByteUnlocked failed after ResetCache";
           params->failed = true;
           return false;
         }
@@ -1530,7 +1530,7 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params) {
       }
       ns = RunStateOnByteUnlocked(s, lastbyte);
       if (ns == NULL) {
-        LOG(DFATAL) << "RunStateOnByteUnlocked failed after Reset";
+        ABSL_LOG(DFATAL) << "RunStateOnByteUnlocked failed after Reset";
         params->failed = true;
         return false;
       }
@@ -1647,7 +1647,7 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
 
   // Sanity check: make sure that text lies within context.
   if (BeginPtr(text) < BeginPtr(context) || EndPtr(text) > EndPtr(context)) {
-    LOG(DFATAL) << "context does not contain text";
+    ABSL_LOG(DFATAL) << "context does not contain text";
     params->start = DeadState;
     return true;
   }
@@ -1695,7 +1695,7 @@ bool DFA::AnalyzeSearch(SearchParams* params) {
     ResetCache(params->cache_lock);
     if (!AnalyzeSearchHelper(params, info, flags)) {
       params->failed = true;
-      LOG(DFATAL) << "Failed to analyze start state.";
+      ABSL_LOG(DFATAL) << "Failed to analyze start state.";
       return false;
     }
   }
@@ -1769,7 +1769,7 @@ bool DFA::Search(absl::string_view text, absl::string_view context,
   params.want_earliest_match = want_earliest_match;
   params.run_forward = run_forward;
   // matches should be null except when using RE2::Set.
-  DCHECK(matches == NULL || kind_ == Prog::kManyMatch);
+  ABSL_DCHECK(matches == NULL || kind_ == Prog::kManyMatch);
   params.matches = matches;
 
   if (!AnalyzeSearch(&params)) {

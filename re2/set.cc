@@ -9,8 +9,8 @@
 #include <memory>
 #include <utility>
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
@@ -53,7 +53,7 @@ RE2::Set& RE2::Set::operator=(Set&& other) {
 
 int RE2::Set::Add(absl::string_view pattern, std::string* error) {
   if (compiled_) {
-    LOG(DFATAL) << "RE2::Set::Add() called after compiling";
+    ABSL_LOG(DFATAL) << "RE2::Set::Add() called after compiling";
     return -1;
   }
 
@@ -65,7 +65,7 @@ int RE2::Set::Add(absl::string_view pattern, std::string* error) {
     if (error != NULL)
       *error = status.Text();
     if (options_.log_errors())
-      LOG(ERROR) << "Error parsing '" << pattern << "': " << status.Text();
+      ABSL_LOG(ERROR) << "Error parsing '" << pattern << "': " << status.Text();
     return -1;
   }
 
@@ -92,7 +92,7 @@ int RE2::Set::Add(absl::string_view pattern, std::string* error) {
 
 bool RE2::Set::Compile() {
   if (compiled_) {
-    LOG(DFATAL) << "RE2::Set::Compile() called more than once";
+    ABSL_LOG(DFATAL) << "RE2::Set::Compile() called more than once";
     return false;
   }
   compiled_ = true;
@@ -129,7 +129,7 @@ bool RE2::Set::Match(absl::string_view text, std::vector<int>* v,
   if (!compiled_) {
     if (error_info != NULL)
       error_info->kind = kNotCompiled;
-    LOG(DFATAL) << "RE2::Set::Match() called before compiling";
+    ABSL_LOG(DFATAL) << "RE2::Set::Match() called before compiling";
     return false;
   }
 #ifdef RE2_HAVE_THREAD_LOCAL
@@ -145,10 +145,10 @@ bool RE2::Set::Match(absl::string_view text, std::vector<int>* v,
                               NULL, &dfa_failed, matches.get());
   if (dfa_failed) {
     if (options_.log_errors())
-      LOG(ERROR) << "DFA out of memory: "
-                 << "program size " << prog_->size() << ", "
-                 << "list count " << prog_->list_count() << ", "
-                 << "bytemap range " << prog_->bytemap_range();
+      ABSL_LOG(ERROR) << "DFA out of memory: "
+                      << "program size " << prog_->size() << ", "
+                      << "list count " << prog_->list_count() << ", "
+                      << "bytemap range " << prog_->bytemap_range();
     if (error_info != NULL)
       error_info->kind = kOutOfMemory;
     return false;
@@ -162,7 +162,7 @@ bool RE2::Set::Match(absl::string_view text, std::vector<int>* v,
     if (matches->empty()) {
       if (error_info != NULL)
         error_info->kind = kInconsistent;
-      LOG(DFATAL) << "RE2::Set::Match() matched, but no matches returned?!";
+      ABSL_LOG(DFATAL) << "RE2::Set::Match() matched, but no matches returned";
       return false;
     }
     v->assign(matches->begin(), matches->end());
