@@ -152,7 +152,9 @@ if(UNIX)
 endif()
 
 foreach(dep ${ABSL_DEPS})
-  string(REGEX REPLACE "^absl_" "absl::" dep ${dep})
+  # Work around https://gitlab.kitware.com/cmake/cmake/-/issues/16899. >:(
+  string(PREPEND dep "^")
+  string(REGEX REPLACE "\\^absl_" "absl::" dep ${dep})
   target_link_libraries(re2 PUBLIC ${dep})
 endforeach()
 
