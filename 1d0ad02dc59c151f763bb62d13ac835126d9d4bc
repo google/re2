@@ -1,0 +1,1486 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5b0bc375_e4310f99",
+        "filename": "re2/bitstate.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 113,
+        "endChar": 53
+      },
+      "fixSuggestions": [
+        {
+          "fixId": "0f591708_a078cd5f",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "re2/bitstate.cc",
+              "range": {
+                "startLine": 112,
+                "startChar": 0,
+                "endLine": 114,
+                "endChar": 0
+              },
+              "replacement": "                       \u003c\u003c \"njob_ \u003d \" \u003c\u003c njob_ \u003c\u003c \", \"\n                       \u003c\u003c \"job_.size() \u003d \" \u003c\u003c job_.size();\n"
+            }
+          ]
+        }
+      ],
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5ef54deb_c6e1d09e",
+        "filename": "re2/filtered_re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 63
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "024a3c87_5e70e0b6",
+        "filename": "re2/nfa.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 542,
+        "startChar": 0,
+        "endLine": 542,
+        "endChar": 87
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bc7f95ff_6841bb93",
+        "filename": "re2/nfa.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 672,
+        "startChar": 0,
+        "endLine": 672,
+        "endChar": 83
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a2ca6657_7186f261",
+        "filename": "re2/parse.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1219,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 1217,
+        "startChar": 0,
+        "endLine": 1219,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9409de97_a406da6c",
+        "filename": "re2/prefilter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 638,
+        "startChar": 0,
+        "endLine": 639,
+        "endChar": 57
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d98a2276_9ee96577",
+        "filename": "re2/prefilter_tree.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 346,
+        "startChar": 0,
+        "endLine": 346,
+        "endChar": 71
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "03981728_ce9030e4",
+        "filename": "re2/prog.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "A bunch of these are over 80 chars. Admittedly some on the left-hand side already were.",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 0
+      },
+      "fixSuggestions": [
+        {
+          "fixId": "08b7413f_bc3a4b6a",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "re2/prog.h",
+              "range": {
+                "startLine": 86,
+                "startChar": 0,
+                "endLine": 87,
+                "endChar": 0
+              },
+              "replacement": "    int out1()      {\n      ABSL_DCHECK(opcode() \u003d\u003d kInstAlt || opcode() \u003d\u003d kInstAltMatch);\n      return out1_;\n    }\n"
+            },
+            {
+              "path": "re2/prog.h",
+              "range": {
+                "startLine": 90,
+                "startChar": 0,
+                "endLine": 92,
+                "endChar": 0
+              },
+              "replacement": "    int foldcase()  {\n      ABSL_DCHECK_EQ(opcode(), kInstByteRange);\n      return hint_foldcase_\u00261;\n    }\n    int hint()      {\n      ABSL_DCHECK_EQ(opcode(), kInstByteRange);\n      return hint_foldcase_\u003e\u003e1;\n    }\n"
+            },
+            {
+              "path": "re2/prog.h",
+              "range": {
+                "startLine": 93,
+                "startChar": 0,
+                "endLine": 94,
+                "endChar": 0
+              },
+              "replacement": "    EmptyOp empty() {\n      ABSL_DCHECK_EQ(opcode(), kInstEmptyWidth);\n      return empty_;\n    }\n"
+            }
+          ]
+        }
+      ],
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6663f662_778a0761",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 233,
+        "startChar": 0,
+        "endLine": 235,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b99abbdc_12fa3be5",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 285,
+        "startChar": 18,
+        "endLine": 285,
+        "endChar": 26
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e8cc50d9_af42ed3d",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 663,
+        "startChar": 0,
+        "endLine": 666,
+        "endChar": 56
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4e7cfdbb_9111e579",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 758,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 754,
+        "startChar": 0,
+        "endLine": 758,
+        "endChar": 70
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "54e47faa_f7ba2c67",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 774,
+        "startChar": 0,
+        "endLine": 778,
+        "endChar": 69
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "69897bdf_a756773e",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 800,
+        "startChar": 0,
+        "endLine": 804,
+        "endChar": 68
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a8d47ea1_ff6dfb67",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 847,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 843,
+        "startChar": 0,
+        "endLine": 847,
+        "endChar": 69
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7d290f6b_72cf3ca3",
+        "filename": "re2/re2.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 1038,
+        "startChar": 0,
+        "endLine": 1038,
+        "endChar": 56
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "eac4c824_94cba284",
+        "filename": "re2/re2.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "Over 80 chars",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 82
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "68869f18_03ade018",
+        "filename": "re2/regexp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 341,
+        "startChar": 0,
+        "endLine": 341,
+        "endChar": 82
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8fbb6f36_ab6fe6c8",
+        "filename": "re2/set.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 148,
+        "startChar": 4,
+        "endLine": 152,
+        "endChar": 27
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "aa736d79_b7486649",
+        "filename": "re2/set.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 165,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 81
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "45e9399d_7a92dbac",
+        "filename": "re2/simplify.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 665,
+        "startChar": 0,
+        "endLine": 665,
+        "endChar": 90
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e62f9bd6_f570b768",
+        "filename": "re2/testing/backtrack.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "optional nit: upgrade to C++-style cast?",
+      "range": {
+        "startLine": 192,
+        "startChar": 49,
+        "endLine": 192,
+        "endChar": 68
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d48775a9_18793868",
+        "filename": "re2/testing/dfa_test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation? and or delete?",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 118,
+        "endChar": 39
+      },
+      "fixSuggestions": [
+        {
+          "fixId": "90a0e595_7dea5c3f",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "re2/testing/dfa_test.cc",
+              "range": {
+                "startLine": 115,
+                "startChar": 0,
+                "endLine": 119,
+                "endChar": 0
+              },
+              "replacement": ""
+            },
+            {
+              "path": "re2/testing/dfa_test.cc",
+              "range": {
+                "startLine": 193,
+                "startChar": 0,
+                "endLine": 195,
+                "endChar": 0
+              },
+              "replacement": ""
+            }
+          ]
+        }
+      ],
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "741ba4d7_791147b7",
+        "filename": "re2/testing/dfa_test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "same here",
+      "range": {
+        "startLine": 193,
+        "startChar": 0,
+        "endLine": 194,
+        "endChar": 47
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "93e52731_0d0a3c77",
+        "filename": "re2/testing/dfa_test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 365,
+        "startChar": 0,
+        "endLine": 365,
+        "endChar": 83
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b793038f_325319a5",
+        "filename": "re2/testing/exhaustive_tester.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "optional: `regexp \u003d absl:StrFormat(*ABSL_DIE_IF_NULL(fmt), regexp);`",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 43
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1a2fabe1_375c7bf0",
+        "filename": "re2/testing/possible_match_test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 218,
+        "startChar": 0,
+        "endLine": 218,
+        "endChar": 82
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "483d1be3_88847263",
+        "filename": "re2/testing/possible_match_test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 245,
+        "startChar": 0,
+        "endLine": 246,
+        "endChar": 37
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0cdb3b1d_1bd5c167",
+        "filename": "re2/testing/re2_test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "optional: c++-style cast?",
+      "range": {
+        "startLine": 777,
+        "startChar": 36,
+        "endLine": 777,
+        "endChar": 45
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "65782ae8_9dee2880",
+        "filename": "re2/testing/re2_test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1572,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "pre-existing, but is there any particular reason this wasn\u0027t written as\n\n```\nconst char b[] \u003d \"\\x28\\x05\\x05...\";\n```",
+      "range": {
+        "startLine": 1568,
+        "startChar": 0,
+        "endLine": 1572,
+        "endChar": 4
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2c2414c0_bfa711e4",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 90 chars",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 88
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0c688126_cc412eac",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 85
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "212bad10_020da120",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 90
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "953381ad_02d3d06a",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation?",
+      "range": {
+        "startLine": 870,
+        "startChar": 0,
+        "endLine": 872,
+        "endChar": 0
+      },
+      "fixSuggestions": [
+        {
+          "fixId": "3abf424f_ff2b93e7",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "re2/testing/regexp_benchmark.cc",
+              "range": {
+                "startLine": 870,
+                "startChar": 0,
+                "endLine": 873,
+                "endChar": 0
+              },
+              "replacement": "    ABSL_CHECK_EQ(prog-\u003eSearchDFA(text, absl::string_view(), anchor, Prog::kFirstMatch, NULL, \u0026failed, NULL), expect_match);\n"
+            }
+          ]
+        }
+      ],
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6eba9a92_f63baac2",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation?",
+      "range": {
+        "startLine": 887,
+        "startChar": 0,
+        "endLine": 889,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9d425590_051f4ad6",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 904,
+        "startChar": 0,
+        "endLine": 904,
+        "endChar": 86
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3c4e3d2b_98781cc1",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 920,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 920,
+        "startChar": 0,
+        "endLine": 920,
+        "endChar": 87
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "13b0d197_45c47e0e",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "optional: absl::WrapUnique on the output of CompileToProg (throughout)",
+      "range": {
+        "startLine": 922,
+        "startChar": 0,
+        "endLine": 922,
+        "endChar": 16
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "47fb83be_c3c93f80",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "optional: add the curly braces",
+      "range": {
+        "startLine": 946,
+        "startChar": 0,
+        "endLine": 950,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "12db5037_6847d0a5",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1031,
+        "startChar": 0,
+        "endLine": 1033,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e6fa47c2_6d63e8a1",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1044,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1042,
+        "startChar": 0,
+        "endLine": 1044,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "176a52bc_01ceda68",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1098,
+        "startChar": 0,
+        "endLine": 1098,
+        "endChar": 90
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "21b10daf_c88bf171",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1113,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1113,
+        "startChar": 0,
+        "endLine": 1113,
+        "endChar": 91
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fac5db99_354965d3",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1127,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1127,
+        "startChar": 0,
+        "endLine": 1127,
+        "endChar": 98
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c21a7e21_f3af7e70",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1169,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1169,
+        "startChar": 0,
+        "endLine": 1169,
+        "endChar": 90
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1d0f24b7_8d491768",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1179,
+        "startChar": 83,
+        "endLine": 1179,
+        "endChar": 85
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a373c36f_08dadf0a",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1188,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1188,
+        "startChar": 0,
+        "endLine": 1188,
+        "endChar": 98
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fa169f82_5332f6d0",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1223,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation?",
+      "range": {
+        "startLine": 1221,
+        "startChar": 0,
+        "endLine": 1223,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c5cb16b6_1b1026e8",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1237,
+        "startChar": 0,
+        "endLine": 1237,
+        "endChar": 90
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4cf1b2b0_f2939206",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1252,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1252,
+        "startChar": 0,
+        "endLine": 1252,
+        "endChar": 91
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "562247d0_da67e0fb",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1294,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1294,
+        "startChar": 0,
+        "endLine": 1294,
+        "endChar": 90
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7be0cf6d_88a09eb5",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1304,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1304,
+        "startChar": 0,
+        "endLine": 1304,
+        "endChar": 91
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e3d54a2c_bc022536",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1313,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 1313,
+        "startChar": 0,
+        "endLine": 1313,
+        "endChar": 98
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "63b75d2a_003630f0",
+        "filename": "re2/testing/regexp_benchmark.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1523,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "pre-existing over 80 chars",
+      "range": {
+        "startLine": 1521,
+        "startChar": 0,
+        "endLine": 1523,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e6a494f9_136e790d",
+        "filename": "re2/testing/tester.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 208,
+        "startChar": 0,
+        "endLine": 208,
+        "endChar": 48
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "51a91024_871b94e6",
+        "filename": "re2/testing/tester.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 220,
+        "startChar": 0,
+        "endLine": 227,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "82c42c7f_51a4403f",
+        "filename": "re2/testing/tester.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "over 80 chars",
+      "range": {
+        "startLine": 233,
+        "startChar": 0,
+        "endLine": 233,
+        "endChar": 81
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9bb889bf_e66e45b8",
+        "filename": "re2/testing/tester.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indnetation",
+      "range": {
+        "startLine": 370,
+        "startChar": 0,
+        "endLine": 372,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5dfd9240_ba613468",
+        "filename": "re2/testing/tester.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 524,
+        "startChar": 0,
+        "endLine": 526,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f10cf193_262ff876",
+        "filename": "re2/testing/tester.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 44612
+      },
+      "writtenOn": "2024-05-20T12:04:32Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 528,
+        "startChar": 0,
+        "endLine": 534,
+        "endChar": 0
+      },
+      "revId": "1d0ad02dc59c151f763bb62d13ac835126d9d4bc",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
