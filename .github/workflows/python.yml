@@ -31,11 +31,11 @@ jobs:
       # Bazel fails if the username is unknown.
       USER: runner
     steps:
-      - uses: actions/checkout@v4.1.4
+      - uses: actions/checkout@v4.1.6
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazel-contrib/setup-bazel@0.8.2
+      - uses: bazel-contrib/setup-bazel@0.8.4
         with:
           bazelisk-version: '1.x'
       - name: Prepare Python ${{ matrix.ver }} environment
@@ -87,11 +87,11 @@ jobs:
       # Otherwise, Python refuses to install the built wheel!
       SYSTEM_VERSION_COMPAT: 0
     steps:
-      - uses: actions/checkout@v4.1.4
+      - uses: actions/checkout@v4.1.6
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazel-contrib/setup-bazel@0.8.2
+      - uses: bazel-contrib/setup-bazel@0.8.4
         with:
           bazelisk-version: '1.x'
       - uses: actions/setup-python@v5.1.0
@@ -138,11 +138,11 @@ jobs:
       BAZEL_CPU: ${{ matrix.arch.bazel-name }}_windows
       PLAT_NAME: ${{ matrix.arch.python-name }}
     steps:
-      - uses: actions/checkout@v4.1.4
+      - uses: actions/checkout@v4.1.6
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazel-contrib/setup-bazel@0.8.2
+      - uses: bazel-contrib/setup-bazel@0.8.4
         with:
           bazelisk-version: '1.x'
       # Lowercase the architecture name for `actions/setup-python`.
@@ -190,7 +190,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.4
+      - uses: actions/checkout@v4.1.6
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash

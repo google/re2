@@ -14,8 +14,8 @@ jobs:
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4.1.4
-      - uses: bazel-contrib/setup-bazel@0.8.2
+      - uses: actions/checkout@v4.1.6
+      - uses: bazel-contrib/setup-bazel@0.8.4
         with:
           bazelisk-version: '1.x'
       - run: .github/bazel.sh

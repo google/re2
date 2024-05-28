@@ -17,8 +17,8 @@ jobs:
       # Bazel fails if the username is unknown.
       USER: runner
     steps:
-      - uses: actions/checkout@v4.1.4
-      - uses: bazel-contrib/setup-bazel@0.8.2
+      - uses: actions/checkout@v4.1.6
+      - uses: bazel-contrib/setup-bazel@0.8.4
         with:
           bazelisk-version: '1.x'
       - run: app/build.sh
@@ -37,5 +37,5 @@ jobs:
     environment: github-pages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.4
+      - uses: actions/checkout@v4.1.6
       - uses: actions/deploy-pages@v4.0.5
