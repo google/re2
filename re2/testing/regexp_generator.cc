@@ -20,11 +20,15 @@
 // Then RunPostfix turns each sequence into a regular expression
 // and passes the regexp to HandleRegexp.
 
+#include "re2/testing/regexp_generator.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
 #include <memory>
+#include <random>
 #include <stack>
 #include <string>
 #include <vector>
@@ -34,9 +38,8 @@
 #include "absl/log/absl_log.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
-#include "gtest/gtest.h"
+#include "absl/strings/string_view.h"
 #include "util/utf.h"
-#include "re2/testing/regexp_generator.h"
 
 namespace re2 {
 

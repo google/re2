@@ -210,20 +210,21 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
 #include <algorithm>
 #include <map>
 #include <string>
 #include <type_traits>
 #include <vector>
 
-#if defined(__APPLE__)
-#include <TargetConditionals.h>
-#endif
-
 #include "absl/base/call_once.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "re2/stringpiece.h"
+
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
 
 namespace re2 {
 class Prog;

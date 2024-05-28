@@ -10,10 +10,11 @@
 // expression symbolically.
 
 #include <stdint.h>
+
 #include <functional>
 #include <string>
-#include <vector>
 #include <type_traits>
+#include <vector>
 
 #include "absl/base/call_once.h"
 #include "absl/log/absl_check.h"

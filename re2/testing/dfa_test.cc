@@ -2,23 +2,24 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <stddef.h>
 #include <stdint.h>
+
 #include <string>
 #include <thread>
 #include <vector>
 
 #include "absl/base/macros.h"
 #include "absl/flags/flag.h"
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "gtest/gtest.h"
-#include "util/malloc_counter.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
-#include "re2/testing/regexp_generator.h"
 #include "re2/testing/string_generator.h"
+#include "util/malloc_counter.h"
 
 static const bool UsingMallocCounter = false;
 

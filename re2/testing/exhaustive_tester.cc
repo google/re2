@@ -11,15 +11,23 @@
 // the NFA, DFA, and a trivial backtracking implementation agree about
 // the location of the match.
 
+#include "re2/testing/exhaustive_tester.h"
+
 #include <stdio.h>
+
+#include <string>
+#include <vector>
 
 #include "absl/base/macros.h"
 #include "absl/flags/flag.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "gtest/gtest.h"
-#include "re2/testing/exhaustive_tester.h"
+#include "re2/prog.h"
+#include "re2/re2.h"
+#include "re2/testing/regexp_generator.h"
 #include "re2/testing/tester.h"
 
 // For target `log' in the Makefile.

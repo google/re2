@@ -6,15 +6,17 @@
 // to use simple extended regular expression features.
 // Also sort and simplify character classes.
 
+#include <stddef.h>
+
 #include <algorithm>
 #include <string>
 
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
-#include "util/utf.h"
+#include "absl/strings/string_view.h"
 #include "re2/pod_array.h"
 #include "re2/regexp.h"
 #include "re2/walker-inl.h"
+#include "util/utf.h"
 
 namespace re2 {
 

@@ -6,14 +6,14 @@
 // Tested by parse_test.cc
 
 #include <string.h>
+
 #include <string>
 
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
-#include "util/utf.h"
 #include "re2/regexp.h"
 #include "re2/walker-inl.h"
+#include "util/utf.h"
 
 namespace re2 {
 

@@ -20,11 +20,13 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
 #include <limits>
 #include <utility>
 
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
+#include "absl/strings/string_view.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"

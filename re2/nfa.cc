@@ -26,15 +26,16 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #include <algorithm>
 #include <deque>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"

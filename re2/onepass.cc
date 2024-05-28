@@ -52,20 +52,21 @@
 
 #include <stdint.h>
 #include <string.h>
+
 #include <algorithm>
 #include <map>
 #include <string>
-#include <vector>
 
 #include "absl/container/fixed_array.h"
 #include "absl/container/inlined_vector.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
-#include "util/utf.h"
+#include "absl/strings/string_view.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
 #include "re2/sparse_set.h"
+#include "util/utf.h"
 
 // Silence "zero-sized array in struct/union" warning for OneState::action.
 #ifdef _MSC_VER

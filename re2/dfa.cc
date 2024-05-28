@@ -25,29 +25,32 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
 #include <algorithm>
 #include <atomic>
 #include <deque>
-#include <new>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/base/call_once.h"
-#include "absl/base/macros.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/hash/hash.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/types/span.h"
-#include "util/strutil.h"
 #include "re2/pod_array.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/sparse_set.h"
+#include "util/strutil.h"
 
 // Silence "zero-sized array in struct/union" warning for DFA::State::next_.
 #ifdef _MSC_VER

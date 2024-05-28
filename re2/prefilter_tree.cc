@@ -5,9 +5,9 @@
 #include "re2/prefilter_tree.h"
 
 #include <stddef.h>
+
 #include <algorithm>
 #include <cmath>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -16,7 +16,6 @@
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
 #include "re2/prefilter.h"
-#include "re2/re2.h"
 
 namespace re2 {
 

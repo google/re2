@@ -68,6 +68,7 @@ set(ABSL_DEPS
     absl_flags
     absl_flat_hash_map
     absl_flat_hash_set
+    absl_hash
     absl_inlined_vector
     absl_optional
     absl_span
