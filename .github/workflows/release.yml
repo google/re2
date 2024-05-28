@@ -16,7 +16,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4.1.4
+      - uses: actions/checkout@v4.1.6
       - run: |
           gh release create "${GITHUB_REF_NAME}" \
             --generate-notes --latest --verify-tag \
