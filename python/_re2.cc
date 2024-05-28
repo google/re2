@@ -17,6 +17,7 @@
 #include "pybind11/gil.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
+#include "pybind11/stl.h"  // IWYU pragma: keep
 #include "re2/filtered_re2.h"
 #include "re2/re2.h"
 #include "re2/set.h"
