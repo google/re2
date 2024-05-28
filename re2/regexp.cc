@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
 #include <algorithm>
 #include <map>
 #include <string>
@@ -21,9 +22,9 @@
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/synchronization/mutex.h"
-#include "util/utf.h"
 #include "re2/pod_array.h"
 #include "re2/walker-inl.h"
+#include "util/utf.h"
 
 namespace re2 {
 

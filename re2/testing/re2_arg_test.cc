@@ -11,8 +11,8 @@
 #include <string.h>
 
 #include "absl/base/macros.h"
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
+#include "absl/types/optional.h"
 #include "gtest/gtest.h"
 #include "re2/re2.h"
 

@@ -5,7 +5,7 @@
 #include "re2/prefilter.h"
 
 #include <stddef.h>
-#include <stdint.h>
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -13,10 +13,11 @@
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
-#include "util/utf.h"
 #include "re2/re2.h"
+#include "re2/regexp.h"
 #include "re2/unicode_casefold.h"
 #include "re2/walker-inl.h"
+#include "util/utf.h"
 
 namespace re2 {
 

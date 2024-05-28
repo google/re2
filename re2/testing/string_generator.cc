@@ -6,15 +6,17 @@
 // maxlen letters using the set of letters in alpha.
 // Fetch strings using a Java-like Next()/HasNext() interface.
 
+#include "re2/testing/string_generator.h"
+
 #include <stddef.h>
 #include <stdint.h>
+
+#include <random>
 #include <string>
 #include <vector>
 
 #include "absl/log/absl_check.h"
-#include "absl/log/absl_log.h"
-#include "gtest/gtest.h"
-#include "re2/testing/string_generator.h"
+#include "absl/strings/string_view.h"
 
 namespace re2 {
 

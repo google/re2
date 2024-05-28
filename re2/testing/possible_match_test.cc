@@ -3,13 +3,14 @@
 // license that can be found in the LICENSE file.
 
 #include <string.h>
+
 #include <string>
 #include <vector>
 
 #include "absl/base/macros.h"
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/escaping.h"
+#include "absl/strings/string_view.h"
 #include "gtest/gtest.h"
 #include "re2/prog.h"
 #include "re2/re2.h"

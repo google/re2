@@ -6,9 +6,8 @@
 
 #include <stdint.h>
 
-#include "absl/base/macros.h"
+#include "absl/base/attributes.h"
 #include "absl/log/absl_check.h"
-#include "absl/log/absl_log.h"
 
 namespace re2 {
 

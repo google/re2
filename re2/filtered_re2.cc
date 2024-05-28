@@ -5,11 +5,13 @@
 #include "re2/filtered_re2.h"
 
 #include <stddef.h>
+
 #include <string>
 #include <utility>
+#include <vector>
 
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
+#include "absl/strings/string_view.h"
 #include "re2/prefilter.h"
 #include "re2/prefilter_tree.h"
 

@@ -2,18 +2,18 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include "re2/filtered_re2.h"
+
 #include <stddef.h>
+
 #include <algorithm>
-#include <memory>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "absl/base/macros.h"
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "gtest/gtest.h"
-#include "re2/filtered_re2.h"
 #include "re2/re2.h"
 
 namespace re2 {

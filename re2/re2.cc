@@ -9,32 +9,36 @@
 
 #include "re2/re2.h"
 
-#include <ctype.h>
 #include <errno.h>
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <algorithm>
 #include <atomic>
-#include <iterator>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/base/call_once.h"
 #include "absl/base/macros.h"
 #include "absl/container/fixed_array.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
-#include "util/strutil.h"
-#include "util/utf.h"
+#include "absl/strings/string_view.h"
 #include "re2/prog.h"
 #include "re2/regexp.h"
 #include "re2/sparse_array.h"
+#include "util/strutil.h"
+#include "util/utf.h"
+
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 
 namespace re2 {
 

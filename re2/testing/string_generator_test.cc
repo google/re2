@@ -4,13 +4,17 @@
 
 // Test StringGenerator.
 
+#include "re2/testing/string_generator.h"
+
+#include <stddef.h>
 #include <stdint.h>
+
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "gtest/gtest.h"
-#include "util/utf.h"
-#include "re2/testing/string_generator.h"
 #include "re2/testing/regexp_generator.h"
+#include "util/utf.h"
 
 namespace re2 {
 

@@ -7,23 +7,30 @@
 
 #include "re2/prog.h"
 
+#include <stdint.h>
+#include <string.h>
+
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "absl/base/attributes.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
+#include "re2/bitmap256.h"
+#include "re2/pod_array.h"
+#include "re2/sparse_array.h"
+#include "re2/sparse_set.h"
+
 #if defined(__AVX2__)
 #include <immintrin.h>
 #ifdef _MSC_VER
 #include <intrin.h>
 #endif
 #endif
-#include <stdint.h>
-#include <string.h>
-#include <algorithm>
-#include <memory>
-#include <utility>
-
-#include "absl/base/macros.h"
-#include "absl/log/absl_check.h"
-#include "absl/log/absl_log.h"
-#include "absl/strings/str_format.h"
-#include "re2/bitmap256.h"
 
 namespace re2 {
 

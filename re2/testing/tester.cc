@@ -4,9 +4,12 @@
 
 // Regular expression engine tester -- test all the implementations against each other.
 
+#include "re2/testing/tester.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
 #include <string>
 
 #include "absl/base/macros.h"
@@ -15,10 +18,11 @@
 #include "absl/log/absl_log.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
-#include "re2/testing/tester.h"
+#include "absl/strings/string_view.h"
 #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/regexp.h"
+#include "util/pcre.h"
 
 ABSL_FLAG(bool, dump_prog, false, "dump regexp program");
 ABSL_FLAG(bool, log_okay, false, "log successful runs");

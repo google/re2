@@ -5,10 +5,8 @@
 // Test simplify.cc.
 
 #include <string.h>
-#include <string>
 
 #include "absl/base/macros.h"
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "gtest/gtest.h"
 #include "re2/regexp.h"

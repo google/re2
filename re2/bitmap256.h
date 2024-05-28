@@ -5,14 +5,15 @@
 #ifndef RE2_BITMAP256_H_
 #define RE2_BITMAP256_H_
 
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
 #include <stdint.h>
 #include <string.h>
 
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
+
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 
 namespace re2 {
 

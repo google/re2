@@ -2,15 +2,21 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <stddef.h>
+#include <sys/types.h>
+
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 #include "absl/strings/string_view.h"
+#include "pybind11/buffer_info.h"
+#include "pybind11/gil.h"
+#include "pybind11/pybind11.h"
+#include "pybind11/pytypes.h"
 #include "re2/filtered_re2.h"
 #include "re2/re2.h"
 #include "re2/set.h"

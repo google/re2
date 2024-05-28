@@ -5,26 +5,29 @@
 
 // TODO: Test extractions for PartialMatch/Consume
 
+#include "re2/re2.h"
+
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
-#if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MINGW32__)
-#include <sys/mman.h>
-#include <unistd.h>  /* for sysconf */
-#endif
 
 #include "absl/base/macros.h"
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "gtest/gtest.h"
-#include "re2/re2.h"
 #include "re2/regexp.h"
+
+#if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MINGW32__)
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
 
 namespace re2 {
 

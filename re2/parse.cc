@@ -16,25 +16,25 @@
 // and recognizes the Perl escape sequences \d, \s, \w, \D, \S, and \W.
 // See regexp.h for rationale.
 
-#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
 #include <algorithm>
-#include <map>
 #include <string>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/base/macros.h"
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/ascii.h"
-#include "util/utf.h"
+#include "absl/strings/string_view.h"
 #include "re2/pod_array.h"
 #include "re2/regexp.h"
 #include "re2/unicode_casefold.h"
 #include "re2/unicode_groups.h"
 #include "re2/walker-inl.h"
+#include "util/utf.h"
 
 #if defined(RE2_USE_ICU)
 #include "unicode/uniset.h"
