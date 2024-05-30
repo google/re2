@@ -192,7 +192,7 @@ ext_module = setuptools.Extension(
 
 setuptools.setup(
     name='google-re2',
-    version='1.1.20240501',
+    version='1.1.20240601',
     description='RE2 Python bindings',
     long_description=long_description,
     long_description_content_type='text/plain',
