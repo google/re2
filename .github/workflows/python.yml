@@ -5,6 +5,10 @@ on:
       build:
         required: true
         type: number
+      force-sdist:
+        required: false
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -202,7 +206,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade build wheel
         shell: bash
-      - if: inputs.build == 1
+      - if: inputs.build == 1 || inputs.force-sdist == true
         name: Build source
         env:
           SOURCE_DATE_EPOCH: ${{ env.timestamp }}
