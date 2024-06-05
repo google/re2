@@ -53,7 +53,7 @@ class NFA {
 
   // Searches for a matching string.
   //   * If anchored is true, only considers matches starting at offset.
-  //     Otherwise finds lefmost match at or after offset.
+  //     Otherwise finds leftmost match at or after offset.
   //   * If longest is true, returns the longest match starting
   //     at the chosen start point.  Otherwise returns the so-called
   //     left-biased match, the one traditional backtracking engines
