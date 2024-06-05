@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "75ffd773_7ec77f52",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-05T10:10:06Z",
+      "side": 1,
+      "message": "You are [`@redpanda83`](https://github.com/redpanda83) on GitHub, I gather, but are you also [`@totoro642`](https://github.com/totoro642) on GitHub? I ask because [this](https://github.com/google/maxtext/pull/686) PR is arguably innocuous, but [this](https://github.com/google/re2/pull/497) PR and [this](https://github.com/google/re2/pull/498) PR are extremely dubious. The timing might just be a coincidence, but the thing is that it might ***not*** just be a coincidence. I guess I will never know. :)",
+      "revId": "798c14dfff4eea9cd1bc4b4cdf6309f19138d223",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
