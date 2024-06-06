@@ -25,8 +25,9 @@ jobs:
       fail-fast: false
       matrix:
         arch:
-          - { name: X64,   python-name: x86_64,  runs-on: [ubuntu-latest]             }
-          - { name: ARM64, python-name: aarch64, runs-on: [self-hosted, linux, arm64] }
+          - { name: X64,   python-name: x86_64,  runs-on: [ubuntu-latest]              }
+          # TODO(junyer): Update the label after ARM64 graduates from beta.
+          - { name: ARM64, python-name: aarch64, runs-on: [arm-ubuntu-arm-22.04-4core] }
         os: [manylinux_2_28]
         ver: ['3.8', '3.9', '3.10', '3.11', '3.12']
     env:
