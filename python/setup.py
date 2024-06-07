@@ -6,8 +6,6 @@ import os
 import setuptools
 import setuptools.command.build_ext
 import shutil
-import sys
-import sysconfig
 
 long_description = r"""A drop-in replacement for the re module.
 
@@ -67,10 +65,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     except KeyError:
       pass
     # Register the local Python toolchains with highest priority.
-    self.generate_python_toolchains()
     cmd.append('--extra_toolchains=//python/toolchains:all')
-    # Print debug information during toolchain resolution.
-    cmd.append('--toolchain_resolution_debug=.*')
     cmd += ['--compilation_mode=opt', '--', ':all']
     self.spawn(cmd)
 
@@ -81,88 +76,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     cmd = ['bazel', 'clean', '--expunge']
     self.spawn(cmd)
-
-  def generate_python_toolchains(self):
-    include = sysconfig.get_path('include')
-    libs = os.path.join(include, '../libs')
-
-    os.makedirs('toolchains')
-    shutil.copytree(include, 'toolchains/include')
-    try:
-      shutil.copytree(libs, 'toolchains/libs')
-    except FileNotFoundError:
-      # We must not be running on Windows. :)
-      pass
-
-    with open('toolchains/BUILD.bazel', 'x') as file:
-      file.write(
-          """\
-load("@rules_python//python/cc:py_cc_toolchain.bzl", "py_cc_toolchain")
-load("@rules_python//python:py_runtime.bzl", "py_runtime")
-load("@rules_python//python:py_runtime_pair.bzl", "py_runtime_pair")
-
-package(default_visibility = ["//visibility:public"])
-
-toolchain(
-    name = "py",
-    toolchain = ":py_toolchain",
-    toolchain_type = "@rules_python//python:toolchain_type",
-)
-
-py_runtime_pair(
-    name = "py_toolchain",
-    py3_runtime = ":interpreter",
-)
-
-py_runtime(
-    name = "interpreter",
-    interpreter_path = "{interpreter_path}",
-    interpreter_version_info = {{
-        "major": "{major}",
-        "minor": "{minor}",
-    }},
-    python_version = "PY3",
-)
-
-toolchain(
-    name = "py_cc",
-    toolchain = ":py_cc_toolchain",
-    toolchain_type = "@rules_python//python/cc:toolchain_type",
-)
-
-py_cc_toolchain(
-    name = "py_cc_toolchain",
-    headers = ":headers",
-    libs = ":libraries",
-    python_version = "{major}.{minor}",
-)
-
-cc_library(
-    name = "headers",
-    hdrs = glob(["include/**/*.h"]),
-    includes = ["include"],
-    deps = select({{
-        "@platforms//os:windows": [":interface_library"],
-        "//conditions:default": [],
-    }}),
-)
-
-cc_import(
-    name = "interface_library",
-    interface_library = select({{
-        "@platforms//os:windows": "libs/python{major}{minor}.lib",
-        "//conditions:default": None,
-    }}),
-    system_provided = True,
-)
-
-# Not actually necessary for our purposes. :)
-cc_library(
-    name = "libraries",
-)
-""".format(interpreter_path=sys.executable.replace('\\', '/'),
-           major=sys.version_info.major,
-           minor=sys.version_info.minor))
 
 
 def options():
