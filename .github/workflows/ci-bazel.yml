@@ -18,5 +18,15 @@ jobs:
       - uses: bazel-contrib/setup-bazel@0.8.4
         with:
           bazelisk-version: '1.x'
+      - uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.x'
+      - name: Prepare Python 3.x environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade mypy
+          python python/toolchains/generate.py
+        shell: bash
       - run: .github/bazel.sh
         shell: bash
+      # TODO(junyer): Run mypy as per https://github.com/google/re2/issues/496.

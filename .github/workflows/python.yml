@@ -46,8 +46,9 @@ jobs:
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           "${PYTHON}" -m pip install --upgrade pip
-          "${PYTHON}" -m pip install --upgrade build wheel auditwheel
+          "${PYTHON}" -m pip install --upgrade setuptools build wheel auditwheel
           "${PYTHON}" -m pip install --upgrade absl-py
+          "${PYTHON}" python/toolchains/generate.py
         shell: bash
       - name: Build wheel
         env:
@@ -105,8 +106,9 @@ jobs:
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade build wheel delocate
+          python -m pip install --upgrade setuptools build wheel delocate
           python -m pip install --upgrade absl-py
+          python python/toolchains/generate.py
         shell: bash
       - name: Build wheel
         env:
@@ -162,8 +164,9 @@ jobs:
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade build wheel delvewheel
+          python -m pip install --upgrade setuptools build wheel delvewheel
           python -m pip install --upgrade absl-py
+          python python/toolchains/generate.py
         shell: bash
       - name: Build wheel
         env:
@@ -205,7 +208,7 @@ jobs:
       - name: Prepare Python 3.x environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade build wheel
+          python -m pip install --upgrade setuptools build wheel
         shell: bash
       - if: inputs.build == 1 || inputs.force-sdist == true
         name: Build source

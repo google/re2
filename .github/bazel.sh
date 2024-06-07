@@ -8,10 +8,14 @@ export MSYS2_ARG_CONV_EXCL='*'
 for compilation_mode in dbg opt
 do
   bazel clean
-  bazel build --compilation_mode=${compilation_mode} -- \
+  bazel build \
+    --extra_toolchains=//python/toolchains:all \
+    --compilation_mode=${compilation_mode} -- \
     //:re2 \
     //python:re2
-  bazel test  --compilation_mode=${compilation_mode} -- \
+  bazel test \
+    --extra_toolchains=//python/toolchains:all \
+    --compilation_mode=${compilation_mode} -- \
     //:all \
     -//:dfa_test \
     -//:exhaustive1_test \

@@ -7,9 +7,9 @@ DSTDIR=$(mktemp --directory --tmpdir $(basename $0).XXXXXXXXXX)
 cd ${SRCDIR}
 # Emscripten doesn't support `-fstack-protector`.
 AR=emar CC=emcc \
-  bazel build --compilation_mode=opt \
+  bazel build \
   --copt=-fno-stack-protector \
-  -- :all
+  --compilation_mode=opt -- :all
 cp ../bazel-bin/app/_re2.js ${DSTDIR}
 bazel clean --expunge
 cp app.ts index.html _re2.d.ts ${DSTDIR}
