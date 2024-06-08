@@ -210,8 +210,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools build wheel
         shell: bash
-      - if: inputs.build == 1 || inputs.force-sdist == true
-        name: Build source
+      - if: inputs.build <= 1 || inputs.force-sdist == true
+        name: Build sdist
         env:
           SOURCE_DATE_EPOCH: ${{ env.timestamp }}
         run: |
