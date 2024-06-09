@@ -3,9 +3,11 @@
 # license that can be found in the LICENSE file.
 
 import os
+import re
 import setuptools
 import setuptools.command.build_ext
 import shutil
+import tempfile
 
 long_description = r"""A drop-in replacement for the re module.
 
@@ -103,25 +105,37 @@ ext_module = setuptools.Extension(
     extra_compile_args=['-fvisibility=hidden'],
 )
 
-setuptools.setup(
-    name='google-re2',
-    version='1.1.20240601',
-    description='RE2 Python bindings',
-    long_description=long_description,
-    long_description_content_type='text/plain',
-    author='The RE2 Authors',
-    author_email='re2-dev@googlegroups.com',
-    url='https://github.com/google/re2',
-    py_modules=['re2'],
-    ext_modules=[ext_module],
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: C++',
-        'Programming Language :: Python :: 3.8',
-    ],
-    options=options(),
-    cmdclass={'build_ext': BuildExt},
-    python_requires='~=3.8',
-)
+with tempfile.TemporaryDirectory(dir='.') as tmpdir:
+  # We need `re2` to be a package, not a module, because it appears that
+  # modules can't have `.pyi` files, so munge the module into a package.
+  with open('re2.py', 'r') as file:
+    contents = file.read()
+  contents = re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
+  with open(f'{tmpdir}/__init__.py', 'x') as file:
+    file.write(contents)
+  # TODO(junyer): `.pyi` files as per https://github.com/google/re2/issues/496.
+
+  setuptools.setup(
+      name='google-re2',
+      version='1.1.20240601',
+      description='RE2 Python bindings',
+      long_description=long_description,
+      long_description_content_type='text/plain',
+      author='The RE2 Authors',
+      author_email='re2-dev@googlegroups.com',
+      url='https://github.com/google/re2',
+      packages=['re2'],
+      ext_package='re2',
+      ext_modules=[ext_module],
+      classifiers=[
+          'Development Status :: 5 - Production/Stable',
+          'Intended Audience :: Developers',
+          'License :: OSI Approved :: BSD License',
+          'Programming Language :: C++',
+          'Programming Language :: Python :: 3.8',
+      ],
+      options=options(),
+      cmdclass={'build_ext': BuildExt},
+      package_dir={'re2': tmpdir},
+      python_requires='~=3.8',
+  )
