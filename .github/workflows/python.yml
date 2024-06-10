@@ -61,6 +61,10 @@ jobs:
       - name: Test wheel
         run: |
           "${PYTHON}" -m pip install google_re2-*.whl
+          # Pivot out of the repository so that we test the wheel.
+          DIR=$(mktemp -d)
+          cp re2_test.py "${DIR}"
+          cd "${DIR}"
           "${PYTHON}" re2_test.py
         shell: bash
         working-directory: python
@@ -122,6 +126,10 @@ jobs:
         name: Test wheel
         run: |
           python -m pip install google_re2-*.whl
+          # Pivot out of the repository so that we test the wheel.
+          DIR=$(mktemp -d)
+          cp re2_test.py "${DIR}"
+          cd "${DIR}"
           python re2_test.py
         shell: bash
         working-directory: python
@@ -179,6 +187,10 @@ jobs:
       - name: Test wheel
         run: |
           python -m pip install google_re2-*.whl
+          # Pivot out of the repository so that we test the wheel.
+          DIR=$(mktemp -d)
+          cp re2_test.py "${DIR}"
+          cd "${DIR}"
           python re2_test.py
         shell: bash
         working-directory: python
