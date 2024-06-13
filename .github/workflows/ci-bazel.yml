@@ -29,4 +29,12 @@ jobs:
         shell: bash
       - run: .github/bazel.sh
         shell: bash
-      # TODO(junyer): Run mypy as per https://github.com/google/re2/issues/496.
+      # FIXME: add test which creates wheel and runs mypy from the wheel imports!
+      - name: Test stubs
+        run: |
+          DIR=$(mktemp -d)
+          cp bazel-bin/python/re2_test.runfiles/_main/python/* "${DIR}"
+          cp python/*.pyi python/mypy.ini "${DIR}"
+          cd "${DIR}"
+          mypy .
+        shell: bash
