@@ -48,6 +48,7 @@ jobs:
           "${PYTHON}" -m pip install --upgrade pip
           "${PYTHON}" -m pip install --upgrade setuptools build wheel auditwheel
           "${PYTHON}" -m pip install --upgrade absl-py
+          "${PYTHON}" -m pip install --upgrade mypy
           "${PYTHON}" python/toolchains/generate.py
         shell: bash
       - name: Build wheel
@@ -64,7 +65,9 @@ jobs:
           # Pivot out of the repository so that we test the wheel.
           DIR=$(mktemp -d)
           cp re2_test.py "${DIR}"
+          cp mypy.ini "${DIR}"
           cd "${DIR}"
+          mypy .
           "${PYTHON}" re2_test.py
         shell: bash
         working-directory: python
@@ -112,6 +115,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools build wheel delocate
           python -m pip install --upgrade absl-py
+          python -m pip install --upgrade mypy
           python python/toolchains/generate.py
         shell: bash
       - name: Build wheel
@@ -129,7 +133,9 @@ jobs:
           # Pivot out of the repository so that we test the wheel.
           DIR=$(mktemp -d)
           cp re2_test.py "${DIR}"
+          cp mypy.ini "${DIR}"
           cd "${DIR}"
+          mypy .
           python re2_test.py
         shell: bash
         working-directory: python
@@ -174,6 +180,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools build wheel delvewheel
           python -m pip install --upgrade absl-py
+          python -m pip install --upgrade mypy
           python python/toolchains/generate.py
         shell: bash
       - name: Build wheel
@@ -190,7 +197,9 @@ jobs:
           # Pivot out of the repository so that we test the wheel.
           DIR=$(mktemp -d)
           cp re2_test.py "${DIR}"
+          cp mypy.ini "${DIR}"
           cd "${DIR}"
+          mypy .
           python re2_test.py
         shell: bash
         working-directory: python
