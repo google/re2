@@ -1,6 +1,23 @@
 {
   "comments": [
     {
+      "unresolved": true,
+      "key": {
+        "uuid": "a1c28c1c_576a6899",
+        "filename": ".github/workflows/python.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "Please revert `python.yml` and, instead, replace the TODO in `ci-bazel.yml` with something like the following:\n\n```\n      - name: Test stubs\n        run: |\n          DIR\u003d$(mktemp -d)\n          cp bazel-bin/python/re2_test.runfiles/_main/python/* \"${DIR}\"\n          cp python/*.pyi python/mypy.ini \"${DIR}\"\n          cd \"${DIR}\"\n          mypy .\n        shell: bash\n```\n\n`python.yml` is a release workflow, not a CI workflow. Moreover, testing the wheels is important for catching any platform-specific breakage before publishing to PyPI, but the stubs aren\u0027t going to break like that. (Well, I certainly hope they won\u0027t.)",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": false,
       "key": {
         "uuid": "1b52e458_cebc99c5",
@@ -14,6 +31,235 @@
       "writtenOn": "2024-06-13T03:46:49Z",
       "side": 1,
       "message": "This change doesn\u0027t add anything to the bazel build yet, but I was thinking that getting type stubs to work at all would establish a nice ground truth before getting them to work in bazel.",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b2e6aac4_62267bbc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "Thank you so much for doing this! I have left a first round of comments. I haven\u0027t actually looked at the `.pyi` files yet.",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ec26266a_6f1a662d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "Quoting https://github.com/google/re2/issues/496#issuecomment-2166522270:\n\n\u003e If the Bazel community ever decides to make Python type checkers Just Work™, we can revisit this then. In the meantime, I have no desire to (co-)author and subsequently maintain whatever Starlark would be needed, so please don\u0027t spend any (more!) time worrying about it. ;)",
+      "parentUuid": "1b52e458_cebc99c5",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3ceede4d_dfd78b81",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "Can we just set `strict` (or a similar knob) to enable everything and then, if there are problems, squelch them selectively and leave comments to explain what still needs to be fixed?",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 26
+      },
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "90648c56_953bec10",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "Not needed?",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 3
+      },
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "39fdf36e_bd4de0c0",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "I would prefer not to do this; see the comment in `re2_test.py`.",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a4c51974_344da1a8",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "`ci-bazel.yml` now installs `absl-py` as well as `mypy`, so this should hopefully not be needed.",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "66da2229_ec11eca5",
+        "filename": "python/re2_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "Do we need to add type annotations throughout this file in order to get mypy to do anything useful for us? There seems to be a lot of noise (almost entirely around the `test_*()` methods) for what feels like very little value.",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cc0289ed_99d8bf8b",
+        "filename": "python/re2_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "Not needed?",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "36a80643_38f27e86",
+        "filename": "python/re2_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "Please use `self.assertIsNotNone(…)` here and below.",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1253f217_3f4fb4d1",
+        "filename": "python/setup.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "```suggestion\nwith open(\u0027re2.py\u0027, \u0027r\u0027) as file:\n  contents \u003d relativize_native_import(file.read())\nwith open(\u0027re2/__init__.py\u0027, \u0027x\u0027) as file:\n  file.write(contents)\n```",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 26
+      },
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8fb99dd7_94ebff3d",
+        "filename": "python/setup.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "```suggestion\nwith open(\u0027re2.pyi\u0027, \u0027r\u0027) as file:\n  contents \u003d relativize_native_import(file.read())\nwith open(\u0027re2/__init__.pyi\u0027, \u0027x\u0027) as file:\n  file.write(contents)\n```",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 27
+      },
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b983568b_95271181",
+        "filename": "python/setup.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 5506
+      },
+      "writtenOn": "2024-06-13T19:38:25Z",
+      "side": 1,
+      "message": "```suggestion\nshutil.copyfile(\u0027_re2.pyi\u0027, \u0027re2/_re2.pyi\u0027)\n\nwith open(\u0027re2/py.typed\u0027, \u0027x\u0027) as file:\n  pass\n```",
       "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
