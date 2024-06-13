@@ -29,4 +29,22 @@ jobs:
         shell: bash
       - run: .github/bazel.sh
         shell: bash
-      # TODO(junyer): Run mypy as per https://github.com/google/re2/issues/496.
+      - name: Test stubs inline
+        run: |
+          DIR=$(mktemp -d)
+          cp bazel-bin/python/re2_test.runfiles/_main/python/* "${DIR}"
+          cp python/*.pyi python/mypy.ini "${DIR}"
+          cd "${DIR}"
+          mypy .
+        shell: bash
+      - name: Test stubs from wheel
+        run: |
+          python -m pip install --upgrade setuptools build wheel
+          python -m build --wheel
+          python -m pip install dist/google_re2-*.whl
+          # Pivot out of the repository so that we test the wheel.
+          DIR=$(mktemp -d)
+          cp python/re2_test.py python/mypy.ini "${DIR}"
+          cd "${DIR}"
+          mypy .
+        shell: bash
