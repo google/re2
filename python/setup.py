@@ -107,12 +107,21 @@ ext_module = setuptools.Extension(
 # We need `re2` to be a package, not a module, because it appears that
 # modules can't have `.pyi` files, so munge the module into a package.
 os.makedirs('re2')
+
+def relativize_native_import(contents):
+  return re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
+
 with open('re2.py', 'r') as file:
-  contents = file.read()
-contents = re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
-with open(f're2/__init__.py', 'x') as file:
-  file.write(contents)
-# TODO(junyer): `.pyi` files as per https://github.com/google/re2/issues/496.
+  re2_contents = relativize_native_import(file.read())
+with open('re2/__init__.py', 'x') as file:
+  file.write(re2_contents)
+
+with open('re2.pyi', 'r') as file:
+  re2i_contents = relativize_native_import(file.read())
+with open('re2/__init__.pyi', 'w') as file:
+  file.write(re2i_contents)
+
+shutil.copyfile('_re2.pyi', 're2/_re2.pyi')
 
 setuptools.setup(
     name='google-re2',
