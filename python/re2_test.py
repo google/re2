@@ -3,19 +3,25 @@
 # license that can be found in the LICENSE file.
 """Tests for google3.third_party.re2.python.re2."""
 
+from __future__ import annotations
+
 import collections
 import pickle
 import re
+from typing import TYPE_CHECKING
 
 from absl.testing import absltest
 from absl.testing import parameterized
 import re2
 
+if TYPE_CHECKING:
+  from re2 import _Match, _PatternType, _Span
+
 
 class OptionsTest(parameterized.TestCase):
 
   @parameterized.parameters(*re2.Options.NAMES)
-  def test_option(self, name):
+  def test_option(self, name: str) -> None:
     options = re2.Options()
     value = getattr(options, name)
     if isinstance(value, re2.Options.Encoding):
@@ -42,7 +48,12 @@ class Re2CompileTest(parameterized.TestCase):
       (b'(foo*)(?P<bar>qux+)', 2, [(b'bar', 2)]),
       (u'(foo*)(?P<中文>qux+)', 2, [(u'中文', 2)]),
   )
-  def test_compile(self, pattern, expected_groups, expected_groupindex):
+  def test_compile(
+    self,
+    pattern: _PatternType,
+    expected_groups: int,
+    expected_groupindex: list[tuple[_PatternType, int]],
+  ) -> None:
     regexp = re2.compile(pattern)
     self.assertIs(regexp, re2.compile(pattern))  # cached
     self.assertIs(regexp, re2.compile(regexp))  # cached
@@ -56,18 +67,18 @@ class Re2CompileTest(parameterized.TestCase):
     self.assertEqual(expected_groups, regexp.groups)
     self.assertDictEqual(dict(expected_groupindex), regexp.groupindex)
 
-  def test_compile_with_options(self):
+  def test_compile_with_options(self) -> None:
     options = re2.Options()
     options.max_mem = 100
     with self.assertRaisesRegex(re2.error, 'pattern too large'):
       re2.compile('.{1000}', options=options)
 
-  def test_programsize_reverseprogramsize(self):
+  def test_programsize_reverseprogramsize(self) -> None:
     regexp = re2.compile('a+b')
     self.assertEqual(7, regexp.programsize)
     self.assertEqual(7, regexp.reverseprogramsize)
 
-  def test_programfanout_reverseprogramfanout(self):
+  def test_programfanout_reverseprogramfanout(self) -> None:
     regexp = re2.compile('a+b')
     self.assertListEqual([1, 1], regexp.programfanout)
     self.assertListEqual([3], regexp.reverseprogramfanout)
@@ -88,7 +99,12 @@ class Re2CompileTest(parameterized.TestCase):
       (u'\\C*', 10, None),
       (b'\\C*', 10, None),
   )
-  def test_possiblematchrange(self, pattern, maxlen, expected_min_max):
+  def test_possiblematchrange(
+    self,
+    pattern: _PatternType,
+    maxlen: int,
+    expected_min_max: tuple[bytes, bytes] | None,
+  ) -> None:
     # For brevity, the string type of pattern determines the encoding.
     # It would otherwise be possible to have bytes with UTF8, but as per
     # the module docstring, it isn't permitted to have str with LATIN1.
@@ -124,7 +140,7 @@ PARAMS = [
 ]
 
 
-def upper(match):
+def upper(match: _Match[_PatternType]) -> _PatternType:
   return match.group().upper()
 
 
@@ -134,22 +150,28 @@ class ReRegexpTest(parameterized.TestCase):
   MODULE = re
 
   @parameterized.parameters((p.pattern,) for p in PARAMS)
-  def test_pickle(self, pattern):
+  def test_pickle(self, pattern: _PatternType) -> None:
     regexp = self.MODULE.compile(pattern)
     rick = pickle.loads(pickle.dumps(regexp))
     self.assertEqual(regexp.pattern, rick.pattern)
 
   @parameterized.parameters(
       (p.pattern, p.text, (p.spans if p.search else None)) for p in PARAMS)
-  def test_search(self, pattern, text, expected_spans):
+  def test_search(
+    self,
+    pattern: _PatternType,
+    text: _PatternType,
+    expected_spans: list[_Span] | None,
+  ) -> None:
     match = self.MODULE.search(pattern, text)
     if expected_spans is None:
       self.assertIsNone(match)
     else:
+      assert match is not None
       spans = [match.span(group) for group in range(match.re.groups + 1)]
       self.assertListEqual(expected_spans, spans)
 
-  def test_search_with_pos_and_endpos(self):
+  def test_search_with_pos_and_endpos(self) -> None:
     regexp = self.MODULE.compile(u'.+')  # empty string NOT allowed
     text = u'I \u2665 RE2!'
     # Note that len(text) is the position of the empty string at the end of
@@ -160,24 +182,29 @@ class ReRegexpTest(parameterized.TestCase):
         if pos == endpos:
           self.assertIsNone(match)
         else:
+          assert match is not None
           self.assertEqual(pos, match.pos)
           self.assertEqual(endpos, match.endpos)
           self.assertEqual(pos, match.start())
           self.assertEqual(endpos, match.end())
           self.assertTupleEqual((pos, endpos), match.span())
 
-  def test_search_with_bogus_pos_and_endpos(self):
+  def test_search_with_bogus_pos_and_endpos(self) -> None:
     regexp = self.MODULE.compile(u'.*')  # empty string allowed
     text = u'I \u2665 RE2!'
 
     match = regexp.search(text, pos=-100)
+    assert match is not None
     self.assertEqual(0, match.pos)
     match = regexp.search(text, pos=100)
+    assert match is not None
     self.assertEqual(8, match.pos)
 
     match = regexp.search(text, endpos=-100)
+    assert match is not None
     self.assertEqual(0, match.endpos)
     match = regexp.search(text, endpos=100)
+    assert match is not None
     self.assertEqual(8, match.endpos)
 
     match = regexp.search(text, pos=100, endpos=-100)
@@ -185,21 +212,33 @@ class ReRegexpTest(parameterized.TestCase):
 
   @parameterized.parameters(
       (p.pattern, p.text, (p.spans if p.match else None)) for p in PARAMS)
-  def test_match(self, pattern, text, expected_spans):
+  def test_match(
+    self,
+    pattern: _PatternType,
+    text: _PatternType,
+    expected_spans: list[_Span] | None,
+  ) -> None:
     match = self.MODULE.match(pattern, text)
     if expected_spans is None:
       self.assertIsNone(match)
     else:
+      assert match is not None
       spans = [match.span(group) for group in range(match.re.groups + 1)]
       self.assertListEqual(expected_spans, spans)
 
   @parameterized.parameters(
       (p.pattern, p.text, (p.spans if p.fullmatch else None)) for p in PARAMS)
-  def test_fullmatch(self, pattern, text, expected_spans):
+  def test_fullmatch(
+    self,
+    pattern: _PatternType,
+    text: _PatternType,
+    expected_spans: list[_Span] | None,
+  ) -> None:
     match = self.MODULE.fullmatch(pattern, text)
     if expected_spans is None:
       self.assertIsNone(match)
     else:
+      assert match is not None
       spans = [match.span(group) for group in range(match.re.groups + 1)]
       self.assertListEqual(expected_spans, spans)
 
@@ -223,7 +262,12 @@ class ReRegexpTest(parameterized.TestCase):
       (b'\\w*', b'Hello, world.', [(0, 5), (5, 5), (6, 6), (7, 12), (12, 12),
                                    (13, 13)]),
   )
-  def test_finditer(self, pattern, text, expected_matches):
+  def test_finditer(
+    self,
+    pattern: _PatternType,
+    text: _PatternType,
+    expected_matches: list[_Span],
+  ) -> None:
     matches = [match.span() for match in self.MODULE.finditer(pattern, text)]
     self.assertListEqual(expected_matches, matches)
 
@@ -237,7 +281,12 @@ class ReRegexpTest(parameterized.TestCase):
       (u'(\\w)(\\w+)?', u'Hello, w.', [(u'H', u'ello'), (u'w', u'')]),
       (b'(\\w)(\\w+)?', b'Hello, w.', [(b'H', b'ello'), (b'w', b'')]),
   )
-  def test_findall(self, pattern, text, expected_matches):
+  def test_findall(
+    self,
+    pattern: _PatternType,
+    text: _PatternType,
+    expected_matches: list[_PatternType | tuple[_PatternType, _PatternType]],
+  ) -> None:
     matches = self.MODULE.findall(pattern, text)
     self.assertListEqual(expected_matches, matches)
 
@@ -255,7 +304,13 @@ class ReRegexpTest(parameterized.TestCase):
       (u'(\\W+)', u'Hello, world.', 1, [u'Hello', u', ', u'world.']),
       (b'(\\W+)', b'Hello, world.', 1, [b'Hello', b', ', b'world.']),
   )
-  def test_split(self, pattern, text, maxsplit, expected_pieces):
+  def test_split(
+    self,
+    pattern: _PatternType,
+    text: _PatternType,
+    maxsplit: int,
+    expected_pieces: list[_PatternType],
+  ) -> None:
     pieces = self.MODULE.split(pattern, text, maxsplit)
     self.assertListEqual(expected_pieces, pieces)
 
@@ -275,8 +330,15 @@ class ReRegexpTest(parameterized.TestCase):
       (u'\\\\', u'\\\\\\\\', u'Hello,\\world.', 0, u'Hello,\\\\world.', 1),
       (b'\\\\', b'\\\\\\\\', b'Hello,\\world.', 0, b'Hello,\\\\world.', 1),
   )
-  def test_subn_sub(self, pattern, repl, text, count, expected_joined_pieces,
-                    expected_numsplit):
+  def test_subn_sub(
+    self,
+    pattern: _PatternType,
+    repl: _PatternType,
+    text: _PatternType,
+    count: int,
+    expected_joined_pieces: _PatternType,
+    expected_numsplit: int,
+  ) -> None:
     joined_pieces, numsplit = self.MODULE.subn(pattern, repl, text, count)
     self.assertEqual(expected_joined_pieces, joined_pieces)
     self.assertEqual(expected_numsplit, numsplit)
@@ -290,7 +352,7 @@ class Re2RegexpTest(ReRegexpTest):
 
   MODULE = re2
 
-  def test_compile_with_latin1_encoding(self):
+  def test_compile_with_latin1_encoding(self) -> None:
     options = re2.Options()
     options.encoding = re2.Options.Encoding.LATIN1
     with self.assertRaisesRegex(re2.error,
@@ -305,15 +367,21 @@ class Re2RegexpTest(ReRegexpTest):
       (u'\\p{Lo}', u'\u0ca0_\u0ca0', [(0, 1), (2, 3)]),
       (b'\\p{Lo}', b'\xe0\xb2\xa0_\xe0\xb2\xa0', [(0, 3), (4, 7)]),
   )
-  def test_finditer_with_utf8(self, pattern, text, expected_matches):
+  def test_finditer_with_utf8(
+    self,
+    pattern: _PatternType,
+    text: _PatternType,
+    expected_matches: list[_Span],
+  ) -> None:
     matches = [match.span() for match in self.MODULE.finditer(pattern, text)]
     self.assertListEqual(expected_matches, matches)
 
-  def test_purge(self):
+  def test_purge(self) -> None:
     re2.compile('Goodbye, world.')
-    self.assertGreater(re2._Regexp._make.cache_info().currsize, 0)
+    # This tests the private function _make(), which does not have a type stub:
+    self.assertGreater(re2._Regexp._make.cache_info().currsize, 0) # type: ignore[attr-defined]
     re2.purge()
-    self.assertEqual(re2._Regexp._make.cache_info().currsize, 0)
+    self.assertEqual(re2._Regexp._make.cache_info().currsize, 0) # type: ignore[attr-defined]
 
 
 class Re2EscapeTest(parameterized.TestCase):
@@ -327,7 +395,11 @@ class Re2EscapeTest(parameterized.TestCase):
       (u'a*b+c?', u'a\\*b\\+c\\?'),
       (b'a*b+c?', b'a\\*b\\+c\\?'),
   )
-  def test_escape(self, pattern, expected_escaped):
+  def test_escape(
+    self,
+    pattern: _PatternType,
+    expected_escaped: _PatternType,
+  ) -> None:
     escaped = re2.escape(pattern)
     self.assertEqual(expected_escaped, escaped)
 
@@ -337,20 +409,22 @@ class ReMatchTest(parameterized.TestCase):
 
   MODULE = re
 
-  def test_expand(self):
+  def test_expand(self) -> None:
     pattern = u'(?P<S>[\u2600-\u26ff]+).*?(?P<P>[^\\s\\w]+)'
     text = u'I \u2665 RE2!\n'
     match = self.MODULE.search(pattern, text)
+    assert match is not None
 
     self.assertEqual(u'\u2665\n!', match.expand(u'\\1\\n\\2'))
     self.assertEqual(u'\u2665\n!', match.expand(u'\\g<1>\\n\\g<2>'))
     self.assertEqual(u'\u2665\n!', match.expand(u'\\g<S>\\n\\g<P>'))
     self.assertEqual(u'\\1\\2\n\u2665!', match.expand(u'\\\\1\\\\2\\n\\1\\2'))
 
-  def test_expand_with_octal(self):
+  def test_expand_with_octal(self) -> None:
     pattern = u'()()()()()()()()()(\\w+)'
     text = u'Hello, world.'
     match = self.MODULE.search(pattern, text)
+    assert match is not None
 
     self.assertEqual(u'Hello\n', match.expand(u'\\g<0>\\n'))
     self.assertEqual(u'Hello\n', match.expand(u'\\g<10>\\n'))
@@ -365,10 +439,11 @@ class ReMatchTest(parameterized.TestCase):
     self.assertEqual(u'@\n', match.expand(u'\\100\\n'))
     self.assertEqual(u'@0\n', match.expand(u'\\1000\\n'))
 
-  def test_getitem_group_groups_groupdict(self):
+  def test_getitem_group_groups_groupdict(self) -> None:
     pattern = u'(?P<S>[\u2600-\u26ff]+).*?(?P<P>[^\\s\\w]+)'
     text = u'Hello, world.\nI \u2665 RE2!\nGoodbye, world.\n'
     match = self.MODULE.search(pattern, text)
+    assert match is not None
 
     self.assertEqual(u'\u2665 RE2!', match[0])
     self.assertEqual(u'\u2665', match[1])
@@ -388,10 +463,11 @@ class ReMatchTest(parameterized.TestCase):
     self.assertTupleEqual((u'\u2665', u'!'), match.groups())
     self.assertDictEqual({u'S': u'\u2665', u'P': u'!'}, match.groupdict())
 
-  def test_bogus_group_start_end_and_span(self):
+  def test_bogus_group_start_end_and_span(self) -> None:
     pattern = u'(?P<S>[\u2600-\u26ff]+).*?(?P<P>[^\\s\\w]+)'
     text = u'I \u2665 RE2!\n'
     match = self.MODULE.search(pattern, text)
+    assert match is not None
 
     self.assertRaises(IndexError, match.group, -1)
     self.assertRaises(IndexError, match.group, 3)
@@ -411,12 +487,18 @@ class ReMatchTest(parameterized.TestCase):
       (u'(?P<one>(a)(b))((c)(d))', u'foo abcd qux', 4, None),
       (u'(?P<one>(a)(b))(?P<four>(c)(d))', u'foo abcd qux', 4, 'four'),
   )
-  def test_lastindex_lastgroup(self, pattern, text, expected_lastindex,
-                               expected_lastgroup):
+  def test_lastindex_lastgroup(
+    self,
+    pattern: _PatternType,
+    text: _PatternType,
+    expected_lastindex: int | None,
+    expected_lastgroup: _PatternType | None,
+  ) -> None:
     match = self.MODULE.search(pattern, text)
     if expected_lastindex is None:
       self.assertIsNone(match)
     else:
+      assert match is not None
       self.assertEqual(expected_lastindex, match.lastindex)
       self.assertEqual(expected_lastgroup, match.lastgroup)
 
@@ -429,7 +511,7 @@ class Re2MatchTest(ReMatchTest):
 
 class SetTest(absltest.TestCase):
 
-  def test_search(self):
+  def test_search(self) -> None:
     s = re2.Set.SearchSet()
     self.assertEqual(0, s.Add('\\d+'))
     self.assertEqual(1, s.Add('\\s+'))
@@ -438,7 +520,7 @@ class SetTest(absltest.TestCase):
     s.Compile()
     self.assertItemsEqual([1, 2], s.Match('Hello, world.'))
 
-  def test_match(self):
+  def test_match(self) -> None:
     s = re2.Set.MatchSet()
     self.assertEqual(0, s.Add('\\d+'))
     self.assertEqual(1, s.Add('\\s+'))
@@ -447,7 +529,7 @@ class SetTest(absltest.TestCase):
     s.Compile()
     self.assertItemsEqual([2], s.Match('Hello, world.'))
 
-  def test_fullmatch(self):
+  def test_fullmatch(self) -> None:
     s = re2.Set.FullMatchSet()
     self.assertEqual(0, s.Add('\\d+'))
     self.assertEqual(1, s.Add('\\s+'))
@@ -459,7 +541,7 @@ class SetTest(absltest.TestCase):
 
 class FilterTest(absltest.TestCase):
 
-  def test_match(self):
+  def test_match(self) -> None:
     f = re2.Filter()
     self.assertEqual(0, f.Add('Hello, \\w+\\.'))
     self.assertEqual(1, f.Add('\\w+, world\\.'))
@@ -477,7 +559,7 @@ class FilterTest(absltest.TestCase):
     # Verify whether the underlying RE2 object is usable.
     self.assertEqual(0, f.re(2).groups)
 
-  def test_issue_484(self):
+  def test_issue_484(self) -> None:
     # Previously, the shim would dereference a null pointer and crash.
     f = re2.Filter()
     with self.assertRaisesRegex(re2.error,
