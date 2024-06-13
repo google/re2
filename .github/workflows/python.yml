@@ -64,7 +64,9 @@ jobs:
           # Pivot out of the repository so that we test the wheel.
           DIR=$(mktemp -d)
           cp re2_test.py "${DIR}"
+          cp mypy.ini "${DIR}"
           cd "${DIR}"
+          mypy .
           "${PYTHON}" re2_test.py
         shell: bash
         working-directory: python
@@ -129,7 +131,9 @@ jobs:
           # Pivot out of the repository so that we test the wheel.
           DIR=$(mktemp -d)
           cp re2_test.py "${DIR}"
+          cp mypy.ini "${DIR}"
           cd "${DIR}"
+          mypy .
           python re2_test.py
         shell: bash
         working-directory: python
@@ -190,7 +194,9 @@ jobs:
           # Pivot out of the repository so that we test the wheel.
           DIR=$(mktemp -d)
           cp re2_test.py "${DIR}"
+          cp mypy.ini "${DIR}""
           cd "${DIR}"
+          mypy .
           python re2_test.py
         shell: bash
         working-directory: python
