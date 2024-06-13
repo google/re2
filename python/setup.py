@@ -113,9 +113,8 @@ try:
     os.makedirs(PACKAGE)
     for filename in (
         're2.py',
-        # TODO(junyer): Populate as per https://github.com/google/re2/issues/496.
-        # 're2.pyi',
-        # '_re2.pyi',
+        're2.pyi',
+        '_re2.pyi',
     ):
       with open(filename, 'r') as file:
         contents = file.read()
@@ -123,9 +122,8 @@ try:
       contents = re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
       with open(f'{PACKAGE}/{filename}', 'x') as file:
         file.write(contents)
-    # TODO(junyer): Populate as per https://github.com/google/re2/issues/496.
-    # with open(f'{PACKAGE}/py.typed', 'x') as file:
-    #   pass
+    with open(f'{PACKAGE}/py.typed', 'x') as file:
+      pass
 
   setuptools.setup(
       name='google-re2',
