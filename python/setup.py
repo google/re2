@@ -7,6 +7,7 @@ import re
 import setuptools
 import setuptools.command.build_ext
 import shutil
+from contextlib import contextmanager
 
 long_description = r"""A drop-in replacement for the re module.
 
@@ -96,6 +97,40 @@ def include_dirs():
     pass
 
 
+def relativize_native_import(contents):
+  """Make the import line for the _re2 native module relative when publishing the wheel."""
+  return re.sub(r'^(?=import _re2)', 'from . ', contents, flags=re.MULTILINE)
+
+def rename_and_rewrite_file(inpath, outpath):
+  with open(inpath, 'r') as file:
+    contents = relativize_native_import(file.read())
+  with open(outpath, mode='x') as file:
+    file.write(contents)
+
+
+@contextmanager
+def generated_package(name):
+  """Create a package directory when executing setuptools.
+
+  We need `re2` to be a package, not a module, because it appears that
+  modules can't have `.pyi` files, so munge the module into a package.
+
+  This yields the name of the generated package directory, which allows the call to
+  ``setuptools.setup()`` to clearly identify which parameters are dependent upon the name of this
+  generated directory."""
+  # Make a subdirectory of cwd with the given name. We don't use a tempdir or delete within the
+  # finally block for debuggability.
+  os.makedirs(name)
+
+  try:
+    yield name
+  finally:
+    pass
+
+  # Delete the package directory if no exception was raised.
+  shutil.rmtree(name)
+
+
 ext_module = setuptools.Extension(
     name='_re2',
     sources=['_re2.cc'],
@@ -104,17 +139,17 @@ ext_module = setuptools.Extension(
     extra_compile_args=['-fvisibility=hidden'],
 )
 
-# We need `re2` to be a package, not a module, because it appears that
-# modules can't have `.pyi` files, so munge the module into a package.
-os.makedirs('re2')
-with open('re2.py', 'r') as file:
-  contents = file.read()
-contents = re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
-with open(f're2/__init__.py', 'x') as file:
-  file.write(contents)
-# TODO(junyer): `.pyi` files as per https://github.com/google/re2/issues/496.
+with generated_package('re2') as dirname:
 
-setuptools.setup(
+  rename_and_rewrite_file('re2.py', f'{dirname}/__init__.py')
+  rename_and_rewrite_file('re2.pyi', f'{dirname}/__init__.pyi')
+
+  shutil.copyfile('_re2.pyi', f'{dirname}/_re2.pyi')
+
+  with open(f'{dirname}/py.typed', 'x') as file:
+    pass
+
+  setuptools.setup(
     name='google-re2',
     version='1.1.20240601',
     description='RE2 Python bindings',
@@ -123,8 +158,11 @@ setuptools.setup(
     author='The RE2 Authors',
     author_email='re2-dev@googlegroups.com',
     url='https://github.com/google/re2',
-    packages=['re2'],
-    ext_package='re2',
+    packages=[dirname],
+    package_data={
+      dirname: ['py.typed'],
+    },
+    ext_package=dirname,
     ext_modules=[ext_module],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -136,6 +174,4 @@ setuptools.setup(
     options=options(),
     cmdclass={'build_ext': BuildExt},
     python_requires='~=3.8',
-)
-
-shutil.rmtree('re2')
+  )

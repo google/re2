@@ -3,13 +3,19 @@
 # license that can be found in the LICENSE file.
 """Tests for google3.third_party.re2.python.re2."""
 
+from __future__ import annotations
+
 import collections
 import pickle
 import re
+from typing import TYPE_CHECKING
 
 from absl.testing import absltest
 from absl.testing import parameterized
 import re2
+
+if TYPE_CHECKING:
+  from re2 import _Match, _PatternType, _Span
 
 
 class OptionsTest(parameterized.TestCase):
@@ -42,7 +48,12 @@ class Re2CompileTest(parameterized.TestCase):
       (b'(foo*)(?P<bar>qux+)', 2, [(b'bar', 2)]),
       (u'(foo*)(?P<中文>qux+)', 2, [(u'中文', 2)]),
   )
-  def test_compile(self, pattern, expected_groups, expected_groupindex):
+  def test_compile(
+    self,
+    pattern: _PatternType,
+    expected_groups: int,
+    expected_groupindex: list[tuple[_PatternType, int]],
+  ) -> None:
     regexp = re2.compile(pattern)
     self.assertIs(regexp, re2.compile(pattern))  # cached
     self.assertIs(regexp, re2.compile(regexp))  # cached
@@ -311,9 +322,10 @@ class Re2RegexpTest(ReRegexpTest):
 
   def test_purge(self):
     re2.compile('Goodbye, world.')
-    self.assertGreater(re2._Regexp._make.cache_info().currsize, 0)
+    # This tests the private function _make(), which does not have a type stub:
+    self.assertGreater(re2._Regexp._make.cache_info().currsize, 0) # type: ignore[attr-defined]
     re2.purge()
-    self.assertEqual(re2._Regexp._make.cache_info().currsize, 0)
+    self.assertEqual(re2._Regexp._make.cache_info().currsize, 0) # type: ignore[attr-defined]
 
 
 class Re2EscapeTest(parameterized.TestCase):
