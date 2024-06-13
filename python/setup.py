@@ -107,12 +107,23 @@ ext_module = setuptools.Extension(
 # We need `re2` to be a package, not a module, because it appears that
 # modules can't have `.pyi` files, so munge the module into a package.
 os.makedirs('re2')
-with open('re2.py', 'r') as file:
-  contents = file.read()
-contents = re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
-with open(f're2/__init__.py', 'x') as file:
-  file.write(contents)
-# TODO(junyer): `.pyi` files as per https://github.com/google/re2/issues/496.
+
+def relativize_native_import(contents):
+  """Make the import line for the _re2 native module relative when publishing the wheel."""
+  return re.sub(r'^(?=import _re2)', 'from . ', contents, flags=re.MULTILINE)
+def rename_and_rewrite_file(inpath, outpath):
+  with open(inpath, 'r') as file:
+    contents = relativize_native_import(file.read())
+  with open(outpath, mode='x') as file:
+    file.write(contents)
+
+rename_and_rewrite_file('re2.py', 're2/__init__.py')
+rename_and_rewrite_file('re2.pyi', 're2/__init__.pyi')
+
+shutil.copyfile('_re2.pyi', 're2/_re2.pyi')
+
+with open('re2/py.typed', 'x') as file:
+  pass
 
 setuptools.setup(
     name='google-re2',
@@ -124,6 +135,9 @@ setuptools.setup(
     author_email='re2-dev@googlegroups.com',
     url='https://github.com/google/re2',
     packages=['re2'],
+    package_data={
+      're2': ['py.typed'],
+    },
     ext_package='re2',
     ext_modules=[ext_module],
     classifiers=[
