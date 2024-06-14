@@ -295,6 +295,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "861c0a9e_f4f499ad",
+        "filename": "python/re2_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:51:39Z",
+      "side": 1,
+      "message": "It looks like there is a [`check_untyped_defs`](https://mypy.readthedocs.io/en/stable/config_file.html#confval-check_untyped_defs) field which should allow us to avoid the noise here. I\u0027m going to try it now.",
+      "parentUuid": "66da2229_ec11eca5",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "cc0289ed_99d8bf8b",
         "filename": "python/re2_test.py",
         "patchSetId": 4
