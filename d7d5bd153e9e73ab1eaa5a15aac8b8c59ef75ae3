@@ -422,6 +422,30 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "f4cf5b8a_f63900df",
+        "filename": "python/setup.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:56:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1253f217_3f4fb4d1",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 26
+      },
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "8fb99dd7_94ebff3d",
@@ -445,6 +469,30 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "54e018c1_2e0c1f5c",
+        "filename": "python/setup.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:56:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8fb99dd7_94ebff3d",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 27
+      },
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "b983568b_95271181",
@@ -458,6 +506,24 @@
       "writtenOn": "2024-06-13T19:38:25Z",
       "side": 1,
       "message": "```suggestion\nshutil.copyfile(\u0027_re2.pyi\u0027, \u0027re2/_re2.pyi\u0027)\n\nwith open(\u0027re2/py.typed\u0027, \u0027x\u0027) as file:\n  pass\n```",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fa701ee5_9b059dd7",
+        "filename": "python/setup.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:56:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b983568b_95271181",
       "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
