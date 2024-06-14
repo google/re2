@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9c33e4d2_27ca4d17",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 9
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T05:16:09Z",
+      "side": 1,
+      "message": "I believe I have figured out how to get some of the type checking to run, although we *won\u0027t* get as deep coverage as we would if we painstakingly added type annotations. As maintainer, I absolutely believe you are within your rights to reject the addition `-\u003e None` to every method. However, I want to make it clear that *should* we ever extend the API and its types, we *may* introduce some errors, which might be caught if we added `-\u003e None` to literally every test method in `re2_test.py` as in the first iteration of this change. However, since the re2 python API is explicitly *not* something that is likely to change in the future, I think we are probably safe to avoid that. But I am pretty confident that we *are* missing some \"test coverage\" of our type annotations by not annotating most of `re2_test.py`. I am totally fine with that if you are.",
+      "revId": "ec670ba555f705ddb3185e778fadab04f4a68a47",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}

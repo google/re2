@@ -177,6 +177,30 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "c4b02136_1863e275",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T05:16:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc097724_1b0bcf8a",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 26
+      },
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "90648c56_953bec10",
@@ -261,6 +285,24 @@
       "writtenOn": "2024-06-13T19:38:25Z",
       "side": 1,
       "message": "I would prefer not to do this; see the comment in `re2_test.py`.",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9faa22e8_88cb6b5b",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T05:16:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "39fdf36e_bd4de0c0",
       "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
@@ -353,6 +395,24 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "932f3602_2e00d96f",
+        "filename": "python/re2_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T05:16:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "861c0a9e_f4f499ad",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "cc0289ed_99d8bf8b",
@@ -437,6 +497,24 @@
       "side": 1,
       "message": "You\u0027re going to hate this, but I\u0027m pretty confident this is literally necessary for mypy, which is able to recognize `x is not None`, but is not able to infer that `self.assertIsNotNone(x)` means `x` is not `None`. With `self.assertIsNotNone(match)`, we get:\n\n```\nre2_test.py:172: error: Item \"None\" of \"Match[str] | None\" has no attribute \"span\"  [union-attr]\nre2_test.py:172: error: Item \"None\" of \"Match[bytes] | None\" has no attribute \"span\"  [union-attr]\nre2_test.py:172: error: Item \"None\" of \"Match[str] | None\" has no attribute \"re\"  [union-attr]\nre2_test.py:172: error: Item \"None\" of \"Match[bytes] | None\" has no attribute \"re\"  [union-attr]\n\n```",
       "parentUuid": "36a80643_38f27e86",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8baf050b_a7a62479",
+        "filename": "python/re2_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T05:16:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0fc24f3c_a1861b0b",
       "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
