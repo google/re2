@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3cffb70b_9c3855c9",
+        "filename": "python/setup.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T05:42:15Z",
+      "side": 1,
+      "message": "I moved the `os.makedirs(\u0027re2\u0027)` into a contextmanager in order to clarify some of the hijinx we\u0027re performing. I personally think this makes the control flow much more clear, but am totally open to reverting it!",
+      "revId": "f033711e691a312861aa4aba20bce67ad5e51f86",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
