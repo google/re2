@@ -182,6 +182,30 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "5cd802c0_b6e6fab9",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:19:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cb301134_7e3faa75",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 3
+      },
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "39fdf36e_bd4de0c0",
@@ -234,6 +258,24 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "54ed7577_987d020e",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:19:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0c32ed21_b7959cae",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "66da2229_ec11eca5",
@@ -282,6 +324,24 @@
       "side": 1,
       "message": "This little trinket is necessary to get some behavior we probably want (see https://mypy.readthedocs.io/en/stable/runtime_troubles.html and https://peps.python.org/pep-0563/#enabling-the-future-behavior-in-python-3-7), for pythons under 3.12. However, it seems to only be necessary for `.py` files, so I will remove it from the `.pyi`!",
       "parentUuid": "cc0289ed_99d8bf8b",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "04a794b4_78bbf824",
+        "filename": "python/re2_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:19:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2be5ac77_d659c5c7",
       "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
