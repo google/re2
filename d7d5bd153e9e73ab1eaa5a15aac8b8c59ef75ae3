@@ -18,6 +18,24 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": true,
+      "key": {
+        "uuid": "8ccbe519_38edbebf",
+        "filename": ".github/workflows/python.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:16:28Z",
+      "side": 1,
+      "message": "So the reason I wanted to test stubs like that (in the separate dir, along with `re2_test.py`, with the wheel) was to ensure that the specific little magic we\u0027ve added in `setup.py` (renaming the `.pyi` files and regex replacing to `from . import _re2`) would correctly \"import\" with mypy when users consume the output wheel.\n\nI totally agree that there\u0027s no platform-specific testing to perform here, but in case we decide e.g. to (heaven forfend) add further `.pyi` files in the future (which e.g. may also need renaming and regex replacing imports), I *would* like to have a single test (not platform-specific!) which imports the wheel, and then runs mypy.\n\nWhat you\u0027ve written out here is a correct invocation of mypy that corresponds to the way I\u0027ve been testing locally, but I *also* want to make sure our types work in the mypy context when imported from the wheel.\n\nThis is very long-winded (sorry!), but what I\u0027ll do is add this \"Test stubs\" phase you\u0027ve helpfully written for me, and then I\u0027ll try to add a phase that executes mypy when importing types from the wheel (in the CI and not the release workflow).",
+      "parentUuid": "a1c28c1c_576a6899",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": false,
       "key": {
         "uuid": "1b52e458_cebc99c5",
@@ -95,6 +113,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "414a23ca_bae597a2",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:16:28Z",
+      "side": 1,
+      "message": "Working on this! I do not believe there is a `strict` option and instead we need to turn on a million flags \\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^_\\^ https://mypy.readthedocs.io/en/stable/config_file.html I will research further!",
+      "parentUuid": "3ceede4d_dfd78b81",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 26
+      },
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "90648c56_953bec10",
         "filename": "python/mypy.ini",
         "patchSetId": 4
@@ -106,6 +148,30 @@
       "writtenOn": "2024-06-13T19:38:25Z",
       "side": 1,
       "message": "Not needed?",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 3
+      },
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cb301134_7e3faa75",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:16:28Z",
+      "side": 1,
+      "message": "This is definitely necessary when running `mypy` locally. I also have an additional exclusion for that case.",
+      "parentUuid": "90648c56_953bec10",
       "range": {
         "startLine": 4,
         "startChar": 0,
@@ -152,6 +218,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "0c32ed21_b7959cae",
+        "filename": "python/mypy.ini",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:16:28Z",
+      "side": 1,
+      "message": "This *was* necessary when I ran `mypy` locally before, but appears to no longer be necessary! Fixed!",
+      "parentUuid": "a4c51974_344da1a8",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "66da2229_ec11eca5",
         "filename": "python/re2_test.py",
         "patchSetId": 4
@@ -186,6 +270,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "2be5ac77_d659c5c7",
+        "filename": "python/re2_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:16:28Z",
+      "side": 1,
+      "message": "This little trinket is necessary to get some behavior we probably want (see https://mypy.readthedocs.io/en/stable/runtime_troubles.html and https://peps.python.org/pep-0563/#enabling-the-future-behavior-in-python-3-7), for pythons under 3.12. However, it seems to only be necessary for `.py` files, so I will remove it from the `.pyi`!",
+      "parentUuid": "cc0289ed_99d8bf8b",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "36a80643_38f27e86",
         "filename": "python/re2_test.py",
         "patchSetId": 4
@@ -197,6 +299,24 @@
       "writtenOn": "2024-06-13T19:38:25Z",
       "side": 1,
       "message": "Please use `self.assertIsNotNone(…)` here and below.",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0fc24f3c_a1861b0b",
+        "filename": "python/re2_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-14T04:16:28Z",
+      "side": 1,
+      "message": "You\u0027re going to hate this, but I\u0027m pretty confident this is literally necessary for mypy, which is able to recognize `x is not None`, but is not able to infer that `self.assertIsNotNone(x)` means `x` is not `None`. With `self.assertIsNotNone(match)`, we get:\n\n```\nre2_test.py:172: error: Item \"None\" of \"Match[str] | None\" has no attribute \"span\"  [union-attr]\nre2_test.py:172: error: Item \"None\" of \"Match[bytes] | None\" has no attribute \"span\"  [union-attr]\nre2_test.py:172: error: Item \"None\" of \"Match[str] | None\" has no attribute \"re\"  [union-attr]\nre2_test.py:172: error: Item \"None\" of \"Match[bytes] | None\" has no attribute \"re\"  [union-attr]\n\n```",
+      "parentUuid": "36a80643_38f27e86",
       "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
