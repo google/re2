@@ -54,6 +54,24 @@
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     },
     {
+      "unresolved": true,
+      "key": {
+        "uuid": "cba96480_e32f9049",
+        "filename": ".github/workflows/python.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3480356
+      },
+      "writtenOn": "2024-06-15T05:55:31Z",
+      "side": 1,
+      "message": "Per our offline discussion regarding the desire to avoid building wheels in CI, I have unreverted my changes here, and we now test stubs in every element of all our publish matrices.\n\nI did consider trying to do it just once in the actual publish step, but I didn\u0027t want to actually `pip install` any specific wheel before publishing because I felt scared of inducing weird errors, and after publishing is no good. If running `mypy` in every single wheel-building shard takes up a nontrivial amount of time (doubtful), we could perhaps create a venv? We could also try adding one of the wheels to `MYPYPATH` (I think that\u0027s how it works) instead of installing.",
+      "parentUuid": "1dd4fb11_a65a7141",
+      "revId": "d7d5bd153e9e73ab1eaa5a15aac8b8c59ef75ae3",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
       "unresolved": false,
       "key": {
         "uuid": "1b52e458_cebc99c5",
