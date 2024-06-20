@@ -332,7 +332,7 @@ int RE2::ReverseProgramSize() const {
 
 // Finds the most significant non-zero bit in n.
 static int FindMSBSet(uint32_t n) {
-  ABSL_DCHECK_NE(n, 0);
+  ABSL_DCHECK_NE(n, uint32_t{0});
 #if defined(__GNUC__)
   return 31 ^ __builtin_clz(n);
 #elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
