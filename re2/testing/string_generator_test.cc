@@ -47,7 +47,7 @@ static void RunTest(int len, const std::string& alphabet, bool donull) {
     EXPECT_TRUE(g.HasNext());
     absl::string_view sp = g.Next();
     EXPECT_EQ(sp.data(), static_cast<const char*>(NULL));
-    EXPECT_EQ(sp.size(), 0);
+    EXPECT_EQ(sp.size(), size_t{0});
   }
 
   while (g.HasNext()) {

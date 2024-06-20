@@ -28,16 +28,16 @@ TEST(Set, Unanchored) {
 
   std::vector<int> v;
   ASSERT_EQ(s.Match("foobar", &v), true);
-  ASSERT_EQ(v.size(), 2);
+  ASSERT_EQ(v.size(), size_t{2});
   ASSERT_EQ(v[0], 0);
   ASSERT_EQ(v[1], 1);
 
   ASSERT_EQ(s.Match("fooba", &v), true);
-  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v.size(), size_t{1});
   ASSERT_EQ(v[0], 0);
 
   ASSERT_EQ(s.Match("oobar", &v), true);
-  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v.size(), size_t{1});
   ASSERT_EQ(v[0], 1);
 }
 
@@ -56,21 +56,21 @@ TEST(Set, UnanchoredFactored) {
 
   std::vector<int> v;
   ASSERT_EQ(s.Match("foobar", &v), true);
-  ASSERT_EQ(v.size(), 2);
+  ASSERT_EQ(v.size(), size_t{2});
   ASSERT_EQ(v[0], 0);
   ASSERT_EQ(v[1], 1);
 
   ASSERT_EQ(s.Match("obarfoobaroo", &v), true);
-  ASSERT_EQ(v.size(), 2);
+  ASSERT_EQ(v.size(), size_t{2});
   ASSERT_EQ(v[0], 0);
   ASSERT_EQ(v[1], 1);
 
   ASSERT_EQ(s.Match("fooba", &v), true);
-  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v.size(), size_t{1});
   ASSERT_EQ(v[0], 0);
 
   ASSERT_EQ(s.Match("oobar", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 }
 
 TEST(Set, UnanchoredDollar) {
@@ -84,11 +84,11 @@ TEST(Set, UnanchoredDollar) {
 
   std::vector<int> v;
   ASSERT_EQ(s.Match("foo", &v), true);
-  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v.size(), size_t{1});
   ASSERT_EQ(v[0], 0);
 
   ASSERT_EQ(s.Match("foobar", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 }
 
 TEST(Set, UnanchoredWordBoundary) {
@@ -103,14 +103,14 @@ TEST(Set, UnanchoredWordBoundary) {
 
   std::vector<int> v;
   ASSERT_EQ(s.Match("foo", &v), true);
-  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v.size(), size_t{1});
   ASSERT_EQ(v[0], 0);
 
   ASSERT_EQ(s.Match("foobar", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 
   ASSERT_EQ(s.Match("foo bar", &v), true);
-  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v.size(), size_t{1});
   ASSERT_EQ(v[0], 0);
 }
 
@@ -130,20 +130,20 @@ TEST(Set, Anchored) {
 
   std::vector<int> v;
   ASSERT_EQ(s.Match("foobar", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 
   ASSERT_EQ(s.Match("fooba", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 
   ASSERT_EQ(s.Match("oobar", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 
   ASSERT_EQ(s.Match("foo", &v), true);
-  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v.size(), size_t{1});
   ASSERT_EQ(v[0], 0);
 
   ASSERT_EQ(s.Match("bar", &v), true);
-  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v.size(), size_t{1});
   ASSERT_EQ(v[0], 1);
 }
 
@@ -157,10 +157,10 @@ TEST(Set, EmptyUnanchored) {
 
   std::vector<int> v;
   ASSERT_EQ(s.Match("", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 
   ASSERT_EQ(s.Match("foobar", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 }
 
 TEST(Set, EmptyAnchored) {
@@ -173,10 +173,10 @@ TEST(Set, EmptyAnchored) {
 
   std::vector<int> v;
   ASSERT_EQ(s.Match("", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 
   ASSERT_EQ(s.Match("foobar", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 }
 
 TEST(Set, Prefix) {
@@ -191,14 +191,14 @@ TEST(Set, Prefix) {
 
   std::vector<int> v;
   ASSERT_EQ(s.Match("/prefix", &v), false);
-  ASSERT_EQ(v.size(), 0);
+  ASSERT_EQ(v.size(), size_t{0});
 
   ASSERT_EQ(s.Match("/prefix/", &v), true);
-  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v.size(), size_t{1});
   ASSERT_EQ(v[0], 0);
 
   ASSERT_EQ(s.Match("/prefix/42", &v), true);
-  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v.size(), size_t{1});
   ASSERT_EQ(v[0], 0);
 }
 
