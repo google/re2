@@ -51,7 +51,7 @@ class Bitmap256 {
  private:
   // Finds the least significant non-zero bit in n.
   static int FindLSBSet(uint64_t n) {
-    ABSL_DCHECK_NE(n, 0);
+    ABSL_DCHECK_NE(n, uint64_t{0});
 #if defined(__GNUC__)
     return __builtin_ctzll(n);
 #elif defined(_MSC_VER) && defined(_M_X64)
