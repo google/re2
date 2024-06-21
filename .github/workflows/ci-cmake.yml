@@ -12,7 +12,7 @@ jobs:
       matrix:
         build_shared_libs: [OFF, ON]
     steps:
-      - uses: actions/checkout@v4.1.6
+      - uses: actions/checkout@v4.1.7
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
           vcpkg update
@@ -29,7 +29,7 @@ jobs:
       matrix:
         build_shared_libs: [OFF, ON]
     steps:
-      - uses: actions/checkout@v4.1.6
+      - uses: actions/checkout@v4.1.7
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
           brew update
@@ -44,7 +44,7 @@ jobs:
       matrix:
         build_shared_libs: [OFF, ON]
     steps:
-      - uses: actions/checkout@v4.1.6
+      - uses: actions/checkout@v4.1.7
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
           vcpkg update
