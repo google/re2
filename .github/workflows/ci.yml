@@ -21,7 +21,7 @@ jobs:
       # (The other two flags are the default provided for CXXFLAGS in Makefile.)
       CXXFLAGS: -O3 -g -std=c++${{ matrix.ver }}
     steps:
-      - uses: actions/checkout@v4.1.6
+      - uses: actions/checkout@v4.1.7
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
           brew update
@@ -40,7 +40,7 @@ jobs:
       CXX: clang++-${{ matrix.ver }}
       PKG_CONFIG_PATH: /usr/local/share/vcpkg/installed/x64-linux/lib/pkgconfig
     steps:
-      - uses: actions/checkout@v4.1.6
+      - uses: actions/checkout@v4.1.7
       - name: Install Clang ${{ matrix.ver }}
         run: |
           # Avoid `Conflicts: python3-lldb-x.y` between packages.
@@ -68,7 +68,7 @@ jobs:
       CXX: g++-${{ matrix.ver }}
       PKG_CONFIG_PATH: /usr/local/share/vcpkg/installed/x64-linux/lib/pkgconfig
     steps:
-      - uses: actions/checkout@v4.1.6
+      - uses: actions/checkout@v4.1.7
       - name: Install Abseil, GoogleTest and Benchmark
         run: |
           vcpkg update
