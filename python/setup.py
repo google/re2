@@ -117,7 +117,7 @@ try:
   ):
     with open(filename, 'r') as file:
       contents = file.read()
-    filename = re.sub(r'^re2(?=\.py)', '__init__', contents)
+    filename = re.sub(r'^re2(?=\.py)', '__init__', filename)
     contents = re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
     with open(f'{PACKAGE}/{filename}', 'x') as file:
       file.write(contents)
