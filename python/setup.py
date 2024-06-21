@@ -106,36 +106,49 @@ ext_module = setuptools.Extension(
 
 # We need `re2` to be a package, not a module, because it appears that
 # modules can't have `.pyi` files, so munge the module into a package.
-os.makedirs('re2')
-with open('re2.py', 'r') as file:
-  contents = file.read()
-contents = re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
-with open(f're2/__init__.py', 'x') as file:
-  file.write(contents)
-# TODO(junyer): `.pyi` files as per https://github.com/google/re2/issues/496.
+PACKAGE = 're2'
+try:
+  os.makedirs(PACKAGE)
+  for filename in (
+      're2.py',
+      # TODO(junyer): Populate as per https://github.com/google/re2/issues/496.
+      # 're2.pyi',
+      # '_re2.pyi',
+  ):
+    with open(filename, 'r') as file:
+      contents = file.read()
+    filename = re.sub(r'^re2(?=\.py)', '__init__', contents)
+    contents = re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
+    with open(f'{PACKAGE}/{filename}', 'x') as file:
+      file.write(contents)
+  # TODO(junyer): Populate as per https://github.com/google/re2/issues/496.
+  # with open(f'{PACKAGE}/py.typed', 'x') as file:
+  #   pass
 
-setuptools.setup(
-    name='google-re2',
-    version='1.1.20240601',
-    description='RE2 Python bindings',
-    long_description=long_description,
-    long_description_content_type='text/plain',
-    author='The RE2 Authors',
-    author_email='re2-dev@googlegroups.com',
-    url='https://github.com/google/re2',
-    packages=['re2'],
-    ext_package='re2',
-    ext_modules=[ext_module],
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: C++',
-        'Programming Language :: Python :: 3.8',
-    ],
-    options=options(),
-    cmdclass={'build_ext': BuildExt},
-    python_requires='~=3.8',
-)
-
-shutil.rmtree('re2')
+  setuptools.setup(
+      name='google-re2',
+      version='1.1.20240601',
+      description='RE2 Python bindings',
+      long_description=long_description,
+      long_description_content_type='text/plain',
+      author='The RE2 Authors',
+      author_email='re2-dev@googlegroups.com',
+      url='https://github.com/google/re2',
+      packages=[PACKAGE],
+      ext_package=PACKAGE,
+      ext_modules=[ext_module],
+      classifiers=[
+          'Development Status :: 5 - Production/Stable',
+          'Intended Audience :: Developers',
+          'License :: OSI Approved :: BSD License',
+          'Programming Language :: C++',
+          'Programming Language :: Python :: 3.8',
+      ],
+      options=options(),
+      cmdclass={'build_ext': BuildExt},
+      python_requires='~=3.8',
+  )
+except:
+  raise
+else:
+  shutil.rmtree(PACKAGE)
