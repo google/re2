@@ -127,7 +127,7 @@ try:
 
   setuptools.setup(
       name='google-re2',
-      version='1.1.20240601',
+      version='1.1.20240701',
       description='RE2 Python bindings',
       long_description=long_description,
       long_description_content_type='text/plain',
