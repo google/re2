@@ -108,22 +108,24 @@ ext_module = setuptools.Extension(
 # modules can't have `.pyi` files, so munge the module into a package.
 PACKAGE = 're2'
 try:
-  os.makedirs(PACKAGE)
-  for filename in (
-      're2.py',
-      # TODO(junyer): Populate as per https://github.com/google/re2/issues/496.
-      # 're2.pyi',
-      # '_re2.pyi',
-  ):
-    with open(filename, 'r') as file:
-      contents = file.read()
-    filename = re.sub(r'^re2(?=\.py)', '__init__', filename)
-    contents = re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
-    with open(f'{PACKAGE}/{filename}', 'x') as file:
-      file.write(contents)
-  # TODO(junyer): Populate as per https://github.com/google/re2/issues/496.
-  # with open(f'{PACKAGE}/py.typed', 'x') as file:
-  #   pass
+  # If we are building from the sdist, we are already in package form.
+  if not os.path.exists('PKG-INFO'):
+    os.makedirs(PACKAGE)
+    for filename in (
+        're2.py',
+        # TODO(junyer): Populate as per https://github.com/google/re2/issues/496.
+        # 're2.pyi',
+        # '_re2.pyi',
+    ):
+      with open(filename, 'r') as file:
+        contents = file.read()
+      filename = re.sub(r'^re2(?=\.py)', '__init__', filename)
+      contents = re.sub(r'^(?=import _)', 'from . ', contents, flags=re.MULTILINE)
+      with open(f'{PACKAGE}/{filename}', 'x') as file:
+        file.write(contents)
+    # TODO(junyer): Populate as per https://github.com/google/re2/issues/496.
+    # with open(f'{PACKAGE}/py.typed', 'x') as file:
+    #   pass
 
   setuptools.setup(
       name='google-re2',
@@ -151,4 +153,6 @@ try:
 except:
   raise
 else:
-  shutil.rmtree(PACKAGE)
+  # If we are building from the sdist, we are already in package form.
+  if not os.path.exists('PKG-INFO'):
+    shutil.rmtree(PACKAGE)
