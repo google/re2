@@ -1050,7 +1050,7 @@ bool RE2::Rewrite(std::string* out,
       out->push_back('\\');
     } else {
       if (options_.log_errors())
-        ABSL_LOG(ERROR) << "invalid rewrite pattern: " << rewrite.data();
+        ABSL_LOG(ERROR) << "invalid rewrite pattern: " << rewrite;
       return false;
     }
   }
