@@ -29,7 +29,7 @@ jobs:
           # TODO(junyer): Update the label after ARM64 graduates from beta.
           - { name: ARM64, python-name: aarch64, runs-on: [arm-ubuntu-arm-22.04-4core] }
         os: [manylinux_2_28]
-        ver: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        ver: ['3.8', '3.9', '3.10', '3.11', '3.12','3.13.0-rc.2']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PYTHON: /usr/local/bin/python${{ matrix.ver }}
