@@ -57,7 +57,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         # Register the local 32-bit C++ toolchain with highest priority.
         # (This is likely to break in some release of Bazel after 7.0.0,
         # but this special case can hopefully be entirely removed then.)
-        cmd.append(f'--extra_toolchains=@local_config_cc//:cc-toolchain-{cpu}')
+        cmd.append(f'--extra_toolchains=@@local_config_cc//:cc-toolchain-{cpu}')
     except KeyError:
       pass
     try:
