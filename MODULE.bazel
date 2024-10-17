@@ -12,14 +12,14 @@ module(
 
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "apple_support", version = "1.15.1")
-bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "rules_cc", version = "0.0.13")
 bazel_dep(name = "abseil-cpp", version = "20240116.2")
 bazel_dep(name = "rules_python", version = "0.33.2")
 bazel_dep(name = "pybind11_bazel", version = "2.12.0")
 
 # This is a temporary hack for `x64_x86_windows`.
 # TODO(junyer): Remove whenever no longer needed.
-cc_configure = use_extension("@bazel_tools//tools/cpp:cc_configure.bzl", "cc_configure_extension")
+cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure_extension")
 use_repo(cc_configure, "local_config_cc")
 
 # These dependencies will be ignored when the `re2` module is not
