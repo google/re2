@@ -29,7 +29,7 @@ jobs:
           # TODO(junyer): Update the label after ARM64 graduates from beta.
           - { name: ARM64, python-name: aarch64, runs-on: [arm-ubuntu-arm-22.04-4core] }
         os: [manylinux_2_28]
-        ver: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        ver: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PYTHON: /usr/local/bin/python${{ matrix.ver }}
@@ -85,7 +85,7 @@ jobs:
         # TODO(junyer): Stop cross-compiling after we drop support for macOS 12;
         # instead, specify `-large` suffix on X64 and `-xlarge` suffix on ARM64.
         os: [12, 13, 14]
-        ver: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        ver: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: darwin_${{ matrix.arch.bazel-name }}
@@ -147,7 +147,7 @@ jobs:
         arch:
           - { name: X86, bazel-name: x64_x86, python-name: win32     }
           - { name: X64, bazel-name: x64,     python-name: win_amd64 }
-        ver: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        ver: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: ${{ matrix.arch.bazel-name }}_windows
