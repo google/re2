@@ -16,9 +16,13 @@ Known differences between this module's API and the re module's API:
   * The error class does not provide any error information as attributes.
   * The Options class replaces the re module's flags with RE2's options as
     gettable/settable properties. Please see re2.h for their documentation.
+    For example the re.INGORECASE can be replaced with case_sensitive=False
+    set on an Options object or with the inline (?i) directive. 
   * The pattern string and the input string do not have to be the same type.
     Any str will be encoded to UTF-8.
   * The pattern string cannot be str if the options specify Latin-1 encoding.
+  * The RE2 \b only works for ASCII word boundaries unlike Python re \b which
+    supports Unicode, e.g. with re2 r'\bé' doesn't match the string 'é'.
 
 This module's LRU cache contains a maximum of 128 regular expression objects.
 Each regular expression object's underlying RE2 object uses a maximum of 8MiB
