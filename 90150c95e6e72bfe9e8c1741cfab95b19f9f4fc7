@@ -68,6 +68,24 @@
       "message": "This looks fine to me, but I\u0027m new here and not sure what attended process (if any) there is in re2 about bumping Bazel versions, so I should wait for Russ, at least for my first time around.",
       "revId": "90150c95e6e72bfe9e8c1741cfab95b19f9f4fc7",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7958ccc5_469a592a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3302506
+      },
+      "writtenOn": "2025-02-26T16:23:34Z",
+      "side": 1,
+      "message": "Thanks! The change itself is backwards compatible and doesn\u0027t require bumping Bazel version.\n\nThere is already a bcr patch version with this change: https://github.com/bazelbuild/bazel-central-registry/blob/main/modules/re2/2024-07-02.bcr.1/presubmit.yml#L11, which is tested with Bazel 8 rc.",
+      "parentUuid": "1d923ee2_d66dd522",
+      "revId": "90150c95e6e72bfe9e8c1741cfab95b19f9f4fc7",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
