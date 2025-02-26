@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9c14b93c_f1f17062",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3904705
+      },
+      "writtenOn": "2025-02-26T07:48:37Z",
+      "side": 1,
+      "message": "Context: https://github.com/bazelbuild/bazel/issues/24426",
+      "revId": "90150c95e6e72bfe9e8c1741cfab95b19f9f4fc7",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
