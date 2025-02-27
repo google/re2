@@ -86,6 +86,24 @@
       "parentUuid": "1d923ee2_d66dd522",
       "revId": "90150c95e6e72bfe9e8c1741cfab95b19f9f4fc7",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1c6bc0c1_9784bf86",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3904705
+      },
+      "writtenOn": "2025-02-27T07:23:51Z",
+      "side": 1,
+      "message": "This change just lets re2 work with bazel 8 intead of giving the error in https://github.com/google/re2/issues/525#issue-2752430908. It will still work with bazel 7.",
+      "parentUuid": "7958ccc5_469a592a",
+      "revId": "90150c95e6e72bfe9e8c1741cfab95b19f9f4fc7",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
