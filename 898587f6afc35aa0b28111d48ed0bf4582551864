@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8544820d_a2d6fec8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3904705
+      },
+      "writtenOn": "2025-02-28T16:59:47Z",
+      "side": 1,
+      "message": "Obsoleted by https://github.com/google/re2/commit/c84a140.",
+      "revId": "898587f6afc35aa0b28111d48ed0bf4582551864",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
