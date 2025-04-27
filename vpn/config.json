@@ -1,0 +1,11 @@
+{
+  "server": {
+    "address": "vpn.example.com",
+    "port": 1194,
+    "encryption": "AES-256-CBC"
+  },
+  "client": {
+    "username": "user",
+    "password": "pass"
+  }
+}
