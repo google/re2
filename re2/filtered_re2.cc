@@ -60,6 +60,9 @@ RE2::ErrorCode FilteredRE2::Add(absl::string_view pattern,
     }
     delete re;
   } else {
+    if (id == nullptr) {
+      return false;  // maybe other return values in the future
+    }
     *id = static_cast<int>(re2_vec_.size());
     re2_vec_.push_back(re);
   }
