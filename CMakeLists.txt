@@ -24,6 +24,9 @@ option(RE2_BUILD_FRAMEWORK "build RE2 as a framework" OFF)
 # CMake seems to have no way to enable/disable testing per subproject,
 # so we provide an option similar to BUILD_TESTING, but just for RE2.
 option(RE2_BUILD_TESTING "enable testing for RE2" OFF)
+# By default, benchmarks are enabled along with tests, but we provide the
+# option to run the tests without benchmarks.
+option(RE2_BUILD_NO_BENCHMARKS "disable benchmarks for RE2" OFF)
 
 # The pkg-config Requires: field.
 set(REQUIRES)
@@ -167,7 +170,7 @@ if(RE2_BUILD_TESTING)
   if(NOT TARGET GTest::gtest)
     find_package(GTest REQUIRED)
   endif()
-  if(NOT TARGET benchmark::benchmark)
+  if(NOT RE2_BUILD_NO_BENCHMARKS AND NOT TARGET benchmark::benchmark)
     find_package(benchmark REQUIRED)
   endif()
 
@@ -213,9 +216,11 @@ if(RE2_BUILD_TESTING)
       random_test
       )
 
-  set(BENCHMARK_TARGETS
-      regexp_benchmark
-      )
+    if(NOT RE2_BUILD_NO_BENCHMARKS)
+      set(BENCHMARK_TARGETS
+          regexp_benchmark
+          )
+    endif()
 
   foreach(target ${TEST_TARGETS})
     add_executable(${target} re2/testing/${target}.cc)
@@ -227,14 +232,16 @@ if(RE2_BUILD_TESTING)
     add_test(NAME ${target} COMMAND ${target})
   endforeach()
 
-  foreach(target ${BENCHMARK_TARGETS})
-    add_executable(${target} re2/testing/${target}.cc)
-    if(BUILD_SHARED_LIBS AND WIN32)
-      target_compile_definitions(${target} PRIVATE -DRE2_CONSUME_TESTING_DLL)
-    endif()
-    target_compile_features(${target} PUBLIC cxx_std_14)
-    target_link_libraries(${target} PUBLIC testing benchmark::benchmark_main ${EXTRA_TARGET_LINK_LIBRARIES})
-  endforeach()
+  if(NOT RE2_BUILD_NO_BENCHMARKS)
+    foreach(target ${BENCHMARK_TARGETS})
+      add_executable(${target} re2/testing/${target}.cc)
+      if(BUILD_SHARED_LIBS AND WIN32)
+        target_compile_definitions(${target} PRIVATE -DRE2_CONSUME_TESTING_DLL)
+      endif()
+      target_compile_features(${target} PUBLIC cxx_std_14)
+      target_link_libraries(${target} PUBLIC testing benchmark::benchmark_main ${EXTRA_TARGET_LINK_LIBRARIES})
+    endforeach()
+  endif()
 endif()
 
 install(TARGETS re2
