@@ -17,10 +17,15 @@ namespace re2 {
 TEST(Set, Unanchored) {
   RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
 
+  ASSERT_EQ(s.Size(), 0);
   ASSERT_EQ(s.Add("foo", NULL), 0);
+  ASSERT_EQ(s.Size(), 1);
   ASSERT_EQ(s.Add("(", NULL), -1);
+  ASSERT_EQ(s.Size(), 1);
   ASSERT_EQ(s.Add("bar", NULL), 1);
+  ASSERT_EQ(s.Size(), 2);
   ASSERT_EQ(s.Compile(), true);
+  ASSERT_EQ(s.Size(), 2);
 
   ASSERT_EQ(s.Match("foobar", NULL), true);
   ASSERT_EQ(s.Match("fooba", NULL), true);

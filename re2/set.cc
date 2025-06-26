@@ -55,6 +55,12 @@ RE2::Set& RE2::Set::operator=(Set&& other) {
   return *this;
 }
 
+int RE2::Set::Size() const {
+  if (!compiled_)
+    return static_cast<int>(elem_.size());
+  return size_;
+}
+
 int RE2::Set::Add(absl::string_view pattern, std::string* error) {
   if (compiled_) {
     ABSL_LOG(DFATAL) << "RE2::Set::Add() called after compiling";
