@@ -1688,4 +1688,12 @@ TEST(RE2, Issue477) {
   ASSERT_EQ(s, "\x61\x63");
 }
 
+TEST(RE2, InitNULL) {
+  // RE2::RE2 accepts NULL. Make sure it keeps doing that.
+  RE2 re(NULL);
+  ASSERT_TRUE(re.ok());
+  ASSERT_TRUE(RE2::FullMatch("", re));
+  ASSERT_TRUE(RE2::FullMatch("", NULL));
+}
+
 }  // namespace re2
