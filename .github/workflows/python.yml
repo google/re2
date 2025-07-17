@@ -26,8 +26,7 @@ jobs:
       matrix:
         arch:
           - { name: X64,   python-name: x86_64,  runs-on: [ubuntu-latest]              }
-          # TODO(junyer): Update the label after ARM64 graduates from beta.
-          - { name: ARM64, python-name: aarch64, runs-on: [arm-ubuntu-arm-22.04-4core] }
+          - { name: ARM64, python-name: aarch64, runs-on: [ubuntu-24.04-arm] }
         os: [manylinux_2_28]
         ver: ['3.8', '3.9', '3.10', '3.11', '3.12']
     env:
@@ -36,11 +35,11 @@ jobs:
       # Bazel fails if the username is unknown.
       USER: runner
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4.2.2
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazel-contrib/setup-bazel@0.8.5
+      - uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-version: '1.x'
       - name: Prepare Python ${{ matrix.ver }} environment
@@ -68,7 +67,7 @@ jobs:
           "${PYTHON}" re2_test.py
         shell: bash
         working-directory: python
-      - uses: actions/upload-artifact@v4.3.3
+      - uses: actions/upload-artifact@v4.6.2
         with:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
@@ -101,10 +100,10 @@ jobs:
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazel-contrib/setup-bazel@0.8.5
+      - uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-version: '1.x'
-      - uses: actions/setup-python@v5.1.0
+      - uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.ver }}
       - name: Prepare Python ${{ matrix.ver }} environment
@@ -133,7 +132,7 @@ jobs:
           python re2_test.py
         shell: bash
         working-directory: python
-      - uses: actions/upload-artifact@v4.3.3
+      - uses: actions/upload-artifact@v4.6.2
         with:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
@@ -153,11 +152,11 @@ jobs:
       BAZEL_CPU: ${{ matrix.arch.bazel-name }}_windows
       PLAT_NAME: ${{ matrix.arch.python-name }}
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4.2.2
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: bazel-contrib/setup-bazel@0.8.5
+      - uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-version: '1.x'
       # Lowercase the architecture name for `actions/setup-python`.
@@ -165,7 +164,7 @@ jobs:
           ARCHITECTURE=${{ matrix.arch.name }}
           echo "architecture=${ARCHITECTURE,,}" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: actions/setup-python@v5.1.0
+      - uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.ver }}
           architecture: ${{ env.architecture }}
@@ -194,7 +193,7 @@ jobs:
           python re2_test.py
         shell: bash
         working-directory: python
-      - uses: actions/upload-artifact@v4.3.3
+      - uses: actions/upload-artifact@v4.6.2
         with:
           name: ${{ hashFiles('python/google_re2-*.whl') }}
           path: python/google_re2-*.whl
@@ -210,11 +209,11 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4.2.2
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
-      - uses: actions/setup-python@v5.1.0
+      - uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.x'
       - name: Prepare Python 3.x environment
@@ -230,7 +229,7 @@ jobs:
           python -m build --sdist
         shell: bash
         working-directory: python
-      - uses: actions/download-artifact@v4.1.7
+      - uses: actions/download-artifact@v4.3.0
         with:
           path: python
       - name: Set build number to ${{ inputs.build }}
@@ -246,6 +245,6 @@ jobs:
         shell: bash
         working-directory: python
       - if: inputs.build >= 1
-        uses: pypa/gh-action-pypi-publish@v1.9.0
+        uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
           packages-dir: python/dist
