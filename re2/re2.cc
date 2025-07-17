@@ -143,6 +143,11 @@ static std::string trunc(absl::string_view pattern) {
 
 
 RE2::RE2(const char* pattern) {
+  // If absl::string_view becomes an alias for std::string_view,
+  // it will stop allowing NULL to be converted.
+  // Handle NULL explicitly to keep callers working no matter what.
+  if (pattern == NULL)
+    pattern = "";
   Init(pattern, DefaultOptions);
 }
 
