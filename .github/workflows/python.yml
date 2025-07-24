@@ -96,7 +96,7 @@ jobs:
       # Otherwise, Python refuses to install the built wheel!
       SYSTEM_VERSION_COMPAT: 0
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4.2.2
       # Stash the timestamp for the commit SHA that triggered the workflow.
       - run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "${GITHUB_ENV}"
         shell: bash
