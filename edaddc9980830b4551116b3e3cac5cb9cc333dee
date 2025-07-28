@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a1636821_600e671e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2025-07-28T16:49:22Z",
+      "side": 1,
+      "message": "Thank you for this. I\u0027ve adjusted things slightly and mailed this as CL 63750.",
+      "revId": "edaddc9980830b4551116b3e3cac5cb9cc333dee",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
