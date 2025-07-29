@@ -87,7 +87,7 @@
 //    ABSL_CHECK(RE2::FullMatch("ruby:1234", "(\\w+):(\\d+)", &s, &i));
 //
 // Example: extracts "ruby" into "s" and no value into "i"
-//    absl::optional<int> i;
+//    std::optional<int> i;
 //    std::string s;
 //    ABSL_CHECK(RE2::FullMatch("ruby", "(\\w+)(?::(\\d+))?", &s, &i));
 //
@@ -213,13 +213,13 @@
 
 #include <algorithm>
 #include <map>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <vector>
 
 #include "absl/base/call_once.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "re2/stringpiece.h"
 
 #if defined(__APPLE__)
@@ -385,7 +385,7 @@ class RE2 {
   // type, or one of:
   //    std::string        (matched piece is copied to string)
   //    absl::string_view  (string_view is mutated to point to matched piece)
-  //    absl::optional<T>  (T is a supported numeric or string type as above)
+  //    std::optional<T>  (T is a supported numeric or string type as above)
   //    T                  ("bool T::ParseFrom(const char*, size_t)" must exist)
   //    (void*)NULL        (the corresponding matched sub-pattern is not copied)
   //
@@ -406,7 +406,7 @@ class RE2 {
   //    int number;
   //    RE2::FullMatch("abc", "[a-z]+(\\d+)?", &number);
   //
-  // Use absl::optional<int> instead to handle this case correctly.
+  // Use std::optional<int> instead to handle this case correctly.
   template <typename... A>
   static bool FullMatch(absl::string_view text, const RE2& re, A&&... a) {
     return Apply(FullMatchN, text, re, Arg(std::forward<A>(a))...);
@@ -842,12 +842,12 @@ template <> struct Parse4ary<unsigned long long> : public std::true_type {};
 template <typename T>
 bool Parse(const char* str, size_t n, T* dest, int radix);
 
-// Support absl::optional<T> for all T with a stock parser.
-template <typename T> struct Parse3ary<absl::optional<T>> : public Parse3ary<T> {};
-template <typename T> struct Parse4ary<absl::optional<T>> : public Parse4ary<T> {};
+// Support std::optional<T> for all T with a stock parser.
+template <typename T> struct Parse3ary<std::optional<T>> : public Parse3ary<T> {};
+template <typename T> struct Parse4ary<std::optional<T>> : public Parse4ary<T> {};
 
 template <typename T>
-bool Parse(const char* str, size_t n, absl::optional<T>* dest) {
+bool Parse(const char* str, size_t n, std::optional<T>* dest) {
   if (str == NULL) {
     if (dest != NULL)
       dest->reset();
@@ -863,7 +863,7 @@ bool Parse(const char* str, size_t n, absl::optional<T>* dest) {
 }
 
 template <typename T>
-bool Parse(const char* str, size_t n, absl::optional<T>* dest, int radix) {
+bool Parse(const char* str, size_t n, std::optional<T>* dest, int radix) {
   if (str == NULL) {
     if (dest != NULL)
       dest->reset();

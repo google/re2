@@ -9,10 +9,10 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <optional>
 
 #include "absl/base/macros.h"
 #include "absl/log/absl_log.h"
-#include "absl/types/optional.h"
 #include "gtest/gtest.h"
 #include "re2/re2.h"
 
@@ -158,7 +158,7 @@ TEST(RE2ArgTest, ParseFromTest) {
 }
 
 TEST(RE2ArgTest, OptionalDoubleTest) {
-  absl::optional<double> opt;
+  std::optional<double> opt;
   RE2::Arg arg(&opt);
   EXPECT_TRUE(arg.Parse(NULL, 0));
   EXPECT_FALSE(opt.has_value());
@@ -169,7 +169,7 @@ TEST(RE2ArgTest, OptionalDoubleTest) {
 }
 
 TEST(RE2ArgTest, OptionalIntWithCRadixTest) {
-  absl::optional<int> opt;
+  std::optional<int> opt;
   RE2::Arg arg = RE2::CRadix(&opt);
   EXPECT_TRUE(arg.Parse(NULL, 0));
   EXPECT_FALSE(opt.has_value());
