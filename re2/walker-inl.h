@@ -192,7 +192,7 @@ template<typename T> T Regexp::Walker<T>::WalkInternal(Regexp* re, T top_arg,
           s->child_args = &s->child_arg;
         else if (re->nsub_ > 1)
           s->child_args = new T[re->nsub_];
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       }
       default: {
         if (re->nsub_ > 0) {

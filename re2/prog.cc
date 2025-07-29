@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/attributes.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
@@ -820,7 +819,7 @@ void Prog::EmitList(int root, SparseArray<int>* rootmap,
         flat->back().set_opcode(kInstAltMatch);
         flat->back().set_out(static_cast<int>(flat->size()));
         flat->back().out1_ = static_cast<uint32_t>(flat->size())+1;
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
 
       case kInstAlt:
         stk->push_back(ip->out1());

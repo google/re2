@@ -34,7 +34,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/attributes.h"
 #include "absl/base/call_once.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
@@ -650,7 +649,7 @@ DFA::State* DFA::WorkqToCachedState(Workq* q, Workq* mq, uint32_t flag) {
             absl::FPrintF(stderr, " -> FullMatchState\n");
           return FullMatchState;
         }
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       default:
         // Record iff id is the head of its list, which must
         // be the case if id-1 is the last of *its* list. :)

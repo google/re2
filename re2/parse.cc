@@ -24,7 +24,6 @@
 #include <string>
 #include <vector>
 
-#include "absl/base/attributes.h"
 #include "absl/base/macros.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/ascii.h"
@@ -304,7 +303,7 @@ Rune ApplyFold(const CaseFold* f, Rune r) {
     case EvenOddSkip:  // even <-> odd but only applies to every other
       if ((r - f->lo) % 2)
         return r;
-      ABSL_FALLTHROUGH_INTENDED;
+      [[fallthrough]];
     case EvenOdd:  // even <-> odd
       if (r%2 == 0)
         return r + 1;
@@ -313,7 +312,7 @@ Rune ApplyFold(const CaseFold* f, Rune r) {
     case OddEvenSkip:  // odd <-> even but only applies to every other
       if ((r - f->lo) % 2)
         return r;
-      ABSL_FALLTHROUGH_INTENDED;
+      [[fallthrough]];
     case OddEven:  // odd <-> even
       if (r%2 == 1)
         return r + 1;
@@ -1525,7 +1524,7 @@ static bool ParseEscape(absl::string_view* s, Rune* rp,
       // Single non-zero octal digit is a backreference; not supported.
       if (s->empty() || (*s)[0] < '0' || (*s)[0] > '7')
         goto BadEscape;
-      ABSL_FALLTHROUGH_INTENDED;
+      [[fallthrough]];
     case '0':
       // consume up to three octal digits; already have one.
       code = c - '0';
