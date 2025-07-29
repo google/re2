@@ -3,12 +3,14 @@
 # license that can be found in the LICENSE file.
 
 # https://github.com/google/oss-policies-info/blob/main/foundational-cxx-support-matrix.md
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.22)
 
 project(RE2 CXX)
 include(CMakePackageConfigHelpers)
 include(CTest)
 include(GNUInstallDirs)
+
+set(RE2_CXX_VERSION cxx_std_17)
 
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
 option(RE2_USE_ICU "build against ICU for full Unicode properties support" OFF)
@@ -23,7 +25,11 @@ option(RE2_BUILD_FRAMEWORK "build RE2 as a framework" OFF)
 
 # CMake seems to have no way to enable/disable testing per subproject,
 # so we provide an option similar to BUILD_TESTING, but just for RE2.
-option(RE2_BUILD_TESTING "enable testing for RE2" OFF)
+# RE2_BUILD_TESTING builds and runs tests, and builds benchmarks
+# RE2_TEST and RE2_BENCHMARK provide more fine-grained control.
+option(RE2_TEST "build and run RE2 tests" OFF)
+option(RE2_BENCHMARK "build RE2 benchmarks" OFF)
+option(RE2_BUILD_TESTING "build and run RE2 tests; build RE2 benchmarks" OFF)
 
 # The pkg-config Requires: field.
 set(REQUIRES)
@@ -34,7 +40,7 @@ set(SONAME 11)
 
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+if(MSVC)
   if(MSVC_VERSION LESS 1920)
     message(FATAL_ERROR "you need Visual Studio 2019 or later")
   endif()
@@ -133,7 +139,7 @@ set(RE2_HEADERS
     )
 
 add_library(re2 ${RE2_SOURCES})
-target_compile_features(re2 PUBLIC cxx_std_14)
+target_compile_features(re2 PUBLIC ${RE2_CXX_VERSION})
 target_include_directories(re2 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 # CMake gives "set_target_properties called with incorrect number of arguments."
 # errors if we don't quote ${RE2_HEADERS}, so quote it despite prevailing style.
@@ -163,14 +169,7 @@ if(RE2_USE_ICU)
   target_link_libraries(re2 PUBLIC ICU::uc)
 endif()
 
-if(RE2_BUILD_TESTING)
-  if(NOT TARGET GTest::gtest)
-    find_package(GTest REQUIRED)
-  endif()
-  if(NOT TARGET benchmark::benchmark)
-    find_package(benchmark REQUIRED)
-  endif()
-
+if(RE2_BUILD_TESTING OR RE2_TEST OR RE2_BENCHMARK)
   set(TESTING_SOURCES
       re2/testing/backtrack.cc
       re2/testing/dump.cc
@@ -186,55 +185,65 @@ if(RE2_BUILD_TESTING)
   if(BUILD_SHARED_LIBS AND WIN32)
     target_compile_definitions(testing PRIVATE -DRE2_BUILD_TESTING_DLL)
   endif()
-  target_compile_features(testing PUBLIC cxx_std_14)
-  target_link_libraries(testing PUBLIC re2 GTest::gtest)
+  target_compile_features(testing PUBLIC ${RE2_CXX_VERSION})
+  target_link_libraries(testing PUBLIC re2)
 
-  set(TEST_TARGETS
-      charclass_test
-      compile_test
-      filtered_re2_test
-      mimics_pcre_test
-      parse_test
-      possible_match_test
-      re2_test
-      re2_arg_test
-      regexp_test
-      required_prefix_test
-      search_test
-      set_test
-      simplify_test
-      string_generator_test
-
-      dfa_test
-      exhaustive1_test
-      exhaustive2_test
-      exhaustive3_test
-      exhaustive_test
-      random_test
-      )
-
-  set(BENCHMARK_TARGETS
-      regexp_benchmark
-      )
-
-  foreach(target ${TEST_TARGETS})
-    add_executable(${target} re2/testing/${target}.cc)
-    if(BUILD_SHARED_LIBS AND WIN32)
-      target_compile_definitions(${target} PRIVATE -DRE2_CONSUME_TESTING_DLL)
+  if(RE2_BUILD_TESTING OR RE2_TEST)
+    if(NOT TARGET GTest::gtest)
+      find_package(GTest REQUIRED)
     endif()
-    target_compile_features(${target} PUBLIC cxx_std_14)
-    target_link_libraries(${target} PUBLIC testing GTest::gtest_main ${EXTRA_TARGET_LINK_LIBRARIES})
-    add_test(NAME ${target} COMMAND ${target})
-  endforeach()
 
-  foreach(target ${BENCHMARK_TARGETS})
-    add_executable(${target} re2/testing/${target}.cc)
-    if(BUILD_SHARED_LIBS AND WIN32)
-      target_compile_definitions(${target} PRIVATE -DRE2_CONSUME_TESTING_DLL)
+    set(TEST_TARGETS
+        charclass_test
+        compile_test
+        filtered_re2_test
+        mimics_pcre_test
+        parse_test
+        possible_match_test
+        re2_test
+        re2_arg_test
+        regexp_test
+        required_prefix_test
+        search_test
+        set_test
+        simplify_test
+        string_generator_test
+
+        dfa_test
+        exhaustive1_test
+        exhaustive2_test
+        exhaustive3_test
+        exhaustive_test
+        random_test
+        )
+
+    foreach(target ${TEST_TARGETS})
+      add_executable(${target} re2/testing/${target}.cc)
+      if(BUILD_SHARED_LIBS AND WIN32)
+        target_compile_definitions(${target} PRIVATE -DRE2_CONSUME_TESTING_DLL)
+      endif()
+      target_compile_features(${target} PUBLIC ${RE2_CXX_VERSION})
+      target_link_libraries(${target} PUBLIC re2 testing GTest::gtest_main ${EXTRA_TARGET_LINK_LIBRARIES})
+      add_test(NAME ${target} COMMAND ${target})
+    endforeach()
+  endif()
+
+  if(RE2_BUILD_TESTING OR RE2_BENCHMARK)
+    if(NOT TARGET benchmark::benchmark)
+      find_package(benchmark REQUIRED)
     endif()
-    target_compile_features(${target} PUBLIC cxx_std_14)
-    target_link_libraries(${target} PUBLIC testing benchmark::benchmark_main ${EXTRA_TARGET_LINK_LIBRARIES})
-  endforeach()
+    set(BENCHMARK_TARGETS
+        regexp_benchmark
+        )
+    foreach(target ${BENCHMARK_TARGETS})
+      add_executable(${target} re2/testing/${target}.cc)
+      if(BUILD_SHARED_LIBS AND WIN32)
+        target_compile_definitions(${target} PRIVATE -DRE2_CONSUME_TESTING_DLL)
+      endif()
+      target_compile_features(${target} PUBLIC ${RE2_CXX_VERSION})
+      target_link_libraries(${target} PUBLIC testing re2 benchmark::benchmark_main ${EXTRA_TARGET_LINK_LIBRARIES})
+    endforeach()
+  endif()
 endif()
 
 install(TARGETS re2
