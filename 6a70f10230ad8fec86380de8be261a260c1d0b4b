@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "317093ee_ec59395d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6940
+      },
+      "writtenOn": "2025-07-30T15:44:42Z",
+      "side": 1,
+      "message": "The change looks plausible enough, but I don\u0027t really know anything about this file or CMake, so my approval is largely based on your reputation.",
+      "revId": "6a70f10230ad8fec86380de8be261a260c1d0b4b",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
