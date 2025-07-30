@@ -10,12 +10,12 @@ module(
     compatibility_level = 1,
 )
 
-bazel_dep(name = "platforms", version = "0.0.10")
-bazel_dep(name = "apple_support", version = "1.15.1")
-bazel_dep(name = "rules_cc", version = "0.0.13")
-bazel_dep(name = "abseil-cpp", version = "20240116.2")
-bazel_dep(name = "rules_python", version = "0.33.2")
-bazel_dep(name = "pybind11_bazel", version = "2.12.0")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "apple_support", version = "1.22.1")
+bazel_dep(name = "rules_cc", version = "0.1.4")
+bazel_dep(name = "abseil-cpp", version = "20250512.1")
+bazel_dep(name = "rules_python", version = "1.5.1")
+bazel_dep(name = "pybind11_bazel", version = "2.13.6")
 
 # This is a temporary hack for `x64_x86_windows`.
 # TODO(junyer): Remove whenever no longer needed.
@@ -24,6 +24,6 @@ use_repo(cc_configure, "local_config_cc")
 
 # These dependencies will be ignored when the `re2` module is not
 # the root module (or when `--ignore_dev_dependency` is enabled).
-bazel_dep(name = "google_benchmark", version = "1.8.4", dev_dependency = True)
-bazel_dep(name = "googletest", version = "1.14.0.bcr.1", dev_dependency = True)
+bazel_dep(name = "google_benchmark", version = "1.9.4", dev_dependency = True)
+bazel_dep(name = "googletest", version = "1.17.0", dev_dependency = True)
 bazel_dep(name = "abseil-py", version = "2.1.0", dev_dependency = True)
