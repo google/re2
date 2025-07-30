@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7ca9707e_ea19cd90",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 6940
+      },
+      "writtenOn": "2025-07-30T16:10:18Z",
+      "side": 1,
+      "message": "\"primary goal\"?\n\n(r always urged me to use only English.)",
+      "range": {
+        "startLine": 7,
+        "startChar": 19,
+        "endLine": 7,
+        "endChar": 32
+      },
+      "revId": "918ccce68419888b0f99c9fe706f7a943fab4cad",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fa696ae5_643f4b48",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 6940
+      },
+      "writtenOn": "2025-07-30T16:10:18Z",
+      "side": 1,
+      "message": "No spaces around em dashes.",
+      "range": {
+        "startLine": 14,
+        "startChar": 39,
+        "endLine": 14,
+        "endChar": 42
+      },
+      "revId": "918ccce68419888b0f99c9fe706f7a943fab4cad",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "22a9d9ab_b6696c94",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 6940
+      },
+      "writtenOn": "2025-07-30T16:10:18Z",
+      "side": 1,
+      "message": "awkward?\n\nPerhaps: \n\n\u003e Although RE2 guarantees a running time that is asymptotically linear in the length of the input, more complex expressions may incur larger constant factors.\n\n(Though this does raise the question whether DoS is possible by making the expression sufficiently complex.)",
+      "range": {
+        "startLine": 18,
+        "startChar": 49,
+        "endLine": 19,
+        "endChar": 6
+      },
+      "revId": "918ccce68419888b0f99c9fe706f7a943fab4cad",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5fc63fb1_78c49057",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 6940
+      },
+      "writtenOn": "2025-07-30T16:10:18Z",
+      "side": 1,
+      "message": "Perhaps elaborate to something like:\n\nIn a sense, RE2 is pessimistic where a backtracking engine is optimistic:\nA backtracking engine tests each alternative sequentially, making it fast when the first alternative is common. By contrast RE2 evaluates all alternatives in parallel, avoiding the performance penalty for the last alternative, at the cost of some overhead. This pessimism is what makes RE2 secure.",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 0
+      },
+      "revId": "918ccce68419888b0f99c9fe706f7a943fab4cad",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "607de50a_b7582378",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 6940
+      },
+      "writtenOn": "2025-07-30T16:10:18Z",
+      "side": 1,
+      "message": "6 nouns? Hard to parse.",
+      "range": {
+        "startLine": 120,
+        "startChar": 28,
+        "endLine": 121,
+        "endChar": 16
+      },
+      "revId": "918ccce68419888b0f99c9fe706f7a943fab4cad",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8c78a0de_37219b7a",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 6940
+      },
+      "writtenOn": "2025-07-30T16:10:18Z",
+      "side": 1,
+      "message": "implementation\n\nor \"is implemented in\"",
+      "range": {
+        "startLine": 221,
+        "startChar": 6,
+        "endLine": 221,
+        "endChar": 12
+      },
+      "revId": "918ccce68419888b0f99c9fe706f7a943fab4cad",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f9cd9ce1_0d4a4fe5",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 6940
+      },
+      "writtenOn": "2025-07-30T16:10:18Z",
+      "side": 1,
+      "message": "The heading promises ports but then lists only wrappers.\n\nMention:\n- https://github.com/google/re2j (Java)\n- https://github.com/le0pard/re2js (JS, via RE2/J--a grandport!)\n\n?",
+      "revId": "918ccce68419888b0f99c9fe706f7a943fab4cad",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
