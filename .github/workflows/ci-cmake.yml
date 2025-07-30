@@ -1,7 +1,7 @@
 name: CI (CMake)
 on:
   push:
-    branches: [main]
+    branches: [main, rsc-testing]
 permissions:
   contents: read
 jobs:
