@@ -216,8 +216,9 @@ which you can do with [Bazelisk](https://github.com/bazelbuild/bazelisk).
 	bazelisk build :all
 	bazelisk test :all
 
-You may need to add `--cxxopt=-std=c++17` or `--cxxopt=/std:c++17` before `:all` on some systems.
-(One would think Bazel's C++ build support would handle that for you!)
+If you are using RE2 from another project, you need to make sure you are
+using at least C++17.
+See the RE2 [.bazelrc](https://github.com/google/re2/blob/main/.bazelrc) file for an example.
 
 ### Ports and Wrappers
 

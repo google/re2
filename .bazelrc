@@ -7,11 +7,11 @@ build --features=layering_check
 # Enable parse headers features. Enforcing that headers are self-contained.
 build --features=parse_headers
 
-# Abseil requires C++14 at minimum.
+# Abseil requires C++17 at minimum.
 build --enable_platform_specific_config
-build:linux --cxxopt=-std=c++14
-build:macos --cxxopt=-std=c++14
-build:windows --cxxopt=/std:c++14
+build:linux --cxxopt=-std=c++17
+build:macos --cxxopt=-std=c++17
+build:windows --cxxopt=/std:c++17
 
 # Print test logs for failed tests.
 test --test_output=errors
