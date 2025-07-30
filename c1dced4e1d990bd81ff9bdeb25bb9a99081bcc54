@@ -39,6 +39,30 @@
       },
       "revId": "c1dced4e1d990bd81ff9bdeb25bb9a99081bcc54",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "45341d63_8858822e",
+        "filename": "README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2025-07-30T17:11:29Z",
+      "side": 1,
+      "message": "Done but now you have to +2 again. Sorry.",
+      "parentUuid": "36879951_e7d231ee",
+      "range": {
+        "startLine": 123,
+        "startChar": 45,
+        "endLine": 123,
+        "endChar": 52
+      },
+      "revId": "c1dced4e1d990bd81ff9bdeb25bb9a99081bcc54",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
