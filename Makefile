@@ -49,7 +49,7 @@ CXX?=g++
 CXXFLAGS?=-O3 -g
 LDFLAGS?=
 # required
-RE2_CXXFLAGS?=-pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCABSL) $(CCICU) $(CCGTEST) $(CCBENCHMARK) $(CCPCRE)
+RE2_CXXFLAGS?=-std=c++17 -pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCABSL) $(CCICU) $(CCGTEST) $(CCBENCHMARK) $(CCPCRE)
 RE2_LDFLAGS?=-pthread $(LDABSL) $(LDICU) $(LDGTEST) $(LDBENCHMARK) $(LDPCRE)
 AR?=ar
 ARFLAGS?=rsc
