@@ -186,7 +186,7 @@ if(RE2_BUILD_TESTING OR RE2_TEST OR RE2_BENCHMARK)
     target_compile_definitions(testing PRIVATE -DRE2_BUILD_TESTING_DLL)
   endif()
   target_compile_features(testing PUBLIC ${RE2_CXX_VERSION})
-  target_link_libraries(testing PUBLIC re2)
+  target_link_libraries(testing PUBLIC re2 GTest::gtest)
 
   if(RE2_BUILD_TESTING OR RE2_TEST)
     if(NOT TARGET GTest::gtest)
