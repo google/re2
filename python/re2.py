@@ -64,7 +64,7 @@ def compile(pattern, options=None):
     if options:
       raise error('pattern is already compiled, so '
                   'options may not be specified')
-    pattern = pattern._pattern
+    return pattern
   options = options or Options()
   values = tuple(getattr(options, name) for name in Options.NAMES)
   return _Regexp._make(pattern, values)
