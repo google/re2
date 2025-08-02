@@ -315,6 +315,12 @@ class Re2RegexpTest(ReRegexpTest):
     re2.purge()
     self.assertEqual(re2._Regexp._make.cache_info().currsize, 0)
 
+  def test_options(self):
+    opt = re2.Options()
+    opt.case_sensitive = False
+    r = re2.compile('test', opt)
+    self.assertIsNotNone(r.search('TEST'))
+    self.assertIsNotNone(re2.search(r, 'TEST'))
 
 class Re2EscapeTest(parameterized.TestCase):
   """Contains tests that apply to the re2 module only.
