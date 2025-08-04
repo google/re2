@@ -16,6 +16,24 @@
       "message": "I added a comment to this file and did not lose the +2. Woo hoo!",
       "revId": "5f094782142a16cfaea5ad79656b63943f37e0ff",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b108b311_9f8239fe",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6940
+      },
+      "writtenOn": "2025-08-04T23:12:39Z",
+      "side": 1,
+      "message": ":-)",
+      "parentUuid": "21930757_1681d0e9",
+      "revId": "5f094782142a16cfaea5ad79656b63943f37e0ff",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ],
   "submitRequirementResults": [
