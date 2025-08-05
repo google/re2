@@ -37,3 +37,10 @@ jobs:
             *.tar.gz *.zip *.sigstore* \
             --repo "${GITHUB_REPOSITORY}"
         shell: bash
+  publish_to_bcr:
+    needs: create
+    uses: ./.github/workflows/publish_to_bcr.yaml
+    with:
+      tag_name: ${{ github.ref_name }}
+    secrets:
+      BCR_PUBLISH_TOKEN: ${{ secrets.BCR_PUBLISH_TOKEN }}
