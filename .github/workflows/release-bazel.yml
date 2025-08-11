@@ -1,0 +1,29 @@
+on:
+  # Automated trigger from the release.yaml workflow
+  workflow_call:
+    inputs:
+      tag_name:
+        required: true
+        type: string
+  # Allow manual triggering from GH UI
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        required: true
+        type: string
+jobs:
+  publish:
+    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@v0.2.2
+    with:
+      tag_name: ${{ inputs.tag_name }}
+      # This workflow seems to require keeping a fork of the upstream to open
+      # PRs from.
+      registry_fork: re2-machine/bazel-central-registry
+      attest: true
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    secrets:
+      # Necessary to push to the BCR fork, and to open a pull request against a registry
+      publish_token: ${{ secrets.BCR_PUBLISH_TOKEN }}
