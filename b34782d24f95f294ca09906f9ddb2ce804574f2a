@@ -22,6 +22,30 @@
       },
       "revId": "b34782d24f95f294ca09906f9ddb2ce804574f2a",
       "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "94dbaf35_eac580c2",
+        "filename": ".github/workflows/release.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2025-08-11T23:49:41Z",
+      "side": 1,
+      "message": "Yes, in the environment bcr-push in the re2 project, although I\u0027d forgotten to add the environment line to this file. Done.",
+      "parentUuid": "c46073a5_37219e14",
+      "range": {
+        "startLine": 46,
+        "startChar": 37,
+        "endLine": 46,
+        "endChar": 54
+      },
+      "revId": "b34782d24f95f294ca09906f9ddb2ce804574f2a",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
     }
   ]
 }
