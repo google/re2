@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c46073a5_37219e14",
+        "filename": ".github/workflows/release.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 3302506
+      },
+      "writtenOn": "2025-08-11T16:10:09Z",
+      "side": 1,
+      "message": "Do you have this token setup?",
+      "range": {
+        "startLine": 46,
+        "startChar": 37,
+        "endLine": 46,
+        "endChar": 54
+      },
+      "revId": "b34782d24f95f294ca09906f9ddb2ce804574f2a",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
