@@ -1,0 +1,45 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "841fb5d5_adaa3e30",
+        "filename": ".bcr/metadata.template.json",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 3302506
+      },
+      "writtenOn": "2025-08-11T16:09:17Z",
+      "side": 1,
+      "message": "You can leave this empty, it will be populated by publish-to-bcr app/workflow.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 18
+      },
+      "fixSuggestions": [
+        {
+          "fixId": "78c82fb5_aa9f38e8",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": ".bcr/metadata.template.json",
+              "range": {
+                "startLine": 15,
+                "startChar": 0,
+                "endLine": 29,
+                "endChar": 0
+              },
+              "replacement": ""
+            }
+          ]
+        }
+      ],
+      "revId": "a54685a16eed12a85b3d3de6e6e5ec62781b0530",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
