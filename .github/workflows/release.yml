@@ -37,3 +37,10 @@ jobs:
             *.tar.gz *.zip *.sigstore* \
             --repo "${GITHUB_REPOSITORY}"
         shell: bash
+  create_bazel:
+    needs: create
+    uses: ./.github/workflows/release-bazel.yaml
+    with:
+      tag_name: ${{ github.ref_name }}
+    secrets:
+      BCR_PUBLISH_TOKEN: ${{ secrets.BCR_PUBLISH_TOKEN }}
