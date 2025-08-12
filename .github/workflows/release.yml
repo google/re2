@@ -42,5 +42,9 @@ jobs:
     uses: ./.github/workflows/release-bazel.yml
     with:
       tag_name: ${{ github.ref_name }}
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     secrets:
       BCR_PUBLISH_TOKEN: ${{ secrets.BCR_PUBLISH_TOKEN }}
