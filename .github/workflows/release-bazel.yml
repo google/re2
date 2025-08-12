@@ -12,6 +12,10 @@ on:
       tag_name:
         required: true
         type: string
+    secrets:
+      BCR_PUBLISH_TOKEN:
+        description: 'Token for pushing to re2-machine/bazel-central-registry'
+        required: true
 jobs:
   release:
     uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@v0.2.2
