@@ -37,9 +37,9 @@ jobs:
             *.tar.gz *.zip *.sigstore* \
             --repo "${GITHUB_REPOSITORY}"
         shell: bash
-  create_bazel:
+  create-bazel:
     needs: create
-    uses: ./.github/workflows/release-bazel.yaml
+    uses: ./.github/workflows/release-bazel.yml
     with:
       tag_name: ${{ github.ref_name }}
     secrets:
