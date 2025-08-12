@@ -12,9 +12,5 @@
       "github:google/re2"
   ],
   "versions": [],
-  "yanked_versions": {
-      "2023-06-02": "bad compatibility_level, upgrade to 2023-09-01 or newer",
-      "2023-08-01": "bad compatibility_level, upgrade to 2023-09-01 or newer",
-      "2025-06-26": "accidentally lost from github, upgrade to 2025-07-22 or newer"
-  }
+  "yanked_versions": {}
 }
