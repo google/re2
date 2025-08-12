@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0a044d43_0f38919e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5145
+      },
+      "writtenOn": "2025-08-12T22:08:38Z",
+      "side": 1,
+      "message": "Actually hold on. It looks like the PR push failed because sigstore.json is not intoto.jsonl in disguise.",
+      "revId": "7b4f3baba70ad7843f2bc5956b17753df2465c41",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
