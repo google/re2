@@ -20,11 +20,19 @@ jobs:
   release:
     uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@v0.2.2
     with:
+      draft: false
       tag_name: ${{ inputs.tag_name }}
-      # This workflow seems to require keeping a fork of the upstream to open
-      # PRs from.
       registry_fork: re2-machine/bazel-central-registry
-      attest: true
+      # NOTE: To use attest: true, we need a signed intoto.jsonl file,
+      # but that appears to require using
+      # the release_ruleset support described on
+      # https://github.com/bazel-contrib/publish-to-bcr?tab=readme-ov-file#attesation-support
+      # but that requires a release_prep.sh file,
+      # and an override on the test command,
+      # and may insist on doing the release upload of the source zip
+      # (which we do ourselves separately),
+      # and possibly more problems I didn't hit because I gave up.
+      attest: false # too hard to generate the intoto.jsonl file
     permissions:
       contents: write
       id-token: write
