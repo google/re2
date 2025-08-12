@@ -33,6 +33,8 @@ jobs:
           # N.B. This is a whitespace-separated string!
           inputs: '*.tar.gz *.zip'
       - run: |
+          cp "re2-${GITHUB_REF_NAME}.zip.sigstore.json" \
+            "re2-${GITHUB_REF_NAME}.zip.intoto.jsonl"; \
           gh release upload "${GITHUB_REF_NAME}" \
             *.tar.gz *.zip *.sigstore* \
             --repo "${GITHUB_REPOSITORY}"
