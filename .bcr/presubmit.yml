@@ -45,13 +45,7 @@ bcr_test_module:
       test_flags:
       - '--cxxopt=-std=c++17'
       test_targets:
-      - '//:all'
-      - '-//:dfa_test'
-      - '-//:exhaustive1_test'
-      - '-//:exhaustive2_test'
-      - '-//:exhaustive3_test'
-      - '-//:exhaustive_test'
-      - '-//:random_test'
+      - '//:small_tests'
       - '//python:all'
     windows_test:
       platform: windows
@@ -59,11 +53,5 @@ bcr_test_module:
       test_flags:
       - '--cxxopt=/std:c++17'
       test_targets:
-      - '//:all'
-      - '-//:dfa_test'
-      - '-//:exhaustive1_test'
-      - '-//:exhaustive2_test'
-      - '-//:exhaustive3_test'
-      - '-//:exhaustive_test'
-      - '-//:random_test'
+      - '//:small_tests'
       - '//python:all'
