@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2e14bd52_d20f9b10",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4290617
+      },
+      "writtenOn": "2025-08-13T16:03:16Z",
+      "side": 1,
+      "message": "It\u0027s interesting because somehow this test_matrix was working on the BCR before this. https://github.com/bazelbuild/bazel-central-registry/blob/main/modules/re2/2025-06-26/presubmit.yml\n\nPerhaps the windows build changed in the last few months?",
+      "revId": "bfd7536e7ac594e03d4a9a560f94b16cc1160534",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
