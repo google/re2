@@ -16,13 +16,7 @@ do
   bazel test \
     --extra_toolchains=//python/toolchains:all \
     --compilation_mode=${compilation_mode} -- \
-    //:all \
-    -//:dfa_test \
-    -//:exhaustive1_test \
-    -//:exhaustive2_test \
-    -//:exhaustive3_test \
-    -//:exhaustive_test \
-    -//:random_test \
+    //:small_tests \
     //python:all
 done
 
