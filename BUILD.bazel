@@ -436,3 +436,24 @@ cc_binary(
         "@google_benchmark//:benchmark_main",
     ],
 )
+
+test_suite(
+    name = "small_tests",
+    tags = ["small"],
+    tests = [
+        ":charclass_test",
+        ":compile_test",
+        ":filtered_re2_test",
+        ":mimics_pcre_test",
+        ":parse_test",
+        ":possible_match_test",
+        ":re2_arg_test",
+        ":re2_test",
+        ":regexp_test",
+        ":required_prefix_test",
+        ":search_test",
+        ":set_test",
+        ":simplify_test",
+        ":string_generator_test",
+    ],
+)
