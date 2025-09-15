@@ -31,6 +31,9 @@ option(RE2_TEST "build and run RE2 tests" OFF)
 option(RE2_BENCHMARK "build RE2 benchmarks" OFF)
 option(RE2_BUILD_TESTING "build and run RE2 tests; build RE2 benchmarks" OFF)
 
+# RE2 Modules option
+option(RE2_MODULES "build RE2 modules" OFF)
+
 # The pkg-config Requires: field.
 set(REQUIRES)
 
@@ -146,6 +149,18 @@ target_include_directories(re2 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_D
 set_target_properties(re2 PROPERTIES PUBLIC_HEADER "${RE2_HEADERS}")
 set_target_properties(re2 PROPERTIES SOVERSION ${SONAME} VERSION ${SONAME}.0.0)
 add_library(re2::re2 ALIAS re2)
+
+if (RE2_MODULES)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.28)
+        message(STATUS "Building re2 C++ modules")
+    else()
+        message(WARNING "Skipping re2 C++ modules (requires CMake 3.28+, found ${CMAKE_VERSION})")
+    endif()
+endif()
+
+if(RE2_MODULES AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.28)
+	add_subdirectory(re2/modules)
+endif()
 
 if(APPLE AND RE2_BUILD_FRAMEWORK)
   set_target_properties(re2 PROPERTIES
