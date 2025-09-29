@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cb8fb64b_65c5907e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 6940
+      },
+      "writtenOn": "2025-09-29T14:14:09Z",
+      "side": 1,
+      "message": "Actual errors? How is such a change acceptable?",
+      "range": {
+        "startLine": 11,
+        "startChar": 48,
+        "endLine": 11,
+        "endChar": 54
+      },
+      "revId": "ef6a3ca29e4353bb971525a3fbd6e403afc66487",
+      "serverId": "c958e1eb-c711-3e17-a1d0-c94d35b2e5aa"
+    }
+  ]
+}
