@@ -251,6 +251,6 @@ jobs:
         shell: bash
         working-directory: python
       - if: inputs.build >= 1
-        uses: pypa/gh-action-pypi-publish@v1.12.4
+        uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
           packages-dir: python/dist
