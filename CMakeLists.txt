@@ -87,7 +87,7 @@ set(ABSL_DEPS
 # indirectly), let that take precedence over any copy of Abseil that might have
 # been installed on the system. And likewise for ICU, GoogleTest and Benchmark.
 if(NOT TARGET absl::base)
-  find_package(absl REQUIRED)
+  find_package(absl 20250814 REQUIRED)
 endif()
 list(APPEND REQUIRES ${ABSL_DEPS})
 
