@@ -12,8 +12,8 @@ module(
 
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "apple_support", version = "1.22.1")
-bazel_dep(name = "rules_cc", version = "0.1.4")
-bazel_dep(name = "abseil-cpp", version = "20250512.1")
+bazel_dep(name = "rules_cc", version = "0.2.0")
+bazel_dep(name = "abseil-cpp", version = "20250814.1")
 bazel_dep(name = "rules_python", version = "1.5.1")
 bazel_dep(name = "pybind11_bazel", version = "2.13.6")
 

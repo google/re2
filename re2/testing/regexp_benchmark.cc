@@ -964,7 +964,7 @@ void SearchRE2(benchmark::State& state, const char* regexp,
 
 Prog* GetCachedProg(const char* regexp) {
   static auto& mutex = *new absl::Mutex;
-  absl::MutexLock lock(&mutex);
+  absl::MutexLock lock(mutex);
   static auto& cache = *new absl::flat_hash_map<std::string, Prog*>;
   Prog* prog = cache[regexp];
   if (prog == NULL) {
@@ -982,7 +982,7 @@ Prog* GetCachedProg(const char* regexp) {
 
 PCRE* GetCachedPCRE(const char* regexp) {
   static auto& mutex = *new absl::Mutex;
-  absl::MutexLock lock(&mutex);
+  absl::MutexLock lock(mutex);
   static auto& cache = *new absl::flat_hash_map<std::string, PCRE*>;
   PCRE* re = cache[regexp];
   if (re == NULL) {
@@ -995,7 +995,7 @@ PCRE* GetCachedPCRE(const char* regexp) {
 
 RE2* GetCachedRE2(const char* regexp) {
   static auto& mutex = *new absl::Mutex;
-  absl::MutexLock lock(&mutex);
+  absl::MutexLock lock(mutex);
   static auto& cache = *new absl::flat_hash_map<std::string, RE2*>;
   RE2* re = cache[regexp];
   if (re == NULL) {
