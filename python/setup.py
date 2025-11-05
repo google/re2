@@ -139,16 +139,17 @@ try:
       packages=[PACKAGE],
       ext_package=PACKAGE,
       ext_modules=[ext_module],
+      # Note: Keep the minimum Python version, which appears twice below, in sync with ../.github/workflows/python.yml.
       classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: C++',
-          'Programming Language :: Python :: 3.9',
+          'Programming Language :: Python :: 3.10',
       ],
       options=options(),
       cmdclass={'build_ext': BuildExt},
-      python_requires='~=3.9',
+      python_requires='~=3.10',
   )
 except:
   raise
