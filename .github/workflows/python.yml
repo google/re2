@@ -28,7 +28,7 @@ jobs:
           - { name: X64,   python-name: x86_64,  runs-on: [ubuntu-latest]              }
           - { name: ARM64, python-name: aarch64, runs-on: [ubuntu-24.04-arm] }
         os: [manylinux_2_28]
-        ver: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        ver: ['3.10', '3.11', '3.12', '3.13', '3.14']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PYTHON: /usr/local/bin/python${{ matrix.ver }}
@@ -84,7 +84,7 @@ jobs:
         # TODO(rsc): Stop cross-compiling now that we don't use macOS 12.
         # instead, specify `-large` suffix on X64 and `-xlarge` suffix on ARM64.
         os: [13, 14, 15]
-        ver: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        ver: ['3.10', '3.11', '3.12', '3.13', '3.14']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: darwin_${{ matrix.arch.bazel-name }}
@@ -147,7 +147,7 @@ jobs:
           - { name: X86,   bazel-name: x64_x86, python-name: win32 }
           - { name: X64,   bazel-name: x64,     python-name: win_amd64 }
           - { name: ARM64, bazel-name: arm64,   python-name: win_arm64 }
-        ver: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        ver: ['3.10', '3.11', '3.12', '3.13', '3.14']
         exclude:
           - arch: { name: ARM64, bazel-name: arm64, python-name: win_arm64 }
             ver: '3.9'
