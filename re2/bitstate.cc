@@ -49,7 +49,7 @@ class BitState {
               bool longest, absl::string_view* submatch, int nsubmatch);
 
  private:
-  inline bool ShouldVisit(int id, const char* p);
+  static inline bool ShouldVisit(absl::string_view text, uint64_t* visited, uint16_t id, const char* p);
   void Push(int id, const char* p);
   void GrowStack();
   bool TrySearch(int id, const char* p);
@@ -85,16 +85,19 @@ BitState::BitState(Prog* prog)
     njob_(0) {
 }
 
-// Given id, which *must* be a list head, we can look up its list ID.
-// Then the question is: Should the search visit the (list ID, p) pair?
+// Given the text being searched and current visited state,
+// as well as a list ID, should the search visit the (list ID, p) pair?
 // If so, remember that it was visited so that the next time,
 // we don't repeat the visit.
-bool BitState::ShouldVisit(int id, const char* p) {
-  int n = prog_->list_heads()[id] * static_cast<int>(text_.size()+1) +
-          static_cast<int>(p-text_.data());
-  if (visited_[n/kVisitedBits] & (uint64_t{1} << (n & (kVisitedBits-1))))
+// We pass text and visited to this as a static method so that the
+// caller can do those loads once instead of this code dereferencing
+// them multiple times.
+bool BitState::ShouldVisit(absl::string_view text, uint64_t* visited, uint16_t list_id, const char* p) {
+  int n = list_id * static_cast<int>(text.size()+1) +
+          static_cast<int>(p-text.data());
+  if (visited[n/kVisitedBits] & (uint64_t{1} << (n & (kVisitedBits-1))))
     return false;
-  visited_[n/kVisitedBits] |= uint64_t{1} << (n & (kVisitedBits-1));
+  visited[n/kVisitedBits] |= uint64_t{1} << (n & (kVisitedBits-1));
   return true;
 }
 
@@ -140,10 +143,12 @@ void BitState::Push(int id, const char* p) {
 bool BitState::TrySearch(int id0, const char* p0) {
   bool matched = false;
   const char* end = text_.data() + text_.size();
+  uint16_t* list_heads = prog_->list_heads();
+  uint64_t* visited = visited_.data();
   njob_ = 0;
   // Push() no longer checks ShouldVisit(),
   // so we must perform the check ourselves.
-  if (ShouldVisit(id0, p0))
+  if (ShouldVisit(text_, visited, list_heads[id0], p0))
     Push(id0, p0);
   while (njob_ > 0) {
     // Pop job off stack.
@@ -237,7 +242,7 @@ bool BitState::TrySearch(int id0, const char* p0) {
         // Sanity check: id is the head of its list, which must
         // be the case if id-1 is the last of *its* list. :)
         ABSL_DCHECK(id == 0 || prog_->inst(id-1)->last());
-        if (ShouldVisit(id, p))
+        if (ShouldVisit(text_, visited, list_heads[id], p))
           goto Loop;
         break;
 
