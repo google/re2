@@ -6,7 +6,7 @@
 
 module(
     name = "re2",
-    version = "2025-08-12",
+    version = "2025-11-05",
     compatibility_level = 1,
 )
 
