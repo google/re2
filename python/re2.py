@@ -563,8 +563,7 @@ class Filter(object):
     return index
 
   def Compile(self):
-    if not self._filter.Compile():
-      raise error('failed to compile Filter')
+    return self._filter.Compile()
 
   def Match(self, text, potential=False):
     if isinstance(text, str):
