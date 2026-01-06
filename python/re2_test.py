@@ -62,6 +62,30 @@ class Re2CompileTest(parameterized.TestCase):
     with self.assertRaisesRegex(re2.error, 'pattern too large'):
       re2.compile('.{1000}', options=options)
 
+  def test_compile_returns_atoms(self):
+    f = re2.Filter()
+    f.Add('hello.*world')
+    f.Add(r'foo\bar')
+    atoms = f.Compile()
+    self.assertIsInstance(atoms, list)
+    # Atoms are lowercase
+    self.assertIn('hello', atoms)
+    self.assertIn('world', atoms)
+    self.assertIn('foo', atoms)
+    self.assertIn('bar', atoms)
+
+  def test_compile_no_literals(self):
+    f = re2.Filter()
+    f.Add('.*')
+    f.Add('[a-z')
+    atoms = f.Compile()
+    self.assertEqual(atoms, [])
+
+  def test_compile_empty_filter(self):
+    f = re2.Filter()
+    atoms = f.Compile()
+    self.assertEqual(atoms, [])
+
   def test_programsize_reverseprogramsize(self):
     regexp = re2.compile('a+b')
     self.assertEqual(7, regexp.programsize)

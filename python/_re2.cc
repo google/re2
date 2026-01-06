@@ -208,21 +208,24 @@ class Filter {
     return index;
   }
 
-  bool Compile() {
-    std::vector<std::string> atoms;
-    filter_.Compile(&atoms);
+  std::vector<std::string> Compile() {
+    atoms_.clear()
+    filter_.Compile(&atoms_);
     RE2::Options options;
     options.set_literal(true);
     options.set_case_sensitive(false);
     set_ = std::make_unique<RE2::Set>(options, RE2::UNANCHORED);
-    for (int i = 0; i < static_cast<int>(atoms.size()); ++i) {
-      if (set_->Add(atoms[i], /*error=*/NULL) != i) {
+    for (int i = 0; i < static_cast<int>(atoms_.size()); ++i) {
+      if (set_->Add(atoms_[i], /*error=*/NULL) != i) {
         // Should never happen: the atom is a literal!
         py::pybind11_fail("set_->Add() failed");
       }
     }
     // Compiling can fail.
-    return set_->Compile();
+    if (!set_->Compile()) {
+      py::pybind11_fail("set_->Compile() failed");
+    };
+    return atoms_
   }
 
   std::vector<int> Match(py::buffer buffer, bool potential) const {
@@ -251,6 +254,7 @@ class Filter {
  private:
   re2::FilteredRE2 filter_;
   std::unique_ptr<RE2::Set> set_;
+  std::vector<std::string> atoms_;
 };
 
 PYBIND11_MODULE(_re2, module) {
