@@ -43,6 +43,39 @@ static inline absl::string_view FromBytes(const py::buffer_info& bytes) {
   return absl::string_view(data, size);
 }
 
+static inline absl::string_view FromByteBuffer(const py::buffer_info& bytes) {
+  if (bytes.ndim != 1) {
+    throw py::value_error("buffer must be 1-dimensional");
+  }
+  if (bytes.itemsize != 1) {
+    throw py::value_error("buffer must have itemsize == 1");
+  }
+  if (!bytes.strides.empty() && bytes.strides[0] != 1) {
+    throw py::value_error("buffer must be C-contiguous (stride == 1)");
+  }
+  return FromBytes(bytes);
+}
+
+static inline void ValidatePosLen(const absl::string_view& text, ssize_t pos) {
+  if (pos < 0 || static_cast<size_t>(pos) > text.size()) {
+    throw py::value_error("pos out of range");
+  }
+}
+
+static inline void ValidatePosEndpos(const absl::string_view& text,
+                                     ssize_t pos,
+                                     ssize_t endpos) {
+  if (pos < 0 || endpos < 0) {
+    throw py::value_error("pos/endpos out of range");
+  }
+  if (pos > endpos) {
+    throw py::value_error("pos must be <= endpos");
+  }
+  if (static_cast<size_t>(endpos) > text.size()) {
+    throw py::value_error("endpos out of range");
+  }
+}
+
 static inline int OneCharLen(const char* ptr) {
   return "\1\1\1\1\1\1\1\1\1\1\1\1\2\2\3\4"[(*ptr & 0xFF) >> 4];
 }
@@ -51,23 +84,28 @@ static inline int OneCharLen(const char* ptr) {
 // convert str offsets to bytes offsets. Assumes that text is valid UTF-8.
 ssize_t CharLenToBytes(py::buffer buffer, ssize_t pos, ssize_t len) {
   auto bytes = buffer.request();
-  auto text = FromBytes(bytes);
-  auto ptr = text.data() + pos;
+  auto text = FromByteBuffer(bytes);
+  ValidatePosLen(text, pos);
+  if (len < 0) {
+    throw py::value_error("len must be >= 0");
+  }
+  auto ptr = text.data() + static_cast<size_t>(pos);
   auto end = text.data() + text.size();
   while (ptr < end && len > 0) {
     ptr += OneCharLen(ptr);
     --len;
   }
-  return ptr - (text.data() + pos);
+  return ptr - (text.data() + static_cast<size_t>(pos));
 }
 
 // Helper function for when Python decodes bytes to str and then needs to
 // convert bytes offsets to str offsets. Assumes that text is valid UTF-8.
 ssize_t BytesToCharLen(py::buffer buffer, ssize_t pos, ssize_t endpos) {
   auto bytes = buffer.request();
-  auto text = FromBytes(bytes);
-  auto ptr = text.data() + pos;
-  auto end = text.data() + endpos;
+  auto text = FromByteBuffer(bytes);
+  ValidatePosEndpos(text, pos, endpos);
+  auto ptr = text.data() + static_cast<size_t>(pos);
+  auto end = text.data() + static_cast<size_t>(endpos);
   ssize_t len = 0;
   while (ptr < end) {
     ptr += OneCharLen(ptr);
