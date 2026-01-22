@@ -1015,7 +1015,7 @@ void DFA::RunWorkqOnByte(Workq* oldq, Workq* newq,
 DFA::State* DFA::RunStateOnByteUnlocked(State* state, int c) {
   // Keep only one RunStateOnByte going
   // even if the DFA is being run by multiple threads.
-  absl::MutexLock l(&mutex_);
+  absl::MutexLock l(mutex_);
   return RunStateOnByte(state, c);
 }
 
@@ -1267,7 +1267,7 @@ DFA::StateSaver::~StateSaver() {
 DFA::State* DFA::StateSaver::Restore() {
   if (is_special_)
     return special_;
-  absl::MutexLock l(&dfa_->mutex_);
+  absl::MutexLock l(dfa_->mutex_);
   State* s = dfa_->CachedState(inst_, ninst_, flag_);
   if (s == NULL)
     ABSL_LOG(DFATAL) << "StateSaver failed to restore state.";
@@ -1730,7 +1730,7 @@ bool DFA::AnalyzeSearchHelper(SearchParams* params, StartInfo* info,
   if (start != NULL)
     return true;
 
-  absl::MutexLock l(&mutex_);
+  absl::MutexLock l(mutex_);
   start = info->start.load(std::memory_order_relaxed);
   if (start != NULL)
     return true;
@@ -2050,7 +2050,7 @@ bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
   // Build minimum prefix.
   State* s = params.start;
   min->clear();
-  absl::MutexLock lock(&mutex_);
+  absl::MutexLock lock(mutex_);
   for (int i = 0; i < maxlen; i++) {
     if (previously_visited_states[s] > kMaxEltRepetitions)
       break;
