@@ -23,6 +23,8 @@ def generate():
   with open(f'{mydir}/BUILD.bazel', 'x') as file:
     file.write(
         """\
+load("@rules_cc//cc:cc_import.bzl", "cc_import")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python/cc:py_cc_toolchain.bzl", "py_cc_toolchain")
 load("@rules_python//python:py_runtime.bzl", "py_runtime")
 load("@rules_python//python:py_runtime_pair.bzl", "py_runtime_pair")

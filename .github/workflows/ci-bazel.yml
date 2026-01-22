@@ -1,5 +1,7 @@
 name: CI (Bazel)
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main, rsc-testing]
 permissions:
@@ -13,8 +15,6 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
         # Keep in sync with python.yml.
         ver: ['3.10', '3.11', '3.12', '3.13', '3.14']
-    env:
-      BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4.2.2
       - uses: bazel-contrib/setup-bazel@0.15.0
