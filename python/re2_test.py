@@ -10,6 +10,7 @@ import re
 from absl.testing import absltest
 from absl.testing import parameterized
 import re2
+import _re2
 
 
 class OptionsTest(parameterized.TestCase):
@@ -489,6 +490,29 @@ class FilterTest(absltest.TestCase):
     with self.assertRaisesRegex(re2.error,
                                 r'Match\(\) called before compiling'):
       f.Match('')
+
+
+class BindingHelpersTest(absltest.TestCase):
+
+  def test_char_len_to_bytes_rejects_negative_pos(self):
+    with self.assertRaises(_re2.Error):
+      _re2.CharLenToBytes(memoryview(b"abc"), -1, 1)
+
+  def test_char_len_to_bytes_rejects_negative_len(self):
+    with self.assertRaises(_re2.Error):
+      _re2.CharLenToBytes(memoryview(b"abc"), 0, -1)
+
+  def test_bytes_to_char_len_rejects_negative_pos(self):
+    with self.assertRaises(_re2.Error):
+      _re2.BytesToCharLen(memoryview(b"abc"), -1, 1)
+
+  def test_bytes_to_char_len_rejects_pos_greater_than_endpos(self):
+    with self.assertRaises(_re2.Error):
+      _re2.BytesToCharLen(memoryview(b"abc"), 2, 1)
+
+  def test_bytes_to_char_len_rejects_endpos_out_of_range(self):
+    with self.assertRaises(_re2.Error):
+      _re2.BytesToCharLen(memoryview(b"abc"), 0, 4)
 
 
 if __name__ == '__main__':

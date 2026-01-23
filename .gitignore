@@ -4,3 +4,4 @@ core
 obj/
 benchlog.*
 user.bazelrc
+.DS_Store
