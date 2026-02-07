@@ -243,11 +243,12 @@ jobs:
       - name: Set build number to ${{ inputs.build }}
         env:
           SOURCE_DATE_EPOCH: ${{ env.timestamp }}
+          BUILD_NUMBER: ${{ inputs.build }}
         run: |
           mkdir -p dist
           for WHL in */google_re2-*.whl; do
             python -m wheel unpack "${WHL}"
-            python -m wheel pack --dest-dir=dist --build-number=${{ inputs.build }} google_re2-*
+            python -m wheel pack --dest-dir=dist --build-number="${BUILD_NUMBER}" google_re2-*
             rm -rf google_re2-*
           done
         shell: bash
