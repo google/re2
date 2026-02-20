@@ -220,6 +220,8 @@ If you are using RE2 from another project, you need to make sure you are
 using at least C++17.
 See the RE2 [.bazelrc](https://github.com/google/re2/blob/main/.bazelrc) file for an example.
 
+If you wish to use C++ modules, use `-DRE2_BUILD_MODULES=ON`. This requires at least C++20.
+
 ### Ports and Wrappers
 
 RE2 is implemented in C++.
