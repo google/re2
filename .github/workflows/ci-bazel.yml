@@ -14,7 +14,7 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
         # Keep in sync with python.yml.
-        ver: ['3.10', '3.11', '3.12', '3.13', '3.14']
+        ver: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.14t']
     steps:
       - uses: actions/checkout@v4.2.2
       - uses: bazel-contrib/setup-bazel@0.15.0
