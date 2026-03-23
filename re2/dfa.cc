@@ -1436,11 +1436,16 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params) {
         // of 10 bytes per state computation, fail so that RE2 can
         // fall back to the NFA.  However, RE2::Set cannot fall back,
         // so we just have to keep on keeping on in that case.
-        if (dfa_should_bail_when_slow && resetp != NULL &&
-            static_cast<size_t>(p - resetp) < 10*state_cache_.size() &&
-            kind_ != Prog::kManyMatch) {
-          params->failed = true;
-          return false;
+        if (dfa_should_bail_when_slow && resetp != NULL) {
+          ptrdiff_t bytes_since_reset_signed =
+              run_forward ? p - resetp : resetp - p;
+          size_t bytes_since_reset =
+              static_cast<size_t>(bytes_since_reset_signed);
+          if (bytes_since_reset < 10*state_cache_.size() &&
+              kind_ != Prog::kManyMatch) {
+            params->failed = true;
+            return false;
+          }
         }
         resetp = p;
 
