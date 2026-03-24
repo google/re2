@@ -47,11 +47,36 @@ static inline int OneCharLen(const char* ptr) {
   return "\1\1\1\1\1\1\1\1\1\1\1\1\2\2\3\4"[(*ptr & 0xFF) >> 4];
 }
 
+static inline void ValidatePosLenOrThrow(absl::string_view text,
+                                         ssize_t pos,
+                                         ssize_t len) {
+  const ssize_t text_size = static_cast<ssize_t>(text.size());
+  if (pos < 0 || pos > text_size) {
+    throw py::value_error("pos out of range");
+  }
+  if (len < 0) {
+    throw py::value_error("len must be non-negative");
+  }
+}
+
+static inline void ValidatePosEndposOrThrow(absl::string_view text,
+                                            ssize_t pos,
+                                            ssize_t endpos) {
+  const ssize_t text_size = static_cast<ssize_t>(text.size());
+  if (pos < 0 || pos > text_size) {
+    throw py::value_error("pos out of range");
+  }
+  if (endpos < pos || endpos > text_size) {
+    throw py::value_error("endpos out of range");
+  }
+}
+
 // Helper function for when Python encodes str to bytes and then needs to
 // convert str offsets to bytes offsets. Assumes that text is valid UTF-8.
 ssize_t CharLenToBytes(py::buffer buffer, ssize_t pos, ssize_t len) {
   auto bytes = buffer.request();
   auto text = FromBytes(bytes);
+  ValidatePosLenOrThrow(text, pos, len);
   auto ptr = text.data() + pos;
   auto end = text.data() + text.size();
   while (ptr < end && len > 0) {
@@ -66,6 +91,7 @@ ssize_t CharLenToBytes(py::buffer buffer, ssize_t pos, ssize_t len) {
 ssize_t BytesToCharLen(py::buffer buffer, ssize_t pos, ssize_t endpos) {
   auto bytes = buffer.request();
   auto text = FromBytes(bytes);
+  ValidatePosEndposOrThrow(text, pos, endpos);
   auto ptr = text.data() + pos;
   auto end = text.data() + endpos;
   ssize_t len = 0;
