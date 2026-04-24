@@ -187,6 +187,7 @@ enum RegexpStatusCode {
   kRegexpBadPerlOp,          // bad perl operator
   kRegexpBadUTF8,            // invalid UTF-8 in regexp
   kRegexpBadNamedCapture,    // bad named capture
+  kRegexpNestedTooDeep,      // nested too deeply
 };
 
 // Error status for certain operations.
@@ -480,6 +481,7 @@ class Regexp {
   // Controls the maximum repeat count permitted by the parser.
   // FOR FUZZING ONLY.
   static void FUZZING_ONLY_set_maximum_repeat_count(int i);
+  static void FUZZING_ONLY_set_maximum_nesting_depth(int i);
 
  private:
   // Constructor allocates vectors as appropriate for operator.

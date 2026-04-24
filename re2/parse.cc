@@ -46,8 +46,15 @@ namespace re2 {
 // Controls the maximum repeat count permitted by the parser.
 static int maximum_repeat_count = 1000;
 
+// Controls the maximum nesting depth permitted by the parser.
+static int maximum_nesting_depth = 1000;
+
 void Regexp::FUZZING_ONLY_set_maximum_repeat_count(int i) {
   maximum_repeat_count = i;
+}
+
+void Regexp::FUZZING_ONLY_set_maximum_nesting_depth(int i) {
+  maximum_nesting_depth = i;
 }
 
 // Regular expression parse state.
@@ -179,6 +186,7 @@ private:
   RegexpStatus* status_;
   Regexp* stacktop_;
   int ncap_;  // number of capturing parens seen
+  int depth_; // nesting depth
   int rune_max_;  // maximum char value for this encoding
 
   ParseState(const ParseState&) = delete;
@@ -193,7 +201,7 @@ Regexp::ParseState::ParseState(ParseFlags flags,
                                absl::string_view whole_regexp,
                                RegexpStatus* status)
   : flags_(flags), whole_regexp_(whole_regexp),
-    status_(status), stacktop_(NULL), ncap_(0) {
+    status_(status), stacktop_(NULL), ncap_(0), depth_(0) {
   if (flags_ & Latin1)
     rune_max_ = 0xFF;
   else
@@ -630,8 +638,14 @@ bool Regexp::ParseState::IsMarker(RegexpOp op) {
 // Processes a left parenthesis in the input.
 // Pushes a marker onto the stack.
 bool Regexp::ParseState::DoLeftParen(absl::string_view name) {
+  if (depth_ >= maximum_nesting_depth) {
+    status_->set_code(kRegexpNestedTooDeep);
+    status_->set_error_arg(whole_regexp_);
+    return false;
+  }
   Regexp* re = new Regexp(kLeftParen, flags_);
   re->cap_ = ++ncap_;
+  depth_++;
   if (name.data() != NULL)
     re->name_ = new std::string(name);
   return PushRegexp(re);
@@ -730,6 +744,7 @@ bool Regexp::ParseState::DoRightParen() {
     re->Decref();
     re = r1;
   }
+  depth_--;
   return PushRegexp(re);
 }
 
