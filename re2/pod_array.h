@@ -8,6 +8,8 @@
 #include <memory>
 #include <type_traits>
 
+#include "absl/log/absl_check.h"
+
 namespace re2 {
 
 template <typename T>
@@ -30,6 +32,8 @@ class PODArray {
   }
 
   T& operator[](int pos) const {
+    ABSL_DCHECK_GE(pos, 0);
+    ABSL_DCHECK_LT(pos, size());
     return ptr_[pos];
   }
 
