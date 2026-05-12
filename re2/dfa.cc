@@ -31,6 +31,7 @@
 #include <deque>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -57,6 +58,55 @@
 #endif
 
 namespace re2 {
+
+// Reader-writer mutex with sharded reader counters to avoid
+// cache-line contention when many threads read-lock simultaneously.
+class ScalableRWMutex {
+ public:
+  void ReaderLock() {
+    int idx = ShardIndex();
+    for (;;) {
+      shards_[idx].count.fetch_add(1, std::memory_order_seq_cst);
+      if (!writer_pending_.load(std::memory_order_seq_cst))
+        return;
+      shards_[idx].count.fetch_sub(1, std::memory_order_seq_cst);
+      while (writer_pending_.load(std::memory_order_seq_cst))
+        std::this_thread::yield();
+    }
+  }
+
+  void ReaderUnlock() {
+    shards_[ShardIndex()].count.fetch_sub(1, std::memory_order_release);
+  }
+
+  void WriterLock() {
+    write_mu_.lock();
+    writer_pending_.store(true, std::memory_order_seq_cst);
+    for (int i = 0; i < kNumShards; i++)
+      while (shards_[i].count.load(std::memory_order_seq_cst) > 0)
+        std::this_thread::yield();
+  }
+
+  void WriterUnlock() {
+    writer_pending_.store(false, std::memory_order_release);
+    write_mu_.unlock();
+  }
+
+ private:
+  static constexpr int kNumShards = 64;
+  struct alignas(64) Shard { std::atomic<int32_t> count{0}; };
+
+  static int ShardIndex() {
+    static std::atomic<int> next{0};
+    static thread_local const int shard =
+        next.fetch_add(1, std::memory_order_relaxed) & (kNumShards - 1);
+    return shard;
+  }
+
+  Shard shards_[kNumShards];
+  std::atomic<bool> writer_pending_{false};
+  absl::Mutex write_mu_;
+};
 
 // Controls whether the DFA should bail out early if the NFA would be faster.
 static bool dfa_should_bail_when_slow = true;
@@ -168,8 +218,7 @@ class DFA {
   typedef absl::flat_hash_set<State*, StateHash, StateEqual> StateSet;
 
  private:
-  // Make it easier to swap in a scalable reader-writer mutex.
-  using CacheMutex = absl::Mutex;
+  using CacheMutex = ScalableRWMutex;
 
   enum {
     // Indices into start_ for unanchored searches.
