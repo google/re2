@@ -31,13 +31,13 @@
 #include <deque>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
 #include "absl/base/call_once.h"
 #include "absl/base/thread_annotations.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "absl/hash/hash.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
@@ -165,7 +165,7 @@ class DFA {
     }
   };
 
-  typedef absl::flat_hash_set<State*, StateHash, StateEqual> StateSet;
+  typedef std::unordered_set<State*, StateHash, StateEqual> StateSet;
 
  private:
   // Make it easier to swap in a scalable reader-writer mutex.
@@ -801,6 +801,9 @@ DFA::State* DFA::CachedState(int* inst, int ninst, uint32_t flag) {
 
 // Clear the cache.  Must hold cache_mutex_.w or be in destructor.
 void DFA::ClearCache() {
+  if (state_cache_.empty())
+    return;
+
   StateSet::iterator begin = state_cache_.begin();
   StateSet::iterator end = state_cache_.end();
   while (begin != end) {
@@ -1932,7 +1935,7 @@ int DFA::BuildAllStates(const Prog::DFAStateCallback& cb) {
   // Add start state to work queue.
   // Note that any State* that we handle here must point into the cache,
   // so we can simply depend on pointer-as-a-number hashing and equality.
-  absl::flat_hash_map<State*, int> m;
+  std::unordered_map<State*, int> m;
   std::deque<State*> q;
   m.emplace(params.start, static_cast<int>(m.size()));
   q.push_back(params.start);
@@ -2006,7 +2009,7 @@ bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
   // Also note that previously_visited_states[UnseenStatePtr] will, in the STL
   // tradition, implicitly insert a '0' value at first use. We take advantage
   // of that property below.
-  absl::flat_hash_map<State*, int> previously_visited_states;
+  std::unordered_map<State*, int> previously_visited_states;
 
   // Pick out start state for anchored search at beginning of text.
   RWLocker l(&cache_mutex_);

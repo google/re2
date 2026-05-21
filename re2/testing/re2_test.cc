@@ -1196,6 +1196,25 @@ TEST(RE2, NoCrash) {
     ASSERT_FALSE(RE2::PartialMatch("a\\b", re));
   }
 
+  // Issue 596: compiling a UTF-8 char class with a trailing hyphen should not
+  // crash while consulting the compiler's rune suffix cache.
+  {
+    const std::string pattern = "((([\xC3\xA4-])))";
+    RE2 re(pattern, RE2::Quiet);
+    ASSERT_TRUE(re.ok());
+  }
+
+  // Issue 589: a tiny DFA memory budget should fail safely without crashing
+  // while tearing down an empty state cache.
+  {
+    RE2::Options opt;
+    opt.set_log_errors(false);
+    opt.set_max_mem(4096);
+    RE2 re("A", opt);
+    ASSERT_TRUE(re.ok());
+    ASSERT_TRUE(RE2::PartialMatch("fooAbar", re));
+  }
+
   // Test that using an enormous regexp doesn't crash
   {
     RE2 re("(((.{100}){100}){100}){100}", RE2::Quiet);
