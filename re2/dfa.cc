@@ -1152,24 +1152,24 @@ class DFA::RWLocker {
 };
 
 DFA::RWLocker::RWLocker(CacheMutex* mu) : mu_(mu), writing_(false) {
-  mu_->ReaderLock();
+  mu_->lock_shared();
 }
 
 // This function is marked as ABSL_NO_THREAD_SAFETY_ANALYSIS because
 // the annotations don't support lock upgrade.
 void DFA::RWLocker::LockForWriting() ABSL_NO_THREAD_SAFETY_ANALYSIS {
   if (!writing_) {
-    mu_->ReaderUnlock();
-    mu_->WriterLock();
+    mu_->unlock_shared();
+    mu_->lock();
     writing_ = true;
   }
 }
 
 DFA::RWLocker::~RWLocker() {
   if (!writing_)
-    mu_->ReaderUnlock();
+    mu_->unlock_shared();
   else
-    mu_->WriterUnlock();
+    mu_->unlock();
 }
 
 

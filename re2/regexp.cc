@@ -83,8 +83,8 @@ struct RefStorage {
 };
 alignas(RefStorage) static char ref_storage[sizeof(RefStorage)];
 
-static inline absl::Mutex* ref_mutex() {
-  return &reinterpret_cast<RefStorage*>(ref_storage)->ref_mutex;
+static inline absl::Mutex& ref_mutex() {
+  return reinterpret_cast<RefStorage*>(ref_storage)->ref_mutex;
 }
 
 static inline absl::flat_hash_map<Regexp*, int>* ref_map() {
