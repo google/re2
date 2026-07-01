@@ -19,6 +19,7 @@
 #include <atomic>
 #include <map>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -28,6 +29,7 @@
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/ascii.h"
+#include "absl/strings/charconv.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "re2/prog.h"
@@ -1176,11 +1178,12 @@ bool Parse(const char* str, size_t n, float* dest) {
   static const int kMaxLength = 200;
   char buf[kMaxLength+1];
   str = TerminateNumber(buf, sizeof buf, str, &n, true);
-  char* end;
-  errno = 0;
-  float r = strtof(str, &end);
-  if (end != str + n) return false;   // Leftover junk
-  if (errno) return false;
+  if (str[0] == '\0') return false;
+  // Use absl::from_chars() instead of strtof() to avoid the radix character
+  // (and thus the accepted grammar) depending on the process's LC_NUMERIC.
+  float r;
+  absl::from_chars_result res = absl::from_chars(str, str + n, r);
+  if (res.ec != std::errc() || res.ptr != str + n) return false;  // Leftover junk
   if (dest == NULL) return true;
   *dest = r;
   return true;
@@ -1192,11 +1195,12 @@ bool Parse(const char* str, size_t n, double* dest) {
   static const int kMaxLength = 200;
   char buf[kMaxLength+1];
   str = TerminateNumber(buf, sizeof buf, str, &n, true);
-  char* end;
-  errno = 0;
-  double r = strtod(str, &end);
-  if (end != str + n) return false;   // Leftover junk
-  if (errno) return false;
+  if (str[0] == '\0') return false;
+  // Use absl::from_chars() instead of strtod() to avoid the radix character
+  // (and thus the accepted grammar) depending on the process's LC_NUMERIC.
+  double r;
+  absl::from_chars_result res = absl::from_chars(str, str + n, r);
+  if (res.ec != std::errc() || res.ptr != str + n) return false;  // Leftover junk
   if (dest == NULL) return true;
   *dest = r;
   return true;
