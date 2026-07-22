@@ -70,7 +70,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
       cmd.append(f'--@nanobind_bazel//:py-limited-api={tag}')
     # Register the local Python toolchains with highest priority.
     cmd.append('--extra_toolchains=//python/toolchains:all')
-    cmd += ['--compilation_mode=opt', '--', ':all']
+    cmd += ['--compilation_mode=opt', '--', ':_re2']
     self.spawn(cmd)
 
     # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
