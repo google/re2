@@ -7,6 +7,7 @@ import re
 import setuptools
 import setuptools.command.build_ext
 import shutil
+import subprocess
 
 long_description = r"""A drop-in replacement for the re module.
 
@@ -96,11 +97,42 @@ def include_dirs():
     pass
 
 
+def _pkg_config(*args):
+  """Run pkg-config and return its stdout, or None on failure."""
+  try:
+    return subprocess.check_output(
+        ['pkg-config'] + list(args),
+        text=True, stderr=subprocess.DEVNULL,
+    ).strip()
+  except (subprocess.CalledProcessError, FileNotFoundError):
+    return None
+
+
+def _re2_ext_args():
+  """Use pkg-config to discover re2 link flags for static builds.
+
+  When re2 is installed as a static library, its transitive dependencies
+  (e.g. abseil-cpp) must also appear on the link line.  pkg-config knows
+  about them via the Requires field in re2.pc.
+  """
+  pc = _pkg_config('--libs', '--static', 're2')
+  if pc:
+    tokens = pc.split()
+    return (
+        [t[2:] for t in tokens if t.startswith('-l')],
+        [t[2:] for t in tokens if t.startswith('-L')],
+    )
+  return ['re2'], []
+
+
+_re2_libraries, _re2_library_dirs = _re2_ext_args()
+
 ext_module = setuptools.Extension(
     name='_re2',
     sources=['_re2.cc'],
     include_dirs=list(include_dirs()),
-    libraries=['re2'],
+    libraries=_re2_libraries,
+    library_dirs=_re2_library_dirs,
     extra_compile_args=['-fvisibility=hidden'],
 )
 
@@ -139,17 +171,16 @@ try:
       packages=[PACKAGE],
       ext_package=PACKAGE,
       ext_modules=[ext_module],
-      # Note: Keep the minimum Python version, which appears twice below, in sync with ../.github/workflows/python.yml.
       classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: C++',
-          'Programming Language :: Python :: 3.10',
+          'Programming Language :: Python :: 3.9',
       ],
       options=options(),
       cmdclass={'build_ext': BuildExt},
-      python_requires='~=3.10',
+      python_requires='~=3.9',
   )
 except:
   raise
