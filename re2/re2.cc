@@ -626,6 +626,14 @@ bool RE2::PossibleMatchRange(std::string* min, std::string* max,
     // but we still have useful information from prefix_.
     // Round up *max to allow any possible suffix.
     PrefixSuccessor(max);
+    // If *max is empty, the prefix consisted entirely of 0xFF bytes
+    // and PrefixSuccessor has no successor to return.  This would
+    // produce a range with min > max, violating the documented
+    // invariant "min <= s <= max" for any anchored match s.
+    // (The empty regexp is handled correctly elsewhere: it returns
+    // min == max == "".)
+    if (max->empty() && !min->empty())
+      return false;
   } else {
     // Nothing useful.
     *min = "";

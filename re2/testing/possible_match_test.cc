@@ -165,6 +165,16 @@ TEST(PossibleMatchRange, Failures) {
   // Fails because it's a malformed regexp.
   EXPECT_FALSE(RE2("*hello").PossibleMatchRange(&min, &max, 10))
       << "min=" << absl::CEscape(min) << ", max=" << absl::CEscape(max);
+
+  // A repeated high byte in Latin1 used to return true with min > max
+  // (contract violation): min="\xFF", max="".  The regexp "^<0xFF><0xFF>+"
+  // never matches the empty string, so the empty max is a lie.
+  EXPECT_FALSE(RE2("^\xFF\xFF+", RE2::Latin1).
+               PossibleMatchRange(&min, &max, 100))
+      << "min=" << absl::CEscape(min) << ", max=" << absl::CEscape(max);
+  EXPECT_FALSE(RE2("^\xFF+", RE2::Latin1).
+               PossibleMatchRange(&min, &max, 100))
+      << "min=" << absl::CEscape(min) << ", max=" << absl::CEscape(max);
 }
 
 // Exhaustive test: generate all regexps within parameters,
