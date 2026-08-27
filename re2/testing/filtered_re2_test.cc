@@ -338,6 +338,20 @@ TEST(FilteredRE2Test, MoveSemantics) {
   EXPECT_EQ(0, v1.matches[0]);
   v1.f.AllMatches("abc bar2 xyz", {0}, &v1.matches);
   EXPECT_EQ(size_t{0}, v1.matches.size());
+
+  // Self-move-assignment must be a no-op. Without the self-assignment guard in
+  // operator=, this->~FilteredRE2() deletes v1.f's RE2* pointers and the object
+  // is then move-constructed from itself, leaving it destroyed and empty: a
+  // use-after-destroy, which manifests as a silently-emptied filter here and as
+  // a double-free or crash on other implementations. The aliased reference
+  // avoids a -Wself-move diagnostic on the direct form.
+  FilteredRE2& v1_ref = v1.f;
+  v1.f = std::move(v1_ref);
+  v1.f.AllMatches("abc foo1 xyz", {0}, &v1.matches);
+  EXPECT_EQ(size_t{1}, v1.matches.size());
+  EXPECT_EQ(0, v1.matches[0]);
+  v1.f.AllMatches("abc bar2 xyz", {0}, &v1.matches);
+  EXPECT_EQ(size_t{0}, v1.matches.size());
 }
 
 }  //  namespace re2
