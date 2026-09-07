@@ -113,6 +113,16 @@ bool FilteredRE2::AllMatches(absl::string_view text,
                              const std::vector<int>& atoms,
                              std::vector<int>* matching_regexps) const {
   matching_regexps->clear();
+  // As with FirstMatch, calling this before Compile() (once at least one
+  // pattern has been added) means the prefilter tree was never built, so
+  // the caller would silently get back every added pattern instead of a
+  // real filtered result. The re2_vec_.empty() case is deliberately
+  // excused: Compile() is a no-op when called before any Add(), and some
+  // callers rely on that by calling AllMatches with nothing added yet.
+  if (!compiled_ && !re2_vec_.empty()) {
+    ABSL_LOG(DFATAL) << "AllMatches called before Compile.";
+    return false;
+  }
   std::vector<int> regexps;
   prefilter_tree_->RegexpsGivenStrings(atoms, &regexps);
   for (size_t i = 0; i < regexps.size(); i++)
@@ -123,6 +133,11 @@ bool FilteredRE2::AllMatches(absl::string_view text,
 
 void FilteredRE2::AllPotentials(const std::vector<int>& atoms,
                                 std::vector<int>* potential_regexps) const {
+  if (!compiled_ && !re2_vec_.empty()) {
+    ABSL_LOG(DFATAL) << "AllPotentials called before Compile.";
+    potential_regexps->clear();
+    return;
+  }
   prefilter_tree_->RegexpsGivenStrings(atoms, potential_regexps);
 }
 

@@ -295,6 +295,33 @@ TEST(FilteredRE2Test, EmptyStringInStringSetBug) {
                                  "EmptyStringInStringSetBug", &v));
 }
 
+TEST(FilteredRE2Test, AllMatchesBeforeCompileDies) {
+  // FirstMatch() already refuses (in debug builds) to run before Compile()
+  // has been called on a non-empty FilteredRE2. AllMatches() and
+  // AllPotentials() used to silently skip that check instead of matching
+  // FirstMatch's behavior, which meant a misuse that FirstMatch would catch
+  // went unnoticed via the other two entry points.
+  FilterTestVars v;
+  int id;
+  v.f.Add("foo", v.opts, &id);
+  // Deliberately not calling v.f.Compile() here.
+  std::vector<int> atom_ids;
+  std::vector<int> matching_regexps;
+  EXPECT_DEATH(v.f.AllMatches("foo", atom_ids, &matching_regexps),
+               "AllMatches called before Compile");
+}
+
+TEST(FilteredRE2Test, AllPotentialsBeforeCompileDies) {
+  FilterTestVars v;
+  int id;
+  v.f.Add("foo", v.opts, &id);
+  // Deliberately not calling v.f.Compile() here.
+  std::vector<int> atom_ids;
+  std::vector<int> potential_regexps;
+  EXPECT_DEATH(v.f.AllPotentials(atom_ids, &potential_regexps),
+               "AllPotentials called before Compile");
+}
+
 TEST(FilteredRE2Test, MoveSemantics) {
   FilterTestVars v1;
   int id;
