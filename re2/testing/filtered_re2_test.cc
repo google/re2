@@ -338,6 +338,13 @@ TEST(FilteredRE2Test, MoveSemantics) {
   EXPECT_EQ(0, v1.matches[0]);
   v1.f.AllMatches("abc bar2 xyz", {0}, &v1.matches);
   EXPECT_EQ(size_t{0}, v1.matches.size());
+
+  // Verify that self-move-assignment is safe.
+  FilteredRE2* f1_ptr = &v1.f;
+  v1.f = std::move(*f1_ptr);
+  v1.f.AllMatches("abc foo1 xyz", {0}, &v1.matches);
+  EXPECT_EQ(size_t{1}, v1.matches.size());
+  EXPECT_EQ(0, v1.matches[0]);
 }
 
 }  //  namespace re2

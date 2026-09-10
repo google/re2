@@ -43,8 +43,10 @@ FilteredRE2::FilteredRE2(FilteredRE2&& other)
 }
 
 FilteredRE2& FilteredRE2::operator=(FilteredRE2&& other) {
-  this->~FilteredRE2();
-  (void) new (this) FilteredRE2(std::move(other));
+  if (this != &other) {
+    this->~FilteredRE2();
+    (void) new (this) FilteredRE2(std::move(other));
+  }
   return *this;
 }
 

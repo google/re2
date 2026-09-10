@@ -230,6 +230,12 @@ TEST(Set, MoveSemantics) {
   s1 = std::move(s2);
   ASSERT_EQ(s1.Match("abc foo1 xyz", NULL), true);
   ASSERT_EQ(s1.Match("abc bar2 xyz", NULL), false);
+
+  // Verify that self-move-assignment is safe.
+  RE2::Set* s1_ptr = &s1;
+  s1 = std::move(*s1_ptr);
+  ASSERT_EQ(s1.Match("abc foo1 xyz", NULL), true);
+  ASSERT_EQ(s1.Match("abc bar2 xyz", NULL), false);
 }
 
 }  // namespace re2
