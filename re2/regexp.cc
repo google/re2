@@ -95,7 +95,7 @@ int Regexp::Ref() {
   if (ref_ < kMaxRef)
     return ref_;
 
-  absl::MutexLock l(ref_mutex());
+  absl::MutexLock l(*ref_mutex());
   return (*ref_map())[this];
 }
 
@@ -108,7 +108,7 @@ Regexp* Regexp::Incref() {
     });
 
     // Store ref count in overflow map.
-    absl::MutexLock l(ref_mutex());
+    absl::MutexLock l(*ref_mutex());
     if (ref_ == kMaxRef) {
       // already overflowed
       (*ref_map())[this]++;
@@ -128,7 +128,7 @@ Regexp* Regexp::Incref() {
 void Regexp::Decref() {
   if (ref_ == kMaxRef) {
     // Ref count is stored in overflow map.
-    absl::MutexLock l(ref_mutex());
+    absl::MutexLock l(*ref_mutex());
     int r = (*ref_map())[this] - 1;
     if (r < kMaxRef) {
       ref_ = static_cast<uint16_t>(r);
