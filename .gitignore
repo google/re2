@@ -2,5 +2,6 @@
 *.orig
 core
 obj/
+build/
 benchlog.*
 user.bazelrc
