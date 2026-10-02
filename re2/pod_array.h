@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <type_traits>
+#include "absl/log/absl_check.h"
 
 namespace re2 {
 
@@ -19,7 +20,7 @@ class PODArray {
   PODArray()
       : ptr_() {}
   explicit PODArray(int len)
-      : ptr_(std::allocator<T>().allocate(len), Deleter(len)) {}
+      : ptr_((ABSL_CHECK_GE(len, 0), std::allocator<T>().allocate(len)), Deleter(len)) {}
 
   T* data() const {
     return ptr_.get();

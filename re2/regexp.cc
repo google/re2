@@ -187,6 +187,9 @@ void Regexp::AddRuneToString(Rune r) {
     runes_ = new Rune[8];
   } else if (nrunes_ >= 8 && (nrunes_ & (nrunes_ - 1)) == 0) {
     // double on powers of two
+    if (nrunes_ >= (1 << 30)) {
+      ABSL_LOG(FATAL) << "Too many runes in LiteralString";
+    }
     Rune *old = runes_;
     runes_ = new Rune[nrunes_ * 2];
     for (int i = 0; i < nrunes_; i++)
@@ -524,6 +527,7 @@ static const char *kErrorStrings[] = {
   "invalid perl operator",
   "invalid UTF-8",
   "invalid named capture group",
+  "expression nested too deeply",
 };
 
 std::string RegexpStatus::CodeText(enum RegexpStatusCode code) {
