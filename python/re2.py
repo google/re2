@@ -218,6 +218,11 @@ class _Regexp(object):
           encoded_pos += _re2.CharLenToBytes(encoded_text, encoded_pos, 1)
         else:
           encoded_pos = spans[0][1]
+          if spans[0][0] == encoded_pos:
+            # Empty match; skip past it to avoid re-matching at same spot
+            if encoded_pos == encoded_endpos:
+              break
+            encoded_pos += _re2.CharLenToBytes(encoded_text, encoded_pos, 1)
     else:
       while True:
         spans = self._regexp.Match(anchor, text, pos, endpos)
@@ -232,6 +237,11 @@ class _Regexp(object):
           pos += 1
         else:
           pos = spans[0][1]
+          if spans[0][0] == spans[0][1]:
+            # Empty match; skip past it to avoid re-matching at same spot
+            if pos == endpos:
+              break
+            pos += 1
 
   def search(self, text, pos=None, endpos=None):
     return next(self._match(_Anchor.UNANCHORED, text, pos, endpos), None)

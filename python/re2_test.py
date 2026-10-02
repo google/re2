@@ -490,6 +490,137 @@ class FilterTest(absltest.TestCase):
                                 r'Match\(\) called before compiling'):
       f.Match('')
 
+class Re2SubTest(absltest.TestCase):
+
+  def test_dollar_sign_subn(self):
+    # $ should match once at end of string
+    end_of_string = re2.compile("$")
+    result, count = end_of_string.subn("EOS", "Hello World")
+    self.assertEqual(result, "Hello WorldEOS")
+    self.assertEqual(count, 1)
+
+  def test_dollar_sign_finditer(self):
+    # $ should match once at end of string
+    matches = list(re2.finditer("$", "Hello World"))
+    self.assertEqual(len(matches), 1)
+    self.assertEqual(matches[0].span(), (11, 11))
+
+  def test_caret_subn(self):
+    # ^ should match once at start of string
+    result, count = re2.subn("^", "BOS", "Hello World")
+    self.assertEqual(result, "BOSHello World")
+    self.assertEqual(count, 1)
+
+  def test_caret_finditer(self):
+    # ^ should match once at start of string
+    matches = list(re2.finditer("^", "Hello World"))
+    self.assertEqual(len(matches), 1)
+    self.assertEqual(matches[0].span(), (0, 0))
+
+  def test_empty_pattern_finditer(self):
+    # Empty pattern should match at every position including end
+    matches = list(re2.finditer("", "abc"))
+    self.assertEqual(len(matches), 4)
+    self.assertEqual([m.span() for m in matches], [(0, 0), (1, 1), (2, 2), (3, 3)])
+
+  def test_empty_pattern_subn(self):
+    # Empty pattern substitution at every position
+    result, count = re2.subn("", "-", "ab")
+    self.assertEqual(result, "-a-b-")
+    self.assertEqual(count, 3)
+
+  def test_dollar_sign_bytes(self):
+    # Bytes version of $ test
+    result, count = re2.subn(b"$", b"EOS", b"Hello World")
+    self.assertEqual(result, b"Hello WorldEOS")
+    self.assertEqual(count, 1)
+
+  def test_caret_bytes(self):
+    # Bytes version of ^ test
+    result, count = re2.subn(b"^", b"BOS", b"Hello World")
+    self.assertEqual(result, b"BOSHello World")
+    self.assertEqual(count, 1)
+
+  def test_empty_string_input(self):
+    # $ on empty string should match once
+    matches = list(re2.finditer("$", ""))
+    self.assertEqual(len(matches), 1)
+    self.assertEqual(matches[0].span(), (0, 0))
+
+  def test_caret_dollar_empty_string(self):
+    # ^$ should match empty string once
+    matches = list(re2.finditer("^$", ""))
+    self.assertEqual(len(matches), 1)
+    self.assertEqual(matches[0].span(), (0, 0))
+
+  def test_optional_match_at_end(self):
+    # a? should match 'a' once, then empty string at positions after
+    matches = list(re2.finditer("a?", "a"))
+    self.assertEqual(len(matches), 2)
+    self.assertEqual([m.span() for m in matches], [(0, 1), (1, 1)])
+
+  def test_star_match_at_end(self):
+    # a* at "aa" should match "aa", then empty at end
+    matches = list(re2.finditer("a*", "aa"))
+    self.assertEqual(len(matches), 2)
+    self.assertEqual([m.span() for m in matches], [(0, 2), (2, 2)])
+
+  def test_finditer_with_endpos(self):
+    # RE2's $ matches end of actual string, not endpos boundary
+    # This differs from Python's re module
+    matches = list(re2.compile("$").finditer("Hello World", endpos=5))
+    self.assertEqual(len(matches), 0)
+
+  def test_empty_pattern_with_endpos(self):
+    # Empty pattern with endpos should match up to and including endpos
+    matches = list(re2.compile("").finditer("Hello", endpos=3))
+    self.assertEqual(len(matches), 4)
+    self.assertEqual([m.span() for m in matches], [(0, 0), (1, 1), (2, 2), (3, 3)])
+
+  def test_backslash_z_end_of_string(self):
+    # \z is RE2's absolute end of string anchor
+    matches = list(re2.finditer(r"\z", "Hello"))
+    self.assertEqual(len(matches), 1)
+    self.assertEqual(matches[0].span(), (5, 5))
+
+  def test_backslash_A_start_of_string(self):
+    # \A is absolute start of string anchor
+    matches = list(re2.finditer(r"\A", "Hello"))
+    self.assertEqual(len(matches), 1)
+    self.assertEqual(matches[0].span(), (0, 0))
+
+  def test_word_boundary(self):
+    # \b matches at word boundaries
+    matches = list(re2.finditer(r"\b", "Hi there"))
+    # Boundaries: before H, after i, before t, after e
+    self.assertEqual(len(matches), 4)
+    self.assertEqual([m.span() for m in matches], [(0, 0), (2, 2), (3, 3), (8, 8)])
+
+  def test_word_boundary_subn(self):
+    # \b substitution at word boundaries
+    result, count = re2.subn(r"\b", "|", "Hi there")
+    self.assertEqual(result, "|Hi| |there|")
+    self.assertEqual(count, 4)
+
+  def test_non_word_boundary(self):
+    # \B matches at non-word boundaries (inside words)
+    matches = list(re2.finditer(r"\B", "Hello"))
+    # Non-boundaries: between H-e, e-l, l-l, l-o
+    self.assertEqual(len(matches), 4)
+    self.assertEqual([m.span() for m in matches], [(1, 1), (2, 2), (3, 3), (4, 4)])
+
+  def test_backslash_z_bytes(self):
+    # Bytes version of \z
+    matches = list(re2.finditer(rb"\z", b"Hello"))
+    self.assertEqual(len(matches), 1)
+    self.assertEqual(matches[0].span(), (5, 5))
+
+  def test_backslash_A_bytes(self):
+    # Bytes version of \A
+    matches = list(re2.finditer(rb"\A", b"Hello"))
+    self.assertEqual(len(matches), 1)
+    self.assertEqual(matches[0].span(), (0, 0))
+
 
 if __name__ == '__main__':
   absltest.main()
