@@ -2106,6 +2106,13 @@ bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
     }
     if (!extended) {
       // Done, no need for PrefixSuccessor.
+      // If *max is empty and *min is not, we have no way to express
+      // "no maximum string" and must report failure: returning true
+      // would give a range with min > max, violating the documented
+      // invariant.  (The empty regexp, with min == max == "", is
+      // handled correctly here.)
+      if (max->empty() && !min->empty())
+        return false;
       return true;
     }
   }
