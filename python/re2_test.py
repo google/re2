@@ -6,9 +6,14 @@
 import collections
 import pickle
 import re
+import unittest
 
 from absl.testing import absltest
 from absl.testing import parameterized
+try:
+  import _re2
+except ImportError:
+  _re2 = None
 import re2
 
 
@@ -28,6 +33,45 @@ class OptionsTest(parameterized.TestCase):
       raise TypeError('option {!r}: {!r} {!r}'.format(name, type(value), value))
     setattr(options, name, value)
     self.assertEqual(value, getattr(options, name))
+
+
+@unittest.skipIf(_re2 is None, '_re2 extension module is unavailable')
+class BindingOffsetConversionTest(absltest.TestCase):
+
+  def test_charlentobytes_negative_pos(self):
+    with self.assertRaises(ValueError):
+      _re2.CharLenToBytes(b'abc', -1, 1)
+
+  def test_charlentobytes_pos_beyond_buffer(self):
+    with self.assertRaises(ValueError):
+      _re2.CharLenToBytes(b'abc', 4, 1)
+
+  def test_charlentobytes_negative_len(self):
+    with self.assertRaises(ValueError):
+      _re2.CharLenToBytes(b'abc', 0, -1)
+
+  def test_bytestocharlen_negative_pos(self):
+    with self.assertRaises(ValueError):
+      _re2.BytesToCharLen(b'abc', -1, 1)
+
+  def test_bytestocharlen_endpos_beyond_buffer(self):
+    with self.assertRaises(ValueError):
+      _re2.BytesToCharLen(b'abc', 0, 4)
+
+  def test_bytestocharlen_endpos_before_pos(self):
+    with self.assertRaises(ValueError):
+      _re2.BytesToCharLen(b'abc', 2, 1)
+
+  def test_valid_ascii_offsets_unchanged(self):
+    self.assertEqual(2, _re2.CharLenToBytes(b'abc', 1, 2))
+    self.assertEqual(2, _re2.BytesToCharLen(b'abc', 1, 3))
+    self.assertEqual(0, _re2.CharLenToBytes(b'abc', 3, 0))
+    self.assertEqual(0, _re2.BytesToCharLen(b'abc', 3, 3))
+
+  def test_valid_utf8_offsets_unchanged(self):
+    text = 'a\u2603b'.encode('utf-8')
+    self.assertEqual(4, _re2.CharLenToBytes(text, 0, 2))
+    self.assertEqual(2, _re2.BytesToCharLen(text, 0, 4))
 
 
 class Re2CompileTest(parameterized.TestCase):
