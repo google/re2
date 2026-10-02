@@ -251,8 +251,13 @@ int Compiler::AllocInst(int n) {
     int cap = inst_.size();
     if (cap == 0)
       cap = 8;
-    while (ninst_ + n > cap)
-      cap *= 2;
+    while (ninst_ + n > cap) {
+      if (cap > max_ninst_ / 2) {
+        cap = max_ninst_;
+      } else {
+        cap *= 2;
+      }
+    }
     PODArray<Prog::Inst> inst(cap);
     if (inst_.data() != NULL)
       memmove(inst.data(), inst_.data(), ninst_*sizeof inst_[0]);
