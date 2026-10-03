@@ -583,4 +583,19 @@ TEST(LookAround, ErrorArgs) {
   EXPECT_EQ(status.error_arg(), "(?<!");
 }
 
+// \p or \P followed by invalid UTF-8 (rather than a group name) must be
+// reported as bad UTF-8, matching the \p{...} form.
+TEST(UnicodeGroups, BadUTF8) {
+  RegexpStatus status;
+  Regexp* re;
+
+  re = Regexp::Parse(std::string("\\p\xff"), Regexp::LikePerl, &status);
+  EXPECT_TRUE(re == NULL);
+  EXPECT_EQ(status.code(), kRegexpBadUTF8);
+
+  re = Regexp::Parse(std::string("\\P\xff"), Regexp::LikePerl, &status);
+  EXPECT_TRUE(re == NULL);
+  EXPECT_EQ(status.code(), kRegexpBadUTF8);
+}
+
 }  // namespace re2

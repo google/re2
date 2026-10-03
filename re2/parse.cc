@@ -1787,7 +1787,7 @@ ParseStatus ParseUnicodeGroup(absl::string_view* s,
   absl::string_view name;  // Han or L
   s->remove_prefix(2);  // '\\', 'p'
 
-  if (!StringViewToRune(&c, s, status))
+  if (StringViewToRune(&c, s, status) < 0)
     return kParseError;
   if (c != '{') {
     // Name is the bit of string we just skipped over for c.
