@@ -1364,13 +1364,18 @@ static bool ParseInteger(absl::string_view* s, int* np) {
     return false;
   int n = 0;
   int c;
+  bool overflow = false;
   while (!s->empty() && absl::ascii_isdigit(c = (*s)[0] & 0xFF)) {
     // Avoid overflow.
-    if (n >= 100000000)
-      return false;
-    n = n*10 + c - '0';
+    if (n >= 100000000) {
+      overflow = true;
+    } else {
+      n = n*10 + c - '0';
+    }
     s->remove_prefix(1);  // digit
   }
+  if (overflow)
+    n = 1000000000;
   *np = n;
   return true;
 }
