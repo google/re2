@@ -6,6 +6,8 @@
 
 #include <string.h>
 
+#include <string>
+
 #include "absl/base/macros.h"
 #include "absl/log/absl_log.h"
 #include "gtest/gtest.h"
@@ -284,6 +286,19 @@ TEST(TestSimplify, SimpleRegexps) {
     re->Decref();
     sre->Decref();
   }
+}
+
+TEST(TestSimplify, VisitBudgetExhaustionFailsGracefully) {
+  std::string pattern;
+  pattern.reserve(1500000);
+  for (int i = 0; i < 500000; i++)
+    pattern += "(a)";
+
+  RegexpStatus status;
+  Regexp* re = Regexp::Parse(pattern, Regexp::LikePerl, &status);
+  ASSERT_TRUE(re != NULL) << status.Text();
+  EXPECT_TRUE(re->Simplify() == NULL);
+  re->Decref();
 }
 
 }  // namespace re2
