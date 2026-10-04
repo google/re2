@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <limits>
 #include <map>
 #include <string>
 #include <utility>
@@ -22,6 +23,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "gtest/gtest.h"
+#include "re2/prog.h"
 #include "re2/regexp.h"
 
 #if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MINGW32__)
@@ -1694,6 +1696,32 @@ TEST(RE2, InitNULL) {
   ASSERT_TRUE(re.ok());
   ASSERT_TRUE(RE2::FullMatch("", re));
   ASSERT_TRUE(RE2::FullMatch("", NULL));
+}
+
+TEST(RE2, BitStateOversizedTextOverflow) {
+  Regexp* re = Regexp::Parse("a", Regexp::LikePerl, NULL);
+  ASSERT_TRUE(re != NULL);
+  Prog* prog = re->CompileToProg(0);
+  ASSERT_TRUE(prog != NULL);
+  ASSERT_TRUE(prog->CanBitState());
+
+  const char dummy = 'a';
+  size_t len = static_cast<size_t>(std::numeric_limits<int>::max());
+  absl::string_view text(&dummy, len);
+
+  absl::string_view match[1];
+  EXPECT_FALSE(prog->SearchBitState(text, text, Prog::kUnanchored,
+                                    Prog::kFirstMatch, match, 1));
+  EXPECT_FALSE(prog->SearchBitState(text, text, Prog::kAnchored,
+                                    Prog::kFullMatch, match, 1));
+
+  size_t half_len = static_cast<size_t>(std::numeric_limits<int>::max() / 2);
+  absl::string_view half_text(&dummy, half_len);
+  EXPECT_FALSE(prog->SearchBitState(half_text, half_text, Prog::kUnanchored,
+                                    Prog::kFirstMatch, match, 1));
+
+  delete prog;
+  re->Decref();
 }
 
 }  // namespace re2

@@ -312,6 +312,17 @@ bool BitState::Search(absl::string_view text, absl::string_view context,
   for (int i = 0; i < nsubmatch_; i++)
     submatch_[i] = absl::string_view();
 
+  if (prog_->list_count() <= 0)
+    return false;
+
+  const uint64_t max_bits =
+      static_cast<uint64_t>(std::numeric_limits<int>::max() - kVisitedBits);
+  if (text.size() > max_bits ||
+      static_cast<uint64_t>(text.size()) + 1 >
+          max_bits / static_cast<uint64_t>(prog_->list_count())) {
+    return false;
+  }
+
   // Allocate scratch space.
   int nvisited = prog_->list_count() * static_cast<int>(text.size()+1);
   nvisited = (nvisited + kVisitedBits-1) / kVisitedBits;
