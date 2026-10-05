@@ -8,6 +8,7 @@
 #include "re2/re2.h"
 
 #include <errno.h>
+#include <locale.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -947,6 +948,37 @@ TEST(RE2, FloatingPointFullMatchTypes) {
     ASSERT_EQ(v, 1.0000000596046448)
       << absl::StrFormat("%.17g != %.17g", v, 1.0000000596046448);
   }
+}
+
+TEST(RE2, FloatingPointFullMatchIsLocaleIndependent) {
+  // Parsing must not depend on LC_NUMERIC: '.' is always the radix character
+  // regardless of the process locale. Skip if no comma-radix locale is present.
+  const char* saved = setlocale(LC_NUMERIC, NULL);
+  std::string savedcopy = saved != NULL ? saved : "C";
+  static const char* const kCommaLocales[] = {
+      "de_DE.UTF-8", "de_DE.utf8", "de_DE", "fr_FR.UTF-8", "nl_NL.UTF-8",
+  };
+  bool have_locale = false;
+  for (const char* name : kCommaLocales) {
+    if (setlocale(LC_NUMERIC, name) != NULL) {
+      have_locale = true;
+      break;
+    }
+  }
+  if (!have_locale)
+    GTEST_SKIP() << "no comma-radix locale available";
+
+  double d = 0;
+  EXPECT_TRUE(RE2::FullMatch("1.5", "(.*)", &d));
+  EXPECT_EQ(d, 1.5);
+  EXPECT_FALSE(RE2::FullMatch("1,5", "(.*)", &d));
+
+  float f = 0;
+  EXPECT_TRUE(RE2::FullMatch("1.5", "(.*)", &f));
+  EXPECT_EQ(f, 1.5f);
+  EXPECT_FALSE(RE2::FullMatch("1,5", "(.*)", &f));
+
+  setlocale(LC_NUMERIC, savedcopy.c_str());
 }
 
 TEST(RE2, FullMatchAnchored) {
