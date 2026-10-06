@@ -230,6 +230,17 @@ TEST(Set, MoveSemantics) {
   s1 = std::move(s2);
   ASSERT_EQ(s1.Match("abc foo1 xyz", NULL), true);
   ASSERT_EQ(s1.Match("abc bar2 xyz", NULL), false);
+
+  // Self-move-assignment must be a no-op. Without the self-assignment guard in
+  // operator=, this->~Set() Decref()s (and can free) s1's Regexp* pointers and
+  // the object is then move-constructed from itself, leaving it destroyed and
+  // empty: a use-after-destroy, which manifests as a silently-emptied Set here
+  // and as a double-free or crash on other implementations. The aliased
+  // reference avoids a -Wself-move diagnostic on the direct form.
+  RE2::Set& s1_ref = s1;
+  s1 = std::move(s1_ref);
+  ASSERT_EQ(s1.Match("abc foo1 xyz", NULL), true);
+  ASSERT_EQ(s1.Match("abc bar2 xyz", NULL), false);
 }
 
 }  // namespace re2

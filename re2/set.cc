@@ -50,6 +50,8 @@ RE2::Set::Set(Set&& other)
 }
 
 RE2::Set& RE2::Set::operator=(Set&& other) {
+  if (this == &other)
+    return *this;
   this->~Set();
   (void) new (this) Set(std::move(other));
   return *this;
