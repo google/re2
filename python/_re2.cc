@@ -38,6 +38,11 @@ namespace py = pybind11;
 // the py::buffer_info manages a reference count to the py::buffer, so it
 // must be constructed and subsequently destructed while holding the GIL.
 static inline absl::string_view FromBytes(const py::buffer_info& bytes) {
+  if (bytes.ndim != 1 || bytes.itemsize != 1 || bytes.strides.size() != 1 ||
+      bytes.strides[0] != 1) {
+    throw py::type_error(
+        "buffer must be a one-dimensional contiguous buffer of bytes");
+  }
   char* data = reinterpret_cast<char*>(bytes.ptr);
   ssize_t size = bytes.size;
   return absl::string_view(data, size);

@@ -301,6 +301,19 @@ class Re2RegexpTest(ReRegexpTest):
     # ... whereas this is fine, of course.
     re2.compile(b'.?', options=options)
 
+  def test_noncontiguous_buffer_rejected(self):
+    regexp = re2.compile(b'.')
+    for text in (memoryview(b'0123456789')[::-1],
+                 memoryview(b'0123456789')[::2]):
+      with self.assertRaisesRegex(
+          re2.error, 'one-dimensional contiguous buffer of bytes'):
+        regexp.search(text)
+
+    for pattern in (memoryview(b'.')[::-1], memoryview(b'..')[::2]):
+      with self.assertRaisesRegex(
+          re2.error, 'one-dimensional contiguous buffer of bytes'):
+        re2.compile(pattern)
+
   @parameterized.parameters(
       (u'\\p{Lo}', u'\u0ca0_\u0ca0', [(0, 1), (2, 3)]),
       (b'\\p{Lo}', b'\xe0\xb2\xa0_\xe0\xb2\xa0', [(0, 3), (4, 7)]),
