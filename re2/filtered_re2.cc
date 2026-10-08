@@ -112,6 +112,11 @@ int FilteredRE2::FirstMatch(absl::string_view text,
 bool FilteredRE2::AllMatches(absl::string_view text,
                              const std::vector<int>& atoms,
                              std::vector<int>* matching_regexps) const {
+  if (!compiled_) {
+    ABSL_LOG(DFATAL) << "AllMatches called before Compile.";
+    matching_regexps->clear();
+    return false;
+  }
   matching_regexps->clear();
   std::vector<int> regexps;
   prefilter_tree_->RegexpsGivenStrings(atoms, &regexps);
@@ -123,6 +128,11 @@ bool FilteredRE2::AllMatches(absl::string_view text,
 
 void FilteredRE2::AllPotentials(const std::vector<int>& atoms,
                                 std::vector<int>* potential_regexps) const {
+  if (!compiled_) {
+    ABSL_LOG(DFATAL) << "AllPotentials called before Compile.";
+    potential_regexps->clear();
+    return;
+  }
   prefilter_tree_->RegexpsGivenStrings(atoms, potential_regexps);
 }
 
