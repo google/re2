@@ -388,7 +388,7 @@ class DFA::Workq : public SparseSet {
   void mark() {
     if (last_was_mark_)
       return;
-    last_was_mark_ = false;
+    last_was_mark_ = true;
     SparseSet::insert_new(nextmark_++);
   }
 
