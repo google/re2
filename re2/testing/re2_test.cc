@@ -1696,4 +1696,152 @@ TEST(RE2, InitNULL) {
   ASSERT_TRUE(RE2::FullMatch("", NULL));
 }
 
+TEST(RE2, TrailingMatchAll) {
+  // Test that patterns ending with .* (when dot matches newline)
+  // produce correct results via the trailing match-all fast path.
+  RE2::Options opt;
+  opt.set_dot_nl(true);
+
+  // Basic: FullMatch with trailing .* (no capture on the tail).
+  {
+    RE2 re("^https?://(?:www\\.)?([^/]+)/.*$", opt);
+    absl::string_view host;
+    ASSERT_TRUE(RE2::FullMatch("https://example.com/foo/bar", re, &host));
+    EXPECT_EQ(host, "example.com");
+  }
+
+  // Large trailing text should produce identical results.
+  {
+    RE2 re("^prefix:([a-z]+)(.*)$", opt);
+    std::string input = "prefix:hello";
+    input.append(100000, 'X');
+    absl::string_view word, rest;
+    ASSERT_TRUE(RE2::FullMatch(input, re, &word, &rest));
+    EXPECT_EQ(word, "hello");
+    EXPECT_EQ(rest.size(), 100000u);
+    EXPECT_EQ(rest.data(), input.data() + 12);
+  }
+
+  // Trailing .* without capture group.
+  {
+    RE2 re("^([a-z]+).*$", opt);
+    absl::string_view word;
+    ASSERT_TRUE(RE2::FullMatch("helloWORLD", re, &word));
+    EXPECT_EQ(word, "hello");
+  }
+
+  // Replace with trailing .* capture.
+  {
+    RE2 re("^([^:]+):(.*)$", opt);
+    std::string s = "key:value_with_long_suffix";
+    ASSERT_TRUE(RE2::Replace(&s, re, "\\1=\\2"));
+    EXPECT_EQ(s, "key=value_with_long_suffix");
+  }
+
+  // GlobalReplace with trailing .*.
+  {
+    RE2 re("^([^:]+):(.*)$", opt);
+    std::string s = "key:value";
+    ASSERT_EQ(RE2::GlobalReplace(&s, re, "\\1"), 1);
+    EXPECT_EQ(s, "key");
+  }
+
+  // Consume with trailing .*.
+  {
+    RE2 re("([a-z]+).*", opt);
+    absl::string_view input("helloWORLD");
+    absl::string_view word;
+    ASSERT_TRUE(RE2::Consume(&input, re, &word));
+    EXPECT_EQ(word, "hello");
+    EXPECT_TRUE(input.empty());
+  }
+
+  // No match should still fail correctly.
+  {
+    RE2 re("^NOMATCH.*$", opt);
+    ASSERT_FALSE(RE2::FullMatch("hello", re));
+  }
+
+  // Without dot_nl, .* is [^\n]* -- no fast path, but still correct.
+  {
+    RE2 re_no_s("^([a-z]+).*$");
+    absl::string_view word;
+    ASSERT_TRUE(RE2::FullMatch("helloWORLD", re_no_s, &word));
+    EXPECT_EQ(word, "hello");
+    // With embedded newline, should not match ($ requires end-of-text).
+    ASSERT_FALSE(RE2::FullMatch("hello\nworld", re_no_s, &word));
+  }
+
+  // PartialMatch with trailing .*.
+  {
+    RE2 re("([0-9]+).*", opt);
+    absl::string_view num;
+    ASSERT_TRUE(RE2::PartialMatch("abc123xyz", re, &num));
+    EXPECT_EQ(num, "123");
+  }
+
+  // nsubmatch == 0: just checking match, no captures.
+  {
+    RE2 re("^https?://.*$", opt);
+    ASSERT_TRUE(RE2::FullMatch("https://example.com/foo", re));
+    ASSERT_FALSE(RE2::FullMatch("not a url", re));
+  }
+
+  // Explicit Match() with ANCHOR_START.
+  {
+    RE2 re("([a-z]+).*", opt);
+    absl::string_view submatch[2];
+    ASSERT_TRUE(re.Match("helloWORLD", 0, 10, RE2::ANCHOR_START,
+                          submatch, 2));
+    EXPECT_EQ(submatch[0], "helloWORLD");
+    EXPECT_EQ(submatch[1], "hello");
+  }
+
+  // Sub-range matching via Match().
+  {
+    RE2 re("([a-z]+).*", opt);
+    absl::string_view submatch[2];
+    ASSERT_TRUE(re.Match("XXhelloWORLDXX", 2, 12, RE2::UNANCHORED,
+                          submatch, 2));
+    EXPECT_EQ(submatch[0], "helloWORLD");
+    EXPECT_EQ(submatch[1], "hello");
+  }
+
+  // Nested capture groups around .*.
+  {
+    RE2 re("^([a-z]+)((.*))$", opt);
+    absl::string_view word, outer, inner;
+    ASSERT_TRUE(RE2::FullMatch("helloWORLD", re, &word, &outer, &inner));
+    EXPECT_EQ(word, "hello");
+    EXPECT_EQ(outer, "WORLD");
+    EXPECT_EQ(inner, "WORLD");
+  }
+
+  // Empty text matching .*
+  {
+    RE2 re("^.*$", opt);
+    ASSERT_TRUE(RE2::FullMatch("", re));
+  }
+
+  // FindAndConsume with trailing .*.
+  {
+    RE2 re("([a-z]+).*", opt);
+    absl::string_view input("helloWORLD");
+    absl::string_view word;
+    ASSERT_TRUE(RE2::FindAndConsume(&input, re, &word));
+    EXPECT_EQ(word, "hello");
+    EXPECT_TRUE(input.empty());
+  }
+
+  // Pattern with .* in the middle — should NOT trigger optimization.
+  // Greedy .* matches as much as possible, leaving only "3" for [0-9]+.
+  {
+    RE2 re("^(.*)([0-9]+)$", opt);
+    absl::string_view prefix, num;
+    ASSERT_TRUE(RE2::FullMatch("hello123", re, &prefix, &num));
+    EXPECT_EQ(prefix, "hello12");
+    EXPECT_EQ(num, "3");
+  }
+}
+
 }  // namespace re2

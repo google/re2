@@ -45,6 +45,78 @@ namespace re2 {
 // Controls the maximum count permitted by GlobalReplace(); -1 is unlimited.
 static int maximum_global_replace_count = -1;
 
+// Strips a trailing greedy match-all (.* where . is kRegexpAnyChar)
+// from the Regexp tree *pre. Looks through trailing anchors ($, \z),
+// empty matches, and optional capture groups. Returns true if stripping
+// occurred. Only strips greedy stars in OneLine mode, consistent with
+// DetectTrailingMatchAll in compile.cc.
+// Caller owns the resulting *pre (which has been Incref'd as needed).
+static bool StripTrailingMatchAll(Regexp** pre) {
+  Regexp* re = *pre;
+  if (re == NULL)
+    return false;
+  switch (re->op()) {
+    default:
+      break;
+    case kRegexpConcat:
+      if (re->nsub() > 0) {
+        // Find last non-anchor/non-empty child.
+        int last = re->nsub() - 1;
+        while (last > 0 &&
+               (re->sub()[last]->op() == kRegexpEndLine ||
+                re->sub()[last]->op() == kRegexpEndText ||
+                re->sub()[last]->op() == kRegexpEmptyMatch))
+          last--;
+        Regexp* sub = re->sub()[last]->Incref();
+        if (StripTrailingMatchAll(&sub)) {
+          // Rebuild concat: children 0..last-1, replace last with sub
+          // (skip sub if it's just an empty placeholder).
+          std::vector<Regexp*> subcopy;
+          for (int i = 0; i < last; i++)
+            subcopy.push_back(re->sub()[i]->Incref());
+          if (sub->op() != kRegexpEmptyMatch)
+            subcopy.push_back(sub);
+          else
+            sub->Decref();
+          if (subcopy.empty()) {
+            *pre = Regexp::LiteralString(NULL, 0, re->parse_flags());
+          } else {
+            *pre = Regexp::Concat(subcopy.data(),
+                                  static_cast<int>(subcopy.size()),
+                                  re->parse_flags());
+          }
+          re->Decref();
+          return true;
+        }
+        sub->Decref();
+      }
+      break;
+    case kRegexpCapture: {
+      Regexp* sub = re->sub()[0]->Incref();
+      if (StripTrailingMatchAll(&sub)) {
+        *pre = Regexp::Capture(sub, re->parse_flags(), re->cap());
+        re->Decref();
+        return true;
+      }
+      sub->Decref();
+      break;
+    }
+    case kRegexpStar: {
+      // Only strip greedy stars in OneLine mode — must match the
+      // conditions in DetectTrailingMatchAll (compile.cc).
+      if ((re->parse_flags() & Regexp::OneLine) &&
+          !(re->parse_flags() & Regexp::NonGreedy) &&
+          re->sub()[0]->op() == kRegexpAnyChar) {
+        *pre = Regexp::LiteralString(NULL, 0, re->parse_flags());
+        re->Decref();
+        return true;
+      }
+      break;
+    }
+  }
+  return false;
+}
+
 void RE2::FUZZING_ONLY_set_maximum_global_replace_count(int i) {
   maximum_global_replace_count = i;
 }
@@ -227,6 +299,8 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
   prefix_foldcase_ = false;
   prefix_.clear();
   prog_ = NULL;
+  prefix_match_ = NULL;
+  trailing_match_all_cap_ = -1;
 
   rprog_ = NULL;
   named_groups_ = NULL;
@@ -281,6 +355,21 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
   // and that is harder to do if the DFA has already
   // been built.
   is_one_pass_ = prog_->IsOnePass();
+
+  // If the pattern ends with a trailing match-all (e.g. (?s:.*)$),
+  // build a prefix RE2 with the .* stripped for fast matching.
+  // Detection runs on the simplified tree, so strip from that too.
+  if (prog_->has_trailing_match_all()) {
+    trailing_match_all_cap_ = prog_->trailing_match_all_cap();
+    re2::Regexp* stripped = entire_regexp_->Incref();
+    if (StripTrailingMatchAll(&stripped)) {
+      std::string stripped_pattern = stripped->ToString();
+      stripped->Decref();
+      prefix_match_ = new RE2(stripped_pattern, options_);
+    } else {
+      stripped->Decref();
+    }
+  }
 }
 
 // Returns rprog_, computing it if needed.
@@ -303,6 +392,7 @@ re2::Prog* RE2::ReverseProg() const {
 }
 
 RE2::~RE2() {
+  delete prefix_match_;
   if (group_names_ != empty_group_names())
     delete group_names_;
   if (named_groups_ != empty_named_groups())
@@ -674,6 +764,35 @@ bool RE2::Match(absl::string_view text,
                       << "endpos: " << endpos << ", "
                       << "text size: " << text.size() << "]";
     return false;
+  }
+
+  // Fast path: if we have a prefix RE2 (trailing match-all was stripped),
+  // delegate to it and extend the results to cover all remaining text.
+  if (prefix_match_ != NULL && prefix_match_->ok()) {
+    // The prefix RE2 doesn't have the trailing .*, so for ANCHOR_BOTH
+    // (full match), downgrade to ANCHOR_START — the .* would have
+    // consumed everything to end-of-text.
+    Anchor prefix_anchor = re_anchor;
+    if (prefix_anchor == ANCHOR_BOTH)
+      prefix_anchor = ANCHOR_START;
+    if (!prefix_match_->Match(text, startpos, endpos, prefix_anchor,
+                              submatch, nsubmatch))
+      return false;
+    if (nsubmatch > 0) {
+      // Extend overall match to endpos.
+      submatch[0] = absl::string_view(
+          submatch[0].data(),
+          static_cast<size_t>(text.data() + endpos - submatch[0].data()));
+      // Extend trailing capture group if present.
+      int cap = trailing_match_all_cap_;
+      if (cap >= 0 && cap < nsubmatch &&
+          submatch[cap].data() != nullptr)
+        submatch[cap] = absl::string_view(
+            submatch[cap].data(),
+            static_cast<size_t>(text.data() + endpos -
+                                submatch[cap].data()));
+    }
+    return true;
   }
 
   absl::string_view subtext = text;

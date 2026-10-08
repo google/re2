@@ -1077,6 +1077,54 @@ static bool IsAnchorEnd(Regexp** pre, int depth) {
   return false;
 }
 
+// Detects whether the simplified regexp ends with a trailing match-all
+// (i.e. .* where . matches any character). Optionally followed by
+// end-of-line/end-of-text anchors, and optionally wrapped in a
+// capture group. Sets has_trailing_match_all and trailing_match_all_cap
+// on prog. Only applicable for the forward (non-reversed) program.
+static void DetectTrailingMatchAll(Regexp* re, Prog* prog) {
+  // Walk through Concat to find the last meaningful child.
+  // Skip trailing end-of-line / end-of-text anchors since they
+  // are always satisfied after a greedy .* that matches all chars.
+  Regexp* last = re;
+  if (last->op() == kRegexpConcat && last->nsub() > 0) {
+    int idx = last->nsub() - 1;
+    // Skip trailing anchors ($ or \z), and empty matches left behind
+    // by IsAnchorEnd stripping \z -- they are always satisfied
+    // after .* that matches any character.
+    while (idx > 0 &&
+           (last->sub()[idx]->op() == kRegexpEndLine ||
+            last->sub()[idx]->op() == kRegexpEndText ||
+            last->sub()[idx]->op() == kRegexpEmptyMatch))
+      idx--;
+    last = last->sub()[idx];
+  }
+
+  // Check for optional capture wrapping.
+  int cap = -1;
+  if (last->op() == kRegexpCapture) {
+    cap = last->cap();
+    last = last->sub()[0];
+    // Look through another Concat if present (e.g. the capture might
+    // contain a concat with .* as the last element, but typically
+    // it's just .* directly).
+    if (last->op() == kRegexpConcat && last->nsub() > 0)
+      last = last->sub()[last->nsub() - 1];
+  }
+
+  // Now last should be a greedy kRegexpStar of a match-all in OneLine mode.
+  // Non-greedy .* doesn't necessarily consume all remaining text.
+  // Without OneLine, ^ and $ are line-oriented and the optimization
+  // may produce incorrect results for multiline patterns.
+  if (last->op() == kRegexpStar && last->nsub() == 1 &&
+      (last->parse_flags() & Regexp::OneLine) &&
+      !(last->parse_flags() & Regexp::NonGreedy) &&
+      last->sub()[0]->op() == kRegexpAnyChar) {
+    prog->set_has_trailing_match_all(true);
+    prog->set_trailing_match_all_cap(cap);
+  }
+}
+
 void Compiler::Setup(Regexp::ParseFlags flags, int64_t max_mem,
                      RE2::Anchor anchor) {
   if (flags & Regexp::Latin1)
@@ -1127,6 +1175,13 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64_t max_mem) {
   // (They get in the way of other optimizations.)
   bool is_anchor_start = IsAnchorStart(&sre, 0);
   bool is_anchor_end = IsAnchorEnd(&sre, 0);
+
+  // Detect trailing match-all (e.g. (?s:.*)$) before compilation.
+  // Only for the forward program. The trailing .* matches all
+  // remaining text regardless of whether there's an explicit end
+  // anchor, because it's a greedy match of all characters.
+  if (!reversed)
+    DetectTrailingMatchAll(sre, c.prog_);
 
   // Generate fragment for entire regexp.
   Frag all = c.WalkExponential(sre, Frag(), 2*c.max_ninst_);

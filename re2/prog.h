@@ -241,6 +241,10 @@ class Prog {
   void set_anchor_start(bool b) { anchor_start_ = b; }
   bool anchor_end() { return anchor_end_; }
   void set_anchor_end(bool b) { anchor_end_ = b; }
+  bool has_trailing_match_all() { return has_trailing_match_all_; }
+  void set_has_trailing_match_all(bool b) { has_trailing_match_all_ = b; }
+  int trailing_match_all_cap() { return trailing_match_all_cap_; }
+  void set_trailing_match_all_cap(int cap) { trailing_match_all_cap_ = cap; }
   int bytemap_range() { return bytemap_range_; }
   const uint8_t* bytemap() { return bytemap_; }
   bool can_prefix_accel() { return prefix_size_ != 0; }
@@ -439,6 +443,8 @@ class Prog {
   bool reversed_;           // whether program runs backward over input
   bool did_flatten_;        // has Flatten been called?
   bool did_onepass_;        // has IsOnePass been called?
+  bool has_trailing_match_all_;  // pattern ends with .* (any-char star)
+  int trailing_match_all_cap_;   // capture index wrapping trailing .*, or -1
 
   int start_;               // entry point for program
   int start_unanchored_;    // unanchored entry point for program

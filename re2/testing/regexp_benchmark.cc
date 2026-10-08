@@ -1602,4 +1602,59 @@ BENCHMARK(PossibleMatchRange_Complex);
 BENCHMARK(PossibleMatchRange_Prefix);
 BENCHMARK(PossibleMatchRange_NoProg);
 
+// Benchmarks for trailing match-all optimization.
+// Tests matching a URL pattern against a URL with a large suffix.
+
+void URLMatchRE2(benchmark::State& state) {
+  // Build a URL string: a short prefix followed by a large suffix.
+  std::string url = "https://www.example.com/";
+  url.append(state.range(0), 'x');
+
+  RE2::Options opt;
+  opt.set_dot_nl(true);
+  RE2 re(R"(^https?://(?:www\.)?([^/]+)/.*$)", opt);
+  ABSL_CHECK(re.ok());
+  for (auto _ : state) {
+    absl::string_view host;
+    ABSL_CHECK(RE2::FullMatch(url, re, &host));
+  }
+}
+
+BENCHMARK(URLMatchRE2)->Arg(1 << 10)->Arg(1 << 16)->Arg(1 << 20);
+
+void URLExtractRE2(benchmark::State& state) {
+  std::string url = "https://www.example.com/";
+  url.append(state.range(0), 'x');
+
+  RE2::Options opt;
+  opt.set_dot_nl(true);
+  RE2 re(R"(^https?://(?:www\.)?([^/]+)/.*$)", opt);
+  ABSL_CHECK(re.ok());
+  for (auto _ : state) {
+    std::string host;
+    ABSL_CHECK(RE2::Extract(url, re, R"(\1)", &host));
+  }
+}
+
+BENCHMARK(URLExtractRE2)->Arg(1 << 10)->Arg(1 << 16)->Arg(1 << 20);
+
+void URLGlobalReplaceRE2(benchmark::State& state) {
+  std::string url = "https://www.example.com/";
+  url.append(state.range(0), 'x');
+
+  RE2::Options opt;
+  opt.set_dot_nl(true);
+  RE2 re(R"(^https?://(?:www\.)?([^/]+)/.*$)", opt);
+  ABSL_CHECK(re.ok());
+  std::string s;
+  for (auto _ : state) {
+    state.PauseTiming();
+    s = url;
+    state.ResumeTiming();
+    ABSL_CHECK_EQ(RE2::GlobalReplace(&s, re, R"(\1)"), 1);
+  }
+}
+
+BENCHMARK(URLGlobalReplaceRE2)->Arg(1 << 10)->Arg(1 << 16)->Arg(1 << 20);
+
 }  // namespace re2

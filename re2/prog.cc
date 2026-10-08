@@ -117,6 +117,8 @@ Prog::Prog()
     reversed_(false),
     did_flatten_(false),
     did_onepass_(false),
+    has_trailing_match_all_(false),
+    trailing_match_all_cap_(-1),
     start_(0),
     start_unanchored_(0),
     size_(0),

@@ -798,6 +798,12 @@ class RE2 {
   std::string prefix_;            // required prefix (before suffix_regexp_)
   re2::Prog* prog_;               // compiled program for regexp
 
+  // If the pattern ends with a trailing match-all (e.g. (?s:.*)$),
+  // this is a compiled RE2 for the prefix (with .* stripped).
+  // Match delegates to this and extends the results to end-of-text.
+  RE2* prefix_match_;
+  int trailing_match_all_cap_;  // capture index wrapping .*, or -1
+
   // Reverse Prog for DFA execution only
   mutable re2::Prog* rprog_;
   // Map from capture names to indices
