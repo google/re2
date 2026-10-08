@@ -340,4 +340,29 @@ TEST(FilteredRE2Test, MoveSemantics) {
   EXPECT_EQ(size_t{0}, v1.matches.size());
 }
 
+// Regression test: self-move-assignment in FilteredRE2 must not trigger UB.
+TEST(FilteredRE2, SelfMoveAssignment) {
+  FilteredRE2 f1;
+  int id;
+  ASSERT_EQ(absl::OkStatus(), f1.Add("foo.*bar", RE2::DefaultOptions, &id));
+  f1.Compile(nullptr);
+
+  // Self-move: previously triggered use-after-free.
+  f1 = std::move(f1);
+
+  std::vector<int> atoms, matches;
+  f1.AllPotentials(atoms, &matches);  // must not crash
+}
+
+// Regression test: AllMatches/AllPotentials before Compile must not crash.
+TEST(FilteredRE2, AllMatchesBeforeCompile) {
+  FilteredRE2 f;
+  int id;
+  ASSERT_EQ(absl::OkStatus(), f.Add("test", RE2::DefaultOptions, &id));
+  // Do NOT call Compile() — AllMatches must return false gracefully.
+  std::vector<int> atoms, matches;
+  EXPECT_FALSE(f.AllMatches("test", atoms, &matches));
+}
+
+
 }  //  namespace re2

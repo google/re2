@@ -232,4 +232,25 @@ TEST(Set, MoveSemantics) {
   ASSERT_EQ(s1.Match("abc bar2 xyz", NULL), false);
 }
 
+// Regression test: self-move-assignment must not trigger use-after-free.
+// RE2::Set::operator=(Set&&) previously called this->~Set() before checking
+// for self-assignment, resulting in undefined behavior when this == &other.
+TEST(Set, SelfMoveAssignment) {
+  RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
+  std::string err;
+  ASSERT_EQ(s.Add("foo.*bar", &err), 0);
+  ASSERT_EQ(s.Add("baz[0-9]+", &err), 1);
+  ASSERT_TRUE(s.Compile());
+
+  // Self-move-assignment: previously UB (use-after-free via placement new
+  // reading destroyed object). Must leave the set in a valid state.
+  s = std::move(s);
+
+  std::vector<int> matches;
+  // After self-move, the object must still be usable (or at least not crash).
+  // We rely on ASAN/MSan to detect any use-after-free.
+  (void)s.Match("fooXbar", &matches);
+}
+
+
 }  // namespace re2
