@@ -14,7 +14,9 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
         # Keep in sync with python.yml.
-        ver: ['3.10', '3.11', '3.12', '3.13', '3.14']
+        ver: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.12-abi3']
+    env:
+      PY_LIMITED_API: ${{ matrix.ver == '3.12-abi3' && 'cp312' || '' }}
     steps:
       - uses: actions/checkout@v4.2.2
       - uses: bazel-contrib/setup-bazel@0.15.0
@@ -22,7 +24,7 @@ jobs:
           bazelisk-version: '1.x'
       - uses: actions/setup-python@v5.6.0
         with:
-          python-version: ${{ matrix.ver }}
+          python-version: ${{ matrix.ver == '3.12-abi3' && '3.12' || matrix.ver }}
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           python -m pip install --upgrade pip

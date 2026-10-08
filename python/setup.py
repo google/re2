@@ -31,9 +31,9 @@ Known issues with regard to building the C++ extension:
 
   * Building requires RE2 to be installed on your system.
     On Debian, for example, install the libre2-dev package.
-  * Building requires pybind11 to be installed on your system OR venv.
-    On Debian, for example, install the pybind11-dev package.
-    For a venv, install the pybind11 package from PyPI.
+  * Building requires nanobind to be installed on your system OR venv.
+    On Debian, for example, install the nanobind-dev package.
+    For a venv, install the nanobind package from PyPI.
   * Building on macOS is known to work, but has been known to fail.
     For example, the system Python may not know which compiler flags
     to set when building bindings for software installed by Homebrew;
@@ -65,9 +65,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
       cmd.append(f'--macos_minimum_os={ver}')
     except KeyError:
       pass
+    tag = py_limited_api()
+    if tag:
+      cmd.append(f'--@nanobind_bazel//:py-limited-api={tag}')
     # Register the local Python toolchains with highest priority.
     cmd.append('--extra_toolchains=//python/toolchains:all')
-    cmd += ['--compilation_mode=opt', '--', ':all']
+    cmd += ['--compilation_mode=opt', '--', ':_re2']
     self.spawn(cmd)
 
     # This ensures that f'_re2.{importlib.machinery.EXTENSION_SUFFIXES[0]}'
@@ -78,6 +81,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     cmd = ['bazel', 'clean', '--expunge']
     self.spawn(cmd)
 
+# When set, PY_LIMITED_API enables building an abi3 wheel. The value of the
+# environment variable is its cpython floor, i.e. PY_LIMITED_API=cp312 creates
+# a cp312-abi3 wheel.
+def py_limited_api():
+  return os.environ.get('PY_LIMITED_API')
+
 
 def options():
   bdist_wheel = {}
@@ -85,23 +94,52 @@ def options():
     bdist_wheel['plat_name'] = os.environ['PLAT_NAME']
   except KeyError:
     pass
+  tag = py_limited_api()
+  if tag:
+    bdist_wheel['py_limited_api'] = tag
   return {'bdist_wheel': bdist_wheel}
 
 
 def include_dirs():
   try:
-    import pybind11
-    yield pybind11.get_include()
+    import nanobind
   except ModuleNotFoundError:
-    pass
+    return
+  yield nanobind.include_dir()
+  # include_dir() does not include nanobind's vendored robin_map dependency.
+  yield os.path.join(
+      os.path.dirname(nanobind.__file__), 'ext', 'robin_map', 'include')
+
+
+def sources():
+  yield '_re2.cc'
+  try:
+    import nanobind
+  except ModuleNotFoundError:
+    return
+  yield os.path.join(nanobind.source_dir(), 'nb_combined.cpp')
+
+
+def define_macros():
+  tag = py_limited_api()
+  if not tag:
+    return []
+  match = re.fullmatch(r'cp3(\d+)', tag)
+  if not match:
+    raise ValueError(f'unsupported PY_LIMITED_API value: {tag!r}')
+  minor = int(match.group(1))
+  # e.g. `cp312` -> 0x030C0000, the Py_LIMITED_API value for Python 3.12.
+  return [('Py_LIMITED_API', '0x03%02X0000' % minor)]
 
 
 ext_module = setuptools.Extension(
     name='_re2',
-    sources=['_re2.cc'],
+    sources=list(sources()),
     include_dirs=list(include_dirs()),
     libraries=['re2'],
-    extra_compile_args=['-fvisibility=hidden'],
+    define_macros=define_macros(),
+    extra_compile_args=['-fvisibility=hidden', '-std=c++17'],
+    py_limited_api=bool(py_limited_api()),
 )
 
 # We need `re2` to be a package, not a module, because it appears that

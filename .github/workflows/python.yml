@@ -30,10 +30,11 @@ jobs:
         os: [manylinux_2_28]
         # Keep in sync with ci-bazel.yml and list below.
         # Also, when bumping the minimum version, update ../../python/setup.py.
-        ver: ['3.10', '3.11', '3.12', '3.13', '3.14']
+        ver: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.12-abi3']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PYTHON: /usr/local/bin/python${{ matrix.ver }}
+      PYTHON: /usr/local/bin/python${{ matrix.ver == '3.12-abi3' && '3.12' || matrix.ver }}
+      PY_LIMITED_API: ${{ matrix.ver == '3.12-abi3' && 'cp312' || '' }}
       # Bazel fails if the username is unknown.
       USER: runner
     steps:
@@ -47,7 +48,7 @@ jobs:
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           "${PYTHON}" -m pip install --upgrade pip
-          "${PYTHON}" -m pip install --upgrade setuptools build wheel auditwheel
+          "${PYTHON}" -m pip install --upgrade setuptools build wheel auditwheel abi3audit
           "${PYTHON}" -m pip install --upgrade absl-py mypy
           "${PYTHON}" python/toolchains/generate.py
         shell: bash
@@ -57,6 +58,12 @@ jobs:
         run: |
           "${PYTHON}" -m build --wheel
           "${PYTHON}" -m auditwheel repair --wheel-dir=. dist/*
+        shell: bash
+        working-directory: python
+      - if: matrix.ver == '3.12-abi3'
+        name: Audit stable ABI compliance
+        run: |
+          "${PYTHON}" -m abi3audit --strict google_re2-*.whl
         shell: bash
         working-directory: python
       - name: Test wheel
@@ -86,7 +93,7 @@ jobs:
         # TODO(rsc): Stop cross-compiling now that we don't use macOS 12.
         # instead, specify `-large` suffix on X64 and `-xlarge` suffix on ARM64.
         os: [13, 14, 15, 26]
-        ver: ['3.10', '3.11', '3.12', '3.13', '3.14']
+        ver: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.12-abi3']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: darwin_${{ matrix.arch.bazel-name }}
@@ -97,6 +104,7 @@ jobs:
       # Stop macOS from reporting the system version as 10.x.
       # Otherwise, Python refuses to install the built wheel!
       SYSTEM_VERSION_COMPAT: 0
+      PY_LIMITED_API: ${{ matrix.ver == '3.12-abi3' && 'cp312' || '' }}
     steps:
       - uses: actions/checkout@v4.1.7
       # Stash the timestamp for the commit SHA that triggered the workflow.
@@ -107,11 +115,11 @@ jobs:
           bazelisk-version: '1.x'
       - uses: actions/setup-python@v5.6.0
         with:
-          python-version: ${{ matrix.ver }}
+          python-version: ${{ matrix.ver == '3.12-abi3' && '3.12' || matrix.ver }}
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade setuptools build wheel delocate
+          python -m pip install --upgrade setuptools build wheel delocate abi3audit
           python -m pip install --upgrade absl-py mypy
           python python/toolchains/generate.py
         shell: bash
@@ -121,6 +129,12 @@ jobs:
         run: |
           python -m build --wheel
           python -m delocate.cmd.delocate_wheel --wheel-dir=. dist/*
+        shell: bash
+        working-directory: python
+      - if: matrix.ver == '3.12-abi3'
+        name: Audit stable ABI compliance
+        run: |
+          python -m abi3audit --strict google_re2-*.whl
         shell: bash
         working-directory: python
       - if: matrix.arch.name == runner.arch
@@ -149,7 +163,7 @@ jobs:
           - { name: X86,   bazel-name: x64_x86, python-name: win32 }
           - { name: X64,   bazel-name: x64,     python-name: win_amd64 }
           - { name: ARM64, bazel-name: arm64,   python-name: win_arm64 }
-        ver: ['3.10', '3.11', '3.12', '3.13', '3.14']
+        ver: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.12-abi3']
         exclude:
           - arch: { name: ARM64, bazel-name: arm64, python-name: win_arm64 }
             ver: '3.9'
@@ -159,6 +173,7 @@ jobs:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BAZEL_CPU: ${{ matrix.arch.bazel-name }}_windows
       PLAT_NAME: ${{ matrix.arch.python-name }}
+      PY_LIMITED_API: ${{ matrix.ver == '3.12-abi3' && 'cp312' || '' }}
     steps:
       - uses: actions/checkout@v4.2.2
       # Stash the timestamp for the commit SHA that triggered the workflow.
@@ -174,12 +189,12 @@ jobs:
         shell: bash
       - uses: actions/setup-python@v5.6.0
         with:
-          python-version: ${{ matrix.ver }}
+          python-version: ${{ matrix.ver == '3.12-abi3' && '3.12' || matrix.ver }}
           architecture: ${{ env.architecture }}
       - name: Prepare Python ${{ matrix.ver }} environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade setuptools build wheel delvewheel
+          python -m pip install --upgrade setuptools build wheel delvewheel abi3audit
           python -m pip install --upgrade absl-py mypy
           python python/toolchains/generate.py
         shell: bash
@@ -189,6 +204,12 @@ jobs:
         run: |
           python -m build --wheel
           python -m delvewheel repair --wheel-dir=. dist/*
+        shell: bash
+        working-directory: python
+      - if: matrix.ver == '3.12-abi3'
+        name: Audit stable ABI compliance
+        run: |
+          python -m abi3audit --strict google_re2-*.whl
         shell: bash
         working-directory: python
       - name: Test wheel

@@ -33,7 +33,7 @@ import itertools
 import _re2
 
 
-# pybind11 translates C++ exceptions to Python exceptions.
+# nanobind translates C++ exceptions to Python exceptions.
 # We use that same Python exception class for consistency.
 error = _re2.Error
 
