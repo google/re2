@@ -105,7 +105,6 @@ bool RE2::Set::Compile() {
     ABSL_LOG(DFATAL) << "RE2::Set::Compile() called more than once";
     return false;
   }
-  compiled_ = true;
   size_ = static_cast<int>(elem_.size());
 
   // Sort the elements by their patterns. This is good enough for now
@@ -118,8 +117,6 @@ bool RE2::Set::Compile() {
   PODArray<re2::Regexp*> sub(size_);
   for (int i = 0; i < size_; i++)
     sub[i] = elem_[i].second;
-  elem_.clear();
-  elem_.shrink_to_fit();
 
   Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
     options_.ParseFlags());
@@ -127,7 +124,13 @@ bool RE2::Set::Compile() {
 
   prog_.reset(Prog::CompileSet(re, anchor_, options_.max_mem()));
   re->Decref();
-  return prog_ != nullptr;
+
+  compiled_ = prog_ != nullptr;
+  if (compiled_) {
+    elem_.clear();
+    elem_.shrink_to_fit();
+  }
+  return compiled_;
 }
 
 bool RE2::Set::Match(absl::string_view text, std::vector<int>* v) const {

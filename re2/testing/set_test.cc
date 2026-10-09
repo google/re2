@@ -232,4 +232,16 @@ TEST(Set, MoveSemantics) {
   ASSERT_EQ(s1.Match("abc bar2 xyz", NULL), false);
 }
 
+TEST(Set, CompileFailureDoesNotCrash) {
+  RE2::Options opt;
+  opt.set_max_mem(1);
+  RE2::Set s(opt, RE2::UNANCHORED);
+  ASSERT_EQ(s.Add("a", NULL), 0);
+  ASSERT_EQ(s.Size(), 1);
+  ASSERT_FALSE(s.Compile());
+  ASSERT_EQ(s.Size(), 1);
+  std::vector<int> v;
+  ASSERT_FALSE(s.Match("a", &v));
+}
+
 }  // namespace re2
