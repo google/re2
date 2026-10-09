@@ -85,7 +85,7 @@ jobs:
           - { name: ARM64, bazel-name: arm64,  python-name: arm64  }
         # TODO(rsc): Stop cross-compiling now that we don't use macOS 12.
         # instead, specify `-large` suffix on X64 and `-xlarge` suffix on ARM64.
-        os: [13, 14, 15, 26]
+        os: [14, 15, 26]
         ver: ['3.10', '3.11', '3.12', '3.13', '3.14']
     env:
       BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
