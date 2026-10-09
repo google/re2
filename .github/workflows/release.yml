@@ -10,13 +10,15 @@ jobs:
       # Required to create the release
       # and upload the release assets.
       contents: write
-      # Required for Sigstore signing.
+      # Required for Sigstore and provenance signing.
       id-token: write
+      # Required to store provenance attestations.
+      attestations: write
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - run: |
           gh release create "${GITHUB_REF_NAME}" \
             --generate-notes --latest --verify-tag \
@@ -28,13 +30,25 @@ jobs:
             --archive zip \
             --repo "${GITHUB_REPOSITORY}"
         shell: bash
-      - uses: sigstore/gh-action-sigstore-python@v3.0.1
+      - uses: sigstore/gh-action-sigstore-python@f7ad0af51a5648d09a20d00370f0a91c3bdf8f84 # v3.0.1
         with:
           # N.B. This is a whitespace-separated string!
           inputs: '*.tar.gz *.zip'
+      - name: Attest source archive
+        id: attest-source
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: re2-${{ github.ref_name }}.zip
+      - name: Write source archive provenance bundle
+        env:
+          BUNDLE_PATH: ${{ steps.attest-source.outputs.bundle-path }}
+        run: |
+          jq --compact-output . "${BUNDLE_PATH}" \
+            > "re2-${GITHUB_REF_NAME}.zip.intoto.jsonl"
+        shell: bash
       - run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            *.tar.gz *.zip *.sigstore* \
+            *.tar.gz *.zip *.sigstore* *.intoto.jsonl \
             --repo "${GITHUB_REPOSITORY}"
         shell: bash
   create-bazel:
