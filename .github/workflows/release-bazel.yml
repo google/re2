@@ -16,9 +16,12 @@ on:
       BCR_PUBLISH_TOKEN:
         description: 'Token for pushing to re2-machine/bazel-central-registry'
         required: true
+permissions:
+  contents: read
+
 jobs:
   release:
-    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@v0.2.2
+    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@096e4724c760aa0024916fe772701c06926f4c49 # v0.2.2
     with:
       draft: false
       tag_name: ${{ inputs.tag_name }}

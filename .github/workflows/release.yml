@@ -16,7 +16,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - run: |
           gh release create "${GITHUB_REF_NAME}" \
             --generate-notes --latest --verify-tag \
@@ -28,7 +28,7 @@ jobs:
             --archive zip \
             --repo "${GITHUB_REPOSITORY}"
         shell: bash
-      - uses: sigstore/gh-action-sigstore-python@v3.0.1
+      - uses: sigstore/gh-action-sigstore-python@f7ad0af51a5648d09a20d00370f0a91c3bdf8f84 # v3.0.1
         with:
           # N.B. This is a whitespace-separated string!
           inputs: '*.tar.gz *.zip'
