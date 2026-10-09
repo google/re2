@@ -17,13 +17,13 @@ jobs:
       # Bazel fails if the username is unknown.
       USER: runner
     steps:
-      - uses: actions/checkout@v4.2.2
-      - uses: bazel-contrib/setup-bazel@0.15.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: bazel-contrib/setup-bazel@4fd964a13a440a8aeb0be47350db2fc640f19ca8 # 0.15.0
         with:
           bazelisk-version: '1.x'
       - run: app/build.sh
         shell: bash
-      - uses: actions/upload-pages-artifact@v3.0.1
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: app/deploy
   deploy:
@@ -37,5 +37,5 @@ jobs:
     environment: github-pages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.2.2
-      - uses: actions/deploy-pages@v4.0.5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
