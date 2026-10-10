@@ -439,6 +439,8 @@ const char* badtests[] = {
   "(?i)[a-Z]",
   "a{100000}",
   "a{100000,}",
+  "a{1000000000}",    // Over the limit: must error, not be treated as a literal.
+  "a{0,1000000000}",  // Same, in the high position of the range.
   "((((((((((x{2}){2}){2}){2}){2}){2}){2}){2}){2}){2})",
   "(((x{7}){11}){13})",
   "\\Q\\E*",

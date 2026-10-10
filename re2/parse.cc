@@ -1365,10 +1365,13 @@ static bool ParseInteger(absl::string_view* s, int* np) {
   int n = 0;
   int c;
   while (!s->empty() && absl::ascii_isdigit(c = (*s)[0] & 0xFF)) {
-    // Avoid overflow.
-    if (n >= 100000000)
-      return false;
-    n = n*10 + c - '0';
+    // Keep consuming digits, but stop accumulating once the value is clearly
+    // over any accepted repetition count. Capping (instead of bailing out of
+    // the parse) avoids overflow while still recognizing the repetition, so a
+    // huge count like {1000000000} is reported as an invalid repetition size
+    // rather than being silently treated as a literal.
+    if (n < 100000000)
+      n = n*10 + c - '0';
     s->remove_prefix(1);  // digit
   }
   *np = n;
