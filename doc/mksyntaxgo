@@ -33,7 +33,8 @@ Parts of the syntax can be disabled by passing alternate flags to [Parse].
 
 .
 $a
-Unicode character classes are those in [unicode.Categories] and [unicode.Scripts].
+Unicode character classes are those in [unicode.Categories],
+[unicode.CategoryAliases], and [unicode.Scripts].
 */
 package syntax
 .
