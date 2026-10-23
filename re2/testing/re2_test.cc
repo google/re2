@@ -31,6 +31,17 @@
 
 namespace re2 {
 
+// Character classes like [sS] and [kK] should not match Unicode fold variants
+// (U+017F and U+212A) inconsistently when combined with alternation.
+TEST(RE2, Issue676) {
+  EXPECT_FALSE(RE2::FullMatch("\u017F", "a|[sS]"));
+  EXPECT_FALSE(RE2::FullMatch("\u017F", "[sS]"));
+  EXPECT_FALSE(RE2::FullMatch("\u017F", "a|s|S"));
+  EXPECT_FALSE(RE2::FullMatch("\u212A", "a|[kK]"));
+  EXPECT_FALSE(RE2::FullMatch("\u212A", "[kK]"));
+  EXPECT_FALSE(RE2::FullMatch("\u212A", "a|k|K"));
+}
+
 TEST(RE2, HexTests) {
 #define ASSERT_HEX(type, value)                                         \
   do {                                                                  \

@@ -230,6 +230,8 @@ Regexp* Regexp::ParseState::FinishRegexp(Regexp* re) {
   return re;
 }
 
+Rune CycleFoldRune(Rune r);
+
 // Pushes the given regular expression onto the stack.
 // Could check for too much memory used here.
 bool Regexp::ParseState::PushRegexp(Regexp* re) {
@@ -250,9 +252,11 @@ bool Regexp::ParseState::PushRegexp(Regexp* re) {
     } else if (re->ccb_->size() == 2) {
       Rune r = re->ccb_->begin()->lo;
       if ('A' <= r && r <= 'Z' && re->ccb_->Contains(r + 'a' - 'A')) {
-        re->Decref();
-        re = new Regexp(kRegexpLiteral, flags_ | FoldCase);
-        re->rune_ = r + 'a' - 'A';
+        if ((flags_ & Latin1) || CycleFoldRune(r + 'a' - 'A') == r) {
+          re->Decref();
+          re = new Regexp(kRegexpLiteral, flags_ | FoldCase);
+          re->rune_ = r + 'a' - 'A';
+        }
       }
     }
   }
