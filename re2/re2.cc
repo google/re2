@@ -275,11 +275,10 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
   // it eagerly, which avoids the overhead of absl::once_flag.
   num_captures_ = suffix_regexp_->NumCaptures();
 
-  // Could delay this until the first match call that
-  // cares about submatch information, but the one-pass
-  // machine's memory gets cut from the DFA memory budget,
-  // and that is harder to do if the DFA has already
-  // been built.
+  // Runs the one-pass analysis now and cuts the one-pass machine's memory
+  // from the DFA memory budget, which is harder to do once the DFA has
+  // been built. The machine itself is built on the first match that needs
+  // it (see Prog::SearchOnePass).
   is_one_pass_ = prog_->IsOnePass();
 }
 

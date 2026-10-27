@@ -117,6 +117,7 @@ Prog::Prog()
     reversed_(false),
     did_flatten_(false),
     did_onepass_(false),
+    is_onepass_(false),
     start_(0),
     start_unanchored_(0),
     size_(0),

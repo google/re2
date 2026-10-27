@@ -54,9 +54,11 @@
 #include <string.h>
 
 #include <algorithm>
+#include <limits>
 #include <map>
 #include <string>
 
+#include "absl/base/call_once.h"
 #include "absl/container/fixed_array.h"
 #include "absl/container/inlined_vector.h"
 #include "absl/log/absl_check.h"
@@ -244,7 +246,22 @@ bool Prog::SearchOnePass(absl::string_view text, absl::string_view context,
   if (anchor_end())
     kind = kFullMatch;
 
+  // Build the one-pass NFA on first use, unless IsOnePass() kept it.
+  // IsOnePass() has already run the analysis and cut the NFA's memory
+  // from the DFA budget.
+  ABSL_DCHECK(did_onepass_) << "SearchOnePass called before IsOnePass";
+  absl::call_once(onepass_once_, [](Prog* prog) {
+    if (prog->is_onepass_ && prog->onepass_nodes_.data() == NULL) {
+      int nbytes = prog->ComputeOnePass(&prog->onepass_nodes_,
+                                        std::numeric_limits<int>::max());
+      ABSL_DCHECK_GE(nbytes, 0);
+    }
+  }, this);
   uint8_t* nodes = onepass_nodes_.data();
+  if (nodes == NULL) {
+    ABSL_LOG(DFATAL) << "SearchOnePass called on a non-one-pass program.";
+    return false;
+  }
   int statesize = sizeof(OneState) + bytemap_range()*sizeof(uint32_t);
   // start() is always mapped to the zeroth OneState.
   OneState* state = IndexToNode(nodes, statesize, 0);
@@ -379,10 +396,12 @@ struct InstCond {
 // This is actually just a conservative approximation: it might
 // return false when the answer is true, when kInstEmptyWidth
 // instructions are involved.
-// Constructs and saves corresponding one-pass NFA on success.
+// On success, cuts the memory for the one-pass NFA from the DFA budget and
+// keeps the NFA if it is small; SearchOnePass() builds a bigger one on first
+// use.
 bool Prog::IsOnePass() {
   if (did_onepass_)
-    return onepass_nodes_.data() != NULL;
+    return is_onepass_;
   did_onepass_ = true;
 
   if (start() == 0)  // no match
@@ -396,6 +415,33 @@ bool Prog::IsOnePass() {
   int statesize = sizeof(OneState) + bytemap_range()*sizeof(uint32_t);
   if (maxnodes >= 65000 || dfa_mem_ / 4 / statesize < maxnodes)
     return false;
+
+  // Keep a small one-pass NFA now, as before: building it again on first
+  // use would cost more time than the memory is worth.
+  int nbytes = ComputeOnePass(&onepass_nodes_, kMaxEagerOnePassBytes);
+  if (nbytes < 0)
+    return false;
+
+  // A bigger one-pass NFA is not kept here: SearchOnePass() builds it again
+  // on first use. RE2::Match calls SearchOnePass() only to extract
+  // submatches (at most 4 groups), for anchored matches on texts of at most
+  // 16 bytes, and when an anchored DFA search runs out of memory, so an RE2
+  // that is used for none of these never builds it. Its memory is cut from
+  // the DFA budget now, though, so that the budget does not depend on
+  // whether (or when) that happens.
+  dfa_mem_ -= nbytes;
+  is_onepass_ = true;
+  return true;
+}
+
+// Runs the one-pass analysis on a program that has passed the checks in
+// IsOnePass(). Returns the size in bytes of the one-pass NFA, or -1 if the
+// program is not one-pass. If out is not NULL and the NFA takes at most
+// max_out_bytes bytes, saves the one-pass NFA there.
+// The analysis only reads the program, which is immutable by now.
+int Prog::ComputeOnePass(PODArray<uint8_t>* out, int max_out_bytes) {
+  int maxnodes = 2 + inst_count(kInstByteRange);
+  int statesize = sizeof(OneState) + bytemap_range()*sizeof(uint32_t);
 
   // Flood the graph starting at the start state, and check
   // that in each reachable state, each possible byte leads
@@ -611,13 +657,14 @@ bool Prog::IsOnePass() {
     ABSL_LOG(ERROR) << "nodes:\n" << dump;
   }
 
-  dfa_mem_ -= nalloc*statesize;
-  onepass_nodes_ = PODArray<uint8_t>(nalloc*statesize);
-  memmove(onepass_nodes_.data(), nodes.data(), nalloc*statesize);
-  return true;
+  if (out != NULL && nalloc*statesize <= max_out_bytes) {
+    *out = PODArray<uint8_t>(nalloc*statesize);
+    memmove(out->data(), nodes.data(), nalloc*statesize);
+  }
+  return nalloc*statesize;
 
 fail:
-  return false;
+  return -1;
 }
 
 }  // namespace re2
