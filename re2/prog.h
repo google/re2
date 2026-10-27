@@ -463,6 +463,8 @@ class Prog {
   bool did_flatten_;        // has Flatten been called?
   bool did_onepass_;        // has IsOnePass been called?
   bool is_onepass_;         // did IsOnePass return true?
+  uint8_t onepass_action_shift_ = 0;  // shift for OneState16 action nextindex
+  uint8_t onepass_cond_shift_ = 0;    // OneState16 cond shift (0xFF: palette)
 
   int start_;               // entry point for program
   int start_unanchored_;    // unanchored entry point for program

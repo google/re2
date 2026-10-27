@@ -520,4 +520,159 @@ TEST(Multithreaded, OnePassFirstUse) {
   }
 }
 
+TEST(Regexp, OnePassCompactionCapturesAndEmptyFlags) {
+  struct OnePassCase {
+    const char* pattern;
+    const char* text;
+    const char* context;
+    int ncap;  // number of capturing groups (excluding group 0)
+    bool expect_match;
+    const char* expected[5];  // group 0..4
+  };
+
+  static const OnePassCase kCases[] = {
+      // 0 capture groups
+      {"^[a-z]+/[0-9]+$", "hello/12345", "hello/12345", 0, true,
+       {"hello/12345", nullptr, nullptr, nullptr, nullptr}},
+      {"^[a-z]+/[0-9]+$", "hello/abc", "hello/abc", 0, false,
+       {nullptr, nullptr, nullptr, nullptr, nullptr}},
+      // 1 capture group
+      {"^([a-z]+)/[0-9]+$", "hello/12345", "hello/12345", 1, true,
+       {"hello/12345", "hello", nullptr, nullptr, nullptr}},
+      // 2 capture groups
+      {"^([a-z]+)/([0-9]+)$", "hello/12345", "hello/12345", 2, true,
+       {"hello/12345", "hello", "12345", nullptr, nullptr}},
+      // 3 capture groups
+      {"^([a-z]+)/([0-9]+)/([A-Z]+)$", "hello/12345/WORLD",
+       "hello/12345/WORLD", 3, true,
+       {"hello/12345/WORLD", "hello", "12345", "WORLD", nullptr}},
+      // 4 capture groups
+      {"^([a-z]+)/([0-9]+)/([A-Z]+)/([a-f0-9]+)$",
+       "hello/12345/WORLD/deadbeef", "hello/12345/WORLD/deadbeef", 4, true,
+       {"hello/12345/WORLD/deadbeef", "hello", "12345", "WORLD", "deadbeef"}},
+      // Empty-width flags (^, $, \b, \B) with 4 captures
+      {"^\\b([a-z]+)\\b:_\\B([0-9]+)\\B_:([A-Z]+)\\b/(\\d+)$",
+       "foo:_23_:BAR/99", "foo:_23_:BAR/99", 4, true,
+       {"foo:_23_:BAR/99", "foo", "23", "BAR", "99"}},
+      {"^\\b([a-z]+)\\b:\\B([0-9]+)\\B_:([A-Z]+)\\b/(\\d+)$",
+       "foo:23_:BAR/99", "foo:23_:BAR/99", 4, false,
+       {nullptr, nullptr, nullptr, nullptr, nullptr}},
+      {"^\\b([a-z]+)\\b:_\\B([0-9]+)\\b_:([A-Z]+)\\b/(\\d+)$",
+       "foo:_23_:BAR/99", "foo:_23_:BAR/99", 4, false,
+       {nullptr, nullptr, nullptr, nullptr, nullptr}},
+      // Word boundary checks (\b and \B at the text's ends, within context)
+      {"\\b([a-z]+)-([0-9]+)\\b", "abc-123", " abc-123 ", 2, true,
+       {"abc-123", "abc", "123", nullptr, nullptr}},
+      {"\\b([a-z]+)-([0-9]+)\\b", "abc-123", "xabc-123 ", 2, false,
+       {nullptr, nullptr, nullptr, nullptr, nullptr}},
+      {"\\B([a-z]+)-([0-9]+)\\B", "abc-123", "xabc-1239", 2, true,
+       {"abc-123", "abc", "123", nullptr, nullptr}},
+      {"\\B([a-z]+)-([0-9]+)\\B", "abc-123", " abc-1239", 2, false,
+       {nullptr, nullptr, nullptr, nullptr, nullptr}},
+  };
+
+  for (const OnePassCase& tc : kCases) {
+    RegexpStatus status;
+    Regexp* re = Regexp::Parse(tc.pattern, Regexp::LikePerl, &status);
+    ASSERT_TRUE(re != nullptr) << tc.pattern;
+    Prog* prog = re->CompileToProg(0);
+    ASSERT_TRUE(prog != nullptr) << tc.pattern;
+    EXPECT_TRUE(prog->IsOnePass()) << tc.pattern;
+
+    absl::string_view context(tc.context);
+    absl::string_view text(tc.text);
+    // Locate text inside context if it is a substring so pointers align.
+    size_t pos = context.find(text);
+    if (pos != absl::string_view::npos) {
+      text = context.substr(pos, text.size());
+    }
+
+    absl::string_view match[5];
+    bool matched = prog->SearchOnePass(text, context, Prog::kAnchored,
+                                       Prog::kFullMatch, match, tc.ncap + 1);
+    EXPECT_EQ(matched, tc.expect_match) << tc.pattern << " on " << tc.text;
+    if (matched && tc.expect_match) {
+      for (int i = 0; i <= tc.ncap; i++) {
+        EXPECT_EQ(match[i], absl::string_view(tc.expected[i]))
+            << tc.pattern << " group " << i;
+      }
+    }
+    EXPECT_TRUE(TestRegexpOnText(tc.pattern, tc.text)) << tc.pattern;
+
+    delete prog;
+    re->Decref();
+  }
+}
+
+TEST(Regexp, OnePassCompactionLargeStateCounts) {
+  // 1. Direct shift mode with nalloc > 128 (0 captures, no empty flags):
+  //    Each repetition of "a{1,200}b" creates >200 OnePass states.
+  {
+    const char* pattern = "^a{1,200}b$";
+    RegexpStatus status;
+    Regexp* re = Regexp::Parse(pattern, Regexp::LikePerl, &status);
+    ASSERT_TRUE(re != nullptr);
+    Regexp* sre = re->Simplify();
+    ASSERT_TRUE(sre != nullptr);
+    Prog* prog = sre->CompileToProg(0);
+    ASSERT_TRUE(prog != nullptr);
+    EXPECT_TRUE(prog->IsOnePass());
+
+    std::string valid(150, 'a');
+    valid.push_back('b');
+    absl::string_view m[1];
+    EXPECT_TRUE(prog->SearchOnePass(valid, valid, Prog::kAnchored,
+                                    Prog::kFullMatch, m, 1));
+    EXPECT_EQ(m[0], valid);
+
+    std::string too_long(201, 'a');
+    too_long.push_back('b');
+    EXPECT_FALSE(prog->SearchOnePass(too_long, too_long, Prog::kAnchored,
+                                     Prog::kFullMatch, m, 1));
+    delete prog;
+    sre->Decref();
+    re->Decref();
+  }
+
+  // 2. Palette mode with nalloc > 128, 4 capture groups, and empty-width flags:
+  //    4 segments of length up to 40 gives ~165 OnePass states (>128), which
+  //    exceeds the 9-bit direct index capacity when 4 captures + \b are active,
+  //    exercising OneState16 Palette Mode (cond_shift == 0xFF).
+  {
+    const char* pattern =
+        "^\\b([a-z]{1,40})/([0-9]{1,40})/([A-Z]{1,40})/([a-f0-9]{1,40})\\b$";
+    RegexpStatus status;
+    Regexp* re = Regexp::Parse(pattern, Regexp::LikePerl, &status);
+    ASSERT_TRUE(re != nullptr);
+    Regexp* sre = re->Simplify();
+    ASSERT_TRUE(sre != nullptr);
+    Prog* prog = sre->CompileToProg(0);
+    ASSERT_TRUE(prog != nullptr);
+    EXPECT_TRUE(prog->IsOnePass());
+
+    std::string s1(35, 'x');
+    std::string s2(38, '7');
+    std::string s3(32, 'Q');
+    std::string s4(40, 'e');
+    std::string input = s1 + "/" + s2 + "/" + s3 + "/" + s4;
+    absl::string_view m[5];
+    EXPECT_TRUE(prog->SearchOnePass(input, input, Prog::kAnchored,
+                                    Prog::kFullMatch, m, 5));
+    EXPECT_EQ(m[0], input);
+    EXPECT_EQ(m[1], s1);
+    EXPECT_EQ(m[2], s2);
+    EXPECT_EQ(m[3], s3);
+    EXPECT_EQ(m[4], s4);
+
+    // Verify rejection when one segment exceeds 40 chars.
+    std::string bad_input =
+        std::string(41, 'x') + "/" + s2 + "/" + s3 + "/" + s4;
+    EXPECT_FALSE(prog->SearchOnePass(bad_input, bad_input, Prog::kAnchored,
+                                     Prog::kFullMatch, m, 5));
+    delete prog;
+    sre->Decref();
+    re->Decref();
+  }
+}
+
 }  // namespace re2

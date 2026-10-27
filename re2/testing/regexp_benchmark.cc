@@ -1602,4 +1602,103 @@ BENCHMARK(PossibleMatchRange_Complex);
 BENCHMARK(PossibleMatchRange_Prefix);
 BENCHMARK(PossibleMatchRange_NoProg);
 
+static std::string MakeOnePassPattern(int kind) {
+  switch (kind) {
+    case 0:
+      // Small 3-capture phone pattern from MemoryUsage().
+      return "^(\\d+)-(\\d+)-(\\d+)$";
+    case 1: {
+      // Medium 0-capture one-pass pattern (~21.4 KiB of nodes at baseline).
+      std::string pat = "^(?:v1|v2)";
+      const char* kChars = "abcdefghijklmnopqrstuvwxyz012345";
+      for (int i = 0; i < 75; ++i) {
+        pat += '/';
+        pat += kChars[i % 32];
+      }
+      pat += '$';
+      return pat;
+    }
+    case 2: {
+      // Medium 1-capture + word-boundary pattern (~23.1 KiB of nodes).
+      std::string pat = "^([a-z0-9]+)\\b";
+      const char* kChars = "abcdefghijklmnopqrstuvwxyz0123456";
+      for (int i = 0; i < 75; ++i) {
+        pat += '/';
+        pat += kChars[i % 33];
+      }
+      pat += '$';
+      return pat;
+    }
+    case 3: {
+      // Medium-large 2-capture pattern (~28.5 KiB of nodes at baseline).
+      std::string pat = "^([a-z]+):([0-9]+)";
+      const char* kChars = "abcdefghijklmnopqrstuvwxyz0123456789_-";
+      for (int i = 0; i < 83; ++i) {
+        pat += '/';
+        pat += kChars[i % 38];
+      }
+      pat += '$';
+      return pat;
+    }
+    default: {
+      // Large 4-capture pattern (~85.5 KiB of nodes at baseline).
+      std::string pat = "^([a-z]+)/([0-9]+)/([A-Z]+)/([a-z0-9_]+)";
+      const char* kChars =
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      for (int i = 0; i < 183; ++i) {
+        pat += '/';
+        pat += kChars[i % 52];
+      }
+      pat += '$';
+      return pat;
+    }
+  }
+}
+
+void BM_OnePassMemoryUsage(benchmark::State& state) {
+  const std::string pattern = MakeOnePassPattern(state.range(0));
+  int64_t onepass_bytes = 0;
+  int64_t re2_bytes = 0;
+  {
+    Regexp* re = Regexp::Parse(pattern, Regexp::LikePerl, NULL);
+    ABSL_CHECK(re);
+    Prog* prog = re->CompileToProg(0);
+    ABSL_CHECK(prog);
+    MallocCounter mc(MallocCounter::THIS_THREAD_ONLY);
+    ABSL_CHECK(prog->IsOnePass());
+    onepass_bytes = mc.HeapGrowth();
+    delete prog;
+    re->Decref();
+  }
+  {
+    MallocCounter mc(MallocCounter::THIS_THREAD_ONLY);
+    RE2 re(pattern);
+    ABSL_CHECK(re.ok());
+    re2_bytes = mc.HeapGrowth();
+  }
+  int64_t total_bytes = 0;
+  for (auto _ : state) {
+    MallocCounter mc(MallocCounter::THIS_THREAD_ONLY);
+    RE2 re(pattern);
+    ABSL_CHECK(re.ok());
+    benchmark::DoNotOptimize(re);
+    total_bytes += mc.HeapGrowth();
+  }
+  state.SetBytesProcessed(total_bytes);
+  state.SetItemsProcessed(state.iterations());
+  state.SetLabel(absl::StrFormat("onepass_heap=%dB re2_heap=%dB",
+                                 onepass_bytes, re2_bytes));
+}
+BENCHMARK(BM_OnePassMemoryUsage)->Arg(0)->Arg(1)->Arg(2)->Arg(3)->Arg(4);
+
+void BM_Search_Digits_OnePass(benchmark::State& state) {
+  SearchDigits(state, SearchOnePass);
+}
+BENCHMARK(BM_Search_Digits_OnePass);
+
+void BM_Search_Success_CachedOnePass(benchmark::State& state) {
+  SearchSuccess(state, ".*$", SearchCachedOnePass);
+}
+BENCHMARK_RANGE(BM_Search_Success_CachedOnePass, 8, 2 << 20);
+
 }  // namespace re2
