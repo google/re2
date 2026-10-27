@@ -216,7 +216,6 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
   pattern_ = new std::string(pattern);
   options_.Copy(options);
   entire_regexp_ = NULL;
-  suffix_regexp_ = NULL;
   error_ = empty_string();
   error_arg_ = empty_string();
 
@@ -233,11 +232,11 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
   group_names_ = NULL;
 
   RegexpStatus status;
-  entire_regexp_ = Regexp::Parse(
+  re2::Regexp* entire_regexp = Regexp::Parse(
     *pattern_,
     static_cast<Regexp::ParseFlags>(options_.ParseFlags()),
     &status);
-  if (entire_regexp_ == NULL) {
+  if (entire_regexp == NULL) {
     if (options_.log_errors()) {
       ABSL_LOG(ERROR) << "Error parsing '" << trunc(*pattern_) << "': "
                       << status.Text();
@@ -249,31 +248,35 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
   }
 
   bool foldcase;
-  re2::Regexp* suffix;
-  if (entire_regexp_->RequiredPrefix(&prefix_, &foldcase, &suffix)) {
+  re2::Regexp* suffix_regexp;
+  if (entire_regexp->RequiredPrefix(&prefix_, &foldcase, &suffix_regexp)) {
     prefix_foldcase_ = foldcase;
-    suffix_regexp_ = suffix;
   }
   else {
-    suffix_regexp_ = entire_regexp_->Incref();
+    suffix_regexp = entire_regexp->Incref();
   }
 
   // Two thirds of the memory goes to the forward Prog,
   // one third to the reverse prog, because the forward
   // Prog has two DFAs but the reverse prog has one.
-  prog_ = suffix_regexp_->CompileToProg(options_.max_mem()*2/3);
+  prog_ = suffix_regexp->CompileToProg(options_.max_mem()*2/3);
   if (prog_ == NULL) {
     if (options_.log_errors())
       ABSL_LOG(ERROR) << "Error compiling '" << trunc(*pattern_) << "'";
     error_ = new std::string("pattern too large - compile failed");
     error_code_ = RE2::ErrorPatternTooLarge;
+    suffix_regexp->Decref();
+    entire_regexp->Decref();
     return;
   }
 
   // We used to compute this lazily, but it's used during the
   // typical control flow for a match call, so we now compute
   // it eagerly, which avoids the overhead of absl::once_flag.
-  num_captures_ = suffix_regexp_->NumCaptures();
+  num_captures_ = suffix_regexp->NumCaptures();
+
+  suffix_regexp->Decref();
+  entire_regexp->Decref();
 
   // Could delay this until the first match call that
   // cares about submatch information, but the one-pass
@@ -283,11 +286,41 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
   is_one_pass_ = prog_->IsOnePass();
 }
 
+// Returns entire_regexp_, computing it if needed.
+re2::Regexp* RE2::Regexp() const {
+  absl::call_once(regexp_once_, [](const RE2* re) {
+    if (re->error_code_ != NoError &&
+        re->error_code_ != RE2::ErrorPatternTooLarge) {
+      return;
+    }
+    re->entire_regexp_ = re2::Regexp::Parse(
+        *re->pattern_,
+        static_cast<re2::Regexp::ParseFlags>(re->options_.ParseFlags()),
+        NULL);
+  }, this);
+  return entire_regexp_;
+}
+
 // Returns rprog_, computing it if needed.
 re2::Prog* RE2::ReverseProg() const {
   absl::call_once(rprog_once_, [](const RE2* re) {
+    if (re->prog_ == NULL)
+      return;
+    re2::Regexp* entire_regexp = re2::Regexp::Parse(
+        *re->pattern_,
+        static_cast<re2::Regexp::ParseFlags>(re->options_.ParseFlags()),
+        NULL);
+    if (entire_regexp == NULL)
+      return;
+    std::string prefix;
+    bool foldcase;
+    re2::Regexp* suffix_regexp;
+    if (!entire_regexp->RequiredPrefix(&prefix, &foldcase, &suffix_regexp))
+      suffix_regexp = entire_regexp->Incref();
     re->rprog_ =
-        re->suffix_regexp_->CompileToReverseProg(re->options_.max_mem() / 3);
+        suffix_regexp->CompileToReverseProg(re->options_.max_mem() / 3);
+    suffix_regexp->Decref();
+    entire_regexp->Decref();
     if (re->rprog_ == NULL) {
       if (re->options_.log_errors())
         ABSL_LOG(ERROR) << "Error reverse compiling '" << trunc(*re->pattern_)
@@ -313,8 +346,6 @@ RE2::~RE2() {
     delete error_arg_;
   if (error_ != empty_string())
     delete error_;
-  if (suffix_regexp_)
-    suffix_regexp_->Decref();
   if (entire_regexp_)
     entire_regexp_->Decref();
   delete pattern_;
@@ -394,8 +425,20 @@ int RE2::ReverseProgramFanout(std::vector<int>* histogram) const {
 // Returns named_groups_, computing it if needed.
 const std::map<std::string, int>& RE2::NamedCapturingGroups() const {
   absl::call_once(named_groups_once_, [](const RE2* re) {
-    if (re->suffix_regexp_ != NULL)
-      re->named_groups_ = re->suffix_regexp_->NamedCaptures();
+    // A pattern that parses but is too large to compile still has its
+    // group names; num_captures_ is -1 then.
+    if (re->error_code_ == RE2::NoError
+            ? re->num_captures_ > 0
+            : re->error_code_ == RE2::ErrorPatternTooLarge) {
+      re2::Regexp* entire_regexp = re2::Regexp::Parse(
+          *re->pattern_,
+          static_cast<re2::Regexp::ParseFlags>(re->options_.ParseFlags()),
+          NULL);
+      if (entire_regexp != NULL) {
+        re->named_groups_ = entire_regexp->NamedCaptures();
+        entire_regexp->Decref();
+      }
+    }
     if (re->named_groups_ == NULL)
       re->named_groups_ = empty_named_groups();
   }, this);
@@ -405,8 +448,20 @@ const std::map<std::string, int>& RE2::NamedCapturingGroups() const {
 // Returns group_names_, computing it if needed.
 const std::map<int, std::string>& RE2::CapturingGroupNames() const {
   absl::call_once(group_names_once_, [](const RE2* re) {
-    if (re->suffix_regexp_ != NULL)
-      re->group_names_ = re->suffix_regexp_->CaptureNames();
+    // A pattern that parses but is too large to compile still has its
+    // group names; num_captures_ is -1 then.
+    if (re->error_code_ == RE2::NoError
+            ? re->num_captures_ > 0
+            : re->error_code_ == RE2::ErrorPatternTooLarge) {
+      re2::Regexp* entire_regexp = re2::Regexp::Parse(
+          *re->pattern_,
+          static_cast<re2::Regexp::ParseFlags>(re->options_.ParseFlags()),
+          NULL);
+      if (entire_regexp != NULL) {
+        re->group_names_ = entire_regexp->CaptureNames();
+        entire_regexp->Decref();
+      }
+    }
     if (re->group_names_ == NULL)
       re->group_names_ = empty_group_names();
   }, this);

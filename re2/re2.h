@@ -337,7 +337,7 @@ class RE2 {
   // Returns the underlying Regexp; not for general use.
   // Returns entire_regexp_ so that callers don't need
   // to know about prefix_ and prefix_foldcase_.
-  re2::Regexp* Regexp() const { return entire_regexp_; }
+  re2::Regexp* Regexp() const;
 
   /***** The array-based matching interface ******/
 
@@ -781,12 +781,11 @@ class RE2 {
   re2::Prog* ReverseProg() const;
 
   // First cache line is relatively cold fields.
-  const std::string* pattern_;    // string regular expression
-  Options options_;               // option flags
-  re2::Regexp* entire_regexp_;    // parsed regular expression
-  re2::Regexp* suffix_regexp_;    // parsed regular expression, prefix_ removed
-  const std::string* error_;      // error indicator (or points to empty string)
-  const std::string* error_arg_;  // fragment of regexp showing error (or ditto)
+  const std::string* pattern_;          // string regular expression
+  Options options_;                     // option flags
+  mutable re2::Regexp* entire_regexp_;  // parsed regular expression (lazy)
+  const std::string* error_;            // error indicator (or empty string)
+  const std::string* error_arg_;        // fragment of regexp showing error
 
   // Second cache line is relatively hot fields.
   // These are ordered oddly to pack everything.
@@ -795,7 +794,7 @@ class RE2 {
   bool longest_match_ : 1;        // cached copy of options_.longest_match()
   bool is_one_pass_ : 1;          // can use prog_->SearchOnePass?
   bool prefix_foldcase_ : 1;      // prefix_ is ASCII case-insensitive
-  std::string prefix_;            // required prefix (before suffix_regexp_)
+  std::string prefix_;            // required prefix (before the suffix)
   re2::Prog* prog_;               // compiled program for regexp
 
   // Reverse Prog for DFA execution only
@@ -805,6 +804,7 @@ class RE2 {
   // Map from capture indices to names
   mutable const std::map<int, std::string>* group_names_;
 
+  mutable absl::once_flag regexp_once_;
   mutable absl::once_flag rprog_once_;
   mutable absl::once_flag named_groups_once_;
   mutable absl::once_flag group_names_once_;

@@ -14,6 +14,7 @@
 
 #include <map>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -1694,6 +1695,115 @@ TEST(RE2, InitNULL) {
   ASSERT_TRUE(re.ok());
   ASSERT_TRUE(RE2::FullMatch("", re));
   ASSERT_TRUE(RE2::FullMatch("", NULL));
+}
+
+TEST(RE2, LazyRegexpAndColdAccessors) {
+  RE2 re("^prefix_(?P<first>[a-z]+)_(?P<second>[0-9]+)$");
+  ASSERT_TRUE(re.ok());
+  EXPECT_EQ(2, re.NumberOfCapturingGroups());
+  EXPECT_GT(re.ProgramSize(), 0);
+  EXPECT_GT(re.ReverseProgramSize(), 0);
+
+  const auto& named = re.NamedCapturingGroups();
+  ASSERT_EQ(size_t{2}, named.size());
+  EXPECT_EQ(1, named.at("first"));
+  EXPECT_EQ(2, named.at("second"));
+
+  const auto& names = re.CapturingGroupNames();
+  ASSERT_EQ(size_t{2}, names.size());
+  EXPECT_EQ("first", names.at(1));
+  EXPECT_EQ("second", names.at(2));
+
+  re2::Regexp* ast1 = re.Regexp();
+  ASSERT_TRUE(ast1 != NULL);
+  EXPECT_EQ("(?-m:^)prefix_(?P<first>[a-z]+)_(?P<second>[0-9]+)(?-m:$)",
+            ast1->ToString());
+  EXPECT_EQ(ast1, re.Regexp());
+
+  RE2 no_caps("^literal_only$");
+  ASSERT_TRUE(no_caps.ok());
+  EXPECT_EQ(0, no_caps.NumberOfCapturingGroups());
+  EXPECT_TRUE(no_caps.NamedCapturingGroups().empty());
+  EXPECT_TRUE(no_caps.CapturingGroupNames().empty());
+  ASSERT_TRUE(no_caps.Regexp() != NULL);
+}
+
+TEST(RE2, LazyRegexpErrorStates) {
+  RE2::Options quiet_opt;
+  quiet_opt.set_log_errors(false);
+
+  RE2 bad_syntax("[unclosed", quiet_opt);
+  EXPECT_FALSE(bad_syntax.ok());
+  EXPECT_EQ(RE2::ErrorMissingBracket, bad_syntax.error_code());
+  EXPECT_TRUE(bad_syntax.Regexp() == NULL);
+  EXPECT_EQ(-1, bad_syntax.ReverseProgramSize());
+  EXPECT_TRUE(bad_syntax.NamedCapturingGroups().empty());
+  EXPECT_TRUE(bad_syntax.CapturingGroupNames().empty());
+
+  RE2 bad_repeat("a{1001}", quiet_opt);
+  EXPECT_FALSE(bad_repeat.ok());
+  EXPECT_EQ(RE2::ErrorRepeatSize, bad_repeat.error_code());
+  EXPECT_TRUE(bad_repeat.Regexp() == NULL);
+
+  RE2::Options tiny_mem_opt;
+  tiny_mem_opt.set_log_errors(false);
+  tiny_mem_opt.set_max_mem(16);
+  RE2 too_large("([a-z0-9]{10,50})_([a-z0-9]{10,50})", tiny_mem_opt);
+  EXPECT_FALSE(too_large.ok());
+  EXPECT_EQ(RE2::ErrorPatternTooLarge, too_large.error_code());
+  EXPECT_EQ(-1, too_large.ReverseProgramSize());
+  EXPECT_TRUE(too_large.Regexp() != NULL);
+
+  // Group names stay available when the pattern parses but is too large.
+  RE2 too_large_named(
+      "(?P<first>[a-z0-9]{10,50})_(?P<second>[a-z0-9]{10,50})", tiny_mem_opt);
+  EXPECT_EQ(RE2::ErrorPatternTooLarge, too_large_named.error_code());
+  const auto& too_large_named_groups = too_large_named.NamedCapturingGroups();
+  ASSERT_EQ(size_t{2}, too_large_named_groups.size());
+  EXPECT_EQ(1, too_large_named_groups.at("first"));
+  EXPECT_EQ(2, too_large_named_groups.at("second"));
+  const auto& too_large_group_names = too_large_named.CapturingGroupNames();
+  ASSERT_EQ(size_t{2}, too_large_group_names.size());
+  EXPECT_EQ("first", too_large_group_names.at(1));
+  EXPECT_EQ("second", too_large_group_names.at(2));
+}
+
+TEST(RE2, ConcurrentLazyAccessors) {
+  const RE2 re("^https?://(?P<host>[a-z0-9.-]+)/(?P<path>[a-z0-9_/]+)$");
+  ASSERT_TRUE(re.ok());
+
+  constexpr int kNumThreads = 8;
+  std::vector<re2::Regexp*> regexps(kNumThreads, NULL);
+  std::vector<int> rprog_sizes(kNumThreads, 0);
+  std::vector<std::thread> threads;
+  threads.reserve(kNumThreads);
+
+  for (int t = 0; t < kNumThreads; ++t) {
+    threads.emplace_back([&, t]() {
+      for (int iter = 0; iter < 50; ++iter) {
+        std::string host, path;
+        EXPECT_TRUE(
+            RE2::FullMatch("https://example.com/a/b/c", re, &host, &path));
+        EXPECT_EQ("example.com", host);
+        EXPECT_EQ("a/b/c", path);
+        const auto& named = re.NamedCapturingGroups();
+        EXPECT_EQ(size_t{2}, named.size());
+        const auto& names = re.CapturingGroupNames();
+        EXPECT_EQ(size_t{2}, names.size());
+        rprog_sizes[t] = re.ReverseProgramSize();
+        regexps[t] = re.Regexp();
+      }
+    });
+  }
+  for (auto& th : threads) {
+    th.join();
+  }
+  ASSERT_TRUE(regexps[0] != NULL);
+  EXPECT_GT(rprog_sizes[0], 0);
+  for (int t = 1; t < kNumThreads; ++t) {
+    EXPECT_EQ(regexps[0], regexps[t]);
+    EXPECT_EQ(rprog_sizes[0], rprog_sizes[t]);
+  }
 }
 
 }  // namespace re2

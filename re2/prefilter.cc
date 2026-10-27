@@ -699,12 +699,19 @@ std::string Prefilter::DebugString() const {
 Prefilter* Prefilter::FromRE2(const RE2* re2) {
   if (re2 == NULL)
     return NULL;
+  if (!re2->ok() && re2->error_code() != RE2::ErrorPatternTooLarge)
+    return NULL;
 
-  Regexp* regexp = re2->Regexp();
+  Regexp* regexp = Regexp::Parse(
+      re2->pattern(),
+      static_cast<Regexp::ParseFlags>(re2->options().ParseFlags()),
+      NULL);
   if (regexp == NULL)
     return NULL;
 
-  return FromRegexp(regexp);
+  Prefilter* prefilter = FromRegexp(regexp);
+  regexp->Decref();
+  return prefilter;
 }
 
 

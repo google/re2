@@ -40,7 +40,7 @@ set(REQUIRES)
 
 # ABI version
 # http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html
-set(SONAME 11)
+set(SONAME 12)
 
 set(EXTRA_TARGET_LINK_LIBRARIES)
 

@@ -340,4 +340,18 @@ TEST(FilteredRE2Test, MoveSemantics) {
   EXPECT_EQ(size_t{0}, v1.matches.size());
 }
 
+TEST(FilteredRE2Test, CompileAndGetRE2Regexp) {
+  FilterTestVars v;
+  int id = -1;
+  EXPECT_EQ(RE2::NoError,
+            v.f.Add("^prefix_(?P<token>abc123|def456)_suffix$", v.opts, &id));
+  ASSERT_EQ(0, id);
+  v.f.Compile(&v.atoms);
+  EXPECT_EQ(size_t{2}, v.atoms.size());
+
+  const RE2& re = v.f.GetRE2(id);
+  EXPECT_TRUE(re.ok());
+  EXPECT_NE(nullptr, re.Regexp());
+}
+
 }  //  namespace re2
