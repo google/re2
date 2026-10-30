@@ -13,11 +13,11 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "pybind11/buffer_info.h"
-#include "pybind11/gil.h"
-#include "pybind11/pybind11.h"
-#include "pybind11/pytypes.h"
-#include "pybind11/stl.h"  // IWYU pragma: keep
+#include "nanobind/nanobind.h"
+#include "nanobind/stl/pair.h"      // IWYU pragma: keep
+#include "nanobind/stl/tuple.h"     // IWYU pragma: keep
+#include "nanobind/stl/unique_ptr.h"  // IWYU pragma: keep
+#include "nanobind/stl/vector.h"    // IWYU pragma: keep
 #include "re2/filtered_re2.h"
 #include "re2/re2.h"
 #include "re2/set.h"
@@ -30,18 +30,33 @@
 namespace re2_python {
 
 // This is conventional.
-namespace py = pybind11;
+namespace nb = nanobind;
 
-// In terms of the pybind11 API, a py::buffer is merely a py::object that
-// supports the buffer interface/protocol and you must explicitly request
-// a py::buffer_info in order to access the actual bytes. Under the hood,
-// the py::buffer_info manages a reference count to the py::buffer, so it
-// must be constructed and subsequently destructed while holding the GIL.
-static inline absl::string_view FromBytes(const py::buffer_info& bytes) {
-  char* data = reinterpret_cast<char*>(bytes.ptr);
-  ssize_t size = bytes.size;
-  return absl::string_view(data, size);
-}
+// nanobind doesn't provide a native way to access a Python buffer, so
+// we extract it ourself. We use PyBUF_SIMPLE to extract a contiguous
+// buffer to match the semantics of the previous pybind11-based implementation.
+class BufferView {
+ public:
+  explicit BufferView(nb::handle obj) {
+    if (PyObject_GetBuffer(obj.ptr(), &view_, PyBUF_SIMPLE) != 0) {
+      throw nb::python_error();
+    }
+  }
+
+  ~BufferView() { PyBuffer_Release(&view_); }
+
+  // Not copyable or movable.
+  BufferView(const BufferView&) = delete;
+  BufferView& operator=(const BufferView&) = delete;
+
+  absl::string_view view() const {
+    return absl::string_view(reinterpret_cast<char*>(view_.buf),
+                             static_cast<size_t>(view_.len));
+  }
+
+ private:
+  Py_buffer view_;
+};
 
 static inline int OneCharLen(const char* ptr) {
   return "\1\1\1\1\1\1\1\1\1\1\1\1\2\2\3\4"[(*ptr & 0xFF) >> 4];
@@ -49,9 +64,9 @@ static inline int OneCharLen(const char* ptr) {
 
 // Helper function for when Python encodes str to bytes and then needs to
 // convert str offsets to bytes offsets. Assumes that text is valid UTF-8.
-ssize_t CharLenToBytes(py::buffer buffer, ssize_t pos, ssize_t len) {
-  auto bytes = buffer.request();
-  auto text = FromBytes(bytes);
+ssize_t CharLenToBytes(nb::object buffer, ssize_t pos, ssize_t len) {
+  BufferView bytes(buffer);
+  auto text = bytes.view();
   auto ptr = text.data() + pos;
   auto end = text.data() + text.size();
   while (ptr < end && len > 0) {
@@ -63,9 +78,9 @@ ssize_t CharLenToBytes(py::buffer buffer, ssize_t pos, ssize_t len) {
 
 // Helper function for when Python decodes bytes to str and then needs to
 // convert bytes offsets to str offsets. Assumes that text is valid UTF-8.
-ssize_t BytesToCharLen(py::buffer buffer, ssize_t pos, ssize_t endpos) {
-  auto bytes = buffer.request();
-  auto text = FromBytes(bytes);
+ssize_t BytesToCharLen(nb::object buffer, ssize_t pos, ssize_t endpos) {
+  BufferView bytes(buffer);
+  auto text = bytes.view();
   auto ptr = text.data() + pos;
   auto end = text.data() + endpos;
   ssize_t len = 0;
@@ -76,25 +91,26 @@ ssize_t BytesToCharLen(py::buffer buffer, ssize_t pos, ssize_t endpos) {
   return len;
 }
 
-std::unique_ptr<RE2> RE2InitShim(py::buffer buffer,
+std::unique_ptr<RE2> RE2InitShim(nb::object buffer,
                                  const RE2::Options& options) {
-  auto bytes = buffer.request();
-  auto pattern = FromBytes(bytes);
+  BufferView bytes(buffer);
+  auto pattern = bytes.view();
   return std::make_unique<RE2>(pattern, options);
 }
 
-py::bytes RE2ErrorShim(const RE2& self) {
+nb::bytes RE2ErrorShim(const RE2& self) {
   // Return std::string as bytes. That is, without decoding to str.
-  return self.error();
+  const std::string& error = self.error();
+  return nb::bytes(error.data(), error.size());
 }
 
-std::vector<std::pair<py::bytes, int>> RE2NamedCapturingGroupsShim(
+std::vector<std::pair<nb::bytes, int>> RE2NamedCapturingGroupsShim(
     const RE2& self) {
   const int num_groups = self.NumberOfCapturingGroups();
-  std::vector<std::pair<py::bytes, int>> groups;
+  std::vector<std::pair<nb::bytes, int>> groups;
   groups.reserve(num_groups);
   for (const auto& it : self.NamedCapturingGroups()) {
-    groups.emplace_back(it.first, it.second);
+    groups.emplace_back(nb::bytes(it.first.data(), it.first.size()), it.second);
   }
   return groups;
 }
@@ -111,24 +127,26 @@ std::vector<int> RE2ReverseProgramFanoutShim(const RE2& self) {
   return histogram;
 }
 
-std::tuple<bool, py::bytes, py::bytes> RE2PossibleMatchRangeShim(
+std::tuple<bool, nb::bytes, nb::bytes> RE2PossibleMatchRangeShim(
     const RE2& self, int maxlen) {
   std::string min, max;
+  bool ok = self.PossibleMatchRange(&min, &max, maxlen);
   // Return std::string as bytes. That is, without decoding to str.
-  return {self.PossibleMatchRange(&min, &max, maxlen), min, max};
+  return {ok, nb::bytes(min.data(), min.size()),
+          nb::bytes(max.data(), max.size())};
 }
 
 std::vector<std::pair<ssize_t, ssize_t>> RE2MatchShim(const RE2& self,
                                                       RE2::Anchor anchor,
-                                                      py::buffer buffer,
+                                                      nb::object buffer,
                                                       ssize_t pos,
                                                       ssize_t endpos) {
-  auto bytes = buffer.request();
-  auto text = FromBytes(bytes);
+  BufferView bytes(buffer);
+  auto text = bytes.view();
   const int num_groups = self.NumberOfCapturingGroups() + 1;  // need $0
   std::vector<absl::string_view> groups;
   groups.resize(num_groups);
-  py::gil_scoped_release release_gil;
+  nb::gil_scoped_release release_gil;
   if (!self.Match(text, pos, endpos, anchor, groups.data(), groups.size())) {
     // Ensure that groups are null before converting to spans!
     for (auto& it : groups) {
@@ -148,11 +166,12 @@ std::vector<std::pair<ssize_t, ssize_t>> RE2MatchShim(const RE2& self,
   return spans;
 }
 
-py::bytes RE2QuoteMetaShim(py::buffer buffer) {
-  auto bytes = buffer.request();
-  auto pattern = FromBytes(bytes);
+nb::bytes RE2QuoteMetaShim(nb::object buffer) {
+  BufferView bytes(buffer);
+  auto pattern = bytes.view();
   // Return std::string as bytes. That is, without decoding to str.
-  return RE2::QuoteMeta(pattern);
+  std::string quoted = RE2::QuoteMeta(pattern);
+  return nb::bytes(quoted.data(), quoted.size());
 }
 
 class Set {
@@ -166,9 +185,9 @@ class Set {
   Set(const Set&) = delete;
   Set& operator=(const Set&) = delete;
 
-  int Add(py::buffer buffer) {
-    auto bytes = buffer.request();
-    auto pattern = FromBytes(bytes);
+  int Add(nb::object buffer) {
+    BufferView bytes(buffer);
+    auto pattern = bytes.view();
     int index = set_.Add(pattern, /*error=*/NULL);  // -1 on error
     return index;
   }
@@ -178,11 +197,11 @@ class Set {
     return set_.Compile();
   }
 
-  std::vector<int> Match(py::buffer buffer) const {
-    auto bytes = buffer.request();
-    auto text = FromBytes(bytes);
+  std::vector<int> Match(nb::object buffer) const {
+    BufferView bytes(buffer);
+    auto text = bytes.view();
     std::vector<int> matches;
-    py::gil_scoped_release release_gil;
+    nb::gil_scoped_release release_gil;
     set_.Match(text, &matches);
     return matches;
   }
@@ -200,9 +219,9 @@ class Filter {
   Filter(const Filter&) = delete;
   Filter& operator=(const Filter&) = delete;
 
-  int Add(py::buffer buffer, const RE2::Options& options) {
-    auto bytes = buffer.request();
-    auto pattern = FromBytes(bytes);
+  int Add(nb::object buffer, const RE2::Options& options) {
+    BufferView bytes(buffer);
+    auto pattern = bytes.view();
     int index = -1;  // not clobbered on error
     filter_.Add(pattern, options, &index);
     return index;
@@ -218,22 +237,22 @@ class Filter {
     for (int i = 0; i < static_cast<int>(atoms.size()); ++i) {
       if (set_->Add(atoms[i], /*error=*/NULL) != i) {
         // Should never happen: the atom is a literal!
-        py::pybind11_fail("set_->Add() failed");
+        throw std::runtime_error("set_->Add() failed");
       }
     }
     // Compiling can fail.
     return set_->Compile();
   }
 
-  std::vector<int> Match(py::buffer buffer, bool potential) const {
+  std::vector<int> Match(nb::object buffer, bool potential) const {
     if (set_ == nullptr) {
-      py::pybind11_fail("Match() called before compiling");
+      throw std::runtime_error("Match() called before compiling");
     }
 
-    auto bytes = buffer.request();
-    auto text = FromBytes(bytes);
+    BufferView bytes(buffer);
+    auto text = bytes.view();
     std::vector<int> atoms;
-    py::gil_scoped_release release_gil;
+    nb::gil_scoped_release release_gil;
     set_->Match(text, &atoms);
     std::vector<int> matches;
     if (potential) {
@@ -253,9 +272,9 @@ class Filter {
   std::unique_ptr<RE2::Set> set_;
 };
 
-PYBIND11_MODULE(_re2, module) {
-  // Translate exceptions thrown by py::pybind11_fail() into Python.
-  py::register_local_exception<std::runtime_error>(module, "Error");
+NB_MODULE(_re2, module) {
+  // Translate exceptions thrown by throw std::runtime_error() into Python.
+  nb::exception<std::runtime_error>(module, "Error");
 
   module.def("CharLenToBytes", &CharLenToBytes);
   module.def("BytesToCharLen", &BytesToCharLen);
@@ -267,12 +286,12 @@ PYBIND11_MODULE(_re2, module) {
   //             enum Encoding
   //     class Set
   //     class Filter
-  py::class_<RE2> re2(module, "RE2");
-  py::enum_<RE2::Anchor> anchor(re2, "Anchor");
-  py::class_<RE2::Options> options(re2, "Options");
-  py::enum_<RE2::Options::Encoding> encoding(options, "Encoding");
-  py::class_<Set> set(module, "Set");
-  py::class_<Filter> filter(module, "Filter");
+  nb::class_<RE2> re2(module, "RE2");
+  nb::enum_<RE2::Anchor> anchor(re2, "Anchor");
+  nb::class_<RE2::Options> options(re2, "Options");
+  nb::enum_<RE2::Options::Encoding> encoding(options, "Encoding");
+  nb::class_<Set> set(module, "Set");
+  nb::class_<Filter> filter(module, "Filter");
 
   anchor.value("UNANCHORED", RE2::Anchor::UNANCHORED);
   anchor.value("ANCHOR_START", RE2::Anchor::ANCHOR_START);
@@ -281,48 +300,48 @@ PYBIND11_MODULE(_re2, module) {
   encoding.value("UTF8", RE2::Options::Encoding::EncodingUTF8);
   encoding.value("LATIN1", RE2::Options::Encoding::EncodingLatin1);
 
-  options.def(py::init<>())
-      .def_property("max_mem",                          //
-                    &RE2::Options::max_mem,             //
-                    &RE2::Options::set_max_mem)         //
-      .def_property("encoding",                         //
-                    &RE2::Options::encoding,            //
-                    &RE2::Options::set_encoding)        //
-      .def_property("posix_syntax",                     //
-                    &RE2::Options::posix_syntax,        //
-                    &RE2::Options::set_posix_syntax)    //
-      .def_property("longest_match",                    //
-                    &RE2::Options::longest_match,       //
-                    &RE2::Options::set_longest_match)   //
-      .def_property("log_errors",                       //
-                    &RE2::Options::log_errors,          //
-                    &RE2::Options::set_log_errors)      //
-      .def_property("literal",                          //
-                    &RE2::Options::literal,             //
-                    &RE2::Options::set_literal)         //
-      .def_property("never_nl",                         //
-                    &RE2::Options::never_nl,            //
-                    &RE2::Options::set_never_nl)        //
-      .def_property("dot_nl",                           //
-                    &RE2::Options::dot_nl,              //
-                    &RE2::Options::set_dot_nl)          //
-      .def_property("never_capture",                    //
-                    &RE2::Options::never_capture,       //
-                    &RE2::Options::set_never_capture)   //
-      .def_property("case_sensitive",                   //
-                    &RE2::Options::case_sensitive,      //
-                    &RE2::Options::set_case_sensitive)  //
-      .def_property("perl_classes",                     //
-                    &RE2::Options::perl_classes,        //
-                    &RE2::Options::set_perl_classes)    //
-      .def_property("word_boundary",                    //
-                    &RE2::Options::word_boundary,       //
-                    &RE2::Options::set_word_boundary)   //
-      .def_property("one_line",                         //
-                    &RE2::Options::one_line,            //
-                    &RE2::Options::set_one_line);       //
+  options.def(nb::init<>())
+      .def_prop_rw("max_mem",                           //
+                   &RE2::Options::max_mem,              //
+                   &RE2::Options::set_max_mem)          //
+      .def_prop_rw("encoding",                          //
+                   &RE2::Options::encoding,             //
+                   &RE2::Options::set_encoding)         //
+      .def_prop_rw("posix_syntax",                      //
+                   &RE2::Options::posix_syntax,         //
+                   &RE2::Options::set_posix_syntax)     //
+      .def_prop_rw("longest_match",                     //
+                   &RE2::Options::longest_match,        //
+                   &RE2::Options::set_longest_match)    //
+      .def_prop_rw("log_errors",                        //
+                   &RE2::Options::log_errors,           //
+                   &RE2::Options::set_log_errors)       //
+      .def_prop_rw("literal",                           //
+                   &RE2::Options::literal,              //
+                   &RE2::Options::set_literal)          //
+      .def_prop_rw("never_nl",                          //
+                   &RE2::Options::never_nl,             //
+                   &RE2::Options::set_never_nl)         //
+      .def_prop_rw("dot_nl",                            //
+                   &RE2::Options::dot_nl,               //
+                   &RE2::Options::set_dot_nl)           //
+      .def_prop_rw("never_capture",                     //
+                   &RE2::Options::never_capture,        //
+                   &RE2::Options::set_never_capture)    //
+      .def_prop_rw("case_sensitive",                    //
+                   &RE2::Options::case_sensitive,       //
+                   &RE2::Options::set_case_sensitive)   //
+      .def_prop_rw("perl_classes",                      //
+                   &RE2::Options::perl_classes,         //
+                   &RE2::Options::set_perl_classes)     //
+      .def_prop_rw("word_boundary",                     //
+                   &RE2::Options::word_boundary,        //
+                   &RE2::Options::set_word_boundary)    //
+      .def_prop_rw("one_line",                          //
+                   &RE2::Options::one_line,             //
+                   &RE2::Options::set_one_line);        //
 
-  re2.def(py::init(&RE2InitShim))
+  re2.def(nb::new_(&RE2InitShim))
       .def("ok", &RE2::ok)
       .def("error", &RE2ErrorShim)
       .def("options", &RE2::options)
@@ -336,17 +355,16 @@ PYBIND11_MODULE(_re2, module) {
       .def("Match", &RE2MatchShim)
       .def_static("QuoteMeta", &RE2QuoteMetaShim);
 
-  set.def(py::init<RE2::Anchor, const RE2::Options&>())
+  set.def(nb::init<RE2::Anchor, const RE2::Options&>())
       .def("Add", &Set::Add)
       .def("Compile", &Set::Compile)
       .def("Match", &Set::Match);
 
-  filter.def(py::init<>())
+  filter.def(nb::init<>())
       .def("Add", &Filter::Add)
       .def("Compile", &Filter::Compile)
       .def("Match", &Filter::Match)
-      .def("GetRE2", &Filter::GetRE2,
-           py::return_value_policy::reference_internal);
+      .def("GetRE2", &Filter::GetRE2, nb::rv_policy::reference_internal);
 }
 
 }  // namespace re2_python

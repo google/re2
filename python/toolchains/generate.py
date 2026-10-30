@@ -61,6 +61,7 @@ toolchain(
 py_cc_toolchain(
     name = "py_cc_toolchain",
     headers = ":headers",
+    headers_abi3 = ":headers",
     libs = ":libraries",
     python_version = "{major}.{minor}",
 )
@@ -75,10 +76,18 @@ cc_library(
     }}),
 )
 
+# Setting to switch the lib passed to Windows builds for unstable vs abi3
+config_setting(
+    name = "windows_unstable_abi",
+    constraint_values = ["@platforms//os:windows"],
+    flag_values = {{"@nanobind_bazel//:py-limited-api": "unset"}},
+)
+
 cc_import(
     name = "interface_library",
     interface_library = select({{
-        "@platforms//os:windows": "libs/python{major}{minor}.lib",
+        ":windows_unstable_abi": "libs/python{major}{minor}.lib",
+        "@platforms//os:windows": "libs/python3.lib",
         "//conditions:default": None,
     }}),
     system_provided = True,
