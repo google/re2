@@ -347,6 +347,17 @@ class Prog {
   // One-pass NFA: only correct if IsOnePass() is true,
   // but much faster than NFA (competitive with PCRE)
   // for those expressions.
+  //
+  // IsOnePass() runs the one-pass analysis once and, if the program is
+  // one-pass, cuts the memory for the one-pass NFA from the DFA budget.
+  // It keeps the NFA only if it takes at most kMaxEagerOnePassBytes;
+  // otherwise SearchOnePass() builds it on first use (thread-safely).
+  // RE2::Match calls SearchOnePass() only to extract submatches (at most 4
+  // groups), for anchored matches on texts of at most 16 bytes, and when an
+  // anchored DFA search runs out of memory.
+  // IsOnePass() itself is not thread-safe; call it before any search.
+  // Calling SearchOnePass() before IsOnePass() disables the one-pass NFA
+  // for good: it is never built, and SearchOnePass() returns false.
   bool IsOnePass();
   bool SearchOnePass(absl::string_view text, absl::string_view context,
                      Anchor anchor, MatchKind kind, absl::string_view* match,
@@ -360,6 +371,10 @@ class Prog {
                       int nmatch);
 
   static const int kMaxOnePassCapture = 5;  // $0 through $4
+
+  // IsOnePass() keeps a one-pass NFA of at most this many bytes, so that
+  // small and short-lived RE2s do not pay to build it twice.
+  static const int kMaxEagerOnePassBytes = 1024;
 
   // Backtracking search: the gold standard against which the other
   // implementations are checked.  FOR TESTING ONLY.
@@ -434,11 +449,20 @@ class Prog {
   DFA* GetDFA(MatchKind kind);
   void DeleteDFA(DFA* dfa);
 
+  // Runs the one-pass analysis on a program that has passed the checks in
+  // IsOnePass() (at most 65000 nodes, so node indices fit in 16 bits, and
+  // within a quarter of the DFA budget); those limits are checked only
+  // there. Returns the size in bytes of the one-pass NFA, or -1 if the
+  // program is not one-pass. If out is not NULL and the NFA takes at most
+  // max_out_bytes bytes, saves the one-pass NFA there.
+  int ComputeOnePass(PODArray<uint8_t>* out, int max_out_bytes);
+
   bool anchor_start_;       // regexp has explicit start anchor
   bool anchor_end_;         // regexp has explicit end anchor
   bool reversed_;           // whether program runs backward over input
   bool did_flatten_;        // has Flatten been called?
   bool did_onepass_;        // has IsOnePass been called?
+  bool is_onepass_;         // did IsOnePass return true?
 
   int start_;               // entry point for program
   int start_unanchored_;    // unanchored entry point for program
@@ -446,6 +470,7 @@ class Prog {
   int bytemap_range_;       // bytemap_[x] < bytemap_range_
 
   bool prefix_foldcase_;    // whether prefix is case-insensitive
+  absl::once_flag onepass_once_;  // for building onepass_nodes_ (fills padding)
   size_t prefix_size_;      // size of prefix (0 if no prefix)
   union {
     uint64_t* prefix_dfa_;  // "Shift DFA" for prefix
@@ -462,7 +487,7 @@ class Prog {
   size_t bit_state_text_max_size_;  // upper bound (inclusive) on text.size()
 
   PODArray<Inst> inst_;              // pointer to instruction array
-  PODArray<uint8_t> onepass_nodes_;  // data for OnePass nodes
+  PODArray<uint8_t> onepass_nodes_;  // OnePass nodes (big ones built lazily)
 
   int64_t dfa_mem_;         // Maximum memory for DFAs.
   DFA* dfa_first_;          // DFA cached for kFirstMatch/kManyMatch

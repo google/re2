@@ -3,14 +3,22 @@
 // license that can be found in the LICENSE file.
 
 #include <stddef.h>
+#include <stdint.h>
 
+#include <atomic>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "absl/base/macros.h"
+#include "absl/strings/string_view.h"
 #include "gtest/gtest.h"
+#include "re2/prog.h"
+#include "re2/re2.h"
+#include "re2/regexp.h"
 #include "re2/testing/exhaustive_tester.h"
 #include "re2/testing/tester.h"
+#include "util/malloc_counter.h"
 
 // For target `log' in the Makefile.
 #ifndef LOGGING
@@ -333,6 +341,183 @@ TEST(Regexp, SearchTests) {
     }
   }
   EXPECT_EQ(failures, 0);
+}
+
+// One-pass regexps with capturing groups, and texts to search with them.
+// IsOnePass() cuts the one-pass NFA's memory from the DFA budget; it keeps a
+// small NFA, and SearchOnePass() builds a bigger one on first use. The last
+// regexp's NFA is well above Prog::kMaxEagerOnePassBytes, so it is built
+// lazily.
+struct OnePassTest {
+  const char* regexp;
+  const char* texts[6];
+};
+
+static const OnePassTest onepass_tests[] = {
+  { "^/home/([^/]+)/(src|old-src)/([^/]+)/bin",
+    { "/home/xx/src/proj-1/bin", "/home/xx/old-src/p/bin",
+      "/home/xx/src/p/binx", "/home//src/p/bin", "/home/xx/src/p", "" } },
+  { "(\\d+)-(\\d+)",
+    { "12-345", "12-", "a12-3", "12-34x", "0-0", "" } },
+  { "(?i)([a-z]{2})-([a-z0-9]+)-(live|test)",
+    { "us-east1-live", "US-East1-Test", "us--live", "us-east1-dev",
+      "u-east1-live", "" } },
+  { "^web-(backend|frontend|mixer)-(\\d{4})$",
+    { "web-mixer-0003", "web-mixer-003", "web-mixer-00031",
+      "web-indexer-0003", "web-backend-1234", "" } },
+  { "^(apple|apricot|banana|blueberry|cherry|cranberry|date|elderberry|fig|"
+    "grape|guava|kiwi|lemon|lime|mango|melon|nectarine|orange|papaya|peach|"
+    "pear|plum|quince|raspberry|strawberry|tangerine|watermelon)-([a-z]+)-"
+    "(\\d+)$",
+    { "watermelon-east-42", "kiwi-x-1", "kiwi--1", "pineapple-x-1",
+      "strawberry-west-007x", "" } },
+};
+
+// Checks that the DFA budget is cut once, by IsOnePass(), and that the
+// one-pass NFA that IsOnePass() and the first SearchOnePass() build together
+// takes exactly the memory that was cut.
+TEST(OnePass, Budget) {
+  for (const OnePassTest& t : onepass_tests) {
+    Regexp* re = Regexp::Parse(t.regexp, Regexp::LikePerl, NULL);
+    ASSERT_TRUE(re != NULL);
+    Prog* prog = re->CompileToProg(0);
+    ASSERT_TRUE(prog != NULL);
+    int nsub = 1 + re->NumCaptures();
+    int64_t budget = prog->dfa_mem();
+    int64_t onepass_budget;
+    int64_t kept_by_isonepass;
+    int64_t usage;
+    {
+      testing::MallocCounter m(testing::MallocCounter::THIS_THREAD_ONLY);
+      ASSERT_TRUE(prog->IsOnePass()) << t.regexp;
+      kept_by_isonepass = m.HeapGrowth();
+      onepass_budget = prog->dfa_mem();
+      ASSERT_LT(onepass_budget, budget) << t.regexp;
+      // A second IsOnePass() gives the same answer and does not cut the
+      // budget again.
+      ASSERT_TRUE(prog->IsOnePass()) << t.regexp;
+      ASSERT_EQ(prog->dfa_mem(), onepass_budget) << t.regexp;
+      // Nor does the first SearchOnePass().
+      absl::string_view text(t.texts[0]);
+      absl::string_view sub[5];
+      ASSERT_TRUE(prog->SearchOnePass(text, text, Prog::kAnchored,
+                                      Prog::kFullMatch, sub, nsub))
+          << t.regexp;
+      ASSERT_EQ(prog->dfa_mem(), onepass_budget) << t.regexp;
+      usage = m.HeapGrowth();
+    }
+    // The open-source MallocCounter is a stub that always returns 0.
+    if (usage != 0) {
+      int64_t nbytes = budget - onepass_budget;
+      ASSERT_EQ(usage, nbytes) << t.regexp;
+      // IsOnePass() keeps a small NFA; SearchOnePass() builds a bigger one.
+      ASSERT_EQ(kept_by_isonepass,
+                nbytes <= Prog::kMaxEagerOnePassBytes ? nbytes : 0)
+          << t.regexp;
+    }
+    delete prog;
+    re->Decref();
+  }
+
+  // A program that is not one-pass keeps its whole budget.
+  Regexp* re = Regexp::Parse("(a*)(a*)b", Regexp::LikePerl, NULL);
+  ASSERT_TRUE(re != NULL);
+  Prog* prog = re->CompileToProg(0);
+  ASSERT_TRUE(prog != NULL);
+  int64_t budget = prog->dfa_mem();
+  ASSERT_FALSE(prog->IsOnePass());
+  ASSERT_FALSE(prog->IsOnePass());
+  ASSERT_EQ(prog->dfa_mem(), budget);
+  delete prog;
+  re->Decref();
+}
+
+// Compares SearchOnePass() with SearchNFA() on the first call, which builds
+// the one-pass NFA, and on later calls.
+TEST(OnePass, SameAsNFA) {
+  int nfail = 0;
+  for (const OnePassTest& t : onepass_tests) {
+    Regexp* re = Regexp::Parse(t.regexp, Regexp::LikePerl, NULL);
+    ASSERT_TRUE(re != NULL);
+    int nsub = 1 + re->NumCaptures();
+    for (Prog::MatchKind kind : {Prog::kFirstMatch, Prog::kFullMatch}) {
+      Prog* prog = re->CompileToProg(0);
+      ASSERT_TRUE(prog != NULL);
+      ASSERT_TRUE(prog->IsOnePass()) << t.regexp;
+      for (int pass = 0; pass < 3; pass++) {
+        for (const char* p : t.texts) {
+          absl::string_view text(p);
+          absl::string_view onepass[5];
+          absl::string_view nfa[5];
+          bool onepass_matched = prog->SearchOnePass(
+              text, text, Prog::kAnchored, kind, onepass, nsub);
+          bool nfa_matched =
+              prog->SearchNFA(text, text, Prog::kAnchored, kind, nfa, nsub);
+          bool same = onepass_matched == nfa_matched;
+          for (int i = 0; same && nfa_matched && i < nsub; i++) {
+            same = onepass[i].data() == nfa[i].data() &&
+                   onepass[i].size() == nfa[i].size();
+          }
+          if (!same) {
+            ADD_FAILURE() << t.regexp << " on \"" << text << "\", kind "
+                          << kind << ", pass " << pass
+                          << ": SearchOnePass and SearchNFA differ";
+            nfail++;
+          }
+        }
+      }
+      delete prog;
+    }
+    re->Decref();
+  }
+  EXPECT_EQ(nfail, 0);
+}
+
+// Releases many threads at once on each freshly built RE2, so that they race
+// to run its first one-pass match (FullMatch with captures on a short text,
+// which skips the DFA) and so to build the one-pass NFA.
+TEST(Multithreaded, OnePassFirstUse) {
+  struct Case {
+    const char* regexp;  // one-pass, as OnePass.Budget checks
+    const char* text;
+    const char* sub1;
+    const char* sub2;
+  };
+  static const Case cases[] = {
+    { "^/home/([^/]+)/(src|old-src)/[^/]+/bin", "/home/xx/old-src/p/bin",
+      "xx", "old-src" },
+    { "(\\d+)-(\\d+)", "12-345", "12", "345" },
+    { "(?i)([a-z]{2})-[a-z0-9]+-(live|test)", "US-East1-Test", "US", "Test" },
+    { "^(apple|apricot|banana|blueberry|cherry|cranberry|date|elderberry|fig|"
+      "grape|guava|kiwi|lemon|lime|mango|melon|nectarine|orange|papaya|peach|"
+      "pear|plum|quince|raspberry|strawberry|tangerine|watermelon)-([a-z]+)$",
+      "melon-east", "melon", "east" },
+  };
+  const int kThreads = 16;
+  const int kRounds = 20;
+  for (const Case& c : cases) {
+    for (int round = 0; round < kRounds; round++) {
+      RE2 re(c.regexp);
+      ASSERT_TRUE(re.ok()) << c.regexp;
+      std::atomic<bool> go(false);
+      std::atomic<int> failures(0);
+      std::vector<std::thread> threads;
+      for (int i = 0; i < kThreads; i++) {
+        threads.emplace_back([&]() {
+          while (!go.load(std::memory_order_acquire))
+            std::this_thread::yield();
+          absl::string_view sub1, sub2;
+          if (!RE2::FullMatch(c.text, re, &sub1, &sub2) || sub1 != c.sub1 ||
+              sub2 != c.sub2)
+            failures.fetch_add(1);
+        });
+      }
+      go.store(true, std::memory_order_release);
+      for (std::thread& t : threads)
+        t.join();
+      ASSERT_EQ(failures.load(), 0) << c.regexp;
+    }
+  }
 }
 
 }  // namespace re2
