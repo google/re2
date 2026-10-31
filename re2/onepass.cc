@@ -54,9 +54,11 @@
 #include <string.h>
 
 #include <algorithm>
+#include <limits>
 #include <map>
 #include <string>
 
+#include "absl/base/call_once.h"
 #include "absl/container/fixed_array.h"
 #include "absl/container/inlined_vector.h"
 #include "absl/log/absl_check.h"
@@ -150,6 +152,11 @@ struct OneState {
   uint32_t action[];
 };
 
+struct OneState16 {
+  uint16_t matchcond;   // conditions to match right now.
+  uint16_t action[];
+};
+
 // The uint32_t conditions in the action are a combination of
 // condition and capture bits and the next state.  The bottom 16 bits
 // are the condition and capture bits, and the top 16 are the index of
@@ -180,6 +187,8 @@ static const uint32_t kMatchWins  = 1 << kEmptyShift;
 static const uint32_t kCapMask    = ((1 << kRealMaxCap) - 1) << kRealCapShift;
 
 static const uint32_t kImpossible = kEmptyWordBoundary | kEmptyNonWordBoundary;
+static const uint16_t kInvalidAction16 = 0xFFFF;
+static const uint8_t  kPaletteCondShift = 0xFF;
 
 // Check, at compile time, that prog.h agrees with math above.
 // This function is never called.
@@ -189,6 +198,10 @@ void OnePass_Checks() {
   // kMaxCap counts pointers, kMaxOnePassCapture counts pairs.
   static_assert(kMaxCap == Prog::kMaxOnePassCapture*2,
                 "kMaxCap disagrees with kMaxOnePassCapture");
+  static_assert(sizeof(OneState16) == 2,
+                "OneState16 must be 2 bytes");
+  static_assert(sizeof(OneState) == 4,
+                "OneState must be 4 bytes");
 }
 
 static bool Satisfy(uint32_t cond, absl::string_view context, const char* p) {
@@ -211,6 +224,179 @@ static void ApplyCaptures(uint32_t cond, const char* p,
 static inline OneState* IndexToNode(uint8_t* nodes, int statesize,
                                     int nodeindex) {
   return reinterpret_cast<OneState*>(nodes + statesize*nodeindex);
+}
+
+static inline OneState16* IndexToNode16(uint8_t* nodes, int statesize,
+                                        int nodeindex) {
+  return reinterpret_cast<OneState16*>(nodes + statesize*nodeindex);
+}
+
+// Copies a 32-bit one-pass NFA into 16-bit cells: the match conditions as
+// they are, each action through encode().
+template <typename Encode>
+static void CopyTo16(uint8_t* src_nodes, int statesize, uint8_t* dst_nodes,
+                     int statesize16, int nalloc, int bytemap_range,
+                     Encode encode) {
+  for (int i = 0; i < nalloc; i++) {
+    const OneState* src = IndexToNode(src_nodes, statesize, i);
+    OneState16* dst = IndexToNode16(dst_nodes, statesize16, i);
+    dst->matchcond = static_cast<uint16_t>(src->matchcond);
+    for (int b = 0; b < bytemap_range; b++)
+      dst->action[b] = encode(src->action[b]);
+  }
+}
+
+template <typename StateT, uint8_t kActionShift, uint8_t kCondShift,
+          bool kUsePalette>
+static bool SearchOnePassLoop(
+    uint8_t* nodes, int bytemap_range, const uint8_t* bytemap,
+    absl::string_view text, absl::string_view context,
+    Prog::MatchKind kind, absl::string_view* match, int nmatch, int ncap,
+    const char** cap, const char** matchcap) {
+  const uint16_t* palette = NULL;
+  if constexpr (kUsePalette) {
+    palette = reinterpret_cast<const uint16_t*>(nodes);
+    nodes += (sizeof(uint16_t) << kActionShift);
+  }
+  const int statesize =
+      sizeof(StateT) + bytemap_range * sizeof(StateT::matchcond);
+  constexpr uint32_t kActionMask = (uint32_t{1} << kActionShift) - 1;
+  // In the shift encodings (no empty-width flags), keep the condition bits
+  // as they sit in the 16-bit action (cond >> kEmptyShift) and test them with
+  // shifted masks; decode only when applying captures.
+  constexpr bool kShiftMode =
+      sizeof(StateT) == sizeof(uint16_t) && kCondShift == kEmptyShift;
+  constexpr int kCondDecodeShift = kShiftMode ? kEmptyShift : 0;
+  constexpr uint32_t kMatchWinsC = kMatchWins >> kCondDecodeShift;
+  constexpr uint32_t kCapMaskC = kCapMask >> kCondDecodeShift;
+  // start() is always mapped to the zeroth OneState.
+  StateT* state =
+      reinterpret_cast<StateT*>(nodes);
+  const char* bp = text.data();
+  const char* ep = text.data() + text.size();
+  const char* p;
+  bool matched = false;
+  matchcap[0] = bp;
+  cap[0] = bp;
+  uint32_t nextmatchcond = state->matchcond;
+  for (p = bp; p < ep; p++) {
+    int c = bytemap[*p & 0xFF];
+    uint32_t matchcond = nextmatchcond;
+    uint32_t cond;
+
+    // Determine whether we can reach act->next.
+    // If so, advance state and nextmatchcond.
+    if constexpr (sizeof(StateT) == sizeof(uint16_t)) {
+      uint32_t act = state->action[c];
+      if constexpr (kCondShift == kEmptyShift) {
+        if (act != kInvalidAction16) {
+          cond = act & kActionMask;
+          uint32_t nextindex = act >> kActionShift;
+          state = IndexToNode16(nodes, statesize, nextindex);
+          nextmatchcond = state->matchcond;
+        } else {
+          cond = 0;
+          state = NULL;
+          nextmatchcond = kImpossible;
+        }
+      } else {
+        if constexpr (kUsePalette) {
+          cond = palette[act & kActionMask];
+        } else {
+          cond = act & kActionMask;
+        }
+        if ((cond & kEmptyAllFlags) == 0 || Satisfy(cond, context, p)) {
+          uint32_t nextindex = act >> kActionShift;
+          state = IndexToNode16(nodes, statesize, nextindex);
+          nextmatchcond = state->matchcond;
+        } else {
+          state = NULL;
+          nextmatchcond = kImpossible;
+        }
+      }
+    } else {
+      cond = state->action[c];
+      if ((cond & kEmptyAllFlags) == 0 || Satisfy(cond, context, p)) {
+        uint32_t nextindex = cond >> kIndexShift;
+        state = IndexToNode(nodes, statesize, nextindex);
+        nextmatchcond = state->matchcond;
+      } else {
+        state = NULL;
+        nextmatchcond = kImpossible;
+      }
+    }
+
+    // This code section is carefully tuned.
+    // The goto sequence is about 10% faster than the
+    // obvious rewrite as a large if statement in the
+    // ASCIIMatchRE2 and DotMatchRE2 benchmarks.
+
+    // Saving the match capture registers is expensive.
+    // Is this intermediate match worth thinking about?
+
+    // Not if we want a full match.
+    if (kind == Prog::kFullMatch)
+      goto skipmatch;
+
+    // Not if it's impossible.
+    if (matchcond == kImpossible)
+      goto skipmatch;
+
+    // Not if the possible match is beaten by the certain
+    // match at the next byte.  When this test is useless
+    // (e.g., HTTPPartialMatchRE2) it slows the loop by
+    // about 10%, but when it avoids work (e.g., DotMatchRE2),
+    // it cuts the loop execution by about 45%.
+    if ((cond & kMatchWinsC) == 0 && (nextmatchcond & kEmptyAllFlags) == 0)
+      goto skipmatch;
+
+    // Finally, the match conditions must be satisfied.
+    if ((matchcond & kEmptyAllFlags) == 0 || Satisfy(matchcond, context, p)) {
+      for (int i = 2; i < 2*nmatch; i++)
+        matchcap[i] = cap[i];
+      if (nmatch > 1 && (matchcond & kCapMask))
+        ApplyCaptures(matchcond, p, matchcap, ncap);
+      matchcap[1] = p;
+      matched = true;
+
+      // If we're in longest match mode, we have to keep
+      // going and see if we find a longer match.
+      // In first match mode, we can stop if the match
+      // takes priority over the next state for this input byte.
+      // That bit is per-input byte and thus in cond, not matchcond.
+      if (kind == Prog::kFirstMatch && (cond & kMatchWinsC))
+        goto done;
+    }
+
+  skipmatch:
+    if (state == NULL)
+      goto done;
+    if ((cond & kCapMaskC) && nmatch > 1)
+      ApplyCaptures(cond << kCondDecodeShift, p, cap, ncap);
+  }
+
+  // Look for match at end of input.
+  {
+    uint32_t matchcond = state->matchcond;
+    if (matchcond != kImpossible &&
+        ((matchcond & kEmptyAllFlags) == 0 || Satisfy(matchcond, context, p))) {
+      if (nmatch > 1 && (matchcond & kCapMask))
+        ApplyCaptures(matchcond, p, cap, ncap);
+      for (int i = 2; i < ncap; i++)
+        matchcap[i] = cap[i];
+      matchcap[1] = p;
+      matched = true;
+    }
+  }
+
+done:
+  if (!matched)
+    return false;
+  for (int i = 0; i < nmatch; i++)
+    match[i] = absl::string_view(
+        matchcap[2 * i],
+        static_cast<size_t>(matchcap[2 * i + 1] - matchcap[2 * i]));
+  return true;
 }
 
 bool Prog::SearchOnePass(absl::string_view text, absl::string_view context,
@@ -244,105 +430,55 @@ bool Prog::SearchOnePass(absl::string_view text, absl::string_view context,
   if (anchor_end())
     kind = kFullMatch;
 
+  // Build the one-pass NFA on first use, unless IsOnePass() kept it.
+  // IsOnePass() has already run the analysis and cut the NFA's memory
+  // from the DFA budget.
+  ABSL_DCHECK(did_onepass_) << "SearchOnePass called before IsOnePass";
+  absl::call_once(onepass_once_, [](Prog* prog) {
+    if (prog->is_onepass_ && prog->onepass_nodes_.data() == NULL) {
+      int nbytes = prog->ComputeOnePass(&prog->onepass_nodes_,
+                                        std::numeric_limits<int>::max());
+      ABSL_DCHECK_GE(nbytes, 0);
+    }
+  }, this);
   uint8_t* nodes = onepass_nodes_.data();
-  int statesize = sizeof(OneState) + bytemap_range()*sizeof(uint32_t);
-  // start() is always mapped to the zeroth OneState.
-  OneState* state = IndexToNode(nodes, statesize, 0);
-  uint8_t* bytemap = bytemap_;
-  const char* bp = text.data();
-  const char* ep = text.data() + text.size();
-  const char* p;
-  bool matched = false;
-  matchcap[0] = bp;
-  cap[0] = bp;
-  uint32_t nextmatchcond = state->matchcond;
-  for (p = bp; p < ep; p++) {
-    int c = bytemap[*p & 0xFF];
-    uint32_t matchcond = nextmatchcond;
-    uint32_t cond = state->action[c];
-
-    // Determine whether we can reach act->next.
-    // If so, advance state and nextmatchcond.
-    if ((cond & kEmptyAllFlags) == 0 || Satisfy(cond, context, p)) {
-      uint32_t nextindex = cond >> kIndexShift;
-      state = IndexToNode(nodes, statesize, nextindex);
-      nextmatchcond = state->matchcond;
-    } else {
-      state = NULL;
-      nextmatchcond = kImpossible;
-    }
-
-    // This code section is carefully tuned.
-    // The goto sequence is about 10% faster than the
-    // obvious rewrite as a large if statement in the
-    // ASCIIMatchRE2 and DotMatchRE2 benchmarks.
-
-    // Saving the match capture registers is expensive.
-    // Is this intermediate match worth thinking about?
-
-    // Not if we want a full match.
-    if (kind == kFullMatch)
-      goto skipmatch;
-
-    // Not if it's impossible.
-    if (matchcond == kImpossible)
-      goto skipmatch;
-
-    // Not if the possible match is beaten by the certain
-    // match at the next byte.  When this test is useless
-    // (e.g., HTTPPartialMatchRE2) it slows the loop by
-    // about 10%, but when it avoids work (e.g., DotMatchRE2),
-    // it cuts the loop execution by about 45%.
-    if ((cond & kMatchWins) == 0 && (nextmatchcond & kEmptyAllFlags) == 0)
-      goto skipmatch;
-
-    // Finally, the match conditions must be satisfied.
-    if ((matchcond & kEmptyAllFlags) == 0 || Satisfy(matchcond, context, p)) {
-      for (int i = 2; i < 2*nmatch; i++)
-        matchcap[i] = cap[i];
-      if (nmatch > 1 && (matchcond & kCapMask))
-        ApplyCaptures(matchcond, p, matchcap, ncap);
-      matchcap[1] = p;
-      matched = true;
-
-      // If we're in longest match mode, we have to keep
-      // going and see if we find a longer match.
-      // In first match mode, we can stop if the match
-      // takes priority over the next state for this input byte.
-      // That bit is per-input byte and thus in cond, not matchcond.
-      if (kind == kFirstMatch && (cond & kMatchWins))
-        goto done;
-    }
-
-  skipmatch:
-    if (state == NULL)
-      goto done;
-    if ((cond & kCapMask) && nmatch > 1)
-      ApplyCaptures(cond, p, cap, ncap);
-  }
-
-  // Look for match at end of input.
-  {
-    uint32_t matchcond = state->matchcond;
-    if (matchcond != kImpossible &&
-        ((matchcond & kEmptyAllFlags) == 0 || Satisfy(matchcond, context, p))) {
-      if (nmatch > 1 && (matchcond & kCapMask))
-        ApplyCaptures(matchcond, p, cap, ncap);
-      for (int i = 2; i < ncap; i++)
-        matchcap[i] = cap[i];
-      matchcap[1] = p;
-      matched = true;
-    }
-  }
-
-done:
-  if (!matched)
+  if (nodes == NULL) {
+    ABSL_LOG(DFATAL) << "SearchOnePass called on a non-one-pass program.";
     return false;
-  for (int i = 0; i < nmatch; i++)
-    match[i] = absl::string_view(
-        matchcap[2 * i],
-        static_cast<size_t>(matchcap[2 * i + 1] - matchcap[2 * i]));
-  return true;
+  }
+  if (onepass_action_shift_ < kIndexShift) {
+    if (onepass_cond_shift_ == kEmptyShift) {
+      if (onepass_action_shift_ == 1) {
+        return SearchOnePassLoop<OneState16, 1, kEmptyShift, false>(
+            nodes, bytemap_range(), bytemap_, text, context, kind, match,
+            nmatch, ncap, cap, matchcap);
+      }
+      if (onepass_action_shift_ == 7) {
+        return SearchOnePassLoop<OneState16, 7, kEmptyShift, false>(
+            nodes, bytemap_range(), bytemap_, text, context, kind, match,
+            nmatch, ncap, cap, matchcap);
+      }
+      return SearchOnePassLoop<OneState16, 9, kEmptyShift, false>(
+          nodes, bytemap_range(), bytemap_, text, context, kind, match,
+          nmatch, ncap, cap, matchcap);
+    }
+    if (onepass_cond_shift_ == kPaletteCondShift) {
+      if (onepass_action_shift_ == 4) {
+        return SearchOnePassLoop<OneState16, 4, 0, true>(
+            nodes, bytemap_range(), bytemap_, text, context, kind, match,
+            nmatch, ncap, cap, matchcap);
+      }
+      return SearchOnePassLoop<OneState16, 6, 0, true>(
+          nodes, bytemap_range(), bytemap_, text, context, kind, match,
+          nmatch, ncap, cap, matchcap);
+    }
+    return SearchOnePassLoop<OneState16, 7, 0, false>(
+        nodes, bytemap_range(), bytemap_, text, context, kind, match, nmatch,
+        ncap, cap, matchcap);
+  }
+  return SearchOnePassLoop<OneState, kIndexShift, 0, false>(
+      nodes, bytemap_range(), bytemap_, text, context, kind, match, nmatch,
+      ncap, cap, matchcap);
 }
 
 // Analysis to determine whether a given regexp program is one-pass.
@@ -379,10 +515,12 @@ struct InstCond {
 // This is actually just a conservative approximation: it might
 // return false when the answer is true, when kInstEmptyWidth
 // instructions are involved.
-// Constructs and saves corresponding one-pass NFA on success.
+// On success, cuts the memory for the one-pass NFA from the DFA budget and
+// keeps the NFA if it is small; SearchOnePass() builds a bigger one on first
+// use.
 bool Prog::IsOnePass() {
   if (did_onepass_)
-    return onepass_nodes_.data() != NULL;
+    return is_onepass_;
   did_onepass_ = true;
 
   if (start() == 0)  // no match
@@ -396,6 +534,35 @@ bool Prog::IsOnePass() {
   int statesize = sizeof(OneState) + bytemap_range()*sizeof(uint32_t);
   if (maxnodes >= 65000 || dfa_mem_ / 4 / statesize < maxnodes)
     return false;
+
+  // Keep a small one-pass NFA now, as before: building it again on first
+  // use would cost more time than the memory is worth.
+  int nbytes = ComputeOnePass(&onepass_nodes_, kMaxEagerOnePassBytes);
+  if (nbytes < 0)
+    return false;
+
+  // A bigger one-pass NFA is not kept here: SearchOnePass() builds it again
+  // on first use. RE2::Match calls SearchOnePass() only to extract
+  // submatches (at most 4 groups), for anchored matches on texts of at most
+  // 16 bytes, and when an anchored DFA search runs out of memory, so an RE2
+  // that is used for none of these never builds it. Its memory is cut from
+  // the DFA budget now, though, so that the budget does not depend on
+  // whether (or when) that happens.
+  dfa_mem_ -= nbytes;
+  is_onepass_ = true;
+  return true;
+}
+
+// Runs the one-pass analysis on a program that has passed the checks in
+// IsOnePass(). Returns the size in bytes of the one-pass NFA, or -1 if the
+// program is not one-pass. If out is not NULL and the NFA takes at most
+// max_out_bytes bytes, saves the one-pass NFA there. Also picks the cell
+// encoding (onepass_action_shift_, onepass_cond_shift_), which is the same
+// on every call. The analysis only reads the program, which is immutable
+// by now.
+int Prog::ComputeOnePass(PODArray<uint8_t>* out, int max_out_bytes) {
+  int maxnodes = 2 + inst_count(kInstByteRange);
+  int statesize = sizeof(OneState) + bytemap_range()*sizeof(uint32_t);
 
   // Flood the graph starting at the start state, and check
   // that in each reachable state, each possible byte leads
@@ -414,11 +581,269 @@ bool Prog::IsOnePass() {
   // unnecessarily optimistic: why allocate a large amount of memory
   // upfront for a large program when it is unlikely to be one-pass?
   absl::InlinedVector<uint8_t, 2048> nodes;
-
   Instq tovisit(size), workq(size);
+
+  const int statesize16 =
+      sizeof(OneState16) + bytemap_range() * sizeof(uint16_t);
+  enum FastMode16 {
+    kModeNone = 0,
+    kModeShift1,
+    kModeShift7,
+    kModeShift9,
+    kModeEmpty0,
+    kModePalette4,
+  };
+  FastMode16 mode16 = kModeNone;
+  const bool has_captures = inst_count(kInstCapture) > 0;
+  if (!has_captures && inst_count(kInstEmptyWidth) == 0 &&
+      maxnodes <= (kInvalidAction16 >> 1)) {
+    mode16 = kModeShift1;
+  } else if (!has_captures && maxnodes <= (1 << (16 - 7))) {
+    mode16 = kModeEmpty0;
+  } else if (inst_count(kInstEmptyWidth) == 0 &&
+             maxnodes <= (kInvalidAction16 >> 7) &&
+             inst_count(kInstCapture) <= 6) {
+    mode16 = kModeShift7;
+  } else if (inst_count(kInstEmptyWidth) == 0 &&
+             maxnodes <= (kInvalidAction16 >> 9)) {
+    mode16 = kModeShift9;
+  } else if (maxnodes <= (1 << (16 - 4))) {
+    mode16 = kModePalette4;
+  }
+
+  uint16_t palette[64];
+  palette[0] = kImpossible;
+  palette[1] = 0;
+  int nconds = 2;
+  uint32_t used_cond = 0;
+  bool palette_ok = true;
+  auto record_cond = [&](uint32_t c) {
+    used_cond |= c;
+    if (c != 0 && palette_ok) {
+      uint16_t c16 = static_cast<uint16_t>(c);
+      for (int idx = 2; idx < nconds; idx++) {
+        if (palette[idx] == c16)
+          return;
+      }
+      if (nconds < 64) {
+        palette[nconds++] = c16;
+      } else {
+        palette_ok = false;
+      }
+    }
+  };
+  int nalloc = 1;
+
+  if (mode16 != kModeNone && !ExtraDebug) {
+    const uint16_t impossible16 =
+        (mode16 == kModePalette4)
+            ? 0
+            : (mode16 == kModeEmpty0 ? kImpossible : kInvalidAction16);
+    AddQ(&tovisit, start());
+    nodebyid[start()] = 0;
+    nalloc = 1;
+    nodes.insert(nodes.end(), statesize16, 0);
+    for (Instq::iterator it = tovisit.begin(); it != tovisit.end(); ++it) {
+      int id = *it;
+      int nodeindex = nodebyid[id];
+      OneState16* node = IndexToNode16(nodes.data(), statesize16, nodeindex);
+
+      if (mode16 == kModeEmpty0) {
+        for (int b = 0; b < bytemap_range_; b++)
+          node->action[b] = kImpossible;
+      } else if (mode16 != kModePalette4) {
+        memset(node->action, 0xFF, bytemap_range_ * sizeof(uint16_t));
+      }
+      node->matchcond = kImpossible;
+
+      workq.clear();
+      bool matched = false;
+      int nstack = 0;
+      stack[nstack].id = id;
+      stack[nstack++].cond = 0;
+      while (nstack > 0) {
+        int id = stack[--nstack].id;
+        uint32_t cond = stack[nstack].cond;
+
+      Loop16:
+        Prog::Inst* ip = inst(id);
+        switch (ip->opcode()) {
+          default:
+            ABSL_LOG(DFATAL) << "unhandled opcode: " << ip->opcode();
+            break;
+
+          case kInstAltMatch:
+            ABSL_DCHECK(!ip->last());
+            if (!AddQ(&workq, id+1))
+              goto fail;
+            id = id+1;
+            goto Loop16;
+
+          case kInstByteRange: {
+            int nextindex = nodebyid[ip->out()];
+            if (nextindex == -1) {
+              if (nalloc >= maxnodes)
+                goto fail;
+              nextindex = nalloc;
+              AddQ(&tovisit, ip->out());
+              nodebyid[ip->out()] = nalloc;
+              nalloc++;
+              nodes.insert(nodes.end(), statesize16, 0);
+              node = IndexToNode16(nodes.data(), statesize16, nodeindex);
+            }
+            uint32_t step_cond = cond | (matched ? kMatchWins : 0);
+            uint16_t newact;
+            switch (mode16) {
+              case kModeShift1:
+                newact = static_cast<uint16_t>(
+                    (nextindex << 1) | (step_cond >> kEmptyShift));
+                break;
+              case kModeShift7:
+                if ((step_cond >> 13) != 0)
+                  goto fallback32;
+                newact = static_cast<uint16_t>(
+                    (nextindex << 7) | (step_cond >> kEmptyShift));
+                break;
+              case kModeShift9:
+                newact = static_cast<uint16_t>(
+                    (nextindex << 9) | (step_cond >> kEmptyShift));
+                break;
+              case kModeEmpty0:
+                newact = static_cast<uint16_t>((nextindex << 7) | step_cond);
+                break;
+              case kModePalette4:
+              default: {
+                uint16_t c16 = static_cast<uint16_t>(step_cond);
+                int idx = 1;
+                if (c16 != 0) {
+                  idx = 2;
+                  while (idx < nconds && palette[idx] != c16) {
+                    idx++;
+                  }
+                  if (idx == nconds) {
+                    if (nconds >= 16)
+                      goto fallback32;
+                    palette[nconds++] = c16;
+                  }
+                }
+                newact = static_cast<uint16_t>((nextindex << 4) | idx);
+                break;
+              }
+            }
+            for (int c = ip->lo(); c <= ip->hi(); c++) {
+              int b = bytemap_[c];
+              while (c < 256-1 && bytemap_[c+1] == b)
+                c++;
+              uint16_t act = node->action[b];
+              if (act == impossible16) {
+                node->action[b] = newact;
+              } else if (act != newact) {
+                goto fail;
+              }
+            }
+            if (ip->foldcase()) {
+              Rune lo = std::max<Rune>(ip->lo(), 'a') + 'A' - 'a';
+              Rune hi = std::min<Rune>(ip->hi(), 'z') + 'A' - 'a';
+              for (int c = lo; c <= hi; c++) {
+                int b = bytemap_[c];
+                while (c < 256-1 && bytemap_[c+1] == b)
+                  c++;
+                uint16_t act = node->action[b];
+                if (act == impossible16) {
+                  node->action[b] = newact;
+                } else if (act != newact) {
+                  goto fail;
+                }
+              }
+            }
+
+            if (ip->last())
+              break;
+            if (!AddQ(&workq, id+1))
+              goto fail;
+            id = id+1;
+            goto Loop16;
+          }
+
+          case kInstCapture:
+          case kInstEmptyWidth:
+          case kInstNop:
+            if (!ip->last()) {
+              if (!AddQ(&workq, id+1))
+                goto fail;
+              stack[nstack].id = id+1;
+              stack[nstack++].cond = cond;
+            }
+            if (ip->opcode() == kInstCapture && ip->cap() < kMaxCap)
+              cond |= (1 << kCapShift) << ip->cap();
+            if (ip->opcode() == kInstEmptyWidth)
+              cond |= ip->empty();
+            if (!AddQ(&workq, ip->out()))
+              goto fail;
+            id = ip->out();
+            goto Loop16;
+
+          case kInstMatch:
+            if (matched)
+              goto fail;
+            matched = true;
+            node->matchcond = static_cast<uint16_t>(cond);
+            if (ip->last())
+              break;
+            if (!AddQ(&workq, id+1))
+              goto fail;
+            id = id+1;
+            goto Loop16;
+
+          case kInstFail:
+            break;
+        }
+      }
+    }
+
+    if (mode16 == kModePalette4) {
+      onepass_action_shift_ = 4;
+      onepass_cond_shift_ = kPaletteCondShift;
+      const int palette_bytes = 16 * sizeof(uint16_t);
+      const int total_bytes = palette_bytes + nalloc * statesize16;
+      if (out != NULL && total_bytes <= max_out_bytes) {
+        *out = PODArray<uint8_t>(total_bytes);
+        memset(out->data(), 0, palette_bytes);
+        memcpy(out->data(), palette, nconds * sizeof(uint16_t));
+        memmove(out->data() + palette_bytes, nodes.data(),
+                nalloc * statesize16);
+      }
+      return total_bytes;
+    }
+
+    if (mode16 == kModeEmpty0) {
+      onepass_action_shift_ = 7;
+      onepass_cond_shift_ = 0;
+    } else {
+      onepass_action_shift_ =
+          (mode16 == kModeShift1) ? 1 : (mode16 == kModeShift7 ? 7 : 9);
+      onepass_cond_shift_ = kEmptyShift;
+    }
+    const int total_bytes = nalloc * statesize16;
+    if (out != NULL && total_bytes <= max_out_bytes) {
+      *out = PODArray<uint8_t>(total_bytes);
+      memmove(out->data(), nodes.data(), total_bytes);
+    }
+    return total_bytes;
+  }
+
+fallback32:
+  nodes.clear();
+  tovisit.clear();
+  for (int i = 0; i < size; i++)
+    nodebyid[i] = -1;
+  nconds = 2;
+  used_cond = 0;
+  palette_ok = true;
+
   AddQ(&tovisit, start());
   nodebyid[start()] = 0;
-  int nalloc = 1;
+  nalloc = 1;
   nodes.insert(nodes.end(), statesize, 0);
   for (Instq::iterator it = tovisit.begin(); it != tovisit.end(); ++it) {
     int id = *it;
@@ -474,15 +899,15 @@ bool Prog::IsOnePass() {
             // Update node because it might have been invalidated.
             node = IndexToNode(nodes.data(), statesize, nodeindex);
           }
+          uint32_t step_cond = cond | (matched ? kMatchWins : 0);
+          record_cond(step_cond);
+          uint32_t newact = (nextindex << kIndexShift) | step_cond;
           for (int c = ip->lo(); c <= ip->hi(); c++) {
             int b = bytemap_[c];
             // Skip any bytes immediately after c that are also in b.
             while (c < 256-1 && bytemap_[c+1] == b)
               c++;
             uint32_t act = node->action[b];
-            uint32_t newact = (nextindex << kIndexShift) | cond;
-            if (matched)
-              newact |= kMatchWins;
             if ((act & kImpossible) == kImpossible) {
               node->action[b] = newact;
             } else if (act != newact) {
@@ -501,9 +926,6 @@ bool Prog::IsOnePass() {
               while (c < 256-1 && bytemap_[c+1] == b)
                 c++;
               uint32_t act = node->action[b];
-              uint32_t newact = (nextindex << kIndexShift) | cond;
-              if (matched)
-                newact |= kMatchWins;
               if ((act & kImpossible) == kImpossible) {
                 node->action[b] = newact;
               } else if (act != newact) {
@@ -611,13 +1033,94 @@ bool Prog::IsOnePass() {
     ABSL_LOG(ERROR) << "nodes:\n" << dump;
   }
 
-  dfa_mem_ -= nalloc*statesize;
-  onepass_nodes_ = PODArray<uint8_t>(nalloc*statesize);
-  memmove(onepass_nodes_.data(), nodes.data(), nalloc*statesize);
-  return true;
+  {
+    if ((used_cond & kEmptyAllFlags) == 0) {
+      uint8_t action_shift = 9;
+      if ((used_cond & kCapMask) == 0) {
+        action_shift = 1;
+      } else if ((used_cond >> 13) == 0) {
+        action_shift = 7;
+      }
+      if (nalloc <= (kInvalidAction16 >> action_shift)) {
+        onepass_action_shift_ = action_shift;
+        onepass_cond_shift_ = kEmptyShift;
+        const int total_bytes = nalloc * statesize16;
+        if (out != NULL && total_bytes <= max_out_bytes) {
+          *out = PODArray<uint8_t>(total_bytes);
+          CopyTo16(nodes.data(), statesize, out->data(),
+                   statesize16, nalloc, bytemap_range_,
+                   [action_shift](uint32_t act) -> uint16_t {
+                     if ((act & kImpossible) == kImpossible)
+                       return kInvalidAction16;
+                     uint32_t cond = (act & 0xFFFF) >> kEmptyShift;
+                     return static_cast<uint16_t>(
+                         ((act >> kIndexShift) << action_shift) | cond);
+                   });
+        }
+        return total_bytes;
+      }
+    } else if ((used_cond & kCapMask) == 0 && nalloc <= (1 << (16 - 7))) {
+      onepass_action_shift_ = 7;
+      onepass_cond_shift_ = 0;
+      const int total_bytes = nalloc * statesize16;
+      if (out != NULL && total_bytes <= max_out_bytes) {
+        *out = PODArray<uint8_t>(total_bytes);
+        CopyTo16(nodes.data(), statesize, out->data(), statesize16,
+                 nalloc, bytemap_range_, [](uint32_t act) -> uint16_t {
+                   if ((act & kImpossible) == kImpossible)
+                     return kImpossible;
+                   return static_cast<uint16_t>(((act >> kIndexShift) << 7) |
+                                                (act & 0x7F));
+                 });
+      }
+      return total_bytes;
+    }
+
+    // Palette mode for large regexes with multiple captures or empty flags:
+    // encode up to 64 distinct 16-bit condition masks in a compact palette.
+    if (palette_ok) {
+      uint8_t palette_shift = (nconds <= 16) ? 4 : 6;
+      if (nalloc <= (1 << (16 - palette_shift))) {
+        onepass_action_shift_ = palette_shift;
+        onepass_cond_shift_ = kPaletteCondShift;
+        const int palette_bytes = (1 << palette_shift) * sizeof(uint16_t);
+        const int total_bytes = palette_bytes + nalloc * statesize16;
+        if (out != NULL && total_bytes <= max_out_bytes) {
+          *out = PODArray<uint8_t>(total_bytes);
+          memset(out->data(), 0, palette_bytes);
+          memcpy(out->data(), palette, nconds * sizeof(uint16_t));
+          CopyTo16(nodes.data(), statesize,
+                   out->data() + palette_bytes, statesize16, nalloc,
+                   bytemap_range_,
+                   [&palette, palette_shift](uint32_t act) -> uint16_t {
+                     if ((act & kImpossible) == kImpossible)
+                       return 0;
+                     uint16_t c = static_cast<uint16_t>(act & 0xFFFF);
+                     int idx = 1;
+                     if (c != 0) {
+                       idx = 2;
+                       while (palette[idx] != c)
+                         idx++;
+                     }
+                     return static_cast<uint16_t>(
+                         ((act >> kIndexShift) << palette_shift) | idx);
+                   });
+        }
+        return total_bytes;
+      }
+    }
+  }
+
+  onepass_action_shift_ = kIndexShift;
+  onepass_cond_shift_ = 0;
+  if (out != NULL && nalloc*statesize <= max_out_bytes) {
+    *out = PODArray<uint8_t>(nalloc*statesize);
+    memmove(out->data(), nodes.data(), nalloc*statesize);
+  }
+  return nalloc*statesize;
 
 fail:
-  return false;
+  return -1;
 }
 
 }  // namespace re2

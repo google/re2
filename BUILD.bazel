@@ -301,8 +301,10 @@ cc_test(
     size = "small",
     srcs = ["re2/testing/search_test.cc"],
     deps = [
+        ":re2",
         ":testing",
         "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
