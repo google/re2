@@ -274,6 +274,11 @@ class ReRegexpTest(parameterized.TestCase):
       (b'\\w+', b'MEEP', b'Hello, world.', 1, b'MEEP, world.', 1),
       (u'\\\\', u'\\\\\\\\', u'Hello,\\world.', 0, u'Hello,\\\\world.', 1),
       (b'\\\\', b'\\\\\\\\', b'Hello,\\world.', 0, b'Hello,\\\\world.', 1),
+      (u'\\w+', u'\u2665', u'Hello, world.', 0, u'\u2665, \u2665.', 2),
+      (b'\\w+', b'\xe2\x99\xa5', b'Hello, world.', 0,
+       b'\xe2\x99\xa5, \xe2\x99\xa5.', 2),
+      (u'(\\w+)', u'\xab\\1\xbb\\n', u'Hello, world.', 1,
+       u'\xabHello\xbb\n, world.', 1),
   )
   def test_subn_sub(self, pattern, repl, text, count, expected_joined_pieces,
                     expected_numsplit):
@@ -352,6 +357,18 @@ class ReMatchTest(parameterized.TestCase):
     self.assertEqual(u'\u2665\n!', match.expand(u'\\g<1>\\n\\g<2>'))
     self.assertEqual(u'\u2665\n!', match.expand(u'\\g<S>\\n\\g<P>'))
     self.assertEqual(u'\\1\\2\n\u2665!', match.expand(u'\\\\1\\\\2\\n\\1\\2'))
+
+  def test_expand_with_non_ascii_template(self):
+    pattern = u'(?P<S>[\u2600-\u26ff]+).*?(?P<P>[^\\s\\w]+)'
+    text = u'I \u2665 RE2!\n'
+    match = self.MODULE.search(pattern, text)
+
+    self.assertEqual(u'\xe9', match.expand(u'\xe9'))
+    self.assertEqual(u'\u2665 \u2192 !', match.expand(u'\\1 \u2192 \\2'))
+    self.assertEqual(u'\u65e5\u672c\n\t\U0001f600',
+                     match.expand(u'\u65e5\u672c\\n\\t\U0001f600'))
+    self.assertEqual(u'\xe9\\\xe9', match.expand(u'\xe9\\\\\xe9'))
+    self.assertEqual(u'\\\xe9', match.expand(u'\\\xe9'))
 
   def test_expand_with_octal(self):
     pattern = u'()()()()()()()()()(\\w+)'
