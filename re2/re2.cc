@@ -616,9 +616,11 @@ bool RE2::PossibleMatchRange(std::string* min, std::string* max,
   }
 
   // Add to prefix min max using PossibleMatchRange on regexp.
+  // prog_ does not include prefix_, so tell it what comes before:
+  // otherwise \b and \B would be evaluated as if at beginning of text.
   std::string dmin, dmax;
   maxlen -= n;
-  if (maxlen > 0 && prog_->PossibleMatchRange(&dmin, &dmax, maxlen)) {
+  if (maxlen > 0 && prog_->PossibleMatchRange(&dmin, &dmax, maxlen, prefix_)) {
     min->append(dmin);
     max->append(dmax);
   } else if (!max->empty()) {

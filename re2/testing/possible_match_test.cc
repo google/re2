@@ -107,6 +107,14 @@ static PrefixTest tests[] = {
   { "(?i)\\A[a\xC3\xA1]",     4,  "A",          "\xC3\xA1" },
   { "(?i)\\Aa*",             10,  "",           "ab"       },
   { "(?i)\\AA*",             10,  "",           "ab"       },
+
+  // \b and \B right after a literal that RE2 strips off as a required prefix.
+  { "\\Aabc\\b",            10,  "abc",        "abc"      },
+  { "\\Aabc\\b-x",          10,  "abc-x",      "abc-x"    },
+  { "\\Aabc\\Bd",           10,  "abcd",       "abcd"     },
+  { "\\Aab-\\bc",           10,  "ab-c",       "ab-c"     },
+  { "(?i)\\Aabc\\b",        10,  "ABC",        "abc"      },
+  { "(?i)\\Aabc\\Bd",       10,  "ABCD",       "abcd"     },
 };
 
 TEST(PossibleMatchRange, HandWritten) {
