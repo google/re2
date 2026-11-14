@@ -104,8 +104,10 @@ class DFA {
   int BuildAllStates(const Prog::DFAStateCallback& cb);
 
   // Computes min and max for matching strings.  Won't return strings
-  // bigger than maxlen.
-  bool PossibleMatchRange(std::string* min, std::string* max, int maxlen);
+  // bigger than maxlen.  The strings are taken to follow prefix in the
+  // text, which matters for \b, \B and ^.
+  bool PossibleMatchRange(std::string* min, std::string* max, int maxlen,
+                          absl::string_view prefix);
 
   // These data structures are logically private, but C++ makes it too
   // difficult to mark them as such.
@@ -1989,7 +1991,8 @@ int Prog::BuildEntireDFA(MatchKind kind, const DFAStateCallback& cb) {
 
 // Computes min and max for matching string.
 // Won't return strings bigger than maxlen.
-bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
+bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen,
+                             absl::string_view prefix) {
   if (!ok())
     return false;
 
@@ -2008,10 +2011,12 @@ bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
   // of that property below.
   absl::flat_hash_map<State*, int> previously_visited_states;
 
-  // Pick out start state for anchored search at beginning of text.
+  // Pick out start state for anchored search just after prefix,
+  // which is at beginning of text if prefix is empty.
   RWLocker l(&cache_mutex_);
-  SearchParams params(absl::string_view(), absl::string_view(), &l);
+  SearchParams params(prefix.substr(prefix.size()), prefix, &l);
   params.anchored = true;
+  params.run_forward = true;
   if (!AnalyzeSearch(&params))
     return false;
   if (params.start == DeadState) {  // No matching strings
@@ -2126,10 +2131,11 @@ bool DFA::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
 }
 
 // PossibleMatchRange for a Prog.
-bool Prog::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
+bool Prog::PossibleMatchRange(std::string* min, std::string* max, int maxlen,
+                              absl::string_view prefix) {
   // Have to use dfa_longest_ to get all strings for full matches.
   // For example, (a|aa) never matches aa in first-match mode.
-  return GetDFA(kLongestMatch)->PossibleMatchRange(min, max, maxlen);
+  return GetDFA(kLongestMatch)->PossibleMatchRange(min, max, maxlen, prefix);
 }
 
 }  // namespace re2

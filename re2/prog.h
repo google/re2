@@ -384,8 +384,14 @@ class Prog {
   // '+' operator). Regexps with "{N}" constructions are not affected, as those
   // do not compile down to infinite repetitions.
   //
+  // prefix is the literal text, if any, that precedes every match because
+  // the caller stripped it from the regexp before compiling. It is not
+  // included in min and max, but \b, \B and ^ at the start of the regexp
+  // look at its last byte. An empty prefix means beginning of text.
+  //
   // Returns true on success, false on error.
-  bool PossibleMatchRange(std::string* min, std::string* max, int maxlen);
+  bool PossibleMatchRange(std::string* min, std::string* max, int maxlen,
+                          absl::string_view prefix = absl::string_view());
 
   // Outputs the program fanout into the given sparse array.
   void Fanout(SparseArray<int>* fanout);
