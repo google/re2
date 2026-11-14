@@ -110,6 +110,26 @@ def _decode(b):
   return b.decode(encoding='utf-8')
 
 
+def _unescape(piece):
+  """Decodes the backslash escapes in a piece of a str template."""
+  # codecs.unicode_escape_decode() treats a str argument as its UTF-8 encoding
+  # and decodes every byte outside an escape as Latin-1, which would turn each
+  # non-ASCII character into two to four others. Hence, pass it only the ASCII
+  # runs and leave the rest of the piece alone.
+  if piece.isascii():
+    return codecs.unicode_escape_decode(piece)[0]
+  runs = [''.join(run) for _, run in itertools.groupby(piece, str.isascii)]
+  for index, run in enumerate(runs):
+    if not run.isascii():
+      continue
+    trailer = ''
+    if index + 1 < len(runs) and (len(run) - len(run.rstrip('\\'))) % 2:
+      # A backslash followed by a non-ASCII character isn't an escape.
+      run, trailer = run[:-1], '\\'
+    runs[index] = codecs.unicode_escape_decode(run)[0] + trailer
+  return ''.join(runs)
+
+
 def escape(pattern):
   if isinstance(pattern, str):
     encoded_pattern = _encode(pattern)
@@ -386,15 +406,15 @@ class _Match(object):
 
   def expand(self, template):
     if isinstance(template, str):
-      unescape = codecs.unicode_escape_decode
+      unescape = _unescape
     else:
-      unescape = codecs.escape_decode
+      unescape = lambda piece: codecs.escape_decode(piece)[0]
     empty = type(template)()
     # Make a copy so that we don't clobber the cached pieces!
     pieces = list(self._split(template))
     for index, piece in enumerate(pieces):
       if not index % 2:
-        pieces[index], _ = unescape(piece)
+        pieces[index] = unescape(piece)
       else:
         if len(piece) <= 3:  # \1 through \99 (inclusive)
           group = int(piece[1:])
