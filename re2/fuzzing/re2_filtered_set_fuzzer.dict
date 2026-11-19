@@ -1,0 +1,14 @@
+# Dictionary for re2_filtered_set_fuzzer: multi-byte tokens traceable to RE2
+# prefilter/prefilter_tree constructs (literal atoms, classes, POSIX classes,
+# groups). Deliberately no single-character tokens.
+dotstar=".*"
+altgrp="(a|b)"
+digcls="\\d{2,4}"
+idlit="ID-"
+numcls="[0-9]+"
+nocase="(?i)"
+posixcls="[[:digit:]]"
+errlit="error"
+lwrcls="[a-z]+"
+ngrp="(?:x)"
+wordlit="hello"
