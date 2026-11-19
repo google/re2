@@ -390,7 +390,14 @@ class Regexp {
   // into simpler terms and all Perl/POSIX features have been
   // removed.  The result will capture exactly the same
   // subexpressions the original did, unless formatted with ToString.
-  Regexp* Simplify();
+  // If max_expansion is non-negative, Simplify() fails (returns
+  // NULL) once the total number of copies materialised while
+  // expanding counted repetitions would exceed max_expansion.
+  // This bounds the transient memory used by the expansion itself,
+  // which no program-size limit covers: expanding a repetition
+  // allocates roughly one pointer per copy before any such limit
+  // is consulted.  A negative max_expansion means no limit.
+  Regexp* Simplify(int max_expansion = -1);
   friend class CoalesceWalker;
   friend class SimplifyWalker;
 
