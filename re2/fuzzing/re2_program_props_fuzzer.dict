@@ -1,0 +1,14 @@
+# Dictionary for re2_program_props_fuzzer: multi-byte tokens traceable to RE2
+# parse/compile constructs that shape programs (repeats, alternations,
+# classes, anchors). Deliberately no single-character tokens.
+plusrep="a+"
+starrep="b*"
+altgrp="(a|b)"
+rngcls="[a-z]{2,5}"
+digcls="\\d+"
+nocase="(?i)"
+dotstar=".*"
+anch_end="$"
+ngrp="(?:x)"
+deepcap="((?:a|b)c)"
+quest="q?"
