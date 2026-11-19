@@ -1,0 +1,17 @@
+# Dictionary for re2_engine_bias_fuzzer: multi-byte tokens traceable to RE2
+# engine constructs (EmptyWidth assertion ops, foldcase flags, counted
+# repeats, alternations). Deliberately no single-character tokens.
+sos="\\A"
+eos="\\z"
+wbound="\\b"
+nbound="\\B"
+nocase="(?i)"
+dotall="(?s)"
+multiline="(?m)"
+lwrcls="[a-z]+"
+altgrp="(a|b)"
+digrng="\\d{1,3}"
+ngrp="(?:x)"
+cntrep="{2,4}"
+captrio="(x)(y)(z)"
+dotstar=".*"
