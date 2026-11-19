@@ -171,7 +171,14 @@ void Prefilter::SimplifyStringSet(SSet* ss) {
 
 Prefilter* Prefilter::OrStrings(SSet* ss) {
   Prefilter* or_prefilter = new Prefilter(NONE);
-  SimplifyStringSet(ss);
+  // SimplifyStringSet() compares every string against every longer
+  // string, so it is quadratic in the size of the set.  Above this
+  // size, skip it: it only removes redundant atoms, which is purely
+  // an optimisation, and keeping the redundant atoms is always
+  // correct, because the prefilter only has to be a necessary
+  // condition for a match.
+  if (ss->size() <= 4096)
+    SimplifyStringSet(ss);
   for (SSIter i = ss->begin(); i != ss->end(); ++i)
     or_prefilter = Or(or_prefilter, FromString(*i));
   return or_prefilter;
