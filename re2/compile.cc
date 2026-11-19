@@ -1119,7 +1119,12 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64_t max_mem) {
 
   // Simplify to remove things like counted repetitions
   // and character classes like \d.
-  Regexp* sre = re->Simplify();
+  // The expansion budget is the program-size limit: expanding a
+  // counted repetition materialises roughly one program instruction
+  // per copy, so a pattern whose expansion alone would exceed the
+  // limit can never compile.  Bounding the expansion here rejects
+  // such patterns before Simplify allocates for them.
+  Regexp* sre = re->Simplify(c.max_ninst_);
   if (sre == NULL)
     return NULL;
 
@@ -1220,7 +1225,7 @@ Prog* Compiler::CompileSet(Regexp* re, RE2::Anchor anchor, int64_t max_mem) {
   Compiler c;
   c.Setup(re->parse_flags(), max_mem, anchor);
 
-  Regexp* sre = re->Simplify();
+  Regexp* sre = re->Simplify(c.max_ninst_);
   if (sre == NULL)
     return NULL;
 

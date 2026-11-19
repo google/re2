@@ -138,7 +138,8 @@ class CoalesceWalker : public Regexp::Walker<Regexp*> {
 // The child_args are simplified Regexp*s.
 class SimplifyWalker : public Regexp::Walker<Regexp*> {
  public:
-  SimplifyWalker() {}
+  explicit SimplifyWalker(int expansion_budget)
+      : expansion_budget_(expansion_budget), expansion_used_(0) {}
   virtual Regexp* PreVisit(Regexp* re, Regexp* parent_arg, bool* stop);
   virtual Regexp* PostVisit(Regexp* re, Regexp* parent_arg, Regexp* pre_arg,
                             Regexp** child_args, int nchild_args);
@@ -156,13 +157,27 @@ class SimplifyWalker : public Regexp::Walker<Regexp*> {
   // Simplifies the expression re{min,max} in terms of *, +, and ?.
   // Returns a new regexp.  Does not edit re.  Does not consume reference to re.
   // Caller must Decref return value when done with it.
-  static Regexp* SimplifyRepeat(Regexp* re, int min, int max,
-                                Regexp::ParseFlags parse_flags);
+  // Returns NULL if expanding the repetition would exceed the
+  // expansion budget (see expansion_budget_).
+  Regexp* SimplifyRepeat(Regexp* re, int min, int max,
+                         Regexp::ParseFlags parse_flags);
 
   // Simplifies a character class by expanding any named classes
   // into rune ranges.  Does not edit re.  Does not consume ref to re.
   // Caller must Decref return value when done with it.
   static Regexp* SimplifyCharClass(Regexp* re);
+
+  // The maximum total number of copies that SimplifyRepeat() may
+  // materialise while expanding counted repetitions, or -1 for no
+  // limit.  Each copy costs roughly one pointer in the arrays that
+  // hold the expansion plus the instructions it compiles to, so
+  // this also bounds the size of the program that the expansion
+  // could produce.  Callers that know the program-size limit (the
+  // compiler) pass it here so that patterns which could never
+  // compile are rejected before the expansion allocates.
+  int expansion_budget_;
+  // Number of copies materialised so far.
+  int64_t expansion_used_;
 
   SimplifyWalker(const SimplifyWalker&) = delete;
   SimplifyWalker& operator=(const SimplifyWalker&) = delete;
@@ -177,7 +192,7 @@ class SimplifyWalker : public Regexp::Walker<Regexp*> {
 // Does not edit current object.
 // Caller must Decref() return value when done with it.
 
-Regexp* Regexp::Simplify() {
+Regexp* Regexp::Simplify(int max_expansion) {
   CoalesceWalker cw;
   Regexp* cre = cw.Walk(this, NULL);
   if (cre == NULL)
@@ -186,7 +201,7 @@ Regexp* Regexp::Simplify() {
     cre->Decref();
     return NULL;
   }
-  SimplifyWalker sw;
+  SimplifyWalker sw(max_expansion);
   Regexp* sre = sw.Walk(cre, NULL);
   cre->Decref();
   if (sre == NULL)
@@ -445,6 +460,8 @@ void CoalesceWalker::DoCoalesce(Regexp** r1ptr, Regexp** r2ptr) {
 }
 
 Regexp* SimplifyWalker::Copy(Regexp* re) {
+  if (re == NULL)
+    return NULL;
   return re->Incref();
 }
 
@@ -469,6 +486,20 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
                                   Regexp* pre_arg,
                                   Regexp** child_args,
                                   int nchild_args) {
+  // If expanding a child failed (e.g. the expansion budget was
+  // exceeded), propagate the failure: release the other children
+  // and return NULL.  The walker propagates NULL to the parent,
+  // and Regexp::Simplify() reports the failure to its caller.
+  for (int i = 0; i < nchild_args; i++) {
+    if (child_args[i] == NULL) {
+      for (int j = 0; j < nchild_args; j++) {
+        if (child_args[j] != NULL)
+          child_args[j]->Decref();
+      }
+      return NULL;
+    }
+  }
+
   switch (re->op()) {
     case kRegexpNoMatch:
     case kRegexpEmptyMatch:
@@ -556,6 +587,8 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
       Regexp* nre = SimplifyRepeat(newsub, re->min_, re->max_,
                                    re->parse_flags());
       newsub->Decref();
+      if (nre == NULL)
+        return NULL;
       nre->simple_ = true;
       return nre;
     }
@@ -609,6 +642,23 @@ Regexp* SimplifyWalker::SimplifyRepeat(Regexp* re, int min, int max,
        std::all_of(re->sub(), re->sub() + re->nsub(), IsEmptyOp))) {
     min = std::min(min, 1);
     max = std::min(max, 1);
+  }
+
+  // Expanding a counted repetition materialises one copy of the
+  // subexpression per repetition, plus one instruction per optional
+  // copy for the nested `?` wrappers, so the size of the expansion
+  // is roughly `max` copies in the bounded case (`min` copies plus
+  // one per optional copy) and `min` copies in the unbounded case.
+  // Check the budget before allocating anything: without this, a
+  // pattern such as `a{1000}` repeated 30000 times (which coalesces
+  // into a single {30000000,30000000} repeat) would allocate
+  // ~500 MB here, long before the program-size limit in the compiler
+  // gets a chance to reject it.
+  if (expansion_budget_ >= 0) {
+    int64_t copies = (max == -1) ? min : (2LL * max - min);
+    if (copies > expansion_budget_ - expansion_used_)
+      return NULL;
+    expansion_used_ += copies;
   }
 
   // x{n,} means at least n matches of x.
