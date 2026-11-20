@@ -630,6 +630,8 @@ bool Regexp::ParseState::IsMarker(RegexpOp op) {
 // Processes a left parenthesis in the input.
 // Pushes a marker onto the stack.
 bool Regexp::ParseState::DoLeftParen(absl::string_view name) {
+  if (flags_ & NeverCapture)
+    return DoLeftParenNoCapture();
   Regexp* re = new Regexp(kLeftParen, flags_);
   re->cap_ = ++ncap_;
   if (name.data() != NULL)
@@ -2313,13 +2315,8 @@ Regexp* Regexp::Parse(absl::string_view s, ParseFlags global_flags,
             return NULL;
           break;
         }
-        if (ps.flags() & NeverCapture) {
-          if (!ps.DoLeftParenNoCapture())
-            return NULL;
-        } else {
-          if (!ps.DoLeftParen(absl::string_view()))
-            return NULL;
-        }
+        if (!ps.DoLeftParen(absl::string_view()))
+          return NULL;
         t.remove_prefix(1);  // '('
         break;
 

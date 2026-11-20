@@ -1376,6 +1376,25 @@ TEST(RE2, NeverCapture) {
   EXPECT_EQ(0, re.NumberOfCapturingGroups());
 }
 
+TEST(RE2, NeverCaptureNamedGroups) {
+  RE2::Options opt;
+  opt.set_never_capture(true);
+  for (const char* pattern : {"(?P<first>r)(e)", "(?<first>r)(e)"}) {
+    RE2 re(pattern, opt);
+    ASSERT_TRUE(re.ok());
+    EXPECT_TRUE(RE2::FullMatch("re", re));
+    EXPECT_EQ(0, re.NumberOfCapturingGroups());
+    EXPECT_TRUE(re.NamedCapturingGroups().empty());
+    EXPECT_TRUE(re.CapturingGroupNames().empty());
+
+    RE2 capturing(pattern);
+    EXPECT_EQ(2, capturing.NumberOfCapturingGroups());
+    EXPECT_EQ(1, capturing.NamedCapturingGroups().at("first"));
+  }
+  opt.set_log_errors(false);
+  EXPECT_EQ(RE2::ErrorBadNamedCapture, RE2("(?P<a-b>r)", opt).error_code());
+}
+
 // Bitstate bug was looking at submatch[0] even if nsubmatch == 0.
 // Triggered by a failed DFA search falling back to Bitstate when
 // using Match with a NULL submatch set.  Bitstate tried to read
