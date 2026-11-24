@@ -13,11 +13,11 @@ jobs:
       # Required for Sigstore signing.
       id-token: write
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4.2.2
-      - run: |
+      - name: Create release and download archives
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           gh release create "${GITHUB_REF_NAME}" \
             --generate-notes --latest --verify-tag \
             --repo "${GITHUB_REPOSITORY}"
@@ -32,7 +32,10 @@ jobs:
         with:
           # N.B. This is a whitespace-separated string!
           inputs: '*.tar.gz *.zip'
-      - run: |
+      - name: Upload signed release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           gh release upload "${GITHUB_REF_NAME}" \
             *.tar.gz *.zip *.sigstore* \
             --repo "${GITHUB_REPOSITORY}"
