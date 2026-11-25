@@ -13,11 +13,11 @@ jobs:
       # Required for Sigstore signing.
       id-token: write
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4.2.2
-      - run: |
+      - name: Create release and download archives
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           gh release create "${GITHUB_REF_NAME}" \
             --generate-notes --latest --verify-tag \
             --repo "${GITHUB_REPOSITORY}"
@@ -28,11 +28,17 @@ jobs:
             --archive zip \
             --repo "${GITHUB_REPOSITORY}"
         shell: bash
-      - uses: sigstore/gh-action-sigstore-python@v3.0.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - uses: sigstore/gh-action-sigstore-python@50941ad9c4f5e626d9120c73ad0a4f317c5f7b01 # sigstore-python 4.5.1
         with:
           # N.B. This is a whitespace-separated string!
           inputs: '*.tar.gz *.zip'
-      - run: |
+      - name: Upload signed release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           gh release upload "${GITHUB_REF_NAME}" \
             *.tar.gz *.zip *.sigstore* \
             --repo "${GITHUB_REPOSITORY}"
