@@ -1437,7 +1437,8 @@ inline bool DFA::InlinedSearchLoop(SearchParams* params) {
         // fall back to the NFA.  However, RE2::Set cannot fall back,
         // so we just have to keep on keeping on in that case.
         if (dfa_should_bail_when_slow && resetp != NULL &&
-            static_cast<size_t>(p - resetp) < 10*state_cache_.size() &&
+            static_cast<size_t>(run_forward ? p - resetp : resetp - p) <
+                10*state_cache_.size() &&
             kind_ != Prog::kManyMatch) {
           params->failed = true;
           return false;
