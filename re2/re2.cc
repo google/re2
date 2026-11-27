@@ -261,7 +261,9 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
   // Two thirds of the memory goes to the forward Prog,
   // one third to the reverse prog, because the forward
   // Prog has two DFAs but the reverse prog has one.
-  prog_ = suffix_regexp_->CompileToProg(options_.max_mem()*2/3);
+  int64_t max_mem = options_.max_mem();
+  prog_ = suffix_regexp_->CompileToProg(
+      (max_mem / 3) * 2 + (max_mem % 3) * 2 / 3);
   if (prog_ == NULL) {
     if (options_.log_errors())
       ABSL_LOG(ERROR) << "Error compiling '" << trunc(*pattern_) << "'";
@@ -1116,20 +1118,22 @@ static const int kMaxNumberLength = 32;
 // REQUIRES "buf" must have length at least nbuf.
 // Copies "str" into "buf" and null-terminates.
 // Overwrites *np with the new length.
+// Returns NULL if the input is empty or invalid.
 static const char* TerminateNumber(char* buf, size_t nbuf, const char* str,
                                    size_t* np, bool accept_spaces) {
   size_t n = *np;
-  if (n == 0) return "";
+  if (n == 0) return NULL;
   if (n > 0 && absl::ascii_isspace(*str)) {
     // We are less forgiving than the strtoxxx() routines and do not
     // allow leading spaces. We do allow leading spaces for floats.
     if (!accept_spaces) {
-      return "";
+      return NULL;
     }
     while (n > 0 && absl::ascii_isspace(*str)) {
       n--;
       str++;
     }
+    if (n == 0) return NULL;
   }
 
   // Although buf has a fixed maximum size, we can still handle
@@ -1159,7 +1163,7 @@ static const char* TerminateNumber(char* buf, size_t nbuf, const char* str,
     str--;
   }
 
-  if (n > nbuf-1) return "";
+  if (n > nbuf-1) return NULL;
 
   memmove(buf, str, n);
   if (neg) {
@@ -1176,6 +1180,7 @@ bool Parse(const char* str, size_t n, float* dest) {
   static const int kMaxLength = 200;
   char buf[kMaxLength+1];
   str = TerminateNumber(buf, sizeof buf, str, &n, true);
+  if (str == NULL) return false;
   char* end;
   errno = 0;
   float r = strtof(str, &end);
@@ -1192,6 +1197,7 @@ bool Parse(const char* str, size_t n, double* dest) {
   static const int kMaxLength = 200;
   char buf[kMaxLength+1];
   str = TerminateNumber(buf, sizeof buf, str, &n, true);
+  if (str == NULL) return false;
   char* end;
   errno = 0;
   double r = strtod(str, &end);
@@ -1207,6 +1213,7 @@ bool Parse(const char* str, size_t n, long* dest, int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
   str = TerminateNumber(buf, sizeof buf, str, &n, false);
+  if (str == NULL) return false;
   char* end;
   errno = 0;
   long r = strtol(str, &end, radix);
@@ -1222,6 +1229,7 @@ bool Parse(const char* str, size_t n, unsigned long* dest, int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
   str = TerminateNumber(buf, sizeof buf, str, &n, false);
+  if (str == NULL) return false;
   if (str[0] == '-') {
     // strtoul() will silently accept negative numbers and parse
     // them.  This module is more strict and treats them as errors.
@@ -1283,6 +1291,7 @@ bool Parse(const char* str, size_t n, long long* dest, int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
   str = TerminateNumber(buf, sizeof buf, str, &n, false);
+  if (str == NULL) return false;
   char* end;
   errno = 0;
   long long r = strtoll(str, &end, radix);
@@ -1298,6 +1307,7 @@ bool Parse(const char* str, size_t n, unsigned long long* dest, int radix) {
   if (n == 0) return false;
   char buf[kMaxNumberLength+1];
   str = TerminateNumber(buf, sizeof buf, str, &n, false);
+  if (str == NULL) return false;
   if (str[0] == '-') {
     // strtoull() will silently accept negative numbers and parse
     // them.  This module is more strict and treats them as errors.

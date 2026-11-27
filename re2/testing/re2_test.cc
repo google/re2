@@ -904,6 +904,10 @@ TEST(RE2, FloatingPointFullMatchTypes) {
     ASSERT_TRUE(RE2::FullMatch("-100.", "(.*)", &v)); ASSERT_EQ(v, -100);
     ASSERT_TRUE(RE2::FullMatch("1e23",  "(.*)", &v)); ASSERT_EQ(v, float{1e23});
     ASSERT_TRUE(RE2::FullMatch(" 100",  "(.*)", &v)); ASSERT_EQ(v, 100);
+    ASSERT_FALSE(RE2::FullMatch("",     "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch(" ",    "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch("   ",  "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch("\t\n", "(.*)", &v));
 
     ASSERT_TRUE(RE2::FullMatch(zeros + "1e23",  "(.*)", &v));
     ASSERT_EQ(v, float{1e23});
@@ -937,6 +941,10 @@ TEST(RE2, FloatingPointFullMatchTypes) {
     ASSERT_TRUE(RE2::FullMatch("-100.", "(.*)", &v)); ASSERT_EQ(v, -100);
     ASSERT_TRUE(RE2::FullMatch("1e23",  "(.*)", &v)); ASSERT_EQ(v, double{1e23});
     ASSERT_TRUE(RE2::FullMatch(" 100",  "(.*)", &v)); ASSERT_EQ(v, 100);
+    ASSERT_FALSE(RE2::FullMatch("",     "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch(" ",    "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch("   ",  "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch("\t\n", "(.*)", &v));
 
     ASSERT_TRUE(RE2::FullMatch(zeros + "1e23", "(.*)", &v));
     ASSERT_EQ(v, double{1e23});
@@ -1386,6 +1394,20 @@ TEST(RE2, BitstateCaptureBug) {
   RE2 re("(_________$)", opt);
   absl::string_view s = "xxxxxxxxxxxxxxxxxxxxxxxxxx_________x";
   EXPECT_FALSE(re.Match(s, 0, s.size(), RE2::UNANCHORED, NULL, 0));
+}
+
+TEST(RE2, MaxMemNoOverflow) {
+  RE2::Options opt;
+  opt.set_max_mem(INT64_MAX);
+  RE2 re("abc", opt);
+  ASSERT_TRUE(re.ok());
+  EXPECT_TRUE(RE2::FullMatch("abc", re));
+  EXPECT_TRUE(RE2::PartialMatch("xxabcyy", re));
+
+  opt.set_max_mem(INT64_MIN);
+  RE2 re_neg("abc", opt);
+  ASSERT_TRUE(re_neg.ok());
+  EXPECT_TRUE(RE2::FullMatch("abc", re_neg));
 }
 
 // C++ version of bug 609710.
