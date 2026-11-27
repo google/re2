@@ -261,7 +261,9 @@ void RE2::Init(absl::string_view pattern, const Options& options) {
   // Two thirds of the memory goes to the forward Prog,
   // one third to the reverse prog, because the forward
   // Prog has two DFAs but the reverse prog has one.
-  prog_ = suffix_regexp_->CompileToProg(options_.max_mem()*2/3);
+  int64_t max_mem = options_.max_mem();
+  prog_ = suffix_regexp_->CompileToProg(
+      (max_mem / 3) * 2 + (max_mem % 3) * 2 / 3);
   if (prog_ == NULL) {
     if (options_.log_errors())
       ABSL_LOG(ERROR) << "Error compiling '" << trunc(*pattern_) << "'";
