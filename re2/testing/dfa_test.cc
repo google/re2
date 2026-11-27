@@ -373,4 +373,29 @@ TEST(DFA, Callback) {
   EXPECT_EQ(nfail, 0);
 }
 
+TEST(DFA, ReverseBailoutWhenSlow) {
+  Prog::TESTING_ONLY_set_dfa_should_bail_when_slow(true);
+  state_cache_resets = 0;
+  search_failures = 0;
+
+  const int n = 18;
+  Regexp* re = Regexp::Parse(absl::StrFormat("^[01]{%d}0", n),
+                             Regexp::LikePerl, NULL);
+  ASSERT_TRUE(re != NULL);
+  Prog* prog = re->CompileToReverseProg(1 << 15);
+  ASSERT_TRUE(prog != NULL);
+
+  std::string text = DeBruijnString(n);
+  bool failed = false;
+  absl::string_view match0;
+  prog->SearchDFA(text, text, Prog::kUnanchored, Prog::kLongestMatch,
+                  &match0, &failed, NULL);
+  EXPECT_TRUE(failed);
+  EXPECT_GT(state_cache_resets, 0);
+  EXPECT_GT(search_failures, 0);
+
+  delete prog;
+  re->Decref();
+}
+
 }  // namespace re2
