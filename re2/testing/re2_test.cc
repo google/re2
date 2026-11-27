@@ -904,6 +904,10 @@ TEST(RE2, FloatingPointFullMatchTypes) {
     ASSERT_TRUE(RE2::FullMatch("-100.", "(.*)", &v)); ASSERT_EQ(v, -100);
     ASSERT_TRUE(RE2::FullMatch("1e23",  "(.*)", &v)); ASSERT_EQ(v, float{1e23});
     ASSERT_TRUE(RE2::FullMatch(" 100",  "(.*)", &v)); ASSERT_EQ(v, 100);
+    ASSERT_FALSE(RE2::FullMatch("",     "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch(" ",    "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch("   ",  "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch("\t\n", "(.*)", &v));
 
     ASSERT_TRUE(RE2::FullMatch(zeros + "1e23",  "(.*)", &v));
     ASSERT_EQ(v, float{1e23});
@@ -937,6 +941,10 @@ TEST(RE2, FloatingPointFullMatchTypes) {
     ASSERT_TRUE(RE2::FullMatch("-100.", "(.*)", &v)); ASSERT_EQ(v, -100);
     ASSERT_TRUE(RE2::FullMatch("1e23",  "(.*)", &v)); ASSERT_EQ(v, double{1e23});
     ASSERT_TRUE(RE2::FullMatch(" 100",  "(.*)", &v)); ASSERT_EQ(v, 100);
+    ASSERT_FALSE(RE2::FullMatch("",     "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch(" ",    "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch("   ",  "(.*)", &v));
+    ASSERT_FALSE(RE2::FullMatch("\t\n", "(.*)", &v));
 
     ASSERT_TRUE(RE2::FullMatch(zeros + "1e23", "(.*)", &v));
     ASSERT_EQ(v, double{1e23});
